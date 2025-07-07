@@ -27,10 +27,9 @@ export const SonyDevice = GObject.registerClass({
         this._callbacks = {
             updateBatteryProps: this.updateBatteryProps.bind(this),
             updateAmbientSoundControl: this.updateAmbientSoundControl.bind(this),
-            updateSpeak2Chat: this.updateSpeak2Chat.bind(this),
-            pausePlayStatus: this.pausePlayStatus.bind(this),
+            updateSpeakToChatEnable: this.updateSpeakToChatEnable.bind(this),
             updateSpeakToChatConfig: this.updateSpeakToChatConfig.bind(this),
-            updateInEarStatus: this.updateInEarStatus.bind(this),
+            updatePlaybackState: this.updatePlaybackState.bind(this),
         };
 
         this._initialize();
@@ -191,6 +190,11 @@ export const SonyDevice = GObject.registerClass({
         this.dataHandler?.setProps(this._props);
     }
 
+    updateSpeakToChatEnable(enabled) {
+        this._props.toggle2State = enabled ? 1 : 2;
+        this.dataHandler?.setProps(this._props);
+    }
+
     updateSpeakToChatConfig(speak2ChatSensitivity, focusOnVoiceState, speak2ChatTimeout) {
         this._speak2ChatSensitivity = speak2ChatSensitivity;
         this._focusOnVoiceState = focusOnVoiceState;
@@ -198,7 +202,8 @@ export const SonyDevice = GObject.registerClass({
         this.dataHandler?.setProps(this._props);
     }
 
-    updatePlaybackState() {
+    updatePlaybackState(state) {
+        this._props.tmpPlayPauseStatus = state;
         this.dataHandler?.setProps(this._props);
     }
 
@@ -214,6 +219,16 @@ export const SonyDevice = GObject.registerClass({
             this._sonySocket.setAmbientSoundControl(AmbientSoundMode.AMBIENT);
         else if (index === 4)
             this._sonySocket.setAmbientSoundControl(AmbientSoundMode.WIND);
+    }
+
+    set2ButtonClicked(index) {
+        if (this._noNoiseCancellingSupported)
+            return;
+
+        if (index === 1)
+            this._sonySocket.setSpeakToChatEnabled(true);
+        else if (index === 2)
+            this._sonySocket.setSpeakToChatEnabled(false);
     }
 
     destroy() {

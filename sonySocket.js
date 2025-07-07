@@ -155,8 +155,8 @@ class SonySocket extends SocketHandler {
     _getSpeakToChatEnabled() {
         this._log.info('_getSpeakToChatEnabled:');
         const byte = this._usesProtocolV2 ? 0x0c : 0x05;
-        return this._encodeSonyMessage(
-            MessageType.COMMAND_1, this._seq++, [PayloadType.SPEAK_TO_CHAT_CONFIG_GET, byte]);
+        return this._encodeSonyMessage(MessageType.COMMAND_1, this._seq++,
+            [PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_GET, byte]);
     }
 
     _parseBatteryStatus(payload) {
@@ -304,40 +304,69 @@ class SonySocket extends SocketHandler {
         }
     }
 
-    _parseSpeakToChatConfigV1(payload) {
-        this._log.info('_parseSpeakToChatConfigV1');
-        if (payload.length !== 6)
+    _parseSpeakToChatEnable(payload) {
+        this._log.info('_parseSpeakToChatEnable');
+
+        if (payload.length !== 4)
             return;
 
-        if (payload[1] !== 0x05)
+        let enabled = null;
+
+        if (this._usesProtocolV2) {
+            const disabled = payload[2];
+            if (disabled === 0x00 || disabled === 0x01)
+                enabled = !disabled;
+            else
+                return;
+        } else {
+            if (payload[2] !== 0x01)
+                return;
+
+            const val = payload[3];
+            if (val === 0x00 || val === 0x01)
+                enabled = Boolean(val);
+            else
+                return;
+        }
+
+        this._log.debug(`Speak to chat enabled: ${enabled}`);
+
+        if (this._callbacks?.updateSpeakToChatEnable)
+            this._callbacks.updateSpeakToChatEnable(enabled);
+    }
+
+
+    _parseSpeakToChatConfigV1(payload) {
+        this._log.info('_parseSpeakToChatConfigV1');
+
+        if (payload.length !== 6 || payload[1] !== 0x05)
             return;
 
         const sensCode = payload[3];
-        if (Object.values(Speak2ChatSensitivity).includes(sensCode))
-            this._speak2ChatSensitivity = sensCode;
+        if (!Object.values(Speak2ChatSensitivity).includes(sensCode))
+            return;
+        this._speak2ChatSensitivity = sensCode;
 
+        if (payload[4] !== 0x00 && payload[4] !== 0x01)
+            return;
         this._focusOnVoiceState = payload[4] === 0x01;
 
         const timeoutCode = payload[5];
-        if (Object.values(Speak2ChatTimeout).includes(timeoutCode))
+        if (!Object.values(Speak2ChatTimeout).includes(timeoutCode))
             return;
         this._speak2ChatTimeout = timeoutCode;
 
-        if (this._callbacks?.updateSpeakToChatConfig) {
-            this._callbacks.updateSpeakToChatConfig(
-                this._speak2ChatSensitivity,
-                this._focusOnVoiceState,
-                this._speak2ChatTimeout
-            );
-        }
+        this._callbacks?.updateSpeakToChatConfig?.(
+            this._speak2ChatSensitivity,
+            this._focusOnVoiceState,
+            this._speak2ChatTimeout
+        );
     }
 
     _parseSpeakToChatConfigV2(payload) {
         this._log.info('_parseSpeakToChatConfigV2');
-        if (payload.length !== 4)
-            return;
 
-        if (payload[1] !== 0x0c)
+        if (payload.length !== 4 || payload[1] !== 0x0c)
             return;
 
         const sensCode = payload[2];
@@ -345,27 +374,26 @@ class SonySocket extends SocketHandler {
             return;
         this._speak2ChatSensitivity = sensCode;
 
-        this._focusOnVoiceState = false;
-
         const timeoutCode = payload[3];
         if (!Object.values(Speak2ChatTimeout).includes(timeoutCode))
             return;
         this._speak2ChatTimeout = timeoutCode;
 
-        if (this._callbacks?.updateSpeakToChatConfig) {
-            this._callbacks.updateSpeakToChatConfig(
-                this._speak2ChatSensitivity,
-                this._focusOnVoiceState,
-                this._speak2ChatTimeout
-            );
-        }
+        this._focusOnVoiceState = false;
+
+        this._callbacks?.updateSpeakToChatConfig?.(
+            this._speak2ChatSensitivity,
+            this._focusOnVoiceState,
+            this._speak2ChatTimeout
+        );
     }
+
 
     _parsePlayBackState(payload) {
         const state = payload[3];
         this._log.info(`_parsePlayBackState: state: ${state}`);
 
-        if (Object.values(PlaybackStatus).includes(state))
+        if (!Object.values(PlaybackStatus).includes(state))
             return;
 
         if (this._callbacks?.updatePlaybackState)
@@ -409,6 +437,11 @@ class SonySocket extends SocketHandler {
                             this._parseAmbientSoundControlV2(payload);
                         else
                             this._parseAmbientSoundControlV1(payload);
+                        break;
+                    case PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_RET:
+                    case PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_NOTIFY:
+                        if (this._usesProtocolV2 && payload[1] === 0x0C || payload[1] === 0x05)
+                            this._parseSpeakToChatEnable(payload);
                         break;
                     case PayloadType.SPEAK_TO_CHAT_CONFIG_RET:
                     case PayloadType.SPEAK_TO_CHAT_CONFIG_NOTIFY:
@@ -497,20 +530,43 @@ class SonySocket extends SocketHandler {
 
     setSpeakToChatEnabled(enabled) {
         this._log.info(`setSpeakToChatEnabled: ${enabled}`);
-        const byte = this._usesProtocolV2 ? 0x0c : 0x05;
-        return this._encodeSonyMessage(
-            MessageType.COMMAND_1, this._seq++,
-            [PayloadType.SPEAK_TO_CHAT_CONFIG_SET, byte, 0x00, enabled ? 0x01 : 0x00]);
+        const subCommand = this._usesProtocolV2 ? 0x0c : 0x05;
+        const payload = [PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_SET, subCommand];
+
+        if (this._usesProtocolV2) {
+            payload.push(enabled ? 0x00 : 0x01);
+            payload.push(0x01);
+        } else {
+            payload.push(0x01);
+            payload.push(enabled ? 0x01 : 0x00);
+        }
+
+        return this._encodeSonyMessage(MessageType.COMMAND_1, this._seq++, payload);
     }
 
+
     setSpeakToChatConfig(sensitivity, timeout) {
-        this._log.info(`setSpeakToChatConfig: sensitivity:${sensitivity}  timeout:${timeout}`);
-        const byte = this._usesProtocolV2 ? 0x0c : 0x05;
-        return this._encodeSonyMessage(MessageType.COMMAND_1, this._seq++, [
-            PayloadType.SPEAK_TO_CHAT_CONFIG_SET,  byte, 0x00, sensitivity & 0xff,
-            this._focusOnVoiceState ? 0x01 : 0x00, timeout & 0xff,
-        ]);
+        this._log.info(`setSpeakToChatConfig: sensitivity=${sensitivity}, timeout=${timeout}`);
+        const subCommand = this._usesProtocolV2 ? 0x0c : 0x05;
+        const payload = [PayloadType.SPEAK_TO_CHAT_CONFIG_SET, subCommand];
+
+        if (this._usesProtocolV2) {
+            payload.push(sensitivity & 0xff);
+            payload.push(timeout & 0xff);
+        } else {
+            payload.push(0x00);
+            payload.push(sensitivity & 0xff);
+            payload.push(this._focusOnVoiceState ? 0x01 : 0x00);
+            payload.push(timeout & 0xff);
+        }
+
+        return this._encodeSonyMessage(
+            MessageType.COMMAND_1,
+            this._seq++,
+            payload
+        );
     }
+
 
     async sendAndWait(packet) {
         this._encodeSonyMessage(MessageType.COMMAND_1, this._seq++, packet);
