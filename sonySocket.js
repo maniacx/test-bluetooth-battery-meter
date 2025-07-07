@@ -13,8 +13,8 @@ export const SonySocket = GObject.registerClass(
 class SonySocket extends SocketHandler {
     _init(devicePath, fd, modelData, usesProtocolV2, callbacks) {
         super._init(devicePath, fd);
-        this._log = createLogger(`SonyDevice-${devicePath.split('_').slice(-3).join('')}`);
-        this._log.info('SonyDevice init');
+        this._log = createLogger('SonyDevice');
+        this._log.info(`SonyDevice init with fd: ${fd}`);
         this._initRetries = 0;
         this._hasInitReply = false;
         this._featureInitComplete = false;
@@ -120,11 +120,13 @@ class SonySocket extends SocketHandler {
     }
 
     _getInitRequest() {
+        this._log.info('_getInitRequest:');
         return this._encodeSonyMessage(
             MessageType.COMMAND_1, this._seq++, [PayloadType.INIT_REQUEST]);
     }
 
     _getBatteryRequest(batteryTypeV1) {
+        this._log.info('_getBatteryRequest:');
         const payloadType = this._usesProtocolV2 ? PayloadType.BATTERY_LEVEL_REQUEST_V2
             : PayloadType.BATTERY_LEVEL_REQUEST;
 
@@ -134,6 +136,7 @@ class SonySocket extends SocketHandler {
 
 
     _getAmbientSoundControl() {
+        this._log.info('_getAmbientSoundControl:');
         let code;
         if (this._usesProtocolV2) {
             code = this._windNoiseReductionSupported || this._ambientSoundControl2Supported
@@ -150,12 +153,14 @@ class SonySocket extends SocketHandler {
     }
 
     _getSpeakToChatEnabled() {
+        this._log.info('_getSpeakToChatEnabled:');
         const byte = this._usesProtocolV2 ? 0x0c : 0x05;
         return this._encodeSonyMessage(
             MessageType.COMMAND_1, this._seq++, [PayloadType.SPEAK_TO_CHAT_CONFIG_GET, byte]);
     }
 
     _parseBatteryStatus(payload) {
+        this._log.info('_parseBatteryStatus:');
         if (payload.length < 4)
             return;
 
@@ -207,10 +212,12 @@ class SonySocket extends SocketHandler {
     }
 
     _parseAmbientAttenuationLevel(byte) {
+        this._log.info(`_parseAmbientAttenuationLevel: ${byte}`);
         return byte >= 0 && byte <= 20 ? byte : 10;
     }
 
     _parseAmbientSoundControlV1(payload) {
+        this._log.info('_parseAmbientSoundControlV1');
         if (payload.length !== 8)
             return;
         const m0 = payload[2], m1 = payload[3], m2 = payload[4];
@@ -246,6 +253,7 @@ class SonySocket extends SocketHandler {
     }
 
     _parseAmbientSoundControlV2(payload) {
+        this._log.info('_parseAmbientSoundControlV2');
         if (payload.length < 6 || payload.length > 8)
             return;
 
@@ -297,6 +305,7 @@ class SonySocket extends SocketHandler {
     }
 
     _parseSpeakToChatConfigV1(payload) {
+        this._log.info('_parseSpeakToChatConfigV1');
         if (payload.length !== 6)
             return;
 
@@ -324,6 +333,7 @@ class SonySocket extends SocketHandler {
     }
 
     _parseSpeakToChatConfigV2(payload) {
+        this._log.info('_parseSpeakToChatConfigV2');
         if (payload.length !== 4)
             return;
 
@@ -353,6 +363,7 @@ class SonySocket extends SocketHandler {
 
     _parsePlayBackState(payload) {
         const state = payload[3];
+        this._log.info(`_parsePlayBackState: state: ${state}`);
 
         if (Object.values(PlaybackStatus).includes(state))
             return;
@@ -369,9 +380,10 @@ class SonySocket extends SocketHandler {
             const {messageType, sequence, payload} = data;
 
             if (!this._featureInitComplete && messageType === MessageType.ACK) {
-                if (sequence !== this._seq)
+                if (sequence !== this._seq) {
+                    this._log.info('Emitted: ack‑received');
                     this.emit('ack‑received');
-
+                }
                 return;
             }
 
@@ -424,7 +436,7 @@ class SonySocket extends SocketHandler {
     }
 
     _setAmbientSoundControlV1(mode, focusOnVoice, level) {
-        log('setAmbientSoundControl');
+        this._log.info(`_setAmbientSoundControlV1: mode: ${mode} focusOnVoice: ${focusOnVoice} level: ${level}`);
         const buf = [PayloadType.AMBIENT_SOUND_CONTROL_SET, 0x02];
 
         const modeIsOff = mode === AmbientSoundMode.ANC_OFF; ;
@@ -484,6 +496,7 @@ class SonySocket extends SocketHandler {
 
 
     setSpeakToChatEnabled(enabled) {
+        this._log.info(`setSpeakToChatEnabled: ${enabled}`);
         const byte = this._usesProtocolV2 ? 0x0c : 0x05;
         return this._encodeSonyMessage(
             MessageType.COMMAND_1, this._seq++,
@@ -491,6 +504,7 @@ class SonySocket extends SocketHandler {
     }
 
     setSpeakToChatConfig(sensitivity, timeout) {
+        this._log.info(`setSpeakToChatConfig: sensitivity:${sensitivity}  timeout:${timeout}`);
         const byte = this._usesProtocolV2 ? 0x0c : 0x05;
         return this._encodeSonyMessage(MessageType.COMMAND_1, this._seq++, [
             PayloadType.SPEAK_TO_CHAT_CONFIG_SET,  byte, 0x00, sensitivity & 0xff,
@@ -541,6 +555,7 @@ class SonySocket extends SocketHandler {
             return;
 
         const batteryType = this._usesProtocolV2 ? BatteryTypeV2 : BatteryTypeV1;
+        this._log.info(`UsesProtocolV2: ${this._usesProtocolV2}`);
 
         if (this._batterySingleSupported)
             await this.sendMessage(this._getBatteryRequest(batteryType.SINGLE));
@@ -561,6 +576,7 @@ class SonySocket extends SocketHandler {
 
 
     _retryInitRequest() {
+        this._log.info(`HasInitReply: ${this._hasInitReply}`);
         if (this._hasInitReply)
             return;
 
@@ -578,7 +594,7 @@ class SonySocket extends SocketHandler {
             });
         } else {
             this._log.error('Failed to complete init after 3 attempts');
-            this.onDestroy();
+            this.destroy();
         }
     }
 

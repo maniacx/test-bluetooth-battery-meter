@@ -6,7 +6,7 @@ import {createLogger} from './logger.js';
 import {getBluezDeviceProxy} from './bluezDeviceProxy.js';
 import {SonyDevice} from './sonyDevice.js';
 import {ProfileManager} from './profileManager.js';
-import {setLiveLogSink} from './logger.js';
+import {setLiveLogSink, hideMacAdddress} from './logger.js';
 
 Gio._promisify(Gio.DBusProxy, 'new');
 Gio._promisify(Gio.DBusProxy, 'new_for_bus');
@@ -149,35 +149,35 @@ class BatteryApp {
 
         this._ancOffButton = new Gtk.Button({label: 'Off'});
         this._ancOffButton.connect('clicked', () => {
-            this._airpodDevice?.set1ButtonClicked(1);
+            this._sonyDevice?.set1ButtonClicked(1);
         });
 
         this._ancOnButton = new Gtk.Button({label: 'ANC'});
         this._ancOnButton.connect('clicked', () => {
-            this._airpodDevice?.set1ButtonClicked(2);
+            this._sonyDevice?.set1ButtonClicked(2);
         });
 
-        this._transparencyButton = new Gtk.Button({label: 'Transparency'});
-        this._transparencyButton.connect('clicked', () => {
-            this._airpodDevice?.set1ButtonClicked(3);
+        this._ambientButton = new Gtk.Button({label: 'Ambient'});
+        this._ambientButton.connect('clicked', () => {
+            this._sonyDevice?.set1ButtonClicked(3);
         });
 
-        this._adaptiveButton = new Gtk.Button({label: 'Adaptive'});
-        this._adaptiveButton.connect('clicked', () => {
-            this._airpodDevice?.set1ButtonClicked(4);
+        this._windButton = new Gtk.Button({label: 'Wind'});
+        this._windButton.connect('clicked', () => {
+            this._sonyDevice?.set1ButtonClicked(4);
         });
 
         toggleBox1.append(this._ancOffButton);
         toggleBox1.append(this._ancOnButton);
-        toggleBox1.append(this._transparencyButton);
-        toggleBox1.append(this._adaptiveButton);
+        toggleBox1.append(this._ambientButton);
+        toggleBox1.append(this._windButton);
 
         ancRow.child = toggleBox1;
         this._ancGroup.add(ancRow);
         page.add(this._ancGroup);
 
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        this._awarenessGroup = new Adw.PreferencesGroup({title: 'Conversation Awareness'});
+        this._awarenessGroup = new Adw.PreferencesGroup({title: 'Speak to Chat'});
         const awarenessrow = new Adw.ActionRow({activatable: false});
 
         const toggleBox2 = new Gtk.Box({
@@ -190,18 +190,18 @@ class BatteryApp {
             margin_end: 12,
         });
 
-        this._awarenessOnButton = new Gtk.ToggleButton({label: 'Converstion awareness On'});
-        this._awarenessOnButton.connect('clicked', () => {
-            this._airpodDevice?.set2ButtonClicked(1);
+        this._speak2chatOnButton = new Gtk.ToggleButton({label: 'Speak to Chat On'});
+        this._speak2chatOnButton.connect('clicked', () => {
+            this._sonyDevice?.set2ButtonClicked(1);
         });
 
-        this._awarenessOffButton = new Gtk.ToggleButton({label: 'Converstion awareness Off'});
-        this._awarenessOffButton.connect('clicked', () => {
-            this._airpodDevice?.set2ButtonClicked(2);
+        this._speak2chatOffButton = new Gtk.ToggleButton({label: 'Speak to Chat Off'});
+        this._speak2chatOffButton.connect('clicked', () => {
+            this._sonyDevice?.set2ButtonClicked(2);
         });
 
-        toggleBox2.append(this._awarenessOnButton);
-        toggleBox2.append(this._awarenessOffButton);
+        toggleBox2.append(this._speak2chatOnButton);
+        toggleBox2.append(this._speak2chatOffButton);
 
         awarenessrow.child = toggleBox2;
         this._awarenessGroup.add(awarenessrow);
@@ -245,6 +245,7 @@ class BatteryApp {
     _initialize() {
         this._bluezDeviceProxy = getBluezDeviceProxy(this._devicePath);
         const connected = this._bluezDeviceProxy.Connected;
+        this._log.info(`Device connection status: ${connected} Path: ${hideMacAdddress(this._devicePath)}`);
         if (!connected) {
             this._log.info('Device not connected. Waiting for device');
             this._bluezSignalId = this._bluezDeviceProxy.connect(
@@ -266,8 +267,9 @@ class BatteryApp {
     }
 
     _startDevice() {
+        this._log.info('Start Device');
         this._profileManager = new ProfileManager();
-        this._airpodDevice = new AirpodsDevice(
+        this._sonyDevice = new SonyDevice(
             this._devicePath, this.updateDeviceMapCb.bind(this), this._profileManager);
     }
 
@@ -294,8 +296,8 @@ class BatteryApp {
             const ctx1 = [
                 this._ancOffButton,
                 this._ancOnButton,
-                this._transparencyButton,
-                this._adaptiveButton,
+                this._ambientButton,
+                this._windButton,
             ];
             ctx1.forEach(btn => btn.get_style_context().remove_class('accent'));
 
@@ -304,8 +306,8 @@ class BatteryApp {
                 ctx1[index1].get_style_context().add_class('accent');
 
             const ctx2 = [
-                this._awarenessOnButton,
-                this._awarenessOffButton,
+                this._speak2chatOnButton,
+                this._speak2chatOffButton,
             ];
             ctx2.forEach(btn => btn.get_style_context().remove_class('accent'));
 
