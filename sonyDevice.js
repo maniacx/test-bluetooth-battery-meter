@@ -1,6 +1,7 @@
 'use strict';
 import GObject from 'gi://GObject';
 
+import {createLogger} from './logger.js';
 import {getBluezDeviceProxy} from './bluezDeviceProxy.js';
 import {createConfig, createProperties, DataHandler} from './dataHandler.js';
 import {SonySocket} from './sonySocket.js';
@@ -14,6 +15,8 @@ export const SonyDevice = GObject.registerClass({
 }, class SonyDevice extends GObject.Object {
     _init(devicePath, updateDeviceMapCb, profileManager) {
         super._init();
+        this._log = createLogger('SonyDevice');
+        this._log.info('SonyDevice init ');
         this._devicePath = devicePath;
         this._config = createConfig();
         this._props = createProperties();
@@ -38,10 +41,24 @@ export const SonyDevice = GObject.registerClass({
     _initialize() {
         this._bluezDeviceProxy = getBluezDeviceProxy(this._devicePath);
         const uuids = this._bluezDeviceProxy.UUIDs;
+        this._log.info('');
+        this._log.info(`UUIDs: ${uuids}`);
+        this._log.info('');
+
+        if (uuids.includes(SonyUUIDv1))
+            this._log.info('Sony device is V1');
+        else if (uuids.includes(SonyUUIDv2))
+            this._log.info('Sony device is V2');
+        else
+            this._log.info('No valid UUIDs found');
+
         if (uuids.includes(SonyUUIDv2))
             this._usesProtocolV2 = true;
 
         const name = this._bluezDeviceProxy.Name;
+        this._log.info('');
+        this._log.info(`Name: ${name}`);
+        this._log.info('');
         if (!name) {
             this._bluezSignalId = this._bluezDeviceProxy.connect(
                 'g-properties-changed', () => this._onBluezPropertiesChanged());
@@ -53,6 +70,9 @@ export const SonyDevice = GObject.registerClass({
     _onBluezPropertiesChanged() {
         const name = this._bluezDeviceProxy.Name;
         if (name) {
+            this._log.info('');
+            this._log.info(`Name: ${name}`);
+            this._log.info('');
             this._initializeModel(name);
             if (this._bluezDeviceProxy && this._bluezSignalId)
                 this._bluezDeviceProxy.disconnect(this._bluezSignalId);
@@ -63,8 +83,13 @@ export const SonyDevice = GObject.registerClass({
 
     _initializeModel(name) {
         const modelData = SonyConfiguration.find(model => model.pattern.test(name));
-        if (!modelData)
+
+        if (!modelData) {
+            this._log.info(`No matching modelData found for name: ${name}`);
             return;
+        }
+
+        this._log.info(`Found modelData for name "${name}": ${JSON.stringify(modelData, null, 2)}`);
 
         this._batteryDualSupported = modelData.batteryDual ?? false;
         this._batteryDual2Supported = modelData.batteryDual2 ?? false;
@@ -90,10 +115,8 @@ export const SonyDevice = GObject.registerClass({
         if (this._batteryCaseSupported)
             this._config.battery3Icon = `${modelData.case}`;
 
-
         if (this._batterySingleSupported)
             this._config.battery1Icon = modelData.budsIcon;
-
 
         if (!this._noNoiseCancellingSupported &&
                 (this._ambientSoundControlSupported || this._ambientSoundControlSupported2)) {
@@ -118,10 +141,12 @@ export const SonyDevice = GObject.registerClass({
         let fd;
         fd = this._profileManager.getFd(this._devicePath);
         if (fd === -1) {
+            this._log.info('No fd: listen for new connections');
             this._profileSignalId = this._profileManager.connect(
                 'new-connection', (_, path, newFd) => {
                     if (path !== this._devicePath)
                         return;
+                    this._log.info(`New connection fd: ${newFd}`);
                     fd = newFd;
                     this._profileManager.disconnect(this._profileSignalId);
                     this._profileSignalId = null;
@@ -133,11 +158,13 @@ export const SonyDevice = GObject.registerClass({
 
             this._profileManager.registerProfile('sony', uuid);
         } else {
+            this._log.info(`Found fd: ${fd}`);
             this._startSonySocket(fd);
         }
     }
 
     _startSonySocket(fd) {
+        this._log.info(`Start Socket with fd: ${fd}`);
         this._sonySocket = new SonySocket(
             this._devicePath,
             fd,

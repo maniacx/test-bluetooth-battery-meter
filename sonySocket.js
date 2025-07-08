@@ -13,8 +13,8 @@ export const SonySocket = GObject.registerClass(
 class SonySocket extends SocketHandler {
     _init(devicePath, fd, modelData, usesProtocolV2, callbacks) {
         super._init(devicePath, fd);
-        this._log = createLogger('SonyDevice');
-        this._log.info(`SonyDevice init with fd: ${fd}`);
+        this._log = createLogger('SonySocket');
+        this._log.info(`SonySocket init with fd: ${fd}`);
         this._initRetries = 0;
         this._hasInitReply = false;
         this._featureInitComplete = false;
