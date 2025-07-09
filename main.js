@@ -245,7 +245,8 @@ class BatteryApp {
     _initialize() {
         this._bluezDeviceProxy = getBluezDeviceProxy(this._devicePath);
         const connected = this._bluezDeviceProxy.Connected;
-        this._log.info(`Device connection status: ${connected} Path: ${hideMacAdddress(this._devicePath)}`);
+        this._log.info(
+            `Device connection status: ${connected} Path: ${hideMacAdddress(this._devicePath)}`);
         if (!connected) {
             this._log.info('Device not connected. Waiting for device');
             this._bluezSignalId = this._bluezDeviceProxy.connect(

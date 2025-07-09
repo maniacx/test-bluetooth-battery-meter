@@ -17,7 +17,6 @@ class SonySocket extends SocketHandler {
         this._log.info(`SonySocket init with fd: ${fd}`);
         this._initRetries = 0;
         this._hasInitReply = false;
-        this._featureInitComplete = false;
         this._seq = 0;
         this._usesProtocolV2 = usesProtocolV2;
         this._callbacks = callbacks;
@@ -157,6 +156,13 @@ class SonySocket extends SocketHandler {
         const byte = this._usesProtocolV2 ? 0x0c : 0x05;
         return this._encodeSonyMessage(MessageType.COMMAND_1, this._seq++,
             [PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_GET, byte]);
+    }
+
+    _getSpeakToChatConfig() {
+        this._log.info('_getSpeakToChatConfig:');
+        const byte = this._usesProtocolV2 ? 0x0c : 0x05;
+        return this._encodeSonyMessage(MessageType.COMMAND_1, this._seq++,
+            [PayloadType.SPEAK_TO_CHAT_CONFIG_GET, byte]);
     }
 
     _parseBatteryStatus(payload) {
@@ -407,11 +413,13 @@ class SonySocket extends SocketHandler {
                 return;
             const {messageType, sequence, payload} = data;
 
-            if (!this._featureInitComplete && messageType === MessageType.ACK) {
-                if (sequence !== this._seq) {
-                    this._log.info('Emitted: ack‑received');
-                    this.emit('ack‑received');
+            if (!this._hasInitReply && messageType === MessageType.ACK) {
+                this._hasInitReply = true;
+                if (this._retryTimeoutId) {
+                    GLib.source_remove(this._retryTimeoutId);
+                    this._retryTimeoutId = null;
                 }
+                this._getCurrentState();
                 return;
             }
 
@@ -469,7 +477,9 @@ class SonySocket extends SocketHandler {
     }
 
     _setAmbientSoundControlV1(mode, focusOnVoice, level) {
-        this._log.info(`_setAmbientSoundControlV1: mode: ${mode} focusOnVoice: ${focusOnVoice} level: ${level}`);
+        this._log.info(
+            `_setAmbientSoundControlV1: mode: ${mode} focusOnVoice: ${focusOnVoice} ` +
+                `level: ${level}`);
         const buf = [PayloadType.AMBIENT_SOUND_CONTROL_SET, 0x02];
 
         const modeIsOff = mode === AmbientSoundMode.ANC_OFF; ;
@@ -567,49 +577,7 @@ class SonySocket extends SocketHandler {
         );
     }
 
-
-    async sendAndWait(packet) {
-        this._encodeSonyMessage(MessageType.COMMAND_1, this._seq++, packet);
-
-        if (this._ackSignal)
-            this.disconnect(this._ackSignal);
-        this._ackSignal = null;
-
-        if (this._ackTimeout)
-            GLib.source_remove(this._ackTimeout);
-        this._ackTimeout = null;
-
-        await new Promise(resolve => {
-            this._ackSignal = this.connect('ack‑received', () => {
-                if (this._ackSignal)
-                    this.disconnect(this._ackSignal);
-                this._ackSignal = null;
-
-                if (this._ackTimeout)
-                    GLib.source_remove(this._ackTimeout);
-                this._ackTimeout = null;
-
-                resolve();
-            });
-
-            this._ackTimeout = GLib.timeout_add(
-                GLib.PRIORITY_DEFAULT, 1000,
-                () => {
-                    this.disconnect(this._ackSignal);
-                    this._ackSignal = null;
-                    this._ackTimeout = null;
-
-                    resolve();
-                    return GLib.SOURCE_REMOVE;
-                }
-            );
-        });
-    }
-
     async _getCurrentState() {
-        if (this._featureInitComplete)
-            return;
-
         const batteryType = this._usesProtocolV2 ? BatteryTypeV2 : BatteryTypeV1;
         this._log.info(`UsesProtocolV2: ${this._usesProtocolV2}`);
 
@@ -628,6 +596,9 @@ class SonySocket extends SocketHandler {
 
         if (this._speakToChatEnabledSupported)
             await this.sendMessage(this._getSpeakToChatEnabled());
+
+        if (this._speakToChatConfigSupported)
+            await this.sendMessage(this._getSpeakToChatConfig());
     }
 
 
@@ -663,14 +634,6 @@ class SonySocket extends SocketHandler {
         if (this._retryTimeoutId)
             GLib.source_remove(this._retryTimeoutId);
         this._retryTimeoutId = null;
-
-        if (this._ackSignal)
-            this.disconnect(this._ackSignal);
-        this._ackSignal = null;
-
-        if (this._ackTimeout)
-            GLib.source_remove(this._ackTimeout);
-        this._ackTimeout = null;
 
         super.destroy();
     }
