@@ -19,6 +19,7 @@ class SonySocket extends SocketHandler {
         this._hasInitReply = false;
         this._seq = 0;
         this._usesProtocolV2 = usesProtocolV2;
+        this._frameBuf = new Uint8Array(0);
         this._callbacks = callbacks;
 
         this._batteryDualSupported = modelData.batteryDual ?? false;
@@ -406,7 +407,38 @@ class SonySocket extends SocketHandler {
             this._callbacks.updatePlaybackState(state);
     }
 
-    processData(rawData) {
+
+    processData(chunk) {
+        const buf = new Uint8Array(this._frameBuf.length + chunk.length);
+        buf.set(this._frameBuf, 0);
+        buf.set(chunk, this._frameBuf.length);
+
+        let frameStart = -1;
+        const frames = [];
+        for (let i = 0; i < buf.length; i++) {
+            const b = buf[i];
+
+            if (frameStart < 0) {
+                if (b === checksum.HEADER)
+                    frameStart = i;
+            } else if (b === checksum.TRAILER) {
+                frames.push(buf.slice(frameStart, i + 1));
+                frameStart = -1;
+            }
+        }
+
+        if (frameStart >= 0)
+            this._frameBuf = buf.slice(frameStart);
+        else
+            this._frameBuf = new Uint8Array(0);
+
+
+        for (const frame of frames)
+            this._parseData(frame);
+    }
+
+
+    _parseData(rawData) {
         try {
             const data = this._decodeSonyMessage(rawData);
             if (!data)
