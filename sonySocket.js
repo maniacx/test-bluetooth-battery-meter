@@ -18,7 +18,7 @@ class SonySocket extends SocketHandler {
         this._initRetries = 0;
         this._hasInitReply = false;
         this._seq = 0;
-        this._usesProtocolV2 = usesProtocolV2;
+        this._usesProtocolV2 = false;
         this._frameBuf = new Uint8Array(0);
         this._callbacks = callbacks;
 
