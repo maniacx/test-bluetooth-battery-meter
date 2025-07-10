@@ -125,13 +125,13 @@ class SonySocket extends SocketHandler {
             MessageType.COMMAND_1, this._seq++, [PayloadType.INIT_REQUEST]);
     }
 
-    _getBatteryRequest(batteryTypeV1) {
+    _getBatteryRequest(batteryType) {
         this._log.info('_getBatteryRequest:');
         const payloadType = this._usesProtocolV2 ? PayloadType.BATTERY_LEVEL_REQUEST_V2
             : PayloadType.BATTERY_LEVEL_REQUEST;
 
         return this._encodeSonyMessage(
-            MessageType.COMMAND_1, this._seq++, [payloadType, batteryTypeV1]);
+            MessageType.COMMAND_1, this._seq++, [payloadType, batteryType]);
     }
 
 
@@ -469,6 +469,8 @@ class SonySocket extends SocketHandler {
                         break;
                     case PayloadType.BATTERY_LEVEL_REPLY:
                     case PayloadType.BATTERY_LEVEL_NOTIFY:
+                    case PayloadType.BATTERY_LEVEL_REPLY_V2:
+                    case PayloadType.BATTERY_LEVEL_NOTIFY_V2:
                         this._parseBatteryStatus(payload);
                         break;
                     case PayloadType.AMBIENT_SOUND_CONTROL_RET:
@@ -640,7 +642,7 @@ class SonySocket extends SocketHandler {
             return;
 
         if (this._initRetries++ < 3) {
-            this._log.info(`Retrying init (#${this._initRetries})`);
+            this._log.info(`Retrying init (${this._initRetries})`);
             this.sendMessage(this._getInitRequest());
 
             if (this._retryTimeoutId)
@@ -653,7 +655,7 @@ class SonySocket extends SocketHandler {
             });
         } else {
             this._log.error('Failed to complete init after 3 attempts');
-            this.destroy();
+           // this.destroy();
         }
     }
 
