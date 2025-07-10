@@ -167,9 +167,14 @@ class SonySocket extends SocketHandler {
     }
 
     _parseBatteryStatus(payload) {
-        this._log.info('_parseBatteryStatus:');
+        this._log.info(`_parseBatteryStatus payload.length = ${payload.length}`);
         if (payload.length < 4)
             return;
+
+
+        this._log.info(`_parseAmbientSoundControlV1 payload[1] = [${payload[1]}]`);
+        this._log.info(`_parseAmbientSoundControlV1 payload[2] = [${payload[2]}]`);
+        this._log.info(`_parseAmbientSoundControlV1 payload[3] = [${payload[3]}]`);
 
         const batteryType = this._usesProtocolV2 ? BatteryTypeV2 : BatteryTypeV1;
 
@@ -224,9 +229,16 @@ class SonySocket extends SocketHandler {
     }
 
     _parseAmbientSoundControlV1(payload) {
-        this._log.info('_parseAmbientSoundControlV1');
+        this._log.info(`_parseAmbientSoundControlV1 payload.length = ${payload.length}`);
+
         if (payload.length !== 8)
             return;
+
+        this._log.info(`_parseAmbientSoundControlV1 payload[2] = [${payload[2]}]`);
+        this._log.info(`_parseAmbientSoundControlV1 payload[4] = [${payload[4]}]`);
+        this._log.info(`_parseAmbientSoundControlV1 payload[5] = [${payload[5]}]`);
+
+
         const m0 = payload[2], m1 = payload[3], m2 = payload[4];
         let mode = null;
 
@@ -260,16 +272,23 @@ class SonySocket extends SocketHandler {
     }
 
     _parseAmbientSoundControlV2(payload) {
-        this._log.info('_parseAmbientSoundControlV2');
+        this._log.info(`_parseAmbientSoundControlV2 payload.lenght = [${payload.length}]`);
         if (payload.length < 6 || payload.length > 8)
             return;
 
+        this._log.info(`_parseAmbientSoundControlV2 payload[1] = [${payload[1]}]`);
+        this._log.info(`_parseAmbientSoundControlV2 payload[4] = [${payload[4]}]`);
+        this._log.info(`_parseAmbientSoundControlV2 payload[5] = [${payload[5]}]`);
+        this._log.info('_parseAmbientSoundControlV2 payload[payload.length - 2]' +
+            ` = [${payload[payload.length - 2]}]`);
+
         const idx = payload[1];
+
         if (idx !== 0x15 && idx !== 0x17 && idx !== 0x22)
             return;
 
         const includesWind = idx === 0x17 && payload.length > 7;
-        const noNc          = idx === 0x22;
+        const noNc = idx === 0x22;
 
 
         let mode = null;
@@ -318,6 +337,8 @@ class SonySocket extends SocketHandler {
             return;
 
         let enabled = null;
+        this._log.info(`_parseSpeakToChatEnable payload[2] = [${payload[2]}]`);
+        this._log.info(`_parseSpeakToChatEnable payload[3] = [${payload[3]}]`);
 
         if (this._usesProtocolV2) {
             const disabled = payload[2];
@@ -350,15 +371,18 @@ class SonySocket extends SocketHandler {
             return;
 
         const sensCode = payload[3];
+        this._log.info(`SpeakChatSensitivity sensCode payload[3] = [${sensCode}]`);
         if (!Object.values(Speak2ChatSensitivity).includes(sensCode))
             return;
         this._speak2ChatSensitivity = sensCode;
 
+        this._log.info(`SpeakChatSensitivity _focusOnVoiceState payload[4] = [${payload[4]}]`);
         if (payload[4] !== 0x00 && payload[4] !== 0x01)
             return;
         this._focusOnVoiceState = payload[4] === 0x01;
 
         const timeoutCode = payload[5];
+        this._log.info(`SpeakChatSensitivity timeoutCode payload[5] = [${timeoutCode}]`);
         if (!Object.values(Speak2ChatTimeout).includes(timeoutCode))
             return;
         this._speak2ChatTimeout = timeoutCode;
@@ -377,11 +401,14 @@ class SonySocket extends SocketHandler {
             return;
 
         const sensCode = payload[2];
+        this._log.info(`Speak2ChatSensitivity sensCode payload[2] = [${sensCode}]`);
+
         if (!Object.values(Speak2ChatSensitivity).includes(sensCode))
             return;
         this._speak2ChatSensitivity = sensCode;
 
         const timeoutCode = payload[3];
+        this._log.info(`Speak2ChatSensitivity timeoutCode payload[3] = [${timeoutCode}]`);
         if (!Object.values(Speak2ChatTimeout).includes(timeoutCode))
             return;
         this._speak2ChatTimeout = timeoutCode;
@@ -397,15 +424,23 @@ class SonySocket extends SocketHandler {
 
 
     _parsePlayBackState(payload) {
-        const state = payload[3];
-        this._log.info(`_parsePlayBackState: state: ${state}`);
+        const code = payload[3];
+        this._log.info(`_parsePlayBackState payload[3] = [${code}]`);
+        let state = null;
 
-        if (!Object.values(PlaybackStatus).includes(state))
+        if (code === PlaybackStatus.PLAY)
+            state = 'play';
+        else if (code === PlaybackStatus.PAUSE)
+            state = 'pause';
+        else
             return;
+
+        this._log.info(`_parsePlayBackState: ${state}`);
 
         if (this._callbacks?.updatePlaybackState)
             this._callbacks.updatePlaybackState(state);
     }
+
 
 
     processData(chunk) {
@@ -655,7 +690,7 @@ class SonySocket extends SocketHandler {
             });
         } else {
             this._log.error('Failed to complete init after 3 attempts');
-           // this.destroy();
+            // this.destroy();
         }
     }
 
