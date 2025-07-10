@@ -9,14 +9,15 @@ import {
     Speak2ChatSensitivity, Speak2ChatTimeout, PlaybackStatus
 } from './sonyConfig.js';
 
-export const SonySocket = GObject.registerClass(
-class SonySocket extends SocketHandler {
+export const SonySocket = GObject.registerClass({
+    Signals: {'acknowledge-received': {}},
+}, class SonySocket extends SocketHandler {
     _init(devicePath, fd, modelData, usesProtocolV2, callbacks) {
         super._init(devicePath, fd);
         this._log = createLogger('SonySocket');
         this._log.info(`SonySocket init with fd: ${fd}`);
-        this._initRetries = 0;
-        this._hasInitReply = false;
+        this._messageQueue = [];
+        this._hasInitAck = false;
         this._seq = 0;
         this._usesProtocolV2 = usesProtocolV2;
         this._frameBuf = new Uint8Array(0);
@@ -37,9 +38,87 @@ class SonySocket extends SocketHandler {
         this._speakToChatFocusOnVoiceSupported = modelData.speakToChatFocusOnVoice ?? false;
 
         this._pauseWhenTakenOffSupported = modelData.pauseWhenTakenOff ?? false;
-
         this.startSocket(fd);
     }
+
+    _addMessageQueue(message) {
+        this._messageQueue.push(message);
+
+        if (!this._processingQueue)
+            this._processNextQueuedMessage();
+    }
+
+    _processNextQueuedMessage() {
+        if (this._messageQueue.length === 0) {
+            this._processingQueue = false;
+            return;
+        }
+
+        this._processingQueue = true;
+        this._currentMessage = this._messageQueue[0];
+        this._retriesLeft = 3;
+
+        this._sendWithRetry();
+    }
+
+    _sendWithRetry() {
+        if (!this._currentMessage)
+            return;
+
+        this.sendMessage(this._currentMessage);
+        this._awaitingAck = true;
+
+        this._ackTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1250, () => {
+            if (!this._awaitingAck)
+                return GLib.SOURCE_REMOVE;
+
+            if (this._retriesLeft > 0) {
+                this._log.warn(`ACK not received, retrying... (${this._retriesLeft})`);
+                this._retriesLeft--;
+                this.sendMessage(this._currentMessage);
+                return GLib.SOURCE_CONTINUE;
+            } else {
+                this._log.error('ACK not received after retries. Giving up.');
+                this._popFailedMessage();
+                return GLib.SOURCE_REMOVE;
+            }
+        });
+    }
+
+    _onAcknowledgeReceived() {
+        if (!this._awaitingAck)
+            return;
+
+        this._awaitingAck = false;
+
+        if (this._ackTimeoutId) {
+            GLib.source_remove(this._ackTimeoutId);
+            this._ackTimeoutId = null;
+        }
+
+        this._messageQueue.shift();
+        this._currentMessage = null;
+
+        this._processNextQueuedMessage();
+    }
+
+    _popFailedMessage() {
+        this._awaitingAck = false;
+
+        if (this._ackTimeoutId) {
+            GLib.source_remove(this._ackTimeoutId);
+            this._ackTimeoutId = null;
+        }
+
+        this._messageQueue.shift();  // Remove failed message
+        this._currentMessage = null;
+
+        if (!this._messageQueue || this._messageQueue.length === 0)
+            this._processingQueue = false;
+
+        this._processNextQueuedMessage();
+    }
+
 
     _encodeSonyMessage(messageType, sequence, payloadArr) {
         const len = payloadArr.length;
@@ -172,9 +251,9 @@ class SonySocket extends SocketHandler {
             return;
 
 
-        this._log.info(`_parseAmbientSoundControlV1 payload[1] = [${payload[1]}]`);
-        this._log.info(`_parseAmbientSoundControlV1 payload[2] = [${payload[2]}]`);
-        this._log.info(`_parseAmbientSoundControlV1 payload[3] = [${payload[3]}]`);
+        this._log.info(`_parseBatteryStatus payload[1] = [${payload[1]}]`);
+        this._log.info(`_parseBatteryStatus payload[2] = [${payload[2]}]`);
+        this._log.info(`_parseBatteryStatus payload[3] = [${payload[3]}]`);
 
         const batteryType = this._usesProtocolV2 ? BatteryTypeV2 : BatteryTypeV1;
 
@@ -480,13 +559,12 @@ class SonySocket extends SocketHandler {
                 return;
             const {messageType, sequence, payload} = data;
 
-            if (!this._hasInitReply && messageType === MessageType.ACK) {
-                this._hasInitReply = true;
-                if (this._retryTimeoutId) {
-                    GLib.source_remove(this._retryTimeoutId);
-                    this._retryTimeoutId = null;
+            if (messageType === MessageType.ACK && sequence !== this._seq) {
+                this.emit('acknowledge-received');
+                if (!this._hasInitAck) {
+                    this._hasInitAck = true;
+                    this._getCurrentState();
                 }
-                this._getCurrentState();
                 return;
             }
 
@@ -496,11 +574,10 @@ class SonySocket extends SocketHandler {
             if (messageType === MessageType.COMMAND_1) {
                 switch (payload[0]) {
                     case PayloadType.INIT_REPLY:
-                        this._hasInitReply = true;
-                        if (this._retryTimeoutId)
-                            GLib.source_remove(this._retryTimeoutId);
-                        this._retryTimeoutId = null;
-                        this._getCurrentState();
+                        if (!this._hasInitAck) {
+                            this._hasInitAck = true;
+                            this._getCurrentState();
+                        }
                         break;
                     case PayloadType.BATTERY_LEVEL_REPLY:
                     case PayloadType.BATTERY_LEVEL_NOTIFY:
@@ -578,7 +655,7 @@ class SonySocket extends SocketHandler {
             : 0x00;
 
         buf.push(attlevel);
-        return this._encodeSonyMessage(MessageType.COMMAND_1, this._seq++, buf);
+        this._addMessageQueue(this._encodeSonyMessage(MessageType.COMMAND_1, this._seq++, buf));
     }
 
     _setAmbientSoundControlV2(mode, focusOnVoice, level) {
@@ -603,9 +680,8 @@ class SonySocket extends SocketHandler {
             this._parseAmbientAttenuationLevel(level)
         );
 
-        return this._encodeSonyMessage(MessageType.COMMAND_1, this._seq++, buf);
+        this._addMessageQueue(this._encodeSonyMessage(MessageType.COMMAND_1, this._seq++, buf));
     }
-
 
     setSpeakToChatEnabled(enabled) {
         this._log.info(`setSpeakToChatEnabled: ${enabled}`);
@@ -620,9 +696,8 @@ class SonySocket extends SocketHandler {
             payload.push(enabled ? 0x01 : 0x00);
         }
 
-        return this._encodeSonyMessage(MessageType.COMMAND_1, this._seq++, payload);
+        this._addMessageQueue(this._encodeSonyMessage(MessageType.COMMAND_1, this._seq++, payload));
     }
-
 
     setSpeakToChatConfig(sensitivity, timeout) {
         this._log.info(`setSpeakToChatConfig: sensitivity=${sensitivity}, timeout=${timeout}`);
@@ -639,70 +714,53 @@ class SonySocket extends SocketHandler {
             payload.push(timeout & 0xff);
         }
 
-        return this._encodeSonyMessage(
+        this._addMessageQueue(this._encodeSonyMessage(
             MessageType.COMMAND_1,
             this._seq++,
             payload
-        );
+        ));
     }
 
-    async _getCurrentState() {
+    _getCurrentState() {
+        this._log.info('_getCurrentState');
+
         const batteryType = this._usesProtocolV2 ? BatteryTypeV2 : BatteryTypeV1;
-        this._log.info(`UsesProtocolV2: ${this._usesProtocolV2}`);
 
         if (this._batterySingleSupported)
-            await this.sendMessage(this._getBatteryRequest(batteryType.SINGLE));
+            this._addMessageQueue(this._getBatteryRequest(batteryType.SINGLE));
 
         if (this._batteryDualSupported || this._batteryDual2Supported)
-            await this.sendMessage(this._getBatteryRequest(batteryType.DUAL));
+            this._addMessageQueue(this._getBatteryRequest(batteryType.DUAL));
 
         if (this._batteryCaseSupported)
-            await this.sendMessage(this._getBatteryRequest(batteryType.CASE));
+            this._addMessageQueue(this._getBatteryRequest(batteryType.CASE));
 
-        if (!this._noNoiseCancellingSupported && (this._ambientSoundControlSupported ||
-            this._ambientSoundControl2Supported || this._windNoiseReductionSupported))
-            await this.sendMessage(this._getAmbientSoundControl());
+        if (!this._noNoiseCancellingSupported && (
+            this._ambientSoundControlSupported ||
+        this._ambientSoundControl2Supported ||
+        this._windNoiseReductionSupported))
+            this._addMessageQueue(this._getAmbientSoundControl());
 
         if (this._speakToChatEnabledSupported)
-            await this.sendMessage(this._getSpeakToChatEnabled());
+            this._addMessageQueue(this._getSpeakToChatEnabled());
 
         if (this._speakToChatConfigSupported)
-            await this.sendMessage(this._getSpeakToChatConfig());
+            this._addMessageQueue(this._getSpeakToChatConfig());
     }
-
-
-    _retryInitRequest() {
-        this._log.info(`HasInitReply: ${this._hasInitReply}`);
-        if (this._hasInitReply)
-            return;
-
-        if (this._initRetries++ < 3) {
-            this._log.info(`Retrying init (${this._initRetries})`);
-            this.sendMessage(this._getInitRequest());
-
-            if (this._retryTimeoutId)
-                GLib.source_remove(this._retryTimeoutId);
-
-            this._retryTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1250, () => {
-                this._retryInitRequest();
-                this._retryTimeoutId = null;
-                return GLib.SOURCE_REMOVE;
-            });
-        } else {
-            this._log.error('Failed to complete init after 3 attempts');
-            // this.destroy();
-        }
-    }
-
 
     postConnectInitialization() {
-        this._retryInitRequest();
+        this.ackSignalId =
+            this.connect('acknowledge-received', this._onAcknowledgeReceived.bind(this));
+        this._addMessageQueue(this._getInitRequest());
     }
 
     destroy() {
-        if (this._retryTimeoutId)
-            GLib.source_remove(this._retryTimeoutId);
-        this._retryTimeoutId = null;
+        if (this._ackTimeoutId) {
+            GLib.source_remove(this._ackTimeoutId);
+            this._ackTimeoutId = null;
+        }
+        if (this.ackSignalId)
+            this.disconnect(this.ackSignalId);
 
         super.destroy();
     }
