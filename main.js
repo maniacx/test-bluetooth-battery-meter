@@ -177,6 +177,7 @@ class BatteryApp {
         page.add(this._ancGroup);
 
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
         this._awarenessGroup = new Adw.PreferencesGroup({title: 'Speak to Chat'});
         const awarenessrow = new Adw.ActionRow({activatable: false});
 
@@ -238,6 +239,13 @@ class BatteryApp {
             this._logView.scroll_to_mark(mark, 0, false, 0, 0);
         });
 
+        this._ancGroup.visible = false;
+        this._ancOffButton.visible = false;
+        this._ancOnButton.visible = false;
+        this._ambientButton.visible = false;
+        this._windButton.visible = false;
+        this._awarenessGroup.visible = false;
+
         this._updateGuiData();
         this._initialize();
     }
@@ -278,6 +286,15 @@ class BatteryApp {
         if (this._dataHandler)
             return;
         this._dataHandler = dataHandler;
+        this._ancGroup.visible = !this._sonyDevice._noNoiseCancellingSupported;
+        this._ancOffButton.visible = !this._sonyDevice._noNoiseCancellingSupported;
+        this._ancOnButton.visible = !this._sonyDevice._noNoiseCancellingSupported;
+        this._ambientButton.visible = this._sonyDevice._ambientSoundControlSupported ||
+                                      this._sonyDevice._ambientSoundControl2Supported;
+        this._windButton.visible = this._sonyDevice._windNoiseReductionSupported;
+        this._awarenessGroup.visible = this._sonyDevice._speakToChatEnabledSupported;
+
+        // ///
         this._dataHandler.connect('properties-changed', () => {
             this._props = this._dataHandler.getProps();
             this._battL = this._props.battery1Level;
