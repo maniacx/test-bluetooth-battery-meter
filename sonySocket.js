@@ -17,9 +17,8 @@ class SonySocket extends SocketHandler {
         this._log.info(`SonySocket init with fd: ${fd}`);
         this._initRetries = 0;
         this._hasInitReply = false;
-        this._featureReplied = false;
         this._seq = 0;
-        this._usesProtocolV2 = usesProtocolV2;
+        this._usesProtocolV2 = false;
         this._frameBuf = new Uint8Array(0);
         this._callbacks = callbacks;
 
@@ -126,13 +125,13 @@ class SonySocket extends SocketHandler {
             MessageType.COMMAND_1, this._seq++, [PayloadType.INIT_REQUEST]);
     }
 
-    _getBatteryRequest(batteryType) {
+    _getBatteryRequest(batteryTypeV1) {
         this._log.info('_getBatteryRequest:');
         const payloadType = this._usesProtocolV2 ? PayloadType.BATTERY_LEVEL_REQUEST_V2
             : PayloadType.BATTERY_LEVEL_REQUEST;
 
         return this._encodeSonyMessage(
-            MessageType.COMMAND_1, this._seq++, [payloadType, batteryType]);
+            MessageType.COMMAND_1, this._seq++, [payloadType, batteryTypeV1]);
     }
 
 
@@ -168,7 +167,6 @@ class SonySocket extends SocketHandler {
     }
 
     _parseBatteryStatus(payload) {
-        this._featureReplied = true;
         this._log.info('_parseBatteryStatus:');
         if (payload.length < 4)
             return;
@@ -614,13 +612,13 @@ class SonySocket extends SocketHandler {
     async _getCurrentState() {
         const batteryType = this._usesProtocolV2 ? BatteryTypeV2 : BatteryTypeV1;
         this._log.info(`UsesProtocolV2: ${this._usesProtocolV2}`);
-/*
+
         if (this._batterySingleSupported)
             await this.sendMessage(this._getBatteryRequest(batteryType.SINGLE));
-*/
-       // if (this._batteryDualSupported || this._batteryDual2Supported)
+
+        if (this._batteryDualSupported || this._batteryDual2Supported)
             await this.sendMessage(this._getBatteryRequest(batteryType.DUAL));
-/*
+
         if (this._batteryCaseSupported)
             await this.sendMessage(this._getBatteryRequest(batteryType.CASE));
 
@@ -633,30 +631,6 @@ class SonySocket extends SocketHandler {
 
         if (this._speakToChatConfigSupported)
             await this.sendMessage(this._getSpeakToChatConfig());
-*/
-    }
-
-    _retryFeatureRequest() {
-        this._log.info(`_featureReplied: ${this._featureReplied}`);
-        if (this._featureReplied)
-            return;
-
-        if (this._featureRetries++ < 3) {
-            this._log.info(`Retrying _featureRetries (${this._featureRetries})`);
-            this._getCurrentState();
-
-            if (this._retryTimeoutId)
-                GLib.source_remove(this._retryTimeoutId);
-
-            this._retryTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1250, () => {
-                this._retryFeatureRequest();
-                this._retryTimeoutId = null;
-                return GLib.SOURCE_REMOVE;
-            });
-        } else {
-            this._log.error('Failed to complete getFeature after 3 attempts');
-         //   this.destroy();
-        }
     }
 
 
@@ -666,7 +640,7 @@ class SonySocket extends SocketHandler {
             return;
 
         if (this._initRetries++ < 3) {
-            this._log.info(`Retrying init (${this._initRetries})`);
+            this._log.info(`Retrying init (#${this._initRetries})`);
             this.sendMessage(this._getInitRequest());
 
             if (this._retryTimeoutId)
@@ -679,7 +653,7 @@ class SonySocket extends SocketHandler {
             });
         } else {
             this._log.error('Failed to complete init after 3 attempts');
-         //   this.destroy();
+            this.destroy();
         }
     }
 
