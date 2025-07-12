@@ -562,7 +562,7 @@ export const SonySocket = GObject.registerClass({
                 return;
             const {messageType, sequence, payload} = data;
 
-            if (messageType === MessageType.ACK && sequence === this._seq - 1) {
+            if (messageType === MessageType.ACK) {
                 this.emit('acknowledge-received');
                 if (!this._hasInitAck) {
                     this._hasInitAck = true;
