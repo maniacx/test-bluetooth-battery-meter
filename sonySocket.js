@@ -80,6 +80,9 @@ export const SonySocket = GObject.registerClass({
             } else {
                 this._log.error('ACK not received after retries. Giving up.');
                 this._popFailedMessage();
+                this._ackTimeoutId = null;
+                //  if(!this._hasInitAck)
+                //      this.destroy();
                 return GLib.SOURCE_REMOVE;
             }
         });
@@ -110,7 +113,7 @@ export const SonySocket = GObject.registerClass({
             this._ackTimeoutId = null;
         }
 
-        this._messageQueue.shift();  // Remove failed message
+        this._messageQueue.shift();
         this._currentMessage = null;
 
         if (!this._messageQueue || this._messageQueue.length === 0)
@@ -559,7 +562,7 @@ export const SonySocket = GObject.registerClass({
                 return;
             const {messageType, sequence, payload} = data;
 
-            if (messageType === MessageType.ACK && sequence !== this._seq) {
+            if (messageType === MessageType.ACK && sequence === this._seq - 1) {
                 this.emit('acknowledge-received');
                 if (!this._hasInitAck) {
                     this._hasInitAck = true;
@@ -735,10 +738,8 @@ export const SonySocket = GObject.registerClass({
         if (this._batteryCaseSupported)
             this._addMessageQueue(this._getBatteryRequest(batteryType.CASE));
 
-        if (!this._noNoiseCancellingSupported && (
-            this._ambientSoundControlSupported ||
-        this._ambientSoundControl2Supported ||
-        this._windNoiseReductionSupported))
+        if (!this._noNoiseCancellingSupported && (this._ambientSoundControlSupported ||
+                    this._ambientSoundControl2Supported || this._windNoiseReductionSupported))
             this._addMessageQueue(this._getAmbientSoundControl());
 
         if (this._speakToChatEnabledSupported)
