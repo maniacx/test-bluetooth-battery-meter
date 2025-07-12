@@ -665,6 +665,9 @@ export const SonySocket = GObject.registerClass({
     }
 
     _setAmbientSoundControlV2(mode, focusOnVoice, level) {
+        this._log.info(
+            `_setAmbientSoundControlV2: mode: ${mode} focusOnVoice: ${focusOnVoice} ` +
+                `level: ${level}`);
         const featureIdx = this._windNoiseReductionSupported ||
                         this._ambientSoundControl2Supported
             ? 0x17

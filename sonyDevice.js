@@ -23,6 +23,7 @@ export const SonyDevice = GObject.registerClass({
         this._usesProtocolV2 = false;
         this._model = null;
         this._ambientLevel = 10;
+        this._focusOnVoiceState = false;
         this.updateDeviceMapCb = updateDeviceMapCb;
         this._profileManager = profileManager;
         this._battInfoRecieved = false;
@@ -239,13 +240,17 @@ export const SonyDevice = GObject.registerClass({
             return;
 
         if (index === 1)
-            this._sonySocket.setAmbientSoundControl(AmbientSoundMode.ANC_OFF);
+            this._sonySocket.setAmbientSoundControl(AmbientSoundMode.ANC_OFF,
+                this._focusOnVoiceState,  this._ambientLevel);
         else if (index === 2)
-            this._sonySocket.setAmbientSoundControl(AmbientSoundMode.ANC_ON);
+            this._sonySocket.setAmbientSoundControl(AmbientSoundMode.ANC_ON,
+                this._focusOnVoiceState,  this._ambientLevel);
         else if (index === 3)
-            this._sonySocket.setAmbientSoundControl(AmbientSoundMode.AMBIENT);
+            this._sonySocket.setAmbientSoundControl(AmbientSoundMode.AMBIENT,
+                this._focusOnVoiceState,  this._ambientLevel);
         else if (index === 4)
-            this._sonySocket.setAmbientSoundControl(AmbientSoundMode.WIND);
+            this._sonySocket.setAmbientSoundControl(AmbientSoundMode.WIND,
+                this._focusOnVoiceState,  this._ambientLevel);
     }
 
     set2ButtonClicked(index) {
