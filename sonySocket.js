@@ -599,6 +599,8 @@ export const SonySocket = GObject.registerClass({
                     case PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_NOTIFY:
                         if (this._usesProtocolV2 && payload[1] === 0x0C || payload[1] === 0x05)
                             this._parseSpeakToChatEnable(payload);
+                        else if (this._usesProtocolV2 && payload[1] === 0x01 || payload[1] === 0x03)
+                            this._parsePlayBackState(payload);
                         break;
                     case PayloadType.SPEAK_TO_CHAT_CONFIG_RET:
                     case PayloadType.SPEAK_TO_CHAT_CONFIG_NOTIFY:
@@ -609,7 +611,8 @@ export const SonySocket = GObject.registerClass({
                         break;
                     case PayloadType.PLAYBACK_STATUS_RET:
                     case PayloadType.PLAYBACK_STATUS_NOTIFY:
-                        this._parsePlayBackState(payload);
+                        if (this._usesProtocolV2)
+                            this._parsePlayBackState(payload);
                         break;
                 }
             }
