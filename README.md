@@ -1,4 +1,4 @@
-### Sony Testing App
+### Samsung Galaxy Buds Testing App
 
 This script is intended for the development and testing of socket connection and feature-specific code for AirPods.
 Successful implementations can later be migrated into the GNOME extension **Bluetooth Battery Meter**.
@@ -14,8 +14,8 @@ It allows socket-level experimentation and debugging in avoiding GNOME Shell res
 ### Instructions
 
 1. **Disable any other extension or application** that may be accessing AirPods sockets.
-2. **Edit `main.js`** and set your Sony buds `devicePath` (replace `XX` with the device's MAC address).
-3. **Ensure your Sony buds are connected** before running the script.
+2. **Edit `main.js`** and set your Samsung Galaxy Buds buds `devicePath` (replace `XX` with the device's MAC address).
+3. **Ensure your Samsung Galaxy Buds buds are connected** before running the script.
 4. **Execute the script via terminal**:
 
 ```

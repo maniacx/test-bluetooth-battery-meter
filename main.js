@@ -4,7 +4,7 @@ import Gtk from 'gi://Gtk';
 
 import {createLogger} from './logger.js';
 import {getBluezDeviceProxy} from './bluezDeviceProxy.js';
-import {SonyDevice} from './sonyDevice.js';
+import {GalaxyBudsDevice} from './galaxyBudsDevice.js';
 import {ProfileManager} from './profileManager.js';
 import {setLiveLogSink, hideMacAdddress} from './logger.js';
 
@@ -149,22 +149,22 @@ class BatteryApp {
 
         this._ancOffButton = new Gtk.Button({label: 'Off'});
         this._ancOffButton.connect('clicked', () => {
-            this._sonyDevice?.set1ButtonClicked(1);
+            this._galaxyBudsDevice?.set1ButtonClicked(1);
         });
 
         this._ancOnButton = new Gtk.Button({label: 'ANC'});
         this._ancOnButton.connect('clicked', () => {
-            this._sonyDevice?.set1ButtonClicked(2);
+            this._galaxyBudsDevice?.set1ButtonClicked(2);
         });
 
         this._ambientButton = new Gtk.Button({label: 'Ambient'});
         this._ambientButton.connect('clicked', () => {
-            this._sonyDevice?.set1ButtonClicked(3);
+            this._galaxyBudsDevice?.set1ButtonClicked(3);
         });
 
         this._windButton = new Gtk.Button({label: 'Wind'});
         this._windButton.connect('clicked', () => {
-            this._sonyDevice?.set1ButtonClicked(4);
+            this._galaxyBudsDevice?.set1ButtonClicked(4);
         });
 
         toggleBox1.append(this._ancOffButton);
@@ -193,12 +193,12 @@ class BatteryApp {
 
         this._speak2chatOnButton = new Gtk.ToggleButton({label: 'Speak to Chat On'});
         this._speak2chatOnButton.connect('clicked', () => {
-            this._sonyDevice?.set2ButtonClicked(1);
+            this._galaxyBudsDevice?.set2ButtonClicked(1);
         });
 
         this._speak2chatOffButton = new Gtk.ToggleButton({label: 'Speak to Chat Off'});
         this._speak2chatOffButton.connect('clicked', () => {
-            this._sonyDevice?.set2ButtonClicked(2);
+            this._galaxyBudsDevice?.set2ButtonClicked(2);
         });
 
         toggleBox2.append(this._speak2chatOnButton);
@@ -278,7 +278,7 @@ class BatteryApp {
     _startDevice() {
         this._log.info('Start Device');
         this._profileManager = new ProfileManager();
-        this._sonyDevice = new SonyDevice(
+        this._galaxyBudsDevice = new GalaxyBudsDevice(
             this._devicePath, this.updateDeviceMapCb.bind(this), this._profileManager);
     }
 
@@ -286,13 +286,13 @@ class BatteryApp {
         if (this._dataHandler)
             return;
         this._dataHandler = dataHandler;
-        this._ancGroup.visible = !this._sonyDevice._noNoiseCancellingSupported;
-        this._ancOffButton.visible = !this._sonyDevice._noNoiseCancellingSupported;
-        this._ancOnButton.visible = !this._sonyDevice._noNoiseCancellingSupported;
-        this._ambientButton.visible = this._sonyDevice._ambientSoundControlSupported ||
-                                      this._sonyDevice._ambientSoundControl2Supported;
-        this._windButton.visible = this._sonyDevice._windNoiseReductionSupported;
-        this._awarenessGroup.visible = this._sonyDevice._speakToChatEnabledSupported;
+        this._ancGroup.visible = !this._galaxyBudsDevice._noNoiseCancellingSupported;
+        this._ancOffButton.visible = !this._galaxyBudsDevice._noNoiseCancellingSupported;
+        this._ancOnButton.visible = !this._galaxyBudsDevice._noNoiseCancellingSupported;
+        this._ambientButton.visible = this._galaxyBudsDevice._ambientSoundControlSupported ||
+                                      this._galaxyBudsDevice._ambientSoundControl2Supported;
+        this._windButton.visible = this._galaxyBudsDevice._windNoiseReductionSupported;
+        this._awarenessGroup.visible = this._galaxyBudsDevice._speakToChatEnabledSupported;
 
         // ///
         this._dataHandler.connect('properties-changed', () => {
