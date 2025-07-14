@@ -58,7 +58,8 @@ export const SonySocket = GObject.registerClass({
 
         this._processingQueue = true;
         this._currentMessage = this._messageQueue.shift();
-        this._retriesLeft = 3;
+
+        this._retriesLeft = this._initComplete ? 0 : 3;
 
         this._sendWithRetry();
     }
@@ -115,7 +116,7 @@ export const SonySocket = GObject.registerClass({
         if (!this._initComplete) {
             this._initComplete = true;
             this._getCurrentState();
-        } else if (this._currentMessage.type !== type) {
+        } else if (this._currentMessage.type !== type || type === 'ack') {
             return;
         }
 
