@@ -222,6 +222,9 @@ class GalaxyBudsSocket extends SocketHandler {
         }
 
         print(`Ear L:${left}  R:${right}`);
+        if (this._callbacks?.updateInEarState) {
+            this._callbacks.updateInEarState(left, right);
+        }
     }
 
     postConnectInitialization() {

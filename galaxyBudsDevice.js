@@ -25,7 +25,7 @@ export const GalaxyBudsDevice = GObject.registerClass({
         this._callbacks = {
             updateBatteryProps: this.updateBatteryProps.bind(this),
             updateAmbientSoundControl: this.updateAmbientSoundControl.bind(this),
-            //updateInEarState: this.updateInEarState.bind(this),
+            updateInEarState: this.updateInEarState.bind(this),
         };
 
         this._initialize();
@@ -202,6 +202,12 @@ export const GalaxyBudsDevice = GObject.registerClass({
         else if (this._adaptiveSoundControlSupported && mode === GalaxyBudsAnc.Adaptive)
             this._props.toggle1State = 4;
 
+        this.dataHandler?.setProps(this._props);
+    }
+
+    updateInEarState(left, right) {
+        this._props.tmpInEarLeft = left
+        this._props.tmpInEarRight = right
         this.dataHandler?.setProps(this._props);
     }
 
