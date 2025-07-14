@@ -128,7 +128,7 @@ export const GalaxyBudsModelList = [
     {
         modelId: GalaxyBudsModel.GalaxyBudsLive,
         name: 'Galaxy Buds Live',
-        legacy: true,
+        legacy: false,
         anc: {supported: false, modes: []},
         earDetection: {offset: 6, legacy: false},
         battery: {
