@@ -22,6 +22,7 @@ class GalaxyBudsSocket extends SocketHandler {
         this._startOfMessage = 0;
         this._endOfMessage = 0;
         this._callbacks = callbacks;
+        this.startSocket(fd);
     }
 
     _checksum(data) {
@@ -39,8 +40,10 @@ class GalaxyBudsSocket extends SocketHandler {
     }
 
     extract(buffer) {
-        if (buffer.length < 6)
+        if (buffer.length < 6) {
+            this._socketLog.error(`buffer length too short: ${buffer.length}`);
             return null;
+        }
         this._startOfMessage = buffer[0];
         this._endOfMessage = buffer[buffer.length - 1];
 
@@ -57,16 +60,20 @@ class GalaxyBudsSocket extends SocketHandler {
         const id = buffer[3];
         const payloadSize = Math.max(size - 3, 0);
         const expectedLen = 4 + payloadSize + 2 + 1;
-        if (buffer.length < expectedLen)
+        if (buffer.length < expectedLen) {
+            this._socketLog.error(`buffer length too shot: ${buffer.length} < ${expectedLen}`);
             return null;
+        }
 
         const payload = Array.from(buffer.slice(4, 4 + payloadSize));
         const crcLo = buffer[4 + payloadSize];
         const crcHi = buffer[5 + payloadSize];
         const expectedCrc = crcHi << 8 | crcLo;
         const actualCrc = this._checksum([id, ...payload]);
-        if (actualCrc !== expectedCrc)
+        if (actualCrc !== expectedCrc) {
+            this._socketLog.error(`bad CRC`);
             return null;
+        }
 
         return {id, type, payload};
     }
@@ -92,6 +99,8 @@ class GalaxyBudsSocket extends SocketHandler {
         const batCfg = this._modelData.battery;
         const id      = resp.id;
         const p       = resp.payload;
+        this._socketLog.bytes(`Process Battery (${p.length}, id=${id}):`, Array.from(p).map(
+            b => b.toString(16).padStart(2, '0')).join(' '));
         let l, r, c, mask;
 
         if (id === GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED && batCfg.extended) {
@@ -221,9 +230,11 @@ class GalaxyBudsSocket extends SocketHandler {
     }
 
     processData(bytes) {
+        this._socketLog.info(`called processData: legacy: ${this._isLegacy}`);
         const resp = this.extract(bytes);
         if (!resp)
             return;
+        this._socketLog.info("got response");
         this._processBattery(resp);
         this._processAnc(resp);
         this._processEar(resp);

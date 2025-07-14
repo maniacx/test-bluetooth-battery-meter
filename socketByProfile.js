@@ -50,8 +50,11 @@ class SocketHandler extends GObject.Object {
     }
 
     async _receiveLoop() {
-        if (!this.running)
+        this._socketLog.info("receiveLoop start");
+        if (!this.running) {
+            this._socketLog.info("receiveLoop exit");
             return;
+        }
 
         try {
             const bytes = await this._input_stream.read_bytes_async(
@@ -75,6 +78,7 @@ class SocketHandler extends GObject.Object {
 
             this._receiveLoop();
         } catch (e) {
+            print(e);
             this._socketLog.error(e, 'SocketHandler Disconnected');
             this.destroy();
         }

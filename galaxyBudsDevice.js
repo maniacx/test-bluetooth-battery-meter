@@ -25,7 +25,7 @@ export const GalaxyBudsDevice = GObject.registerClass({
         this._callbacks = {
             updateBatteryProps: this.updateBatteryProps.bind(this),
             updateAmbientSoundControl: this.updateAmbientSoundControl.bind(this),
-            updateInEarState: this.updateInEarState.bind(this),
+            //updateInEarState: this.updateInEarState.bind(this),
         };
 
         this._initialize();
@@ -69,7 +69,7 @@ export const GalaxyBudsDevice = GObject.registerClass({
     }
 
     _initializeModel(modalias, name) {
-        if(uuids.includes(BudsUUID)) {
+        if(this._uuids.includes(BudsUUID)) {
             this._log.info('this._deviceType = galaxybuds')
             this._deviceType = 'galaxybuds';
         } else if (uuids.includes(BudsLegacyUUID)) {
@@ -85,6 +85,7 @@ export const GalaxyBudsDevice = GObject.registerClass({
             this._log.info('No valid modelId found') 
             return;
         }
+        this._log.info(`got model id: ${modelId}`);
 
 
         this._uuids = null;
@@ -144,7 +145,7 @@ export const GalaxyBudsDevice = GObject.registerClass({
                 }
             );
 
-            const uuid =  this._deviceType === galaxybudslegacy ? BudsLegacyUUID : BudsUUID;
+            const uuid =  this._deviceType === 'galaxybudslegacy' ? BudsLegacyUUID : BudsUUID;
 
             this._profileManager.registerProfile(this._deviceType, uuid);
         } else {
@@ -172,8 +173,10 @@ export const GalaxyBudsDevice = GObject.registerClass({
 
         this._battInfoRecieved = true;
 
+        this._log.info(`about to start handler: ${bat1level}, ${bat2level}, ${bat3level}`);
         this.dataHandler = new DataHandler(this._config, this._props,
             this.set1ButtonClicked.bind(this), this.set2ButtonClicked.bind(this));
+        this._log.info(`did start handler`);
 
         this.updateDeviceMapCb(this._devicePath, this.dataHandler);
     }
@@ -219,6 +222,9 @@ export const GalaxyBudsDevice = GObject.registerClass({
             this._galaxyBudsSocket.setAmbientSoundControl(AmbientSoundMode.AmbientSound);
         else if (this._adaptiveSoundControlSupported && index === 4)
             this._galaxyBudsSocket.setAmbientSoundControl(AmbientSoundMode.Adaptive);
+    }
+    set2ButtonClicked(index) {
+        this._socketLog.info(`set2ButtonClicked(${index}) called`);
     }
 
     destroy() {
