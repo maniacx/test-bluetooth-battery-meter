@@ -753,9 +753,6 @@ export const SonySocket = GObject.registerClass({
         if (this._batteryDualSupported || this._batteryDual2Supported)
             this._getBatteryRequest(batteryType.DUAL);
 
-        if (this._batteryCaseSupported)
-            this._getBatteryRequest(batteryType.CASE);
-
         if (!this._noNoiseCancellingSupported && (this._ambientSoundControlSupported ||
                     this._ambientSoundControl2Supported || this._windNoiseReductionSupported))
             this._getAmbientSoundControl();
@@ -765,6 +762,9 @@ export const SonySocket = GObject.registerClass({
 
         if (this._speakToChatConfigSupported)
             this._getSpeakToChatConfig();
+
+        if (this._batteryCaseSupported)
+            this._getBatteryRequest(batteryType.CASE);
     }
 
     postConnectInitialization() {
