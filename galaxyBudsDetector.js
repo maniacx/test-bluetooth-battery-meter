@@ -66,10 +66,6 @@ export function checkForSamsungBuds(uuids, modalias, name) {
 
     if (name) {
         const lower = name.toLowerCase();
-        if (lower.includes('galaxy buds+'))
-            return GalaxyBudsModel.GalaxyBudsPlus;
-        if (lower.includes('galaxy buds'))
-            return GalaxyBudsModel.GalaxyBuds;
         if (lower.includes('buds live'))
             return GalaxyBudsModel.GalaxyBudsLive;
         if (lower.includes('buds pro'))
@@ -84,6 +80,10 @@ export function checkForSamsungBuds(uuids, modalias, name) {
             return GalaxyBudsModel.GalaxyBuds3Pro;
         if (lower.includes('buds3'))
             return GalaxyBudsModel.GalaxyBuds3;
+        if (lower.includes('galaxy buds+'))
+            return GalaxyBudsModel.GalaxyBudsPlus;
+        if (lower.includes('galaxy buds'))
+            return GalaxyBudsModel.GalaxyBuds;
     }
     return null;
 }
