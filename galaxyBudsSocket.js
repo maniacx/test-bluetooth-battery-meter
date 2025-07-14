@@ -151,6 +151,10 @@ class GalaxyBudsSocket extends SocketHandler {
             battery3Level: caseLevel,
             battery3Status: caseStatus,
         };
+        if (caseLevel > 100) {
+            // Don't update when case level > 100
+            delete props.battery3Level;
+        }
 
         print(JSON.stringify(props));
 
