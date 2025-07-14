@@ -192,10 +192,11 @@ class GalaxyBudsSocket extends SocketHandler {
         if (id === GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED)
             raw = p[earCfg.offset];
         else if (id === GalaxyBudsMsgIds.STATUS_UPDATED)
-            raw = p[earCfg.offset];
+            raw = p[earCfg.offset - 1];  // offset is only 5 for Galaxy Buds Live instead of 6 in this case
         else
             return;
 
+        print(`L: ${raw >> 4}, R: ${raw & 0x0F}`);
         let left, right;
         if (earCfg.legacy) {
             switch (raw) {
