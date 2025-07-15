@@ -20,7 +20,7 @@ export const SonySocket = GObject.registerClass({
         this._initComplete = false;
         this._processingQueue = false;
         this._currentMessage = null;
-        this._seq = 1;
+        this._seq = 0;
         this._frameBuf = new Uint8Array(0);
         this._usesProtocolV2 = usesProtocolV2;
         this._callbacks = callbacks;
@@ -141,7 +141,6 @@ export const SonySocket = GObject.registerClass({
         if (seq !== undefined) {
             sequence = seq;
         } else {
-            this._seq = 1 - this._seq;
             sequence = this._seq;
         }
 
@@ -217,7 +216,7 @@ export const SonySocket = GObject.registerClass({
     }
 
     _encodeAck(seq) {
-        return this._encodeSonyMessage(MessageType.ACK, [], seq);
+        return this._encodeSonyMessage(MessageType.ACK, [], 1 - seq);
     }
 
     _getInitRequest() {
@@ -575,6 +574,7 @@ export const SonySocket = GObject.registerClass({
             if (!data)
                 return;
             const {messageType, sequence, payload} = data;
+            this._seq = sequence;
 
             if (messageType === MessageType.ACK) {
                 this.emit('response-received', 'ack');
