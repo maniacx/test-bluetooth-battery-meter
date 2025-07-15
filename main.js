@@ -28,6 +28,8 @@ class BatteryApp {
 
         this.application.connect('activate', this._onActivate.bind(this));
         this._devicePath = devicePath;
+        this._deviceStarted = false;
+        this._deviceConnected = false;
         this._dataHandler = null;
         this._battL = '--';
         this._battR = '--';
@@ -253,6 +255,7 @@ class BatteryApp {
     _initialize() {
         this._bluezDeviceProxy = getBluezDeviceProxy(this._devicePath);
         const connected = this._bluezDeviceProxy.Connected;
+        this._deviceConnected = connected;
         this._log.info(
             `Device connection status: ${connected} Path: ${hideMacAdddress(this._devicePath)}`);
         if (!connected) {
@@ -266,16 +269,32 @@ class BatteryApp {
 
     _onBluezPropertiesChanged() {
         const connected = this._bluezDeviceProxy.Connected;
-        if (connected) {
-            this._startDevice();
+        if (this._deviceConnected !== connected) {
+            this._deviceConnected = connected;
+
+            this._log.info(
+                'Device connection Changed' +
+            `status: ${connected} Path: ${hideMacAdddress(this._devicePath)}`);
+
+            if (connected) {
+                this._startDevice();
+                /*
             if (this._bluezDeviceProxy && this._bluezSignalId)
                 this._bluezDeviceProxy.disconnect(this._bluezSignalId);
             this._bluezSignalId = null;
             this._bluezDeviceProxy = null;
+ */
+            } else {
+                this._sonyDevice?.destroy();
+                this._sonyDevice = null;
+            }
         }
     }
 
     _startDevice() {
+        if (this._deviceStarted)
+            return;
+        this._deviceStarted = true;
         this._log.info('Start Device');
         this._profileManager = new ProfileManager();
         this._sonyDevice = new SonyDevice(
@@ -294,7 +313,6 @@ class BatteryApp {
         this._windButton.visible = this._sonyDevice._windNoiseReductionSupported;
         this._awarenessGroup.visible = this._sonyDevice._speakToChatEnabledSupported;
 
-        // ///
         this._dataHandler.connect('properties-changed', () => {
             this._props = this._dataHandler.getProps();
             this._battL = this._props.battery1Level;

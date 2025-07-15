@@ -138,11 +138,11 @@ export const SonySocket = GObject.registerClass({
         const len = payloadArr.length;
         const headerBuf = new Uint8Array(6 + len);
         let sequence;
-        if (seq !== undefined) {
+        if (seq !== undefined)
             sequence = seq;
-        } else {
+        else
             sequence = this._seq;
-        }
+
 
         headerBuf[0] = messageType;
         headerBuf[1] = sequence;
@@ -236,13 +236,15 @@ export const SonySocket = GObject.registerClass({
     _getAmbientSoundControl() {
         this._log.info('_getAmbientSoundControl:');
         let code;
+        /*
         if (this._usesProtocolV2) {
             code = this._windNoiseReductionSupported || this._ambientSoundControl2Supported
                 ? 0x17 : 0x15;
         } else {
             code = 0x02;
         }
-
+*/
+        code = 0x02;
         this._addMessageQueue('anc', MessageType.COMMAND_1,
             [PayloadType.AMBIENT_SOUND_CONTROL_GET, code]);
     }
@@ -266,11 +268,11 @@ export const SonySocket = GObject.registerClass({
         if (payload.length < 4)
             return;
 
-
+        /*
         this._log.info(`_parseBatteryStatus payload[1] = [${payload[1]}]`);
         this._log.info(`_parseBatteryStatus payload[2] = [${payload[2]}]`);
         this._log.info(`_parseBatteryStatus payload[3] = [${payload[3]}]`);
-
+*/
         const batteryType = this._usesProtocolV2 ? BatteryTypeV2 : BatteryTypeV1;
 
         const type = payload[1];
@@ -319,7 +321,7 @@ export const SonySocket = GObject.registerClass({
     }
 
     _parseAmbientAttenuationLevel(byte) {
-        this._log.info(`_parseAmbientAttenuationLevel: ${byte}`);
+        //        this._log.info(`_parseAmbientAttenuationLevel: ${byte}`);
         return byte >= 0 && byte <= 20 ? byte : 10;
     }
 
@@ -328,11 +330,11 @@ export const SonySocket = GObject.registerClass({
 
         if (payload.length !== 8)
             return;
-
+        /*
         this._log.info(`_parseAmbientSoundControlV1 payload[2] = [${payload[2]}]`);
         this._log.info(`_parseAmbientSoundControlV1 payload[4] = [${payload[4]}]`);
         this._log.info(`_parseAmbientSoundControlV1 payload[5] = [${payload[5]}]`);
-
+*/
 
         const m0 = payload[2], m1 = payload[3], m2 = payload[4];
         let mode = null;
@@ -370,13 +372,13 @@ export const SonySocket = GObject.registerClass({
         this._log.info(`_parseAmbientSoundControlV2 payload.lenght = [${payload.length}]`);
         if (payload.length < 6 || payload.length > 8)
             return;
-
+        /*
         this._log.info(`_parseAmbientSoundControlV2 payload[1] = [${payload[1]}]`);
         this._log.info(`_parseAmbientSoundControlV2 payload[4] = [${payload[4]}]`);
         this._log.info(`_parseAmbientSoundControlV2 payload[5] = [${payload[5]}]`);
         this._log.info('_parseAmbientSoundControlV2 payload[payload.length - 2]' +
             ` = [${payload[payload.length - 2]}]`);
-
+*/
         const idx = payload[1];
 
         if (idx !== 0x15 && idx !== 0x17 && idx !== 0x22)
@@ -774,6 +776,7 @@ export const SonySocket = GObject.registerClass({
     }
 
     destroy() {
+        this._seq = 0;
         if (this._ackTimeoutId)
             GLib.source_remove(this._ackTimeoutId);
         this._ackTimeoutId = null;
