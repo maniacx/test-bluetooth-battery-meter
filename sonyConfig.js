@@ -62,8 +62,8 @@ export const BatteryTypeV2 = {
 export const AmbientSoundMode = {
     ANC_OFF: 0,
     ANC_ON: 1,
-    AMBIENT: 2,
-    WIND: 3,
+    WIND: 2,
+    AMBIENT: 3,
 };
 
 export const Speak2ChatSensitivity = {
