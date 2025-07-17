@@ -176,6 +176,35 @@ class BatteryApp {
 
         ancRow.child = toggleBox1;
         this._ancGroup.add(ancRow);
+
+        this._slider = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 10, 1);
+        this._slider.hexpand = true;
+        this._slider.margin_start = 50;
+        this._slider.margin_end = 50;
+        this._slider.margin_top = 4;
+        this._slider.margin_bottom = 4;
+        this._slider.add_mark(0, Gtk.PositionType.BOTTOM, 'Less');
+        this._slider.add_mark(10, Gtk.PositionType.BOTTOM, 'Default');
+        this._slider.add_mark(20, Gtk.PositionType.BOTTOM, 'More');
+
+        this._levelSliderRow = new Adw.ActionRow({title: 'Ambient Level'});
+        this._levelSliderRow.add_suffix(this._slider);
+
+        this._slider.set_value(10);
+
+        this._slider.connect('value-changed', () => {
+            this._sliderPositionChanged(this._slider.get_value());
+        });
+        this._ancGroup.add(this._levelSliderRow);
+
+        this._focuseSwitch = new Adw.SwitchRow({title: 'Focus on Voice'});
+        this._focuseSwitch.connect('notify::active', () =>
+            this._switchPostionChanged(this._focuseSwitch.get_active()));
+
+        this._ancGroup.add(this._focuseSwitch);
+
+
+
         page.add(this._ancGroup);
 
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -212,6 +241,8 @@ class BatteryApp {
 
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
+        //
+
         vbox.append(page);
 
         const scrolled = new Gtk.ScrolledWindow({
@@ -247,6 +278,8 @@ class BatteryApp {
         this._ambientButton.visible = false;
         this._windButton.visible = false;
         this._awarenessGroup.visible = false;
+        this._levelSliderRow.visible = false;
+        this._focuseSwitch.visible = false;
 
         this._updateGuiData();
         this._initialize();
@@ -301,6 +334,14 @@ class BatteryApp {
             this._devicePath, this.updateDeviceMapCb.bind(this), this._profileManager);
     }
 
+    _sliderPositionChanged(value) {
+        this._sonyDevice?.updateLevel(value);
+    }
+
+    _switchPostionChanged(state) {
+        this._sonyDevice?.updateSwitch(state);
+    }
+
     updateDeviceMapCb(path, dataHandler) {
         if (this._dataHandler)
             return;
@@ -311,6 +352,7 @@ class BatteryApp {
         this._ambientButton.visible = this._sonyDevice._ambientSoundControlSupported ||
                                       this._sonyDevice._ambientSoundControl2Supported;
         this._windButton.visible = this._sonyDevice._windNoiseReductionSupported;
+
         this._awarenessGroup.visible = this._sonyDevice._speakToChatEnabledSupported;
 
         this._dataHandler.connect('properties-changed', () => {
@@ -326,6 +368,8 @@ class BatteryApp {
             this._rightBudsStatus = this._props.tmpInEarRight;
             this._attenuationStatus = this._props.tmpAwarnessAtt;
             this._mediaStatus = this._props.tmpPlayPauseStatus;
+            this._slider.value = this._props.tmpAmbientLevel;
+            this._focuseSwitch.active = this._props.tmpFocusOnVoice;
 
             this._updateGuiData();
 
@@ -350,6 +394,12 @@ class BatteryApp {
             const index2 = {1: 0, 2: 1}[this._props.toggle2State];
             if (index2 !== undefined)
                 ctx2[index2].get_style_context().add_class('accent');
+
+            this._levelSliderRow.visible = this._props.toggle1State === 3 &&
+                        this._sonyDevice._hasAmbientLevelControl;
+
+            this._focuseSwitch.visible = this._props.toggle1State === 3 &&
+                    this._sonyDevice._hasFocusOnVoice;
         });
     }
 

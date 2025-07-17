@@ -211,6 +211,8 @@ export const SonyConfiguration = [
         batteryDual2: true,
         batteryCase: true,
         ambientSoundControl2: true,
+        hasFocusOnVoice: true,
+        hasAmbientLevelControl: true,
         equalizerSimple: true,
         equalizerWithCustomBands: true,
         audioUpsampling: true,

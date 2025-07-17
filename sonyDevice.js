@@ -102,6 +102,9 @@ export const SonyDevice = GObject.registerClass({
         this._ambientSoundControl2Supported = modelData.ambientSoundControl2 ?? false;
         this._windNoiseReductionSupported = modelData.windNoiseReduction ?? false;
 
+        this._hasFocusOnVoice = modelData.hasFocusOnVoice ?? false;
+        this._hasAmbientLevelControl = modelData.hasAmbientLevelControl ?? false; ;
+
         this._speakToChatEnabledSupported = modelData.speakToChatEnabled ?? false;
         this._speakToChatConfigSupported = modelData.speakToChatConfig ?? false;
         this._speakToChatFocusOnVoiceSupported = modelData.speakToChatFocusOnVoice ?? false;
@@ -202,6 +205,8 @@ export const SonyDevice = GObject.registerClass({
         if (this._noNoiseCancellingSupported)
             return;
 
+        this._ambientMode = mode;
+
         if (this._ambientSoundControlSupported && mode === AmbientSoundMode.ANC_OFF)
             this._props.toggle1State = 1;
         else if (this._ambientSoundControlSupported && mode === AmbientSoundMode.ANC_ON)
@@ -213,7 +218,9 @@ export const SonyDevice = GObject.registerClass({
             this._props.toggle1State = 4;
 
         this._focusOnVoiceState = focusOnVoiceState;
+        this._props.tmpFocusOnVoice = focusOnVoiceState;
         this._ambientLevel = level;
+        this._props.tmpAmbientLevel = level;
 
         this.dataHandler?.setProps(this._props);
     }
@@ -227,6 +234,8 @@ export const SonyDevice = GObject.registerClass({
         this._speak2ChatSensitivity = speak2ChatSensitivity;
         this._focusOnVoiceState = focusOnVoiceState;
         this._speak2ChatTimeout = speak2ChatTimeout;
+
+        this._props.tmpFocusOnVoice = focusOnVoiceState;
         this.dataHandler?.setProps(this._props);
     }
 
@@ -239,19 +248,28 @@ export const SonyDevice = GObject.registerClass({
         if (this._noNoiseCancellingSupported)
             return;
 
-        if (index === 1) {
-            this._sonySocket.setAmbientSoundControl(AmbientSoundMode.ANC_OFF,
-                this._focusOnVoiceState,  this._ambientLevel);
-        } else if (index === 2) {
-            this._sonySocket.setAmbientSoundControl(AmbientSoundMode.ANC_ON,
-                this._focusOnVoiceState,  this._ambientLevel);
-        } else if (index === 3) {
-            this._sonySocket.setAmbientSoundControl(AmbientSoundMode.AMBIENT,
-                this._focusOnVoiceState,  this._ambientLevel);
-        } else if (index === 4) {
-            this._sonySocket.setAmbientSoundControl(AmbientSoundMode.WIND,
-                this._focusOnVoiceState,  this._ambientLevel);
-        }
+        if (index === 1)
+            this._ambientMode = AmbientSoundMode.ANC_OFF;
+        else if (index === 2)
+            this._ambientMode = AmbientSoundMode.ANC_ON;
+        else if (index === 3)
+            this._ambientMode = AmbientSoundMode.AMBIENT;
+        else if (index === 4)
+            this._ambientMode = AmbientSoundMode.WIND;
+
+
+        this._sonySocket.setAmbientSoundControl(this._ambientMode,
+            this._focusOnVoiceState,  this._ambientLevel);
+    }
+
+    updateLevel(value) {
+        this._ambientLevel = value;
+        this._sonySocket.setAmbientSoundControl(this._ambientMode,
+            this._focusOnVoiceState,  this._ambientLevel);
+    }
+
+    updateSwitch(state) {
+        this._focusOnVoiceState = state;
     }
 
     set2ButtonClicked(index) {

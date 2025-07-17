@@ -66,6 +66,8 @@ export function createProperties() {
         tmpInEarLeft: '--',
         tmpInEarRight: '--',
         tmpPlayPauseStatus: '--',
+        tmpFocusOnVoice: false,
+        tmpAmbientLevel: 10,
     };
 }
 
