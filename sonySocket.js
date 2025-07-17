@@ -236,15 +236,13 @@ export const SonySocket = GObject.registerClass({
     _getAmbientSoundControl() {
         this._log.info('_getAmbientSoundControl:');
         let code;
-        /*
         if (this._usesProtocolV2) {
             code = this._windNoiseReductionSupported || this._ambientSoundControl2Supported
                 ? 0x17 : 0x15;
         } else {
             code = 0x02;
         }
-*/
-        code = 0x02;
+
         this._addMessageQueue('anc', MessageType.COMMAND_1,
             [PayloadType.AMBIENT_SOUND_CONTROL_GET, code]);
     }
