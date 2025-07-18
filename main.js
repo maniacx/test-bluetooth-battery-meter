@@ -184,7 +184,6 @@ class BatteryApp {
         this._slider.margin_top = 4;
         this._slider.margin_bottom = 4;
         this._slider.add_mark(0, Gtk.PositionType.BOTTOM, 'Less');
-        this._slider.add_mark(10, Gtk.PositionType.BOTTOM, 'Default');
         this._slider.add_mark(20, Gtk.PositionType.BOTTOM, 'More');
 
         this._levelSliderRow = new Adw.ActionRow({title: 'Ambient Level'});
