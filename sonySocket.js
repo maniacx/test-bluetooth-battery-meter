@@ -773,14 +773,6 @@ export const SonySocket = GObject.registerClass({
     _getCurrentState() {
         this._log.info('_getCurrentState');
 
-        const batteryType = this._usesProtocolV2 ? BatteryTypeV2 : BatteryTypeV1;
-
-        if (this._batterySingleSupported)
-            this._getBatteryRequest(batteryType.SINGLE);
-
-        if (this._batteryDualSupported || this._batteryDual2Supported)
-            this._getBatteryRequest(batteryType.DUAL);
-
         if (!this._noNoiseCancellingSupported && (this._ambientSoundControlSupported ||
                     this._ambientSoundControl2Supported || this._windNoiseReductionSupported))
             this._getAmbientSoundControl();
@@ -790,6 +782,14 @@ export const SonySocket = GObject.registerClass({
 
         if (this._speakToChatConfigSupported)
             this._getSpeakToChatConfig();
+
+        const batteryType = this._usesProtocolV2 ? BatteryTypeV2 : BatteryTypeV1;
+
+        if (this._batterySingleSupported)
+            this._getBatteryRequest(batteryType.SINGLE);
+
+        if (this._batteryDualSupported || this._batteryDual2Supported)
+            this._getBatteryRequest(batteryType.DUAL);
 
         if (this._batteryCaseSupported)
             this._getBatteryRequest(batteryType.CASE);
