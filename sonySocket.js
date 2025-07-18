@@ -433,6 +433,10 @@ export const SonySocket = GObject.registerClass({
             this._ambientSoundLevel = this._parseAmbientAttenuationLevel(level);
         }
 
+        this._log.info(`ANC mode = [${ancmode}]`);
+        this._log.info(`Ambient level = [${level}]`);
+        this._log.info(`Focus on Voice = [${this._focusOnVoiceState}]`);
+
         if (this._callbacks?.updateAmbientSoundControl) {
             this._callbacks.updateAmbientSoundControl(
                 mode, this._focusOnVoiceState, this._ambientSoundLevel);
