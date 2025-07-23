@@ -10,7 +10,7 @@ import {
 } from './sonyConfig.js';
 
 export const SonySocket = GObject.registerClass({
-    Signals: {'response-received': {param_types: [GObject.TYPE_STRING]}},
+    Signals: {'ack‑received': {}},
 }, class SonySocket extends SocketHandler {
     _init(devicePath, fd, modelData, usesProtocolV2, callbacks) {
         super._init(devicePath, fd);
@@ -43,8 +43,8 @@ export const SonySocket = GObject.registerClass({
         this.startSocket(fd);
     }
 
-    _addMessageQueue(type, msg, payload) {
-        this._messageQueue.push({type, msg, payload});
+    _addMessageQueue(type, payload) {
+        this._messageQueue.push({type, payload});
 
         if (!this._processingQueue)
             this._processNextQueuedMessage();
@@ -68,7 +68,7 @@ export const SonySocket = GObject.registerClass({
         if (!this._currentMessage)
             return;
         this._log.info(`Sending message type: ${this._currentMessage.type}`);
-        this._encodeSonyMessage(this._currentMessage.msg, this._currentMessage.payload);
+        this._encodeSonyMessage(this._currentMessage.type, this._currentMessage.payload);
         this._awaitingAck = true;
 
         if (this._ackTimeoutId) {
@@ -80,14 +80,15 @@ export const SonySocket = GObject.registerClass({
             if (this._retriesLeft > 0) {
                 this._log.info(`ACK not received, retrying... (${this._retriesLeft})`);
                 this._retriesLeft--;
-                this._encodeSonyMessage(this._currentMessage.msg, this._currentMessage.payload);
+                this._encodeSonyMessage(this._currentMessage.type, this._currentMessage.payload);
                 return GLib.SOURCE_CONTINUE;
             } else {
-                this._log.error('ACK not received after retries. Giving up.');
                 this._popFailedMessage();
                 this._ackTimeoutId = null;
-                if (!this._initComplete)
+                if (!this._initComplete) {
+                    this._log.error('ACK not received after retries. Giving up.');
                     this.destroy();
+                }
                 return GLib.SOURCE_REMOVE;
             }
         });
@@ -108,18 +109,13 @@ export const SonySocket = GObject.registerClass({
             this._processNextQueuedMessage();
     }
 
-    _onAcknowledgeReceived(_, type) {
-        this._log.info(`_onAcknowledgeReceived: ${type}`);
+    _onAcknowledgeReceived() {
+        this._log.info('_onAcknowledgeReceived:');
+        if (!this._initComplete)
+            return;
+
         if (!this._awaitingAck)
             return;
-
-        if (!this._initComplete) {
-            this._initComplete = true;
-            this._getCurrentState();
-        } else if (this._currentMessage.type !== type || type === 'ack') {
-            return;
-        }
-
         this._awaitingAck = false;
 
         if (this._ackTimeoutId) {
@@ -221,7 +217,7 @@ export const SonySocket = GObject.registerClass({
 
     _getInitRequest() {
         this._log.info('_getInitRequest:');
-        this._addMessageQueue('ack', MessageType.COMMAND_1, [PayloadType.INIT_REQUEST]);
+        this._addMessageQueue(MessageType.COMMAND_1, [PayloadType.INIT_REQUEST, 0x00]);
     }
 
     _getBatteryRequest(batteryType) {
@@ -229,7 +225,7 @@ export const SonySocket = GObject.registerClass({
         const payloadType = this._usesProtocolV2 ? PayloadType.BATTERY_LEVEL_REQUEST_V2
             : PayloadType.BATTERY_LEVEL_REQUEST;
 
-        this._addMessageQueue('batt', MessageType.COMMAND_1, [payloadType, batteryType]);
+        this._addMessageQueue(MessageType.COMMAND_1, [payloadType, batteryType]);
     }
 
 
@@ -243,21 +239,21 @@ export const SonySocket = GObject.registerClass({
             code = 0x02;
         }
 
-        this._addMessageQueue('anc', MessageType.COMMAND_1,
+        this._addMessageQueue(MessageType.COMMAND_1,
             [PayloadType.AMBIENT_SOUND_CONTROL_GET, code]);
     }
 
     _getSpeakToChatEnabled() {
         this._log.info('_getSpeakToChatEnabled:');
         const byte = this._usesProtocolV2 ? 0x0c : 0x05;
-        this._addMessageQueue('speak2chatEnable', MessageType.COMMAND_1,
+        this._addMessageQueue(MessageType.COMMAND_1,
             [PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_GET, byte]);
     }
 
     _getSpeakToChatConfig() {
         this._log.info('_getSpeakToChatConfig:');
         const byte = this._usesProtocolV2 ? 0x0c : 0x05;
-        this._addMessageQueue('speak2chatConfig', MessageType.COMMAND_1,
+        this._addMessageQueue(MessageType.COMMAND_1,
             [PayloadType.SPEAK_TO_CHAT_CONFIG_GET, byte]);
     }
 
@@ -605,7 +601,7 @@ export const SonySocket = GObject.registerClass({
             this._seq = sequence;
 
             if (messageType === MessageType.ACK) {
-                this.emit('response-received', 'ack');
+                this.emit('ack-received');
                 return;
             }
 
@@ -615,14 +611,18 @@ export const SonySocket = GObject.registerClass({
             if (messageType === MessageType.COMMAND_1) {
                 switch (payload[0]) {
                     case PayloadType.INIT_REPLY:
-                        this.emit('response-received', 'init');
+                        this._log.info(`Recieved: PayloadType.INIT_REPLY`);
+                        if (!this._initComplete) {
+                            this._initComplete = true;
+                            this.emit('ack-received');
+                            this._getCurrentState();
+                        }
                         break;
                     case PayloadType.BATTERY_LEVEL_REPLY:
                     case PayloadType.BATTERY_LEVEL_NOTIFY:
                     case PayloadType.BATTERY_LEVEL_REPLY_V2:
                     case PayloadType.BATTERY_LEVEL_NOTIFY_V2:
                         this._parseBatteryStatus(payload);
-                        this.emit('response-received', 'batt');
                         break;
                     case PayloadType.AMBIENT_SOUND_CONTROL_RET:
                     case PayloadType.AMBIENT_SOUND_CONTROL_NOTIFY:
@@ -630,18 +630,15 @@ export const SonySocket = GObject.registerClass({
                             this._parseAmbientSoundControlV2(payload);
                         else
                             this._parseAmbientSoundControlV1(payload);
-                        this.emit('response-received', 'anc');
                         break;
                     case PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_RET:
                     case PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_NOTIFY:
-                        if (this._usesProtocolV2 && payload[1] === 0x0C || payload[1] === 0x05) {
+                        if (this._usesProtocolV2 && payload[1] === 0x0C || payload[1] === 0x05)
                             this._parseSpeakToChatEnable(payload);
-                            this.emit('response-received', 'speak2chatEnable');
-                        } else if (this._usesProtocolV2 && payload[1] === 0x01 ||
-                            payload[1] === 0x03) {
+                        else if (this._usesProtocolV2 && payload[1] === 0x01 ||
+                            payload[1] === 0x03)
                             this._parsePlayBackState(payload);
-                            this.emit('response-received', 'pausePlay');
-                        }
+
                         break;
                     case PayloadType.SPEAK_TO_CHAT_CONFIG_RET:
                     case PayloadType.SPEAK_TO_CHAT_CONFIG_NOTIFY:
@@ -649,14 +646,12 @@ export const SonySocket = GObject.registerClass({
                             this._parseSpeakToChatConfigV2(payload);
                         else
                             this._parseSpeakToChatConfigV1(payload);
-                        this.emit('response-received', 'speak2chatConfig');
                         break;
                     case PayloadType.PLAYBACK_STATUS_RET:
                     case PayloadType.PLAYBACK_STATUS_NOTIFY:
-                        if (this._usesProtocolV2) {
+                        if (this._usesProtocolV2)
                             this._parsePlayBackState(payload);
-                            this.emit('response-received', 'pausePlay');
-                        }
+
                         break;
                 }
             }
@@ -749,7 +744,7 @@ export const SonySocket = GObject.registerClass({
             payload.push(enabled ? 0x01 : 0x00);
         }
 
-        this._addMessageQueue('ack', MessageType.COMMAND_1, payload);
+        this._addMessageQueue(MessageType.COMMAND_1, payload);
     }
 
     setSpeakToChatConfig(sensitivity, timeout) {
@@ -767,7 +762,7 @@ export const SonySocket = GObject.registerClass({
             payload.push(timeout & 0xff);
         }
 
-        this._addMessageQueue('ack', MessageType.COMMAND_1, payload);
+        this._addMessageQueue(MessageType.COMMAND_1, payload);
     }
 
     _getCurrentState() {
@@ -797,7 +792,7 @@ export const SonySocket = GObject.registerClass({
 
     postConnectInitialization() {
         this.ackSignalId =
-            this.connect('response-received', this._onAcknowledgeReceived.bind(this));
+            this.connect('ack-received', this._onAcknowledgeReceived.bind(this));
         this._getInitRequest();
     }
 
