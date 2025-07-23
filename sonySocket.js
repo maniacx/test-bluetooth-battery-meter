@@ -10,7 +10,7 @@ import {
 } from './sonyConfig.js';
 
 export const SonySocket = GObject.registerClass({
-    Signals: {'ack‑received': {}},
+    Signals: {'ack-received': {}},
 }, class SonySocket extends SocketHandler {
     _init(devicePath, fd, modelData, usesProtocolV2, callbacks) {
         super._init(devicePath, fd);
