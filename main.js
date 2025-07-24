@@ -277,8 +277,8 @@ class BatteryApp {
         this._ambientButton.visible = false;
         this._windButton.visible = false;
         this._awarenessGroup.visible = false;
-        this._levelSliderRow.visible = false;
-        this._focuseSwitch.visible = false;
+//        this._levelSliderRow.visible = false;
+//        this._focuseSwitch.visible = false;
 
         this._updateGuiData();
         this._initialize();
@@ -394,11 +394,12 @@ class BatteryApp {
             if (index2 !== undefined)
                 ctx2[index2].get_style_context().add_class('accent');
 
-            this._levelSliderRow.visible = this._props.toggle1State === 3 &&
+/*            this._levelSliderRow.visible = this._props.toggle1State === 3 &&
                         this._sonyDevice._hasAmbientLevelControl;
 
             this._focuseSwitch.visible = this._props.toggle1State === 3 &&
                     this._sonyDevice._hasFocusOnVoice;
+*/
         });
     }
 

@@ -270,6 +270,8 @@ export const SonyDevice = GObject.registerClass({
 
     updateSwitch(state) {
         this._focusOnVoiceState = state;
+        this._sonySocket.setAmbientSoundControl(this._ambientMode,
+            this._focusOnVoiceState,  this._ambientLevel);
     }
 
     set2ButtonClicked(index) {
