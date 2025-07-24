@@ -67,7 +67,6 @@ export const SonySocket = GObject.registerClass({
     _sendWithRetry() {
         if (!this._currentMessage)
             return;
-        this._log.info(`Sending message type: ${this._currentMessage.type}`);
         this._encodeSonyMessage(this._currentMessage.type, this._currentMessage.payload);
         this._awaitingAck = true;
 
@@ -233,8 +232,7 @@ export const SonySocket = GObject.registerClass({
         this._log.info('_getAmbientSoundControl:');
         let code;
         if (this._usesProtocolV2) {
-            code = this._windNoiseReductionSupported || this._ambientSoundControl2Supported
-                ? 0x17 : 0x15;
+            code = 0x15;
         } else {
             code = 0x02;
         }
@@ -700,7 +698,7 @@ export const SonySocket = GObject.registerClass({
             : 0x00;
 
         buf.push(attlevel);
-        this._addMessageQueue('ack', MessageType.COMMAND_1, buf);
+        this._addMessageQueue(MessageType.COMMAND_1, buf);
     }
 
     _setAmbientSoundControlV2(mode, focusOnVoice, level) {
@@ -728,7 +726,7 @@ export const SonySocket = GObject.registerClass({
             this._parseAmbientAttenuationLevel(level)
         );
 
-        this._addMessageQueue('ack', MessageType.COMMAND_1, buf);
+        this._addMessageQueue(MessageType.COMMAND_1, buf);
     }
 
     setSpeakToChatEnabled(enabled) {
