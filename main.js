@@ -319,6 +319,9 @@ class BatteryApp {
             } else {
                 this._sonyDevice?.destroy();
                 this._sonyDevice = null;
+                this._profileManager.deleteFD(this._devicePath);
+                this._profileManager.unregisterProfile('sony');
+                this._profileManager = null;
             }
         }
     }

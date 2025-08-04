@@ -123,7 +123,7 @@ export const SonyDevice = GObject.registerClass({
             this._config.battery1Icon = modelData.budsIcon;
 
         if (!this._noNoiseCancellingSupported &&
-                (this._ambientSoundControlSupported || this._ambientSoundControlSupported2)) {
+                (this._ambientSoundControlSupported || this._ambientSoundControl2Supported)) {
             this._config.set1Button1Icon = 'bbm-anc-off-symbolic.svg';
             this._config.set1Button2Icon = 'bbm-anc-on-symbolic.svg';
             this._config.set1Button3Icon = 'bbm-transperancy-symbolic.svg';
@@ -209,14 +209,13 @@ export const SonyDevice = GObject.registerClass({
 
         this._ambientMode = mode;
 
-        if (this._ambientSoundControlSupported && mode === AmbientSoundMode.ANC_OFF)
+        if (mode === AmbientSoundMode.ANC_OFF)
             this._props.toggle1State = 1;
-        else if (this._ambientSoundControlSupported && mode === AmbientSoundMode.ANC_ON)
+        else if (mode === AmbientSoundMode.ANC_ON)
             this._props.toggle1State = 2;
-        else if (this._ambientSoundControlSupported && mode === AmbientSoundMode.AMBIENT)
+        else if (mode === AmbientSoundMode.AMBIENT)
             this._props.toggle1State = 3;
-        else if (this._ambientSoundControlSupported & this._windNoiseReductionSupported &&
-            mode === AmbientSoundMode.WIND)
+        else if (mode === AmbientSoundMode.WIND)
             this._props.toggle1State = 4;
 
         this._log.info(`updateAmbientSoundControl toggle1State = [${this._props.toggle1State}]`);
