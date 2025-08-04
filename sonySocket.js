@@ -10,7 +10,7 @@ import {
 } from './sonyConfig.js';
 
 export const SonySocket = GObject.registerClass({
-    Signals: {'ack-received': {}},
+    Signals: {'ack-received': {param_types: [GObject.TYPE_STRING]}},
 }, class SonySocket extends SocketHandler {
     _init(devicePath, fd, modelData, usesProtocolV2, callbacks) {
         super._init(devicePath, fd);
@@ -43,8 +43,9 @@ export const SonySocket = GObject.registerClass({
         this.startSocket(fd);
     }
 
-    _addMessageQueue(type, payload) {
-        this._messageQueue.push({type, payload});
+    _addMessageQueue(type, payload, ack = 'ack') {
+        ack = ack ?? 'ack';
+        this._messageQueue.push({type, payload, ack});
 
         if (!this._processingQueue)
             this._processNextQueuedMessage();
@@ -58,9 +59,6 @@ export const SonySocket = GObject.registerClass({
 
         this._processingQueue = true;
         this._currentMessage = this._messageQueue.shift();
-
-        this._retriesLeft = this._initComplete ? 0 : 3;
-
         this._sendWithRetry();
     }
 
@@ -68,7 +66,9 @@ export const SonySocket = GObject.registerClass({
         if (!this._currentMessage)
             return;
         this._encodeSonyMessage(this._currentMessage.type, this._currentMessage.payload);
-        this._awaitingAck = true;
+        this._awaitingAck = this._currentMessage.ack;
+
+        this._retriesLeft = this._awaitingAck === 'ack' ? 0 : 3;
 
         if (this._ackTimeoutId) {
             GLib.source_remove(this._ackTimeoutId);
@@ -94,7 +94,7 @@ export const SonySocket = GObject.registerClass({
     }
 
     _popFailedMessage() {
-        this._awaitingAck = false;
+        this._awaitingAck = null;
 
         if (this._ackTimeoutId) {
             GLib.source_remove(this._ackTimeoutId);
@@ -108,25 +108,25 @@ export const SonySocket = GObject.registerClass({
             this._processNextQueuedMessage();
     }
 
-    _onAcknowledgeReceived() {
+    _onAcknowledgeReceived(o, ackType) {
         this._log.info('_onAcknowledgeReceived:');
-        if (!this._initComplete)
+        if (this._awaitingAck !== ackType)
             return;
 
-        if (!this._awaitingAck)
-            return;
-        this._awaitingAck = false;
+        if (this._awaitingAck === ackType) {
+            this._awaitingAck = null;
 
-        if (this._ackTimeoutId) {
-            GLib.source_remove(this._ackTimeoutId);
-            this._ackTimeoutId = null;
+            if (this._ackTimeoutId) {
+                GLib.source_remove(this._ackTimeoutId);
+                this._ackTimeoutId = null;
+            }
+
+            this._currentMessage = null;
+            if (this._messageQueue.length === 0)
+                this._processingQueue = false;
+            else
+                this._processNextQueuedMessage();
         }
-
-        this._currentMessage = null;
-        if (this._messageQueue.length === 0)
-            this._processingQueue = false;
-        else
-            this._processNextQueuedMessage();
     }
 
     _encodeSonyMessage(messageType, payloadArr, seq) {
@@ -211,12 +211,12 @@ export const SonySocket = GObject.registerClass({
     }
 
     _encodeAck(seq) {
-        return this._encodeSonyMessage(MessageType.ACK, [], 1 - seq);
+        this._encodeSonyMessage(MessageType.ACK, [], 1 - seq);
     }
 
     _getInitRequest() {
         this._log.info('_getInitRequest:');
-        this._addMessageQueue(MessageType.COMMAND_1, [PayloadType.INIT_REQUEST, 0x00]);
+        this._addMessageQueue(MessageType.COMMAND_1, [PayloadType.INIT_REQUEST, 0x00], 'init');
     }
 
     _getBatteryRequest(batteryType) {
@@ -224,35 +224,35 @@ export const SonySocket = GObject.registerClass({
         const payloadType = this._usesProtocolV2 ? PayloadType.BATTERY_LEVEL_REQUEST_V2
             : PayloadType.BATTERY_LEVEL_REQUEST;
 
-        this._addMessageQueue(MessageType.COMMAND_1, [payloadType, batteryType]);
+        this._addMessageQueue(MessageType.COMMAND_1, [payloadType, batteryType], 'battery');
     }
 
 
     _getAmbientSoundControl() {
         this._log.info('_getAmbientSoundControl:');
         let code;
-        if (this._usesProtocolV2) {
+        if (this._usesProtocolV2)
             code = 0x15;
-        } else {
+        else
             code = 0x02;
-        }
+
 
         this._addMessageQueue(MessageType.COMMAND_1,
-            [PayloadType.AMBIENT_SOUND_CONTROL_GET, code]);
+            [PayloadType.AMBIENT_SOUND_CONTROL_GET, code], 'ambientControl');
     }
 
     _getSpeakToChatEnabled() {
         this._log.info('_getSpeakToChatEnabled:');
         const byte = this._usesProtocolV2 ? 0x0c : 0x05;
         this._addMessageQueue(MessageType.COMMAND_1,
-            [PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_GET, byte]);
+            [PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_GET, byte], 'speakToChatEnable');
     }
 
     _getSpeakToChatConfig() {
         this._log.info('_getSpeakToChatConfig:');
         const byte = this._usesProtocolV2 ? 0x0c : 0x05;
         this._addMessageQueue(MessageType.COMMAND_1,
-            [PayloadType.SPEAK_TO_CHAT_CONFIG_GET, byte]);
+            [PayloadType.SPEAK_TO_CHAT_CONFIG_GET, byte], 'speakToChatConfig');
     }
 
     _parseBatteryStatus(payload) {
@@ -599,7 +599,7 @@ export const SonySocket = GObject.registerClass({
             this._seq = sequence;
 
             if (messageType === MessageType.ACK) {
-                this.emit('ack-received');
+                this.emit('ack-received', 'ack');
                 return;
             }
 
@@ -609,10 +609,10 @@ export const SonySocket = GObject.registerClass({
             if (messageType === MessageType.COMMAND_1) {
                 switch (payload[0]) {
                     case PayloadType.INIT_REPLY:
-                        this._log.info(`Recieved: PayloadType.INIT_REPLY`);
+                        this._log.info('Recieved: PayloadType.INIT_REPLY');
                         if (!this._initComplete) {
                             this._initComplete = true;
-                            this.emit('ack-received');
+                            this.emit('ack-received', 'init');
                             this._getCurrentState();
                         }
                         break;
@@ -620,10 +620,12 @@ export const SonySocket = GObject.registerClass({
                     case PayloadType.BATTERY_LEVEL_NOTIFY:
                     case PayloadType.BATTERY_LEVEL_REPLY_V2:
                     case PayloadType.BATTERY_LEVEL_NOTIFY_V2:
+                        this.emit('ack-received', 'battery');
                         this._parseBatteryStatus(payload);
                         break;
                     case PayloadType.AMBIENT_SOUND_CONTROL_RET:
                     case PayloadType.AMBIENT_SOUND_CONTROL_NOTIFY:
+                        this.emit('ack-received', 'ambientControl');
                         if (this._usesProtocolV2)
                             this._parseAmbientSoundControlV2(payload);
                         else
@@ -631,6 +633,7 @@ export const SonySocket = GObject.registerClass({
                         break;
                     case PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_RET:
                     case PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_NOTIFY:
+                        this.emit('ack-received', 'speakToChatEnable');
                         if (this._usesProtocolV2 && payload[1] === 0x0C || payload[1] === 0x05)
                             this._parseSpeakToChatEnable(payload);
                         else if (this._usesProtocolV2 && payload[1] === 0x01 ||
@@ -640,6 +643,7 @@ export const SonySocket = GObject.registerClass({
                         break;
                     case PayloadType.SPEAK_TO_CHAT_CONFIG_RET:
                     case PayloadType.SPEAK_TO_CHAT_CONFIG_NOTIFY:
+                        this.emit('ack-received', 'speakToChatConfig');
                         if (this._usesProtocolV2)
                             this._parseSpeakToChatConfigV2(payload);
                         else
@@ -647,6 +651,7 @@ export const SonySocket = GObject.registerClass({
                         break;
                     case PayloadType.PLAYBACK_STATUS_RET:
                     case PayloadType.PLAYBACK_STATUS_NOTIFY:
+                        this.emit('ack-received', 'playback');
                         if (this._usesProtocolV2)
                             this._parsePlayBackState(payload);
 

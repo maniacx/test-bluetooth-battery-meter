@@ -202,7 +202,8 @@ export const SonyDevice = GObject.registerClass({
     }
 
     updateAmbientSoundControl(mode, focusOnVoiceState, level) {
-        this._log.info(`updateAmbientSoundControl : M: [${mode}] F:[${focusOnVoiceState}] L:[${level}]`);
+        this._log.info(`updateAmbientSoundControl : M: [${mode}]` +
+            ` F:[${focusOnVoiceState}] L:[${level}]`);
         if (this._noNoiseCancellingSupported)
             return;
 
