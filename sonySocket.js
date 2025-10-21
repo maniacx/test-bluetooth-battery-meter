@@ -6,8 +6,19 @@ import {createLogger} from './logger.js';
 import {SocketHandler} from './socketByProfile.js';
 import {
     checksum, MessageType, PayloadType, BatteryTypeV1, BatteryTypeV2, AmbientSoundMode,
-    Speak2ChatSensitivity, Speak2ChatTimeout, PlaybackStatus
+    Speak2ChatSensitivity, Speak2ChatTimeout, EqualizerPreset, ListeningMode,
+    BgmDistance, AutoPowerOff, AutoAsmSensitivity
 } from './sonyConfig.js';
+
+/**
+Sony module for Bluetooth battery meter service to provide,
+battery information, ANC and Convesational awareness on device that support it.
+
+Reference and Credits:
+https://codeberg.org/Freeyourgadget/Gadgetbridge
+
+https://github.com/mos9527/SonyHeadphonesClient
+**/
 
 export const SonySocket = GObject.registerClass({
     Signals: {'ack-received': {param_types: [GObject.TYPE_STRING]}},
@@ -29,22 +40,31 @@ export const SonySocket = GObject.registerClass({
         this._batteryDual2Supported = modelData.batteryDual2 ?? false;
         this._batteryCaseSupported = modelData.batteryCase ?? false;
         this._batterySingleSupported = modelData.batterySingle ?? false;
-
         this._noNoiseCancellingSupported = modelData.noNoiseCancelling ?? false;
         this._ambientSoundControlSupported = modelData.ambientSoundControl ?? false;
         this._ambientSoundControl2Supported = modelData.ambientSoundControl2 ?? false;
+        this._ambientSoundControlNASupported = modelData.ambientSoundControlNA ?? false;
         this._windNoiseReductionSupported = modelData.windNoiseReduction ?? false;
-
         this._speakToChatEnabledSupported = modelData.speakToChatEnabled ?? false;
         this._speakToChatConfigSupported = modelData.speakToChatConfig ?? false;
         this._speakToChatFocusOnVoiceSupported = modelData.speakToChatFocusOnVoice ?? false;
-
         this._pauseWhenTakenOffSupported = modelData.pauseWhenTakenOff ?? false;
+        this._equalizerSixBands = modelData.equalizerSixBands ?? false;
+        this._equalizerTenBands = modelData.equalizerTenBands ?? false;
+        this._voiceNotifications = modelData.voiceNotifications ?? false;
+
+        this._noiseAdaptiveOn = true;
+        this._noiseAdaptiveSensitivity = AutoAsmSensitivity.STANDARD;
+        this._speakToChatMode = false;
+        this._speak2ChatSensitivity = Speak2ChatSensitivity.AUTO;
+        this._speak2ChatFocusOnVoiceState = false;
+        this._speak2ChatTimeout = Speak2ChatTimeout.STANDARD;
+        this._bgmProps = {active: false, distance: 0, mode: ListeningMode.STANDARD};
+
         this.startSocket(fd);
     }
 
     _addMessageQueue(type, payload, ack = 'ack') {
-        ack = ack ?? 'ack';
         this._messageQueue.push({type, payload, ack});
 
         if (!this._processingQueue)
@@ -75,21 +95,20 @@ export const SonySocket = GObject.registerClass({
             this._ackTimeoutId = null;
         }
 
-        this._ackTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1250, () => {
+        this._ackTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
             if (this._retriesLeft > 0) {
                 this._log.info(`ACK not received, retrying... (${this._retriesLeft})`);
                 this._retriesLeft--;
-                this._encodeSonyMessage(this._currentMessage.type, this._currentMessage.payload);
+                const {type, payload} = this._currentMessage ?? {};
+                if (type && payload)
+                    this._encodeSonyMessage(type, payload);
+
                 return GLib.SOURCE_CONTINUE;
-            } else {
-                this._popFailedMessage();
-                this._ackTimeoutId = null;
-                if (!this._initComplete) {
-                    this._log.error('ACK not received after retries. Giving up.');
-                    this.destroy();
-                }
-                return GLib.SOURCE_REMOVE;
             }
+
+            this._popFailedMessage();
+            this._ackTimeoutId = null;
+            return GLib.SOURCE_REMOVE;
         });
     }
 
@@ -99,6 +118,11 @@ export const SonySocket = GObject.registerClass({
         if (this._ackTimeoutId) {
             GLib.source_remove(this._ackTimeoutId);
             this._ackTimeoutId = null;
+        }
+
+        if (!this._initComplete) {
+            this._log.error('ACK not received after retries. Giving up.');
+            this.destroy();
         }
 
         this._currentMessage = null;
@@ -113,38 +137,37 @@ export const SonySocket = GObject.registerClass({
         if (this._awaitingAck !== ackType)
             return;
 
-        if (this._awaitingAck === ackType) {
-            this._awaitingAck = null;
+        this._awaitingAck = null;
 
-            if (this._ackTimeoutId) {
-                GLib.source_remove(this._ackTimeoutId);
-                this._ackTimeoutId = null;
-            }
-
-            this._currentMessage = null;
-            if (this._messageQueue.length === 0)
-                this._processingQueue = false;
-            else
-                this._processNextQueuedMessage();
+        if (this._ackTimeoutId) {
+            GLib.source_remove(this._ackTimeoutId);
+            this._ackTimeoutId = null;
         }
+
+        this._currentMessage = null;
+        if (this._messageQueue.length === 0)
+            this._processingQueue = false;
+        else
+            this._processNextQueuedMessage();
     }
 
     _encodeSonyMessage(messageType, payloadArr, seq) {
         const len = payloadArr.length;
         const headerBuf = new Uint8Array(6 + len);
         let sequence;
-        if (seq !== undefined)
+        if (seq !== undefined) {
             sequence = seq;
-        else
+        } else {
             sequence = this._seq;
-
+            this._seq = 1 - this._seq;
+        }
 
         headerBuf[0] = messageType;
         headerBuf[1] = sequence;
-        headerBuf[2] = len >>> 24 & 0xff;
-        headerBuf[3] = len >>> 16 & 0xff;
-        headerBuf[4] = len >>>  8 & 0xff;
-        headerBuf[5] = len & 0xff;
+        headerBuf[2] = len >>> 24 & 0xFF;
+        headerBuf[3] = len >>> 16 & 0xFF;
+        headerBuf[4] = len >>>  8 & 0xFF;
+        headerBuf[5] = len & 0xFF;
         headerBuf.set(payloadArr, 6);
 
         const chksum = this._calcChecksum(headerBuf);
@@ -182,7 +205,7 @@ export const SonySocket = GObject.registerClass({
     _calcChecksum(buf) {
         let sum = 0;
         for (const b of buf)
-            sum = sum + b & 0xff;
+            sum = sum + b & 0xFF;
         return sum;
     }
 
@@ -216,43 +239,21 @@ export const SonySocket = GObject.registerClass({
 
     _getInitRequest() {
         this._log.info('_getInitRequest:');
-        this._addMessageQueue(MessageType.COMMAND_1, [PayloadType.INIT_REQUEST, 0x00], 'init');
+
+        const payload = [PayloadType.INIT_REQUEST];
+        payload.push(0x00);
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload, 'init');
     }
 
     _getBatteryRequest(batteryType) {
         this._log.info('_getBatteryRequest:');
+
         const payloadType = this._usesProtocolV2 ? PayloadType.BATTERY_LEVEL_REQUEST_V2
             : PayloadType.BATTERY_LEVEL_REQUEST;
+        const payload = [payloadType, batteryType];
 
-        this._addMessageQueue(MessageType.COMMAND_1, [payloadType, batteryType], 'battery');
-    }
-
-
-    _getAmbientSoundControl() {
-        this._log.info('_getAmbientSoundControl:');
-        let code;
-        if (this._usesProtocolV2)
-            code = 0x15;
-        else
-            code = 0x02;
-
-
-        this._addMessageQueue(MessageType.COMMAND_1,
-            [PayloadType.AMBIENT_SOUND_CONTROL_GET, code], 'ambientControl');
-    }
-
-    _getSpeakToChatEnabled() {
-        this._log.info('_getSpeakToChatEnabled:');
-        const byte = this._usesProtocolV2 ? 0x0c : 0x05;
-        this._addMessageQueue(MessageType.COMMAND_1,
-            [PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_GET, byte], 'speakToChatEnable');
-    }
-
-    _getSpeakToChatConfig() {
-        this._log.info('_getSpeakToChatConfig:');
-        const byte = this._usesProtocolV2 ? 0x0c : 0x05;
-        this._addMessageQueue(MessageType.COMMAND_1,
-            [PayloadType.SPEAK_TO_CHAT_CONFIG_GET, byte], 'speakToChatConfig');
+        this._addMessageQueue(MessageType.COMMAND_1, payload, 'battery');
     }
 
     _parseBatteryStatus(payload) {
@@ -260,11 +261,6 @@ export const SonySocket = GObject.registerClass({
         if (payload.length < 4)
             return;
 
-        /*
-        this._log.info(`_parseBatteryStatus payload[1] = [${payload[1]}]`);
-        this._log.info(`_parseBatteryStatus payload[2] = [${payload[2]}]`);
-        this._log.info(`_parseBatteryStatus payload[3] = [${payload[3]}]`);
-*/
         const batteryType = this._usesProtocolV2 ? BatteryTypeV2 : BatteryTypeV1;
 
         const type = payload[1];
@@ -308,13 +304,26 @@ export const SonySocket = GObject.registerClass({
             return;
         }
 
-        if (this._callbacks?.updateBatteryProps)
-            this._callbacks.updateBatteryProps(props);
+        this._callbacks?.updateBatteryProps?.(props);
     }
 
-    _parseAmbientAttenuationLevel(byte) {
-        //        this._log.info(`_parseAmbientAttenuationLevel: ${byte}`);
-        return byte >= 0 && byte <= 20 ? byte : 10;
+
+    _getAmbientSoundControl() {
+        this._log.info('_getAmbientSoundControl:');
+
+        const payload = [PayloadType.AMBIENT_SOUND_CONTROL_GET];
+        if (this._usesProtocolV2) {
+            let idx = 0x15;
+            if (this._ambientSoundControlNASupported)
+                idx = 0x19;
+            else if (this._windNoiseReductionSupported || this._ambientSoundControl2Supported)
+                idx = 0x17;
+            payload.push(idx);
+        } else {
+            payload.push(0x02);
+        }
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload, 'ambientControl');
     }
 
     _parseAmbientSoundControlV1(payload) {
@@ -322,11 +331,6 @@ export const SonySocket = GObject.registerClass({
 
         if (payload.length !== 8)
             return;
-        /*
-        this._log.info(`_parseAmbientSoundControlV1 payload[2] = [${payload[2]}]`);
-        this._log.info(`_parseAmbientSoundControlV1 payload[4] = [${payload[4]}]`);
-        this._log.info(`_parseAmbientSoundControlV1 payload[5] = [${payload[5]}]`);
-*/
 
         const m0 = payload[2], m1 = payload[3], m2 = payload[4];
         let mode = null;
@@ -349,56 +353,31 @@ export const SonySocket = GObject.registerClass({
         if (!mode)
             return;
 
+        this._ancmode = mode;
         this._focusOnVoiceState = payload[6] === 0x01;
-
         const level = payload[7];
-        this._ambientSoundLevel = this._parseAmbientAttenuationLevel(level);
+        this._ambientSoundLevel = level >= 0 && level <= 20 ? level : 10;
 
-        let ancmode;
-        if (mode === AmbientSoundMode.ANC_OFF)
-            ancmode = 'ANC-OFF';
-        else if (mode === AmbientSoundMode.ANC_ON)
-            ancmode = 'ANC-ON';
-        else if (mode === AmbientSoundMode.WIND)
-            ancmode = 'WIND';
-        else if (mode === AmbientSoundMode.AMBIENT)
-            ancmode = 'AMBIENT';
-
-        this._log.info(`ANC mode = [${ancmode}]`);
-        this._log.info(`Ambient level = [${this._ambientSoundLevel}]`);
-        this._log.info(`Focus on Voice = [${this._focusOnVoiceState}]`);
-
-        if (this._callbacks?.updateAmbientSoundControl) {
-            this._callbacks.updateAmbientSoundControl(
-                mode, this._focusOnVoiceState, this._ambientSoundLevel);
-        }
+        this._callbacks?.updateAmbientSoundControl?.(
+            mode, this._focusOnVoiceState, this._ambientSoundLevel);
     }
 
     _parseAmbientSoundControlV2(payload) {
         this._log.info(`_parseAmbientSoundControlV2 payload.lenght = [${payload.length}]`);
-        if (payload.length < 6 || payload.length > 8)
+        if (payload.length < 6 || payload.length > 9)
             return;
-        /*
-        this._log.info(`_parseAmbientSoundControlV2 payload[1] = [${payload[1]}]`);
-        this._log.info(`_parseAmbientSoundControlV2 payload[4] = [${payload[4]}]`);
-        this._log.info(`_parseAmbientSoundControlV2 payload[5] = [${payload[5]}]`);
-        this._log.info('_parseAmbientSoundControlV2 payload[payload.length - 2]' +
-            ` = [${payload[payload.length - 2]}]`);
-*/
+
         const idx = payload[1];
 
-        if (idx !== 0x15 && idx !== 0x17 && idx !== 0x22)
+        if (idx !== 0x15 && idx !== 0x17 && idx !== 0x19 && idx !== 0x22)
             return;
 
-        const includesWind = idx === 0x17 && payload.length > 7;
+        const includesWind = idx === 0x17 || idx === 0x19;
         const noNc = idx === 0x22;
 
-
-        let mode = null;
+        let mode;
         if (payload[3] === 0x00) {
             mode = AmbientSoundMode.ANC_OFF;
-            this._focusOnVoiceState = false;
-            this._ambientSoundLevel = 10;
         } else {
             if (includesWind) {
                 const sub = payload[5];
@@ -419,32 +398,121 @@ export const SonySocket = GObject.registerClass({
             if (mode === null)
                 return;
 
-            let i = payload.length - 2;
+            let i = payload.length - (this._ambientSoundControlNASupported ? 4 : 2);
             this._focusOnVoiceState = payload[i] === 0x01;
 
             i++;
             const level = payload[i];
-            this._ambientSoundLevel = this._parseAmbientAttenuationLevel(level);
+            this._ambientSoundLevel = level >= 0 && level <= 20 ? level : 10;
+
+            if (this._ambientSoundControlNASupported && idx === 0x19) {
+                let j = payload.length - 2;
+                const val = payload[j];
+                if (val === 0x00 || val === 0x01)
+                    this._noiseAdaptiveOn = val === 0x01;
+
+                j++;
+                const noiseAdaptiveSensitivity = payload[j];
+                if (Object.values(AutoAsmSensitivity).includes(noiseAdaptiveSensitivity))
+                    this._noiseAdaptiveSensitivity = noiseAdaptiveSensitivity;
+            }
         }
 
-        let ancmode;
-        if (mode === AmbientSoundMode.ANC_OFF)
-            ancmode = 'ANC-OFF';
-        else if (mode === AmbientSoundMode.ANC_ON)
-            ancmode = 'ANC-ON';
-        else if (mode === AmbientSoundMode.WIND)
-            ancmode = 'WIND';
-        else if (mode === AmbientSoundMode.AMBIENT)
-            ancmode = 'AMBIENT';
+        this._callbacks?.updateAmbientSoundControl?.(mode, this._focusOnVoiceState,
+            this._ambientSoundLevel, this._noiseAdaptiveOn, this._noiseAdaptiveSensitivity);
+    }
 
-        this._log.info(`ANC mode = [${ancmode}]`);
-        this._log.info(`Ambient level = [${this._ambientSoundLevel}]`);
-        this._log.info(`Focus on Voice = [${this._focusOnVoiceState}]`);
 
-        if (this._callbacks?.updateAmbientSoundControl) {
-            this._callbacks.updateAmbientSoundControl(
-                mode, this._focusOnVoiceState, this._ambientSoundLevel);
+    setAmbientSoundControl(mode, focusOnVoice, level, adaptiveMode, sensitivity) {
+        if (this._usesProtocolV2)
+            this._setAmbientSoundControlV2(mode, focusOnVoice, level);
+        else
+            this._setAmbientSoundControlV1(mode, focusOnVoice, level, adaptiveMode, sensitivity);
+    }
+
+    _setAmbientSoundControlV1(mode, focusOnVoice, level) {
+        this._log.info(
+            `_setAmbientSoundControlV1: mode: ${mode} focusOnVoice: ${focusOnVoice} ` +
+                `level: ${level}`);
+        const payload = [PayloadType.AMBIENT_SOUND_CONTROL_SET];
+
+        const modeIsOff = mode === AmbientSoundMode.ANC_OFF; ;
+        const modeIsNC = mode === AmbientSoundMode.ANC_ON;
+        const modeIsWNR = mode === AmbientSoundMode.WIND;
+        const modeIsAmbient = mode === AmbientSoundMode.AMBIENT;
+
+        payload.push(0x02);
+        payload.push(modeIsOff ? 0x00 : 0x11);
+        payload.push(this._windNoiseReductionSupported ? 0x02 : 0x00);
+
+        let modeCode = 0x00;
+        if (this._windNoiseReductionSupported) {
+            if (modeIsNC)
+                modeCode = 0x02;
+            else if (modeIsWNR)
+                modeCode = 0x01;
+        } else {
+            modeCode = modeIsNC ? 0x01 : 0x00;
         }
+
+        payload.push(modeCode);
+        payload.push(0x01);
+        payload.push(focusOnVoice ? 0x01 : 0x00);
+
+        const attlevel = modeIsOff || modeIsAmbient ? level : 0x00;
+
+        this._focusOnVoiceState = focusOnVoice;
+        this._ambientSoundLevel = level;
+
+        payload.push(attlevel);
+        this._addMessageQueue(MessageType.COMMAND_1, payload);
+    }
+
+    _setAmbientSoundControlV2(mode, focusOnVoice, level, adaptiveMode, sensitivity) {
+        this._log.info(
+            `_setAmbientSoundControlV2: mode: ${mode} focusOnVoice: ${focusOnVoice} ` +
+                `level: ${level}`);
+
+        const payload = [PayloadType.AMBIENT_SOUND_CONTROL_SET];
+        let idx = 0x15;
+        if (this._ambientSoundControlNASupported)
+            idx = 0x19;
+        else if (this._windNoiseReductionSupported || this._ambientSoundControl2Supported)
+            idx = 0x17;
+
+        payload.push(idx);
+        payload.push(0x01);
+        payload.push(mode === AmbientSoundMode.ANC_OFF ? 0x00 : 0x01);
+        payload.push(mode === AmbientSoundMode.AMBIENT ? 0x01 : 0x00);
+
+        if (this._windNoiseReductionSupported)
+            payload.push(mode === AmbientSoundMode.WIND ? 0x03 : 0x02);
+
+        payload.push(this._focusOnVoiceState ? 0x01 : 0x00);
+        payload.push(level);
+
+        this._focusOnVoiceState = focusOnVoice;
+        this._ambientSoundLevel = level;
+
+        if (this._ambientSoundControlNASupported) {
+            payload.push(adaptiveMode ? 0x01 : 0x00);
+            payload.push(sensitivity);  // already sending correct bytes
+
+            this._noiseAdaptiveOn = adaptiveMode;
+            this._noiseAdaptiveSensitivity = sensitivity;
+        }
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload);
+    }
+
+
+    _getSpeakToChatEnabled() {
+        this._log.info('_getSpeakToChatEnabled:');
+
+        const payload = [PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_GET];
+        payload.push(this._usesProtocolV2 ? 0x0C : 0x05);
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload, 'speakToChatEnable');
     }
 
     _parseSpeakToChatEnable(payload) {
@@ -454,10 +522,10 @@ export const SonySocket = GObject.registerClass({
             return;
 
         let enabled = null;
-        this._log.info(`_parseSpeakToChatEnable payload[2] = [${payload[2]}]`);
-        this._log.info(`_parseSpeakToChatEnable payload[3] = [${payload[3]}]`);
 
         if (this._usesProtocolV2) {
+            if (payload[1] !== 0x0C)
+                return;
             const disabled = payload[2];
             if (disabled === 0x00 || disabled === 0x01)
                 enabled = !disabled;
@@ -469,95 +537,465 @@ export const SonySocket = GObject.registerClass({
 
             const val = payload[3];
             if (val === 0x00 || val === 0x01)
-                enabled = Boolean(val);
+                enabled = val === 0x01;
             else
                 return;
         }
 
-        this._log.debug(`Speak to chat enabled: ${enabled}`);
+        this._speakToChatMode = enabled;
 
-        if (this._callbacks?.updateSpeakToChatEnable)
-            this._callbacks.updateSpeakToChatEnable(enabled);
+        this._callbacks?.updateSpeakToChatEnable?.(this._speakToChatMode);
     }
 
+    setSpeakToChatEnabled(enabled) {
+        this._log.info(`setSpeakToChatEnabled: ${enabled}`);
 
-    _parseSpeakToChatConfigV1(payload) {
-        this._log.info('_parseSpeakToChatConfigV1');
+        const payload = [PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_SET];
+        if (this._usesProtocolV2) {
+            payload.push(0x0C);
+            payload.push(enabled ? 0x00 : 0x01);
+            payload.push(0x01);
+        } else {
+            payload.push(0x05);
+            payload.push(0x01);
+            payload.push(enabled ? 0x01 : 0x00);
+        }
 
-        if (payload.length !== 6 || payload[1] !== 0x05)
+        this._addMessageQueue(MessageType.COMMAND_1, payload);
+    }
+
+    _getSpeakToChatConfig() {
+        this._log.info('_getSpeakToChatConfig:');
+
+        const payload = [PayloadType.SPEAK_TO_CHAT_CONFIG_GET];
+        payload.push(this._usesProtocolV2 ? 0x0C : 0x05);
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload, 'speakToChatConfig');
+    }
+
+    _parseSpeakToChatConfig(payload) {
+        this._log.info('_parseSpeakToChatConfig');
+
+        if (this._usesProtocolV2) {
+            if (payload.length !== 4 || payload[1] !== 0x0C)
+                return;
+        } else if (payload.length !== 6 || payload[1] !== 0x05) {
             return;
+        }
 
-        const sensCode = payload[3];
-        this._log.info(`SpeakChatSensitivity sensCode payload[3] = [${sensCode}]`);
+        const sensCode = this._usesProtocolV2 ? payload[2] : payload[3];
         if (!Object.values(Speak2ChatSensitivity).includes(sensCode))
             return;
+
         this._speak2ChatSensitivity = sensCode;
 
-        this._log.info(`SpeakChatSensitivity _focusOnVoiceState payload[4] = [${payload[4]}]`);
-        if (payload[4] !== 0x00 && payload[4] !== 0x01)
-            return;
-        this._focusOnVoiceState = payload[4] === 0x01;
+        if (!this._usesProtocolV2) {
+            if (payload[4] !== 0x00 && payload[4] !== 0x01)
+                return;
+            this._speak2ChatFocusOnVoiceState = payload[4] === 0x01;
+        } else {
+            this._speak2ChatFocusOnVoiceState = false;
+        }
 
-        const timeoutCode = payload[5];
-        this._log.info(`SpeakChatSensitivity timeoutCode payload[5] = [${timeoutCode}]`);
+        const timeoutCode = this._usesProtocolV2 ? payload[3] : payload[5];
         if (!Object.values(Speak2ChatTimeout).includes(timeoutCode))
             return;
+
         this._speak2ChatTimeout = timeoutCode;
 
         this._callbacks?.updateSpeakToChatConfig?.(
             this._speak2ChatSensitivity,
-            this._focusOnVoiceState,
+            this._speak2ChatFocusOnVoiceState,
             this._speak2ChatTimeout
         );
     }
 
-    _parseSpeakToChatConfigV2(payload) {
-        this._log.info('_parseSpeakToChatConfigV2');
+    setSpeakToChatConfig(sensitivity, timeout) {
+        this._log.info(`setSpeakToChatConfig: sensitivity=${sensitivity}, timeout=${timeout}`);
 
-        if (payload.length !== 4 || payload[1] !== 0x0c)
+        const payload = [PayloadType.SPEAK_TO_CHAT_CONFIG_SET];
+        if (this._usesProtocolV2) {
+            payload.push(0x0C);
+            payload.push(sensitivity & 0xFF);
+            payload.push(timeout & 0xFF);
+        } else {
+            payload.push(0x05);
+            payload.push(0x00);
+            payload.push(sensitivity & 0xFF);
+            payload.push(this._speak2ChatFocusOnVoiceState ? 0x01 : 0x00);
+            payload.push(timeout & 0xFF);
+        }
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload);
+    }
+
+    _getEqualizer() {
+        this._log.info('_getEqualizer:');
+
+        const payload = [PayloadType.EQUALIZER_GET];
+        payload.push(this._usesProtocolV2 ? 0x00 : 0x01);
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload, 'equalizer');
+    }
+
+    _parseEqualizer(payload) {
+        this._log.info(`_parseEqualizer: payload.length =  ${payload.length}`);
+        if (payload.length < 9)
             return;
 
-        const sensCode = payload[2];
-        this._log.info(`Speak2ChatSensitivity sensCode payload[2] = [${sensCode}]`);
-
-        if (!Object.values(Speak2ChatSensitivity).includes(sensCode))
+        const presetCode = payload[2];
+        if (!Object.values(EqualizerPreset).includes(presetCode))
             return;
-        this._speak2ChatSensitivity = sensCode;
 
-        const timeoutCode = payload[3];
-        this._log.info(`Speak2ChatSensitivity timeoutCode payload[3] = [${timeoutCode}]`);
-        if (!Object.values(Speak2ChatTimeout).includes(timeoutCode))
+        const customBands = [];
+        if (this._equalizerTenBands && payload[3] === 10) {
+            for (let i = 0; i < 10; i++)
+                customBands.push(payload[4 + i] - 6);
+        } else if (this._equalizerSixBands && payload[3] === 6) {
+            for (let i = 0; i < 6; i++)
+                customBands.push(payload[4 + i] - 10);
+        } else {
             return;
-        this._speak2ChatTimeout = timeoutCode;
+        }
 
-        this._focusOnVoiceState = false;
+        this._log.info(`Equalizer Custom Bands: ${customBands}`);
 
-        this._callbacks?.updateSpeakToChatConfig?.(
-            this._speak2ChatSensitivity,
-            this._focusOnVoiceState,
-            this._speak2ChatTimeout
+        this._callbacks?.updateEqualizer?.(presetCode, customBands);
+    }
+
+    setEqualizerPreset(presetCode) {
+        this._log.info(`setEqualizerPreset: presetCode=${presetCode}`);
+
+        if (!Object.values(EqualizerPreset).includes(presetCode))
+            return;
+
+        const payload = [PayloadType.EQUALIZER_SET];
+        payload.push(this._usesProtocolV2 ? 0x00 : 0x01);
+        payload.push(presetCode);
+        payload.push(0x00);
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload);
+    }
+
+    setEqualizerCustomBands(customBands) {
+        this._log.info(`setEqualizerCustomBands: customBands=${customBands}`);
+
+        const payload = [PayloadType.EQUALIZER_SET];
+        payload.push(this._usesProtocolV2 ? 0x00 : 0x01);
+        payload.push(this._usesProtocolV2 ? 0xa0 : 0xFF);
+        payload.push(this._equalizerTenBands ? 0x0A : 0x06);
+
+        const bandCount = this._equalizerTenBands ? 10 : 6;
+        const levelCompensator = this._equalizerTenBands ? 6 : 10;
+
+        if (customBands.length !== bandCount) {
+            this._log.info('setEqualizerCustomBands: invalid length');
+            return;
+        }
+
+        for (let i = 0; i < bandCount; i++)
+            payload.push(customBands[i] + levelCompensator);
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload);
+    }
+
+    _getListeningMode() {
+        this._log.info('_getListeningMode:');
+
+        const payloadNonBgm = [PayloadType.AUDIO_PARAM_GET, 0x04];
+        this._addMessageQueue(MessageType.COMMAND_1, payloadNonBgm, 'listeningModeNonBgm');
+
+        const payloadBgm = [PayloadType.AUDIO_PARAM_GET, 0x03];
+        this._addMessageQueue(MessageType.COMMAND_1, payloadBgm, 'listeningModeBgm');
+    }
+
+    _parseListeningModeBgm(payload) {
+        this._log.info(`_parseListeningModeBgm: payload.length = ${payload.length}`);
+
+        const bgmActive = payload[2] === 0x00;
+        const bgmDistanceMode = payload[3];
+
+        if (!Object.values(BgmDistance).includes(bgmDistanceMode))
+            return;
+
+        this._bgmProps.active = bgmActive;
+        this._bgmProps.distance = bgmDistanceMode;
+
+        this._callbacks?.updateListeningBgmMode?.(this._bgmProps);
+    }
+
+    _parseListeningModeNonBgm(payload) {
+        this._log.info(`_parseListeningModeNonBgm: payload.length = ${payload.length}`);
+
+        const nonBgmMode = payload[2];
+        if (nonBgmMode !== ListeningMode.STANDARD && nonBgmMode !== ListeningMode.CINEMA)
+            return;
+
+        this._bgmProps.mode = nonBgmMode;
+
+        this._callbacks?.updateListeningNonBgmMode?.(this._bgmProps);
+    }
+
+    setListeningModeBgm(mode, distance) {
+        const bgmActive = mode === ListeningMode.BGM;
+        const bgmToStandard =
+            this._bgmProps.active && !bgmActive && mode === ListeningMode.STANDARD;
+
+        if (bgmActive || bgmToStandard) {
+            const payload = [PayloadType.AUDIO_PARAM_SET];
+            payload.push(0x03);
+            payload.push(bgmActive ? 0x00 : 0x01);
+            payload.push(distance);
+            this._addMessageQueue(MessageType.COMMAND_1, payload);
+        }
+
+        if (!bgmActive) {
+            const payload = [PayloadType.AUDIO_PARAM_SET];
+            payload.push(0x04);
+            payload.push(mode);
+            this._addMessageQueue(MessageType.COMMAND_1, payload);
+        }
+
+        this._bgmProps.active = bgmActive;
+        this._bgmProps.distance = distance;
+
+        if (mode === ListeningMode.STANDARD || mode === ListeningMode.CINEMA)
+            this._bgmProps.mode = mode;
+    }
+
+    _getVoiceNotifications() {
+        this._log.info('_getVoiceNotifications:');
+
+        const payload = [PayloadType.VOICE_NOTIFICATIONS_GET];
+        payload.push(0x01);
+
+        if (!this._usesProtocolV2)
+            payload.push(0x01);
+
+        this._addMessageQueue(MessageType.COMMAND_2, payload, 'voiceNotifications');
+    }
+
+    _parseVoiceNotifications(payload) {
+        this._log.info(`_parseVoiceNotifications: payload.length = ${payload.length}`);
+
+        if (payload.length !== 4) {
+            this._log.error(`Unexpected payload length ${payload.length}`);
+            return;
+        }
+
+        let enabled = null;
+
+        if (this._usesProtocolV2) {
+            switch (payload[2]) {
+                case 0x00:
+                    enabled = true;
+                    break;
+                case 0x01:
+                    enabled = false;
+                    break;
+                default:
+                    return;
+            }
+        } else {
+            switch (payload[3]) {
+                case 0x00:
+                    enabled = false;
+                    break;
+                case 0x01:
+                    enabled = true;
+                    break;
+                default:
+                    return;
+            }
+        }
+
+        this._voiceNotificationsEnabled = enabled;
+        this._log.info(`Voice Notifications: ${enabled}`);
+
+        this._callbacks?.updateVoiceNotifications?.(enabled);
+    }
+
+    setVoiceNotifications(enabled) {
+        this._log.info(`_setVoiceNotifications: ${enabled}`);
+
+        const payload = [PayloadType.VOICE_NOTIFICATIONS_SET];
+
+        payload.push(0x01);
+        if (this._usesProtocolV2) {
+            payload.push(enabled ? 0x00 : 0x01);
+        } else {
+            payload.push(0x01);
+            payload.push(enabled ? 0x01 : 0x00);
+        }
+
+        this._addMessageQueue(MessageType.COMMAND_2, payload);
+    }
+    // ///////////
+
+    _getAudioUpsampling() {
+        this._log.info('_getAudioUpsampling:');
+
+        const payload = [PayloadType.AUDIO_PARAM_GET];
+        payload.push(this._usesProtocolV2 ? 0x01 : 0x02);
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload, 'audioSampling');
+    }
+
+    _parseAudioUpsampling(payload) {
+        this._log.info(`_parseAudioUpsampling: payload.length = ${payload.length}`);
+
+        if (!this._usesProtocolV2 && payload.length !== 4 ||
+                this._usesProtocolV2 && payload.length !== 3)  {
+            this._log.error(`Unexpected payload length ${payload.length}`);
+            return;
+        }
+
+        let enabled = null;
+
+        const val = this._usesProtocolV2 ? payload[2] : payload[3];
+        if (val !== 0x00 && val !== 0x01)
+            return;
+
+        enabled = val === 0x01;
+
+        this._audioSamplingEnabled = enabled;
+        this._log.info(`DSEE : ${enabled}`);
+
+        this._callbacks?.updateAudioSampling?.(enabled);
+    }
+
+    setAudioUpsampling(enabled) {
+        this._log.info(`setAudioUpsampling: ${enabled}`);
+
+        const payload = [PayloadType.AUDIO_PARAM_SET];
+
+        if (this._usesProtocolV2) {
+            payload.push(0x01);
+        } else {
+            payload.push(0x02);
+            payload.push(0x00);
+        }
+        payload.push(enabled ? 0x01 : 0x00);
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload);
+    }
+
+    // ///////
+    _getPauseWhenTakenOff() {
+        this._log.info('_getPauseWhenTakenOff:');
+
+        const payload = [this._usesProtocolV2 ? PayloadType.AUTOMATIC_POWER_OFF_GET
+            : PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_GET];
+        payload.push(this._usesProtocolV2 ? 0x01 : 0x03);
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload, 'pauseWhenTakenOff');
+    }
+
+    _parsePauseWhenTakenOff(payload) {
+        this._log.info(`_parsePauseWhenTakenOff: payload.length = ${payload.length}`);
+
+        if (!this._usesProtocolV2 && payload.length !== 4 ||
+                this._usesProtocolV2 && payload.length !== 3)  {
+            this._log.error(`Unexpected payload length ${payload.length}`);
+            return;
+        }
+
+        let enabled = null;
+
+        const val = this._usesProtocolV2 ? payload[2] : payload[3];
+        if (val !== 0x00 && val !== 0x01)
+            return;
+
+        enabled = val === 0x01;
+
+        this._audioSamplingEnabled = enabled;
+        this._log.info(`Pause when taken off : ${enabled}`);
+
+        this._callbacks?.updatePauseWhenTakenOff?.(enabled);
+    }
+
+    setPauseWhenTakenOff(enabled) {
+        this._log.info(`setPauseWhenTakenOff: ${enabled}`);
+
+        const payload = [this._usesProtocolV2 ? PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_SET
+            : PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_SET];
+
+        if (this._usesProtocolV2) {
+            payload.push(0x01);
+            payload.push(enabled ? 0x00 : 0x01);
+        } else {
+            payload.push(0x03);
+            payload.push(0x00);
+            payload.push(enabled ? 0x01 : 0x00);
+        }
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload);
+    }
+
+    // //////
+    _getAutomaticPowerOff() {
+        this._log.info('_getAutomaticPowerOff:');
+
+        const payload = [this._usesProtocolV2 ? PayloadType.AUTOMATIC_POWER_OFF_GET
+            : PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_GET];
+        payload.push(this._usesProtocolV2 ? 0x05 : 0x04);
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload, 'automaticPowerOff');
+    }
+
+    _parseAutomaticPowerOff(payload) {
+        this._log.info(`_parseAutomaticPowerOff: payload.length = ${payload.length}`);
+
+        if (!this._usesProtocolV2 && payload.length !== 5 ||
+        this._usesProtocolV2 && payload.length !== 4) {
+            this._log.warn(`Unexpected payload length ${payload.length}`);
+            return;
+        }
+
+        const byte1 = this._usesProtocolV2 ? payload[2] : payload[3];
+        const byte2 = this._usesProtocolV2 ? payload[3] : payload[4];
+
+        const mode = Object.values(AutoPowerOff).find(v =>
+            v.bytes[0] === byte1 && v.bytes[1] === byte2
         );
-    }
 
-
-    _parsePlayBackState(payload) {
-        const code = payload[3];
-        this._log.info(`_parsePlayBackState payload[3] = [${code}]`);
-        let state = null;
-
-        if (code === PlaybackStatus.PLAY)
-            state = 'play';
-        else if (code === PlaybackStatus.PAUSE)
-            state = 'pause';
-        else
+        if (!mode)
             return;
 
-        this._log.info(`_parsePlayBackState: ${state}`);
 
-        if (this._callbacks?.updatePlaybackState)
-            this._callbacks.updatePlaybackState(state);
+        this._log.info(`Automatic Power Off: id=${mode.id}`);
+
+        this._callbacks?.updateAutomaticPowerOff?.(mode.id);
     }
 
+    setAutomaticPowerOff(id) {
+        this._log.info(`setAutomaticPowerOff: id=${id}`);
+
+        const config = Object.values(AutoPowerOff).find(v => v.id === id);
+        if (!config)
+            return;
+
+        const payload = [
+            this._usesProtocolV2
+                ? PayloadType.AUTOMATIC_POWER_OFF_SET
+                : PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_SET,
+        ];
+
+        payload.push(this._usesProtocolV2 ? 0x05 : 0x04);
+
+        if (!this._usesProtocolV2)
+            payload.push(0x01);
+
+        payload.push(...config.bytes);
+
+        this._log.info(
+            `Sending AutoPowerOff payload: ${payload.map(x => x.toString(16)).join(' ')}`
+        );
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload);
+    }
+
+    // //////
 
 
     processData(chunk) {
@@ -589,14 +1027,12 @@ export const SonySocket = GObject.registerClass({
             this._parseData(frame);
     }
 
-
     _parseData(rawData) {
         try {
             const data = this._decodeSonyMessage(rawData);
             if (!data)
                 return;
             const {messageType, sequence, payload} = data;
-            this._seq = sequence;
 
             if (messageType === MessageType.ACK) {
                 this.emit('ack-received', 'ack');
@@ -616,6 +1052,7 @@ export const SonySocket = GObject.registerClass({
                             this._getCurrentState();
                         }
                         break;
+
                     case PayloadType.BATTERY_LEVEL_REPLY:
                     case PayloadType.BATTERY_LEVEL_NOTIFY:
                     case PayloadType.BATTERY_LEVEL_REPLY_V2:
@@ -623,6 +1060,7 @@ export const SonySocket = GObject.registerClass({
                         this.emit('ack-received', 'battery');
                         this._parseBatteryStatus(payload);
                         break;
+
                     case PayloadType.AMBIENT_SOUND_CONTROL_RET:
                     case PayloadType.AMBIENT_SOUND_CONTROL_NOTIFY:
                         this.emit('ack-received', 'ambientControl');
@@ -631,141 +1069,58 @@ export const SonySocket = GObject.registerClass({
                         else
                             this._parseAmbientSoundControlV1(payload);
                         break;
+
                     case PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_RET:
                     case PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_NOTIFY:
                         this.emit('ack-received', 'speakToChatEnable');
-                        if (this._usesProtocolV2 && payload[1] === 0x0C || payload[1] === 0x05)
+                        if (this._usesProtocolV2 && payload[1] === 0x01 || payload[1] === 0x03)
+                            this._parsePauseWhenTakenOff(payload);
+                        else if (this._usesProtocolV2 && payload[1] === 0x0C || payload[1] === 0x04)
+                            this._parseAutomaticPowerOff(payload);
+                        else if (this._usesProtocolV2 && payload[1] === 0x0C || payload[1] === 0x05)
                             this._parseSpeakToChatEnable(payload);
-                        else if (this._usesProtocolV2 && payload[1] === 0x01 ||
-                            payload[1] === 0x03)
-                            this._parsePlayBackState(payload);
-
                         break;
+
                     case PayloadType.SPEAK_TO_CHAT_CONFIG_RET:
                     case PayloadType.SPEAK_TO_CHAT_CONFIG_NOTIFY:
                         this.emit('ack-received', 'speakToChatConfig');
-                        if (this._usesProtocolV2)
-                            this._parseSpeakToChatConfigV2(payload);
-                        else
-                            this._parseSpeakToChatConfigV1(payload);
+                        this._parseSpeakToChatConfig(payload);
                         break;
-                    case PayloadType.PLAYBACK_STATUS_RET:
-                    case PayloadType.PLAYBACK_STATUS_NOTIFY:
-                        this.emit('ack-received', 'playback');
-                        if (this._usesProtocolV2)
-                            this._parsePlayBackState(payload);
 
+                    case PayloadType.EQUALIZER_RET:
+                    case PayloadType.EQUALIZER_NOTIFY:
+                        this.emit('ack-received', 'equalizer');
+                        this._parseEqualizer(payload);
+                        break;
+
+                    case PayloadType.AUDIO_PARAM_RET:
+                    case PayloadType.AUDIO_PARAM_NOTIFY:
+                        if (payload[1] === 0x03) {
+                            this.emit('ack-received', 'listeningModeBgm');
+                            this._parseListeningModeBgm(payload);
+                        } else if (payload[1] === 0x04) {
+                            this._parseListeningModeNonBgm(payload);
+                            this.emit('ack-received', 'listeningModeNonBgm');
+                        } else if (payload[1] === 0x01) {
+                            this._parseAudioSampling(payload);
+                            this.emit('ack-received', 'audioSampling');
+                        }
+                        break;
+                }
+            }
+
+            if (messageType === MessageType.COMMAND_2) {
+                switch (payload[0]) {
+                    case PayloadType.VOICE_NOTIFICATIONS_RET:
+                    case PayloadType.VOICE_NOTIFICATIONS_NOTIFY:
+                        this.emit('ack-received', 'voiceNotifications');
+                        this._parseVoiceNotifications(payload);
                         break;
                 }
             }
         } catch (e) {
             this._log.error('Failed to process socket data', e);
         }
-    }
-
-    setAmbientSoundControl(mode, focusOnVoice, level) {
-        if (this._usesProtocolV2)
-            this._setAmbientSoundControlV2(mode, focusOnVoice, level);
-        else
-            this._setAmbientSoundControlV1(mode, focusOnVoice, level);
-    }
-
-    _setAmbientSoundControlV1(mode, focusOnVoice, level) {
-        this._log.info(
-            `_setAmbientSoundControlV1: mode: ${mode} focusOnVoice: ${focusOnVoice} ` +
-                `level: ${level}`);
-        const buf = [PayloadType.AMBIENT_SOUND_CONTROL_SET, 0x02];
-
-        const modeIsOff = mode === AmbientSoundMode.ANC_OFF; ;
-        const modeIsNC = mode === AmbientSoundMode.ANC_ON;
-        const modeIsWNR = mode === AmbientSoundMode.WIND;
-        const modeIsAmbient = mode === AmbientSoundMode.AMBIENT;
-
-        buf.push(modeIsOff ? 0x00 : 0x11);
-        buf.push(this._windNoiseReductionSupported ? 0x02 : 0x00);
-
-        let modeCode = 0x00;
-        if (this._windNoiseReductionSupported) {
-            if (modeIsNC)
-                modeCode = 0x02;
-            else if (modeIsWNR)
-                modeCode = 0x01;
-        } else {
-            modeCode = modeIsNC ? 0x01 : 0x00;
-        }
-
-        buf.push(modeCode);
-        buf.push(0x01);
-        buf.push(this._focusOnVoiceState ? 0x01 : 0x00);
-
-        const attlevel = modeIsOff || modeIsAmbient
-            ? this._parseAmbientAttenuationLevel(level)
-            : 0x00;
-
-        buf.push(attlevel);
-        this._addMessageQueue(MessageType.COMMAND_1, buf);
-    }
-
-    _setAmbientSoundControlV2(mode, focusOnVoice, level) {
-        this._log.info(
-            `_setAmbientSoundControlV2: mode: ${mode} focusOnVoice: ${focusOnVoice} ` +
-                `level: ${level}`);
-        const featureIdx = this._windNoiseReductionSupported ||
-                        this._ambientSoundControl2Supported
-            ? 0x17
-            : 0x15;
-
-        const buf = [
-            PayloadType.AMBIENT_SOUND_CONTROL_SET,
-            featureIdx,
-            0x01,
-            mode === AmbientSoundMode.ANC_OFF ? 0x00 : 0x01,
-            mode === AmbientSoundMode.AMBIENT ? 0x01 : 0x00,
-        ];
-
-        if (this._windNoiseReductionSupported)
-            buf.push(mode === AmbientSoundMode.WIND ? 0x03 : 0x02);
-
-
-        buf.push(this._focusOnVoiceState ? 0x01 : 0x00,
-            this._parseAmbientAttenuationLevel(level)
-        );
-
-        this._addMessageQueue(MessageType.COMMAND_1, buf);
-    }
-
-    setSpeakToChatEnabled(enabled) {
-        this._log.info(`setSpeakToChatEnabled: ${enabled}`);
-        const subCommand = this._usesProtocolV2 ? 0x0c : 0x05;
-        const payload = [PayloadType.AUTOMATIC_POWER_OFF_BUTTON_MODE_SET, subCommand];
-
-        if (this._usesProtocolV2) {
-            payload.push(enabled ? 0x00 : 0x01);
-            payload.push(0x01);
-        } else {
-            payload.push(0x01);
-            payload.push(enabled ? 0x01 : 0x00);
-        }
-
-        this._addMessageQueue(MessageType.COMMAND_1, payload);
-    }
-
-    setSpeakToChatConfig(sensitivity, timeout) {
-        this._log.info(`setSpeakToChatConfig: sensitivity=${sensitivity}, timeout=${timeout}`);
-        const subCommand = this._usesProtocolV2 ? 0x0c : 0x05;
-        const payload = [PayloadType.SPEAK_TO_CHAT_CONFIG_SET, subCommand];
-
-        if (this._usesProtocolV2) {
-            payload.push(sensitivity & 0xff);
-            payload.push(timeout & 0xff);
-        } else {
-            payload.push(0x00);
-            payload.push(sensitivity & 0xff);
-            payload.push(this._focusOnVoiceState ? 0x01 : 0x00);
-            payload.push(timeout & 0xff);
-        }
-
-        this._addMessageQueue(MessageType.COMMAND_1, payload);
     }
 
     _getCurrentState() {
@@ -778,9 +1133,6 @@ export const SonySocket = GObject.registerClass({
         if (this._speakToChatEnabledSupported)
             this._getSpeakToChatEnabled();
 
-        if (this._speakToChatConfigSupported)
-            this._getSpeakToChatConfig();
-
         const batteryType = this._usesProtocolV2 ? BatteryTypeV2 : BatteryTypeV1;
 
         if (this._batterySingleSupported)
@@ -791,6 +1143,18 @@ export const SonySocket = GObject.registerClass({
 
         if (this._batteryCaseSupported)
             this._getBatteryRequest(batteryType.CASE);
+
+        if (this._speakToChatConfigSupported)
+            this._getSpeakToChatConfig();
+
+        if (this._equalizerSixBands || this._equalizerTenBands)
+            this._getEqualizer();
+
+        if (this._voiceNotifications)
+            this._getVoiceNotifications();
+
+        if (this._listeningMode)
+            this._getListeningMode();
     }
 
     postConnectInitialization() {

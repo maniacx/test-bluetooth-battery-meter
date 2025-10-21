@@ -1,0 +1,6 @@
+[2025-10-21T14:51:38.209Z] Log started
+
+[2025-10-21T14:51:38.375Z] INF: [Main] Device connection status: null Path: /org/bluez/hci0/dev_XX_XX_XX_XX_XX_XX
+ 
+[2025-10-21T14:51:38.375Z] INF: [Main] Device not connected. Waiting for device
+ 

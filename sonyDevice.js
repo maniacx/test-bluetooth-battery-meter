@@ -3,9 +3,11 @@ import GObject from 'gi://GObject';
 
 import {createLogger} from './logger.js';
 import {getBluezDeviceProxy} from './bluezDeviceProxy.js';
-import {createConfig, createProperties, DataHandler} from './dataHandler.js';
 import {SonySocket} from './sonySocket.js';
-import {SonyConfiguration, AmbientSoundMode} from './sonyConfig.js';
+import {
+    SonyConfiguration, AmbientSoundMode,
+    AutoAsmSensitivity, ListeningMode
+} from './sonyConfig.js';
 
 export const SonyUUIDv1 = '96cc203e-5068-46ad-b32d-e316f5e069ba';
 
@@ -13,27 +15,49 @@ export const SonyUUIDv2 = '956c7b26-d49a-4ba8-b03f-b17d393cb6e2';
 
 export const SonyDevice = GObject.registerClass({
 }, class SonyDevice extends GObject.Object {
-    _init(devicePath, updateDeviceMapCb, profileManager) {
+    _init(devicePath, ui, profileManager) {
         super._init();
+        this._ui = ui;
         this._log = createLogger('SonyDevice');
         this._log.info('SonyDevice init ');
         this._devicePath = devicePath;
-        this._config = createConfig();
-        this._props = createProperties();
         this._usesProtocolV2 = false;
         this._model = null;
         this._ambientLevel = 10;
         this._focusOnVoiceState = false;
-        this.updateDeviceMapCb = updateDeviceMapCb;
         this._profileManager = profileManager;
         this._battInfoRecieved = false;
+        this._uiGuards = {
+            ambientmode: false,
+            s2cenable: false,
+            s2cConfig: false,
+            bgm: false,
+            voiceNotifications: false,
+            equalizer: false,
+            audioSampling: false,
+            pauseWhenTakenOff: false,
+            automaticPowerOff: false,
+        };
+
+        this._ambientMode = AmbientSoundMode.ANC_OFF;
+        this._focusOnVoiceState = false;
+        this._ambientLevel = 10;
+        this._naMode = true;
+        this._naSensitivity = AutoAsmSensitivity.STANDARD;
+        this._bgmProps = {active: false, distance: 0, mode: ListeningMode.STANDARD};
 
         this._callbacks = {
             updateBatteryProps: this.updateBatteryProps.bind(this),
             updateAmbientSoundControl: this.updateAmbientSoundControl.bind(this),
             updateSpeakToChatEnable: this.updateSpeakToChatEnable.bind(this),
             updateSpeakToChatConfig: this.updateSpeakToChatConfig.bind(this),
-            updatePlaybackState: this.updatePlaybackState.bind(this),
+            updateEqualizer: this.updateEqualizer.bind(this),
+            updateListeningBgmMode: this.updateListeningBgmMode.bind(this),
+            updateListeningNonBgmMode: this.updateListeningNonBgmMode.bind(this),
+            updateVoiceNotifications: this.updateVoiceNotifications.bind(this),
+            updateAudioSampling: this.updateAudioSampling.bind(this),
+            updatePauseWhenTakenOff: this.updatePauseWhenTakenOff.bind(this),
+            updateAutomaticPowerOff: this.updateAutomaticPowerOff.bind(this),
         };
 
         this._initialize();
@@ -90,7 +114,7 @@ export const SonyDevice = GObject.registerClass({
             return;
         }
 
-        this._log.info(`Found modelData for name "${name}": ${JSON.stringify(modelData, null, 2)}`);
+        this._log.info(`Found modelData "${name}": ${JSON.stringify(modelData, null, 2)}`);
 
         this._batteryDualSupported = modelData.batteryDual ?? false;
         this._batteryDual2Supported = modelData.batteryDual2 ?? false;
@@ -101,40 +125,84 @@ export const SonyDevice = GObject.registerClass({
         this._ambientSoundControlSupported = modelData.ambientSoundControl ?? false;
         this._ambientSoundControl2Supported = modelData.ambientSoundControl2 ?? false;
         this._windNoiseReductionSupported = modelData.windNoiseReduction ?? false;
-
-        this._hasFocusOnVoice = modelData.hasFocusOnVoice ?? false;
-        this._hasAmbientLevelControl = modelData.hasAmbientLevelControl ?? false; ;
+        this._ambientSoundControlNASupported = modelData.ambientSoundControlNA ?? false;
 
         this._speakToChatEnabledSupported = modelData.speakToChatEnabled ?? false;
         this._speakToChatConfigSupported = modelData.speakToChatConfig ?? false;
         this._speakToChatFocusOnVoiceSupported = modelData.speakToChatFocusOnVoice ?? false;
 
+        this._listeningModeSupported = modelData.listeningMode ?? false;
+        this._voiceNotificationsSupported = modelData.voiceNotifications ?? false;
+        this._equalizerSixBandsSupported = modelData.equalizerSixBands ?? false;
+        this._equalizerTenBandsSupported = modelData.equalizerTenBands ?? false;
+        this._audioUpsamplingSupported = modelData.audioUpsampling ?? false;
         this._pauseWhenTakenOffSupported = modelData.pauseWhenTakenOff ?? false;
+        this._automaticPowerOffWhenTakenOffSupported =
+            modelData.automaticPowerOffWhenTakenOff ?? false;
 
         if (this._batteryDualSupported || this._batteryDual2Supported) {
-            this._config.battery1Icon = `${modelData.budsIcon}-left`;
-            this._config.battery2Icon = `${modelData.budsIcon}-right`;
+            this._ui.bat1.setIcon(`bbm-${modelData.budsIcon}-left-symbolic`);
+            this._ui.bat2.setIcon(`bbm-${modelData.budsIcon}-right-symbolic`);
+            this._ui.bat2.visible = true;
         }
 
-        if (this._batteryCaseSupported)
-            this._config.battery3Icon = `${modelData.case}`;
+        if (this._batteryCaseSupported) {
+            this._ui.bat3.setIcon(`bbm-${modelData.case}-symbolic`);
+            this._ui.bat3.visible = true;
+        }
 
         if (this._batterySingleSupported)
-            this._config.battery1Icon = modelData.budsIcon;
+            this._ui.bat1.setIcon(`bbm-${modelData.budsIcon}-symbolic`);
 
         if (!this._noNoiseCancellingSupported &&
                 (this._ambientSoundControlSupported || this._ambientSoundControl2Supported)) {
-            this._config.set1Button1Icon = 'bbm-anc-off-symbolic.svg';
-            this._config.set1Button2Icon = 'bbm-anc-on-symbolic.svg';
-            this._config.set1Button3Icon = 'bbm-transperancy-symbolic.svg';
-            if (this._windNoiseReductionSupported)
-                this._config.set1Button4Icon = 'bbm-wind-symbolic.svg';
+            this._ui.ancGroup.visible = true;
+
+            const btns = {
+                btn1Name: 'Off', btn1Icon: 'bbm-anc-off-symbolic',
+                btn2Name: 'On', btn2Icon: 'bbm-anc-on-symbolic',
+                btn3Name: 'Ambient', btn3Icon: 'bbm-transperancy-symbolic',
+            };
+            if (this._windNoiseReductionSupported) {
+                btns.btn4Name = 'Wind';
+                btns.btn4Icon = 'bbm-adaptive-symbolic';
+            }
+
+            this._ui.autoAdaptiveNoiseSwitch.visible = this._ambientSoundControlNASupported;
+            this._ui.autoAdaptiveNoiseSensitivityDd.visible =  this._ambientSoundControlNASupported;
+
+            this._ui.ancToggle.updateConfig(btns);
         }
 
         if (this._speakToChatEnabledSupported) {
-            this._config.set2Button1Icon = 'bbm-ca-on-symbolic.svg';
-            this._config.set2Button2Icon = 'bbm-ca-off-symbolic.svg';
+            this._ui.s2cGroup.visible = true;
+            const s2cTogglebtn = {
+                btn1Name: 'Off', btn1Icon: 'bbm-ca-off-symbolic',
+                btn2Name: 'On', btn2Icon: 'bbm-ca-on-symbolic',
+            };
+            this._ui.s2cToggle.updateConfig(s2cTogglebtn);
+            if (this._speakToChatConfigSupported) {
+                this._ui.s2cSensitivityDd.visible = true;
+                this._ui.s2cDurationDd.visible = true;
+            }
         }
+
+        this._ui.bgmGroup.visible = this._listeningModeSupported;
+
+        this._ui.moreGroup.visible = this._voiceNotificationsSupported ||
+            this._equalizerSixBandsSupported || this._equalizerTenBandsSupported ||
+            this._audioUpsamplingSupported || this._pauseWhenTakenOffSupported ||
+            this._automaticPowerOffWhenTakenOffSupported;
+
+        this._ui.voiceNotificationSwitch.visible = this._voiceNotificationsSupported;
+        if (this._equalizerSixBandsSupported || this._equalizerTenBandsSupported) {
+            this._ui.eqPresetDd.visible = true;
+            this._ui.eqCustomRow.visible =  true;
+            this._eq = this._ui.addCustomEqCallback(this._equalizerTenBandsSupported);
+        }
+        this._ui.dseeRow.visible = this._audioUpsamplingSupported;
+        this._ui.pauseWhenTakeOffSwitch.visible = this._pauseWhenTakenOffSupported;
+        this._ui.autoPowerOffDd.visible = this._automaticPowerOffWhenTakenOffSupported;
 
         this._modelData = modelData;
         this._initializeProfile();
@@ -185,106 +253,307 @@ export const SonyDevice = GObject.registerClass({
         if (bat1level <= 0 && bat2level <= 0 && bat3level <= 0)
             return;
 
-        this._battInfoRecieved = true;
-
-        this.dataHandler = new DataHandler(this._config, this._props,
-            this.set1ButtonClicked.bind(this), this.set2ButtonClicked.bind(this));
-
-        this.updateDeviceMapCb(this._devicePath, this.dataHandler);
+        this._ui.bat1.setLabel(bat1level === 0 ? '---' : bat1level);
+        this._ui.bat2.setLabel(bat2level === 0 ? '---' : bat2level);
+        this._ui.bat3.setLabel(bat3level === 0 ? '---' : bat3level);
     }
 
     updateBatteryProps(props) {
         this._props = {...this._props, ...props};
-        if (!this._battInfoRecieved)
-            this._startConfiguration(props);
+        const bat1level = props.battery1Level  ?? 0;
+        const bat2level = props.battery2Level  ?? 0;
+        const bat3level = props.battery3Level  ?? 0;
 
-        this.dataHandler?.setProps(this._props);
-    }
-
-    updateAmbientSoundControl(mode, focusOnVoiceState, level) {
-        this._log.info(`updateAmbientSoundControl : M: [${mode}]` +
-            ` F:[${focusOnVoiceState}] L:[${level}]`);
-        if (this._noNoiseCancellingSupported)
+        if (bat1level <= 0 && bat2level <= 0 && bat3level <= 0)
             return;
 
+        this._ui.bat1.setLabel(bat1level === 0 ? '---' : bat1level);
+        this._ui.bat2.setLabel(bat2level === 0 ? '---' : bat2level);
+        this._ui.bat3.setLabel(bat3level === 0 ? '---' : bat3level);
+
+        if (!this._battInfoRecieved) {
+            this._ancToggleMonitor();
+            this._ambientLevelSliderMonitor();
+            this._voiceFocusSwitchMonitor();
+            this._autoAdaptiveNoiseSwitchMonitor();
+            this._autoAdaptiveNoiseSensitivityDdMonitor();
+            this._s2cToggleMonitor();
+            this._s2cSensitivityDdMonitor();
+            this._s2cDurationDdMonitor();
+            this._bgmDistanceDdMonitor();
+            this._bgmModeDdMonitor();
+            this._voiceNotificationSwitchMonitor();
+            this._eqPresetDdMonitor();
+            this._eqCustomRowMonitor();
+            this._dseeRowSwitchMonitor();
+            this._autoPowerOffDdMonitor();
+            this._pauseWhenTakeOffSwitchMonitor();
+        }
+
+        this._battInfoRecieved = true;
+    }
+
+    updateAmbientSoundControl(mode, focusOnVoiceState, level, naMode, naSensitivity) {
+        this._uiGuards.ambientmode = true;
+
         this._ambientMode = mode;
+        this._focusOnVoiceState = focusOnVoiceState;
+        this._ambientLevel = level;
+        this._naMode = naMode;
+        this._naSensitivity = naSensitivity;
 
         if (mode === AmbientSoundMode.ANC_OFF)
-            this._props.toggle1State = 1;
+            this._ui.ancToggle.toggled = 1;
         else if (mode === AmbientSoundMode.ANC_ON)
-            this._props.toggle1State = 2;
+            this._ui.ancToggle.toggled = 2;
         else if (mode === AmbientSoundMode.AMBIENT)
-            this._props.toggle1State = 3;
-        else if (mode === AmbientSoundMode.WIND)
-            this._props.toggle1State = 4;
+            this._ui.ancToggle.toggled = 3;
+        else if (this._windNoiseReductionSupported && mode === AmbientSoundMode.WIND)
+            this._ui.ancToggle.toggled = 4;
 
-        this._log.info(`updateAmbientSoundControl toggle1State = [${this._props.toggle1State}]`);
+        this._ui.voiceFocusSwitch.active = focusOnVoiceState;
+        this._ui.ambientLevelSlider.value = level;
 
-        this._focusOnVoiceState = focusOnVoiceState;
-        this._props.tmpFocusOnVoice = focusOnVoiceState;
-        this._ambientLevel = level;
-        this._props.tmpAmbientLevel = level;
+        if (this._ambientSoundControlNASupported) {
+            this._ui.autoAmbientSoundSwitch.active = naMode;
+            this._ui.autoAsmSensitivityDropdown.selected_item = naSensitivity;
+        }
+        this._uiGuards.ambientmode = false;
+    }
 
-        this.dataHandler?.setProps(this._props);
+    _ancToggleMonitor() {
+        this._ui.ancToggle.connect('notify::toggled', () => {
+            if (this._uiGuards.ambientmode)
+                return;
+            const val = this._ui.ancToggle.toggled;
+            let mode = AmbientSoundMode.ANC_OFF;
+            if (val === 2)
+                mode = AmbientSoundMode.ANC_ON;
+            else if (val === 3)
+                mode = AmbientSoundMode.AMBIENT;
+            else if (val === 4)
+                mode = AmbientSoundMode.WIND;
+
+            this._ambientMode = mode;
+
+            this._sonySocket.setAmbientSoundControl(this._ambientMode, this._focusOnVoiceState,
+                this._ambientLevel, this._naMode, this._naSensitivity);
+        });
+    }
+
+    _ambientLevelSliderMonitor() {
+        this._ui.ambientLevelSlider.connect('notify::value-changed', () => {
+            if (this._uiGuards.ambientmode)
+                return;
+            this._ambientLevel = this._ui.ambientLevelSlider.get_value();
+            this._sonySocket.setAmbientSoundControl(this._ambientMode, this._focusOnVoiceState,
+                this._ambientLevel, this._naMode, this._naSensitivity);
+        });
+    }
+
+    _voiceFocusSwitchMonitor() {
+        this._ui.voiceFocusSwitch.connect('notify::active', () => {
+            if (this._uiGuards.ambientmode)
+                return;
+            this._focusOnVoiceState = this._ui.voiceFocusSwitch.active;
+            this._sonySocket.setAmbientSoundControl(this._ambientMode, this._focusOnVoiceState,
+                this._ambientLevel, this._naMode, this._naSensitivity);
+        });
+    }
+
+    _autoAdaptiveNoiseSwitchMonitor() {
+        this._ui.autoAdaptiveNoiseSwitch.connect('notify::active', () => {
+            if (this._uiGuards.ambientmode)
+                return;
+            this._naMode = this._ui.autoAdaptiveNoiseSwitch.active;
+            this._sonySocket.setAmbientSoundControl(this._ambientMode, this._focusOnVoiceState,
+                this._ambientLevel, this._naMode, this._naSensitivity);
+        });
+    }
+
+    _autoAdaptiveNoiseSensitivityDdMonitor() {
+        this._ui.autoAdaptiveNoiseSensitivityDd.connect('notify::selected-item', () => {
+            if (this._uiGuards.ambientmode)
+                return;
+            this._naSensitivity = this._ui.autoAdaptiveNoiseSensitivityDd.selected_item;
+            this._sonySocket.setAmbientSoundControl(this._ambientMode, this._focusOnVoiceState,
+                this._ambientLevel, this._naMode, this._naSensitivity);
+        });
     }
 
     updateSpeakToChatEnable(enabled) {
-        this._props.toggle2State = enabled ? 1 : 2;
-        this.dataHandler?.setProps(this._props);
+        this._uiGuards.s2cenable = true;
+        this._ui.s2cToggle.toggled = enabled ? 2 : 1;
+        this._uiGuards.s2cenable = false;
+    }
+
+    _s2cToggleMonitor() {
+        this._ui.s2cToggle.connect('notify::toggled', () => {
+            if (this._uiGuards.s2cenable)
+                return;
+            const enabled = this._ui.s2cToggle.toggled === 2;
+            this._sonySocket.setSpeakToChatEnabled(enabled);
+        });
     }
 
     updateSpeakToChatConfig(speak2ChatSensitivity, focusOnVoiceState, speak2ChatTimeout) {
+        this._uiGuards.s2cConfig = true;
         this._speak2ChatSensitivity = speak2ChatSensitivity;
-        this._focusOnVoiceState = focusOnVoiceState;
+        this._s2cFocusOnVoiceState = focusOnVoiceState;
         this._speak2ChatTimeout = speak2ChatTimeout;
 
-        this._props.tmpFocusOnVoice = focusOnVoiceState;
-        this.dataHandler?.setProps(this._props);
+        this._ui.s2cSensitivityDd.selected_item = speak2ChatSensitivity;
+        this._ui.s2cDurationDd.selected_item = speak2ChatTimeout;
+        this._uiGuards.s2cConfig = false;
     }
 
-    updatePlaybackState(state) {
-        this._props.tmpPlayPauseStatus = state;
-        this.dataHandler?.setProps(this._props);
+    _s2cSensitivityDdMonitor() {
+        this._ui.s2cSensitivityDd.connect('notify::selected-item', () => {
+            if (this._uiGuards.s2cConfig)
+                return;
+            const val = this._ui.s2cSensitivityDd.selected_item;
+            this._speak2ChatSensitivity = val;
+            this._sonySocket.setSpeakToChatEnabled(this._speak2ChatSensitivity,
+                this._speak2ChatTimeout);
+        });
     }
 
-    set1ButtonClicked(index) {
-        if (this._noNoiseCancellingSupported)
-            return;
-
-        if (index === 1)
-            this._ambientMode = AmbientSoundMode.ANC_OFF;
-        else if (index === 2)
-            this._ambientMode = AmbientSoundMode.ANC_ON;
-        else if (index === 3)
-            this._ambientMode = AmbientSoundMode.AMBIENT;
-        else if (index === 4)
-            this._ambientMode = AmbientSoundMode.WIND;
-
-
-        this._sonySocket.setAmbientSoundControl(this._ambientMode,
-            this._focusOnVoiceState,  this._ambientLevel);
+    _s2cDurationDdMonitor() {
+        this._ui.s2cDurationDd.connect('notify::selected-item', () => {
+            if (this._uiGuards.s2cConfig)
+                return;
+            const val = this._ui.s2cDurationDd.selected_item;
+            this._speak2ChatTimeout = val;
+            this._sonySocket.setSpeakToChatEnabled(this._speak2ChatSensitivity,
+                this._speak2ChatTimeout);
+        });
     }
 
-    updateLevel(value) {
-        this._ambientLevel = value;
-        this._sonySocket.setAmbientSoundControl(this._ambientMode,
-            this._focusOnVoiceState,  this._ambientLevel);
+    updateListeningBgmMode(bgmProps) {
+        this._uiGuards.bgm = true;
+        if (bgmProps.active)
+            this._ui.bgmModeDd.selected_item = ListeningMode.BGM;
+        else
+            this._ui.bgmModeDd.selected_item = bgmProps.mode;
+
+        this._ui.bgmDistanceDd.selected_item = bgmProps.distance;
+        this._bgmProps = bgmProps;
+        this._uiGuards.bgm = false;
     }
 
-    updateSwitch(state) {
-        this._focusOnVoiceState = state;
-        this._sonySocket.setAmbientSoundControl(this._ambientMode,
-            this._focusOnVoiceState,  this._ambientLevel);
+    updateListeningNonBgmMode(bgmProps) {
+        this._uiGuards.bgm = true;
+        this._ui.bgmModeDd.selected_item = bgmProps.mode;
+        this._ui.bgmDistanceDd.selected_item = bgmProps.distance;
+        this._bgmProps = bgmProps;
+        this._uiGuards.bgm = false;
     }
 
-    set2ButtonClicked(index) {
-        if (this._noNoiseCancellingSupported)
-            return;
+    _bgmModeDdMonitor() {
+        this._ui.bgmModeDd.connect('notify::selected-item', () => {
+            if (this._uiGuards.bgm)
+                return;
+            const val = this._ui.bgmModeDd.selected_item;
+            this._bgmProps.mode = val;
+            this._sonySocket.setListeningModeBgm(this._bgmProps.mode,
+                this._bgmProps.distance);
+        });
+    }
 
-        if (index === 1)
-            this._sonySocket.setSpeakToChatEnabled(true);
-        else if (index === 2)
-            this._sonySocket.setSpeakToChatEnabled(false);
+    _bgmDistanceDdMonitor() {
+        this._ui.bgmDistanceDd.connect('notify::selected-item', () => {
+            if (this._uiGuards.bgm)
+                return;
+            const val = this._ui.bgmDistanceDd.selected_item;
+            this._bgmProps.distance = val;
+            this._sonySocket.setListeningModeBgm(this._bgmProps.mode,
+                this._bgmProps.distance);
+        });
+    }
+
+    updateVoiceNotifications(enabled) {
+        this._uiGuards.voiceNotifications = true;
+        this._ui.voiceNotificationSwitch.active = enabled;
+        this._uiGuards.voiceNotifications = false;
+    }
+
+    _voiceNotificationSwitchMonitor() {
+        this._ui.voiceNotificationSwitch.connect('notify::active', () => {
+            if (this._uiGuards.voiceNotifications)
+                return;
+            const enabled = this._ui.voiceNotificationSwitch.active;
+            this._sonySocket.setVoiceNotifications(enabled);
+        });
+    }
+
+    updateEqualizer(presetCode, customBands) {
+        this._uiGuards.equalizer = true;
+        this._ui.eqPresetDd.selected_item = presetCode;
+        this._eq.setValues(customBands);
+        this._uiGuards.equalizer = false;
+    }
+
+    _eqPresetDdMonitor() {
+        this._ui.eqPresetDd.connect('notify::selected-item', () => {
+            if (this._uiGuards.equalizer)
+                return;
+            const val = this._ui.eqPresetDd.selected_item;
+            this._sonySocket.setEqualizerPreset(val);
+        });
+    }
+
+    _eqCustomRowMonitor() {
+        this._uiGuards.audioSampling = true;
+        this._eq.connect('eq-changed', (_w, arr) => {
+            if (this._uiGuards.equalizer)
+                return;
+            this._sonySocket.setEqualizerCustomBands(arr);
+        });
+    }
+
+    updateAudioSampling(enabled) {
+        this._uiGuards.audioSampling = true;
+        this._ui.dseeRow.active = enabled;
+        this._uiGuards.audioSampling = false;
+    }
+
+    _dseeRowSwitchMonitor() {
+        this._ui.dseeRow.connect('notify::active', () => {
+            if (this._uiGuards.audioSampling)
+                return;
+            const enabled = this._ui.dseeRow.active;
+            this._sonySocket.setAudioUpsampling(enabled);
+        });
+    }
+
+    updatePauseWhenTakenOff(enabled) {
+        this._uiGuards.pauseWhenTakenOff = true;
+        this._ui.pauseWhenTakeOffSwitch.active = enabled;
+        this._uiGuards.pauseWhenTakenOff = false;
+    }
+
+    _pauseWhenTakeOffSwitchMonitor() {
+        this._ui.pauseWhenTakeOffSwitch.connect('notify::active', () => {
+            if (this._uiGuards.pauseWhenTakenOff)
+                return;
+            const enabled = this._ui.pauseWhenTakeOffSwitch.active;
+            this._sonySocket.setPauseWhenTakenOff(enabled);
+        });
+    }
+
+    updateAutomaticPowerOff(mode) {
+        this._uiGuards.automaticPowerOff = true;
+        this._ui.autoPowerOffDd.selected_item = mode;
+        this._uiGuards.automaticPowerOff = false;
+    }
+
+    _autoPowerOffDdMonitor() {
+        this._ui.autoPowerOffDd.connect('notify::selected-item', () => {
+            if (this._uiGuards.automaticPowerOff)
+                return;
+            const val = this._ui.autoPowerOffDd.selected_item;
+            this._sonySocket.setAutomaticPowerOff(val);
+        });
     }
 
     destroy() {
