@@ -224,6 +224,33 @@ export const SonySocket = GObject.registerClass({
         this._addMessageQueue(MessageType.COMMAND_1, payload, 'init');
     }
 
+    _getProtocolInfo() {
+        this._log.info('_getProtocolInfo:');
+
+        const payload = [PayloadType.CONNECT_GET_PROTOCOL_INFO];
+        payload.push(0x00);
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload, 'protocolInfo');
+    }
+
+    _getCapabilityInfo() {
+        this._log.info('_getCapabilityInfo:');
+
+        const payload = [PayloadType.CONNECT_GET_CAPABILITY_INFO];
+        payload.push(0x00);
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload, 'capabilityInfo');
+    }
+
+    _getSupportInfo() {
+        this._log.info('_getSupportInfo:');
+
+        const payload = [PayloadType.CONNECT_GET_SUPPORT_FUNCTION];
+        payload.push(0x00);
+
+        this._addMessageQueue(MessageType.COMMAND_1, payload, 'supportInfo');
+    }
+
     _getBatteryRequest(batteryType) {
         this._log.info('_getBatteryRequest:');
 
@@ -1104,6 +1131,10 @@ export const SonySocket = GObject.registerClass({
 
     _getCurrentState() {
         this._log.info('_getCurrentState');
+
+        this._getProtocolInfo();
+        this._getCapabilityInfo();
+        this._getSupportInfo();
 
         const batteryType = this._usesProtocolV2 ? BatteryTypeV2 : BatteryTypeV1;
 
