@@ -155,7 +155,9 @@ class BatteryApp {
         this._slider.set_value(10);
 
         this._slider.connect('value-changed', () => {
-            this._log.info(`Ambient level changed : ${this._slider.get_value()}`);
+            const value = Math.round(this._slider.get_value());
+            if (this._sliderValue !== value)
+                this._log.info(`Ambient level changed : ${value}`);
         });
         this._ancGroup.add(this._levelSliderRow);
 

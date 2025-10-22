@@ -245,19 +245,6 @@ export const SonyDevice = GObject.registerClass({
             this._callbacks);
     }
 
-    _startConfiguration(battInfo) {
-        const bat1level = battInfo.battery1Level  ?? 0;
-        const bat2level = battInfo.battery2Level  ?? 0;
-        const bat3level = battInfo.battery3Level  ?? 0;
-
-        if (bat1level <= 0 && bat2level <= 0 && bat3level <= 0)
-            return;
-
-        this._ui.bat1.setLabel(bat1level === 0 ? '---' : bat1level);
-        this._ui.bat2.setLabel(bat2level === 0 ? '---' : bat2level);
-        this._ui.bat3.setLabel(bat3level === 0 ? '---' : bat3level);
-    }
-
     updateBatteryProps(props) {
         this._props = {...this._props, ...props};
         const bat1level = props.battery1Level  ?? 0;
@@ -267,9 +254,9 @@ export const SonyDevice = GObject.registerClass({
         if (bat1level <= 0 && bat2level <= 0 && bat3level <= 0)
             return;
 
-        this._ui.bat1.setLabel(bat1level === 0 ? '---' : bat1level);
-        this._ui.bat2.setLabel(bat2level === 0 ? '---' : bat2level);
-        this._ui.bat3.setLabel(bat3level === 0 ? '---' : bat3level);
+        this._ui.bat1.setLabel(bat1level === 0 ? '---' : `${bat1level}%,  ${props.battery1Status}`);
+        this._ui.bat2.setLabel(bat2level === 0 ? '---' : `${bat2level}%,  ${props.battery2Status}`);
+        this._ui.bat3.setLabel(bat3level === 0 ? '---' : `${bat3level}%,  ${props.battery3Status}`);
 
         if (!this._battInfoRecieved) {
             this._ancToggleMonitor();
@@ -345,9 +332,13 @@ export const SonyDevice = GObject.registerClass({
         this._ui.ambientLevelSlider.connect('notify::value-changed', () => {
             if (this._uiGuards.ambientmode)
                 return;
-            this._ambientLevel = this._ui.ambientLevelSlider.get_value();
-            this._sonySocket.setAmbientSoundControl(this._ambientMode, this._focusOnVoiceState,
-                this._ambientLevel, this._naMode, this._naSensitivity);
+            const value = Math.round(this._ui.ambientLevelSlider.get_value());
+
+            if (this._ambientLevel !== value) {
+                this._ambientLevel = value;
+                this._sonySocket.setAmbientSoundControl(this._ambientMode, this._focusOnVoiceState,
+                    this._ambientLevel, this._naMode, this._naSensitivity);
+            }
         });
     }
 
