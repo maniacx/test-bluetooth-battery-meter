@@ -82,6 +82,8 @@ class BatteryApp {
         });
 
         const page = new Adw.PreferencesPage();
+        this._page = page;
+        this._page.sensitive = false;
 
         const currentFile = import.meta.url.replace('file://', '');
         const scriptDir = Gio.File.new_for_path(GLib.path_get_dirname(currentFile));
@@ -571,6 +573,13 @@ class BatteryApp {
             return;
 
         this._deviceStarted = true;
+
+        GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 15, () => {
+            this._page.sensitive = true;
+            return GLib.SOURCE_REMOVE;
+        });
+
+
 
         const uiObjects = {
             bat1: this._battery1,
