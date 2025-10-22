@@ -79,63 +79,42 @@ export const SonySocket = GObject.registerClass({
 
         this._processingQueue = true;
         this._currentMessage = this._messageQueue.shift();
-        this._sendWithRetry();
+        this._sendAndWaitAck();
     }
 
-    _sendWithRetry() {
+    _sendAndWaitAck() {
         if (!this._currentMessage)
             return;
-        this._encodeSonyMessage(this._currentMessage.type, this._currentMessage.payload);
-        this._awaitingAck = this._currentMessage.ack;
 
-        this._retriesLeft = this._awaitingAck === 'ack' ? 0 : 3;
+        const {type, payload, ack} = this._currentMessage;
+        this._encodeSonyMessage(type, payload);
+        this._awaitingAck = ack;
 
         if (this._ackTimeoutId) {
             GLib.source_remove(this._ackTimeoutId);
             this._ackTimeoutId = null;
         }
 
-        this._ackTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
-            if (this._retriesLeft > 0) {
-                this._log.info(`ACK not received, retrying... (${this._retriesLeft})`);
-                this._retriesLeft--;
-                const {type, payload} = this._currentMessage ?? {};
-                if (type && payload)
-                    this._encodeSonyMessage(type, payload);
+        this._ackTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
+            this._log.info(`ACK (${ack}) not received after 1s, continuing.`);
+            this._awaitingAck = null;
+            this._currentMessage = null;
 
-                return GLib.SOURCE_CONTINUE;
-            }
+            if (this._messageQueue.length === 0)
+                this._processingQueue = false;
+            else
+                this._processNextQueuedMessage();
 
-            this._popFailedMessage();
             this._ackTimeoutId = null;
             return GLib.SOURCE_REMOVE;
         });
     }
 
-    _popFailedMessage() {
-        this._awaitingAck = null;
-
-        if (this._ackTimeoutId) {
-            GLib.source_remove(this._ackTimeoutId);
-            this._ackTimeoutId = null;
-        }
-
-        if (!this._initComplete) {
-            this._log.error('ACK not received after retries. Giving up.');
-            this.destroy();
-        }
-
-        this._currentMessage = null;
-        if (this._messageQueue.length === 0)
-            this._processingQueue = false;
-        else
-            this._processNextQueuedMessage();
-    }
-
     _onAcknowledgeReceived(o, ackType) {
-        this._log.info('_onAcknowledgeReceived:');
         if (this._awaitingAck !== ackType)
             return;
+
+        this._log.info('ACK Received:');
 
         this._awaitingAck = null;
 
