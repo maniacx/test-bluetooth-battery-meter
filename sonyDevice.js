@@ -66,9 +66,8 @@ export const SonyDevice = GObject.registerClass({
     _initialize() {
         this._bluezDeviceProxy = getBluezDeviceProxy(this._devicePath);
         const uuids = this._bluezDeviceProxy.UUIDs;
-        this._log.info('');
-        this._log.info(`UUIDs: ${uuids}`);
-        this._log.info('');
+        this._log.info('Branch: Sony-No-Retries-Ori-Seq-GetInfo');
+
 
         if (uuids.includes(SonyUUIDv1))
             this._log.info('Sony device is V1');
