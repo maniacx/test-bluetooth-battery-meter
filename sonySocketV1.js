@@ -122,11 +122,12 @@ export const SonySocket = GObject.registerClass({
         const len = payloadArr.length;
         const headerBuf = new Uint8Array(6 + len);
         let sequence;
-        if (seq !== undefined)
+        if (seq !== undefined) {
             sequence = seq;
-        else
+        } else {
             sequence = this._seq;
-
+            this._seq = 1 - this._seq;
+        }
 
         headerBuf[0] = messageType;
         headerBuf[1] = sequence;
@@ -903,7 +904,6 @@ export const SonySocket = GObject.registerClass({
             const {messageType, sequence, payload} = data;
 
             if (messageType === MessageType.ACK) {
-                this._seq = 1 - this._seq;
                 this.emit('ack-received', 'ack');
                 return;
             }
