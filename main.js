@@ -5,17 +5,17 @@ import GLib from 'gi://GLib';
 
 import {createLogger} from './logger.js';
 import {getBluezDeviceProxy} from './bluezDeviceProxy.js';
-import {SonyDevice} from './sonyDevice.js';
+import {SonyDevice, SonyUUIDv1} from './sonyDeviceV1.js';
 import {ProfileManager} from './profileManager.js';
 import {setLiveLogSink, hideMacAdddress} from './logger.js';
 import {ToggleButtonRow} from './widgets/toggleButtonRow.js';
 import {DropDownRowWidget} from './widgets/dropDownRow.js';
 import {EqualizerWidget} from './widgets/equalizerWidget.js';
 
-import {
-    EqualizerPreset, ListeningMode, AutoAsmSensitivity,
-    BgmDistance, AutoPowerOff
-} from './sonyConfig.js';
+import {EqualizerPreset, AutoPowerOff} from './sonyDefsV1.js';
+
+//globalThis.TESTDEVICE = 'WH-1000XM4';
+globalThis.TESTDEVICE = '';
 
 Gio._promisify(Gio.DBusProxy, 'new');
 Gio._promisify(Gio.DBusProxy, 'new_for_bus');
@@ -169,44 +169,6 @@ class BatteryApp {
 
         this._ancGroup.add(this._focuseSwitch);
 
-        this._autoAmbientSoundSwitch =
-            new Adw.SwitchRow({title: 'Auto Ambient Sound', visible: false});
-
-        this._autoAmbientSoundSwitch.connect('notify::active', () => {
-            this._log.info(`Auto Ambient : ${this._autoAmbientSoundSwitch.get_active()}`);
-            this._focuseSwitch.sensitive =  !this._autoAmbientSoundSwitch.active;
-            this._levelSliderRow.sensitive = !this._autoAmbientSoundSwitch.active;
-            this._slider.sensitive = !this._autoAmbientSoundSwitch.active;
-            if (this._autoAsmSensitivityDropdown)
-                this._autoAsmSensitivityDropdown.sensitive = this._autoAmbientSoundSwitch.active;
-        });
-
-        this._ancGroup.add(this._autoAmbientSoundSwitch);
-
-        const autoAsmSensitivityOptions = ['Standard', 'High', 'Low'];
-        const autoAsmSensitivityValues =
-            [AutoAsmSensitivity.STANDARD, AutoAsmSensitivity.HIGH, AutoAsmSensitivity.LOW];
-
-        this._autoAsmSensitivityDropdown = new DropDownRowWidget({
-            title: 'Auto Ambient Sound Sensitivity',
-            options: autoAsmSensitivityOptions,
-            values: autoAsmSensitivityValues,
-            initialValue: AutoAsmSensitivity.STANDARD,
-        });
-
-        this._autoAsmSensitivityDropdown.visible = false;
-        this._autoAsmSensitivityDropdown.sensitive = this._autoAmbientSoundSwitch.active;
-        this._focuseSwitch.sensitive = !this._autoAmbientSoundSwitch.active;
-        this._levelSliderRow.sensitive = !this._autoAmbientSoundSwitch.active;
-        this._slider.sensitive = !this._autoAmbientSoundSwitch.active;
-
-        this._autoAsmSensitivityDropdown.connect('notify::selected-item', () => {
-            const val = this._autoAsmSensitivityDropdown.selected_item;
-            this._log.info(`Auto ASM Sensitivity : ${val}`);
-        });
-
-        this._ancGroup.add(this._autoAsmSensitivityDropdown);
-
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
         this._awarenessGroup = new Adw.PreferencesGroup({title: 'Speak to Chat', visible: false});
@@ -253,64 +215,6 @@ class BatteryApp {
         });
 
         this._awarenessGroup.add(this._durationDropdown);
-
-        // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        this._listeningModeGroup =
-            new Adw.PreferencesGroup({title: 'Listening Mode', visible: false});
-
-        const listeningModes =  [
-            'Standard',
-            'Background Music',
-            'Cinema',
-        ];
-
-        this._listeningModesValues = [
-            ListeningMode.STANDARD,
-            ListeningMode.BGM,
-            ListeningMode.CINEMA,
-        ];
-
-        this._bgmModeDropdown = new DropDownRowWidget({
-            title: 'Listening Mode',
-            options: listeningModes,
-            values: this._listeningModesValues,
-            initialValue: ListeningMode.STANDARD,
-        });
-
-        this._bgmModeDropdown.connect('notify::selected-item', () => {
-            this._log.info(`BGM Mode  : ${this._bgmModeDropdown.selected_item}`);
-            this._updateMenuSensitivity();
-        });
-
-        this._listeningModeGroup.add(this._bgmModeDropdown);
-
-        const bgmDistance =  [
-            'My Room',
-            'Living Room',
-            'Cafe',
-        ];
-
-        this._bgmDistanceValues = [
-            BgmDistance.MY_ROOM,
-            BgmDistance.LIVING_ROOM,
-            BgmDistance.CAFE,
-        ];
-
-        this._bgmDistanceDropdown = new DropDownRowWidget({
-            title: 'Background Music Effects',
-            options: bgmDistance,
-            values: this._bgmDistanceValues,
-            initialValue: BgmDistance.MY_ROOM,
-        });
-
-        this._updateMenuSensitivity();
-
-        this._bgmDistanceDropdown.connect('notify::selected-item', () => {
-            this._log.info(`BGM Distance : ${this._bgmDistanceDropdown.selected_item}`);
-        });
-
-        this._listeningModeGroup.add(this._bgmDistanceDropdown);
-        page.add(this._listeningModeGroup);
 
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         this._moreGroup = new Adw.PreferencesGroup({title: 'More Settings'});
@@ -494,7 +398,6 @@ class BatteryApp {
 
         this._equalizerCustomRow.set_child(this._eq);
         this._updateEqCustomRowVisibility();
-        this._updateMenuSensitivity();
         return this._eq;
     }
 
@@ -511,33 +414,31 @@ class BatteryApp {
         ].includes(val);
     };
 
-    _updateMenuSensitivity()  {
-        const isBGMMode = this._bgmModeDropdown.selected_item === ListeningMode.BGM;
-
-        if (this._bgmDistanceDropdown)
-            this._bgmDistanceDropdown.sensitive = isBGMMode;
-
-        const isStdMode = this._bgmModeDropdown.selected_item === ListeningMode.STANDARD;
-
-        if (this._eqPresetDropdown)
-            this._eqPresetDropdown.sensitive = isStdMode;
-
-        if (this._equalizerCustomRow)
-            this._equalizerCustomRow.sensitive = isStdMode;
-    }
-
     _initialize() {
-        this._bluezDeviceProxy = getBluezDeviceProxy(this._devicePath);
-        const connected = this._bluezDeviceProxy.Connected;
-        this._deviceConnected = connected;
-        this._log.info(
-            `Device connection status: ${connected} Path: ${hideMacAdddress(this._devicePath)}`);
-        if (!connected) {
-            this._log.info('Device not connected. Waiting for device');
-            this._bluezSignalId = this._bluezDeviceProxy.connect(
-                'g-properties-changed', () => this._onBluezPropertiesChanged());
-        } else {
+        if (globalThis.TESTDEVICE) {
             this._startDevice();
+        } else {
+            this._bluezDeviceProxy = getBluezDeviceProxy(this._devicePath);
+            const uuids = this._bluezDeviceProxy.UUIDs;
+
+            if (!uuids.includes(SonyUUIDv1)) {
+                this._log.info('Invalid Sony Device: Not Protocol V1 device');
+                return;
+            }
+
+            const connected = this._bluezDeviceProxy.Connected;
+            this._deviceConnected = connected;
+            this._log.info(
+                `Device connection status: ${connected} ` +
+                `Path: ${hideMacAdddress(this._devicePath)}`);
+
+            if (!connected) {
+                this._log.info('Device not connected. Waiting for device');
+                this._bluezSignalId = this._bluezDeviceProxy.connect(
+                    'g-properties-changed', () => this._onBluezPropertiesChanged());
+            } else {
+                this._startDevice();
+            }
         }
     }
 
@@ -574,7 +475,7 @@ class BatteryApp {
 
         this._deviceStarted = true;
 
-        GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 15, () => {
+        GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 4, () => {
             this._page.sensitive = true;
             return GLib.SOURCE_REMOVE;
         });
@@ -591,17 +492,11 @@ class BatteryApp {
             ambientLevelRow: this._levelSliderRow,
             ambientLevelSlider: this._slider,
             voiceFocusSwitch: this._focuseSwitch,
-            autoAdaptiveNoiseSwitch: this._autoAmbientSoundSwitch,
-            autoAdaptiveNoiseSensitivityDd: this._autoAsmSensitivityDropdown,
 
             s2cGroup: this._awarenessGroup,
             s2cToggle: this._awarenessToggle,
             s2cSensitivityDd: this._sensitivityDropdown,
             s2cDurationDd: this._durationDropdown,
-
-            bgmGroup: this._listeningModeGroup,
-            bgmModeDd: this._bgmModeDropdown,
-            bgmDistanceDd: this._bgmDistanceDropdown,
 
             moreGroup: this._moreGroup,
             voiceNotificationSwitch: this._voiceNotificationsSwitchRow,
@@ -611,6 +506,7 @@ class BatteryApp {
             pauseWhenTakeOffSwitch: this._pauseWhenTakenOff,
             autoPowerOffDd: this._autoPowerOffDropdown,
             addCustomEqCallback: this.addCustomEq.bind(this),
+            updateEqCustomRowVisibility: this._updateEqCustomRowVisibility.bind(this),
         };
 
         this._log.info('Start Device');
