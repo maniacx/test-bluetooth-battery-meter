@@ -53,6 +53,8 @@ export const SonyDevice = GObject.registerClass({
             updateAutomaticPowerOff: this.updateAutomaticPowerOff.bind(this),
         };
 
+        this._log.info('Branch: sony-v1-independent-seq-flip-lines');
+
         if (globalThis.TESTDEVICE)
             this._initializeModel(globalThis.TESTDEVICE);
         else
