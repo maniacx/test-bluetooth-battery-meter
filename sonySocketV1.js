@@ -15,12 +15,15 @@ import {
 Sony module for Bluetooth battery meter service to provide,
 battery information, ANC and Convesational awareness on device that support it.
 
-Reference and Credits:
+Reference and Credits: for V1
 https://codeberg.org/Freeyourgadget/Gadgetbridge
 
-https://github.com/mos9527/SonyHeadphonesClient
-**/
+https://github.com/aybruh00/SonyHeadphonesClient
 
+https://github.com/Plutoberth/SonyHeadphonesClient
+
+https://github.com/andreasolofsson/MDR-protocol
+**/
 export const SonySocket = GObject.registerClass({
     Signals: {'ack-received': {param_types: [GObject.TYPE_STRING]}},
 }, class SonySocket extends SocketHandler {
