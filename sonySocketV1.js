@@ -50,9 +50,12 @@ export const SonySocket = GObject.registerClass({
         this._speakToChatEnabledSupported = modelData.speakToChatEnabled ?? false;
         this._speakToChatConfigSupported = modelData.speakToChatConfig ?? false;
         this._speakToChatFocusOnVoiceSupported = modelData.speakToChatFocusOnVoice ?? false;
-        this._pauseWhenTakenOffSupported = modelData.pauseWhenTakenOff ?? false;
         this._equalizerSixBands = modelData.equalizerSixBands ?? false;
         this._voiceNotifications = modelData.voiceNotifications ?? false;
+        this._audioUpsamplingSupported = modelData.audioUpsampling ?? false;
+        this._pauseWhenTakenOffSupported = modelData.pauseWhenTakenOff ?? false;
+        this._automaticPowerOffWhenTakenOffSupported =
+            modelData.automaticPowerOffWhenTakenOff ?? false;
 
         if (globalThis.TESTDEVICE)
             this.startTestSocket();
@@ -1016,17 +1019,23 @@ export const SonySocket = GObject.registerClass({
         if (this._speakToChatConfigSupported)
             this._getSpeakToChatConfig();
 
+        if (this._speakToChatEnabledSupported)
+            this._getSpeakToChatEnabled();
+
         if (this._equalizerSixBands)
             this._getEqualizer();
 
         if (this._voiceNotifications)
             this._getVoiceNotifications();
 
-        if (this._listeningMode)
-            this._getListeningMode();
+        if (this._audioUpsamplingSupported)
+            this._getAudioUpsampling();
 
-        if (this._speakToChatEnabledSupported)
-            this._getSpeakToChatEnabled();
+        if (this._pauseWhenTakenOffSupported)
+            this._getPauseWhenTakenOff();
+
+        if (this._automaticPowerOffWhenTakenOffSupported)
+            this._getAutomaticPowerOff();
 
         if (!this._noNoiseCancellingSupported && (this._ambientSoundControlSupported ||
                     this._ambientSoundControl2Supported || this._windNoiseReductionSupported))
