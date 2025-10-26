@@ -21,6 +21,42 @@ class SocketHandler extends GObject.Object {
         this._output_queue = [];
     }
 
+    async startTestSocket() {
+        const host = '127.0.0.1';
+        const port = 9000;
+        this._socketLog.info(`Connecting to TCP server ${host}:${port}`);
+
+        try {
+            const inetAddr = Gio.InetAddress.new_from_string(host);
+            const address = Gio.InetSocketAddress.new(inetAddr, port);
+
+            this._socket = Gio.Socket.new(
+                Gio.SocketFamily.IPV4,
+                Gio.SocketType.STREAM,
+                Gio.SocketProtocol.TCP
+            );
+
+            this._socket.connect(address, this._cancellable);
+            this._socket.set_blocking(false);
+            this._socket.set_keepalive(true);
+            this._connection = this._socket.connection_factory_create_connection();
+            this._input_stream = this._connection.get_input_stream();
+            this._output_stream = this._connection.get_output_stream();
+
+            log(`Blocking = ${this._socket.get_blocking()}`);
+            log(`Alive = ${this._socket.get_keepalive()}`);
+
+            this.running = true;
+            this._sending = false;
+
+            this._receiveLoop();
+            await this.postConnectInitialization();
+        } catch (e) {
+            this._socketLog.error(e, 'Error connecting to TCP socket');
+            this.destroy();
+        }
+    }
+
     // Credits: GSCConnect
     // https://github.com/jtojnar/gnome-shell-extension-gsconnect/
     // blob/bb77316b75f330740ffc3523cd1496b5db0f8199/src/service/bluetooth.js#L321

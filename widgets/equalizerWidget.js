@@ -5,7 +5,7 @@ export const EqualizerWidget = GObject.registerClass({
     GTypeName: 'EqualizerWidget',
     Signals: {'eq-changed': {param_types: [GObject.TYPE_JSOBJECT]}},
 }, class EqualizerWidget extends Gtk.Box {
-    _init(freqs, initialValues, range) {
+    _init(freqs, initialValues = [], range = 6) {
         super._init({
             orientation: Gtk.Orientation.HORIZONTAL,
             spacing: 10,
@@ -17,8 +17,11 @@ export const EqualizerWidget = GObject.registerClass({
         });
 
         this.set_size_request(-1, 200);
+
         this._values = freqs.map((_, i) => Math.round(initialValues[i] ?? 0));
         this._range = range;
+        this._sliders = [];
+        this._valueLabels = [];
 
         freqs.forEach((freq, i) => {
             const vbox = new Gtk.Box({
@@ -59,9 +62,11 @@ export const EqualizerWidget = GObject.registerClass({
                 max_width_chars: 5,
             });
 
-            slider._lastStepValue = Math.round(slider.get_value());
+            slider._lastStepValue = this._values[i];
+            this._sliders.push(slider);
+            this._valueLabels.push(valueLabel);
 
-            slider.connect('value-changed', w => {
+            slider._valueChangedHandler = slider.connect('value-changed', w => {
                 const val = Math.round(w.get_value());
                 if (val !== slider._lastStepValue) {
                     slider._lastStepValue = val;
@@ -84,6 +89,16 @@ export const EqualizerWidget = GObject.registerClass({
 
     setValues(values) {
         this._values = this._values.map((_, i) => Math.round(values[i] ?? 0));
+
+        this._sliders.forEach((slider, i) => {
+            const valueLabel = this._valueLabels[i];
+            const val = this._values[i];
+            GObject.signal_handler_block(slider, slider._valueChangedHandler);
+            slider.set_value(val);
+            slider._lastStepValue = val;
+            GObject.signal_handler_unblock(slider, slider._valueChangedHandler);
+            valueLabel.label = `${val} dB`;
+        });
     }
 });
 

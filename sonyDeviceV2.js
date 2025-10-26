@@ -3,13 +3,9 @@ import GObject from 'gi://GObject';
 
 import {createLogger} from './logger.js';
 import {getBluezDeviceProxy} from './bluezDeviceProxy.js';
-import {SonySocket} from './sonySocket.js';
-import {
-    SonyConfiguration, AmbientSoundMode,
-    AutoAsmSensitivity, ListeningMode
-} from './sonyConfig.js';
-
-export const SonyUUIDv1 = '96cc203e-5068-46ad-b32d-e316f5e069ba';
+import {SonySocket} from './sonySocketV2.js';
+import {AmbientSoundMode, AutoAsmSensitivity, ListeningMode} from './sonyDefsV2.js';
+import {SonyConfiguration} from './sonyConfig.js';
 
 export const SonyUUIDv2 = '956c7b26-d49a-4ba8-b03f-b17d393cb6e2';
 
@@ -60,25 +56,16 @@ export const SonyDevice = GObject.registerClass({
             updateAutomaticPowerOff: this.updateAutomaticPowerOff.bind(this),
         };
 
-        this._initialize();
+        this._log.info('Branch: sony-v2');
+
+        if (globalThis.TESTDEVICE)
+            this._initializeModel(globalThis.TESTDEVICE);
+        else
+            this._initialize();
     }
 
     _initialize() {
         this._bluezDeviceProxy = getBluezDeviceProxy(this._devicePath);
-        const uuids = this._bluezDeviceProxy.UUIDs;
-        this._log.info('Branch: Sony');
-
-
-        if (uuids.includes(SonyUUIDv1))
-            this._log.info('Sony device is V1');
-        else if (uuids.includes(SonyUUIDv2))
-            this._log.info('Sony device is V2');
-        else
-            this._log.info('No valid UUIDs found');
-
-        if (uuids.includes(SonyUUIDv2))
-            this._usesProtocolV2 = true;
-
         const name = this._bluezDeviceProxy.Name;
         this._log.info('');
         this._log.info(`Name: ${name}`);
@@ -204,9 +191,12 @@ export const SonyDevice = GObject.registerClass({
         this._ui.autoPowerOffDd.visible = this._automaticPowerOffWhenTakenOffSupported;
 
         this._modelData = modelData;
-        this._initializeProfile();
-    }
 
+        if (globalThis.TESTDEVICE)
+            this._startSonySocket(-1);
+        else
+            this._initializeProfile();
+    }
 
     _initializeProfile() {
         let fd;
@@ -225,9 +215,7 @@ export const SonyDevice = GObject.registerClass({
                 }
             );
 
-            const uuid =  this._usesProtocolV2 ? SonyUUIDv2 : SonyUUIDv1;
-
-            this._profileManager.registerProfile('sony', uuid);
+            this._profileManager.registerProfile('sony', SonyUUIDv2);
         } else {
             this._log.info(`Found fd: ${fd}`);
             this._startSonySocket(fd);
@@ -240,7 +228,6 @@ export const SonyDevice = GObject.registerClass({
             this._devicePath,
             fd,
             this._modelData,
-            this._usesProtocolV2,
             this._callbacks);
     }
 
@@ -298,7 +285,7 @@ export const SonyDevice = GObject.registerClass({
             this._ui.ancToggle.toggled = 4;
 
         this._ui.voiceFocusSwitch.active = focusOnVoiceState;
-        this._ui.ambientLevelSlider.value = level;
+        this._ui?.ambientLevelSlider?.set_value(level);
 
         if (this._ambientSoundControlNASupported) {
             this._ui.autoAmbientSoundSwitch.active = naMode;
@@ -328,7 +315,7 @@ export const SonyDevice = GObject.registerClass({
     }
 
     _ambientLevelSliderMonitor() {
-        this._ui.ambientLevelSlider.connect('notify::value-changed', () => {
+        this._ui.ambientLevelSlider.connect('value-changed', () => {
             if (this._uiGuards.ambientmode)
                 return;
             const value = Math.round(this._ui.ambientLevelSlider.get_value());
@@ -386,10 +373,9 @@ export const SonyDevice = GObject.registerClass({
         });
     }
 
-    updateSpeakToChatConfig(speak2ChatSensitivity, focusOnVoiceState, speak2ChatTimeout) {
+    updateSpeakToChatConfig(speak2ChatSensitivity, speak2ChatTimeout) {
         this._uiGuards.s2cConfig = true;
         this._speak2ChatSensitivity = speak2ChatSensitivity;
-        this._s2cFocusOnVoiceState = focusOnVoiceState;
         this._speak2ChatTimeout = speak2ChatTimeout;
 
         this._ui.s2cSensitivityDd.selected_item = speak2ChatSensitivity;
@@ -479,6 +465,7 @@ export const SonyDevice = GObject.registerClass({
     updateEqualizer(presetCode, customBands) {
         this._uiGuards.equalizer = true;
         this._ui.eqPresetDd.selected_item = presetCode;
+        this._ui.updateEqCustomRowVisibility();
         this._eq.setValues(customBands);
         this._uiGuards.equalizer = false;
     }
@@ -493,7 +480,8 @@ export const SonyDevice = GObject.registerClass({
     }
 
     _eqCustomRowMonitor() {
-        this._uiGuards.audioSampling = true;
+        if (this._uiGuards.equalizer)
+            return;
         this._eq.connect('eq-changed', (_w, arr) => {
             if (this._uiGuards.equalizer)
                 return;

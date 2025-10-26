@@ -5,7 +5,7 @@ import GLib from 'gi://GLib';
 
 import {createLogger} from './logger.js';
 import {getBluezDeviceProxy} from './bluezDeviceProxy.js';
-import {SonyDevice} from './sonyDevice.js';
+import {SonyDevice, SonyUUIDv2} from './sonyDeviceV2.js';
 import {ProfileManager} from './profileManager.js';
 import {setLiveLogSink, hideMacAdddress} from './logger.js';
 import {ToggleButtonRow} from './widgets/toggleButtonRow.js';
@@ -13,9 +13,12 @@ import {DropDownRowWidget} from './widgets/dropDownRow.js';
 import {EqualizerWidget} from './widgets/equalizerWidget.js';
 
 import {
-    EqualizerPreset, ListeningMode, AutoAsmSensitivity,
-    BgmDistance, AutoPowerOff
-} from './sonyConfig.js';
+    EqualizerPreset, AutoPowerOff, AutoAsmSensitivity, ListeningMode, BgmDistance
+} from './sonyDefsV2.js';
+
+// globalThis.TESTDEVICE = 'WH-1000XM5';
+// globalThis.TESTDEVICE = 'WF-C700N';
+ globalThis.TESTDEVICE = '';
 
 Gio._promisify(Gio.DBusProxy, 'new');
 Gio._promisify(Gio.DBusProxy, 'new_for_bus');
@@ -527,17 +530,30 @@ class BatteryApp {
     }
 
     _initialize() {
-        this._bluezDeviceProxy = getBluezDeviceProxy(this._devicePath);
-        const connected = this._bluezDeviceProxy.Connected;
-        this._deviceConnected = connected;
-        this._log.info(
-            `Device connection status: ${connected} Path: ${hideMacAdddress(this._devicePath)}`);
-        if (!connected) {
-            this._log.info('Device not connected. Waiting for device');
-            this._bluezSignalId = this._bluezDeviceProxy.connect(
-                'g-properties-changed', () => this._onBluezPropertiesChanged());
-        } else {
+        if (globalThis.TESTDEVICE) {
             this._startDevice();
+        } else {
+            this._bluezDeviceProxy = getBluezDeviceProxy(this._devicePath);
+            const uuids = this._bluezDeviceProxy.UUIDs;
+
+            if (!uuids.includes(SonyUUIDv2)) {
+                this._log.info('Invalid Sony Device: Not Protocol V2 device');
+                return;
+            }
+
+            const connected = this._bluezDeviceProxy.Connected;
+            this._deviceConnected = connected;
+            this._log.info(
+                `Device connection status: ${connected} ` +
+                `Path: ${hideMacAdddress(this._devicePath)}`);
+
+            if (!connected) {
+                this._log.info('Device not connected. Waiting for device');
+                this._bluezSignalId = this._bluezDeviceProxy.connect(
+                    'g-properties-changed', () => this._onBluezPropertiesChanged());
+            } else {
+                this._startDevice();
+            }
         }
     }
 
@@ -574,7 +590,7 @@ class BatteryApp {
 
         this._deviceStarted = true;
 
-        GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 15, () => {
+        GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 4, () => {
             this._page.sensitive = true;
             return GLib.SOURCE_REMOVE;
         });
@@ -611,6 +627,7 @@ class BatteryApp {
             pauseWhenTakeOffSwitch: this._pauseWhenTakenOff,
             autoPowerOffDd: this._autoPowerOffDropdown,
             addCustomEqCallback: this.addCustomEq.bind(this),
+            updateEqCustomRowVisibility: this._updateEqCustomRowVisibility.bind(this),
         };
 
         this._log.info('Start Device');
