@@ -1101,9 +1101,11 @@ export const SonySocket = GObject.registerClass({
         if (this._automaticPowerOffWhenTakenOffSupported)
             this._getAutomaticPowerOff();
 
+    /*
         if (!this._noNoiseCancellingSupported && (this._ambientSoundControlSupported ||
                     this._ambientSoundControl2Supported || this._windNoiseReductionSupported))
             this._getAmbientSoundControl();
+    */
     }
 
     _requestDeviceInfoSupportFunctions() {
