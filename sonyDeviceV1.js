@@ -19,7 +19,6 @@ export const SonyDevice = GObject.registerClass({
         this._log = createLogger('SonyDevice');
         this._log.info('SonyDevice init ');
         this._devicePath = devicePath;
-        this._usesProtocolV2 = false;
         this._model = null;
         this._ambientLevel = 10;
         this._focusOnVoiceState = false;
@@ -207,9 +206,7 @@ export const SonyDevice = GObject.registerClass({
                 }
             );
 
-            const uuid =  this._usesProtocolV2 ? SonyUUIDv2 : SonyUUIDv1;
-
-            this._profileManager.registerProfile('sony', uuid);
+            this._profileManager.registerProfile('sony', SonyUUIDv1);
         } else {
             this._log.info(`Found fd: ${fd}`);
             this._startSonySocket(fd);
