@@ -163,7 +163,7 @@ export const DeviceColor = {
     0x0e: 'Violet',
 };
 
-export const FuntionType = {
+export const FunctionType = {
     NO_USE: 0x00,
     BATTERY_LEVEL: 0x11,
     UPSCALING_INDICATOR: 0x12,

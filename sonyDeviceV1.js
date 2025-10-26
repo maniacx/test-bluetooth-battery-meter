@@ -9,8 +9,6 @@ import {SonyConfiguration} from './sonyConfig.js';
 
 export const SonyUUIDv1 = '96cc203e-5068-46ad-b32d-e316f5e069ba';
 
-export const SonyUUIDv2 = '956c7b26-d49a-4ba8-b03f-b17d393cb6e2';
-
 export const SonyDevice = GObject.registerClass({
 }, class SonyDevice extends GObject.Object {
     _init(devicePath, ui, profileManager) {

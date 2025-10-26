@@ -7,7 +7,7 @@ import {SocketHandler} from './socketByProfile.js';
 import {Checksum, MessageType, booleanFromByte, isValidByte} from './sonyConfig.js';
 
 import {
-    PayloadType, DeviceSeries, DeviceColor, FuntionType, BatteryType, AmbientSoundMode,
+    PayloadType, DeviceSeries, DeviceColor, FunctionType, BatteryType, AmbientSoundMode,
     AutoPowerOff, Speak2ChatSensitivity, Speak2ChatTimeout, EqualizerPreset
 } from './sonyDefsV1.js';
 
@@ -380,9 +380,9 @@ export const SonySocket = GObject.registerClass({
         };
 
         const functionMap = {
-            [FuntionType.NOISE_CANCELLING]: 'noiseCancelling',
-            [FuntionType.AMBIENT_SOUND_MODE]: 'ambientSoundMode',
-            [FuntionType.NOISE_CANCELLING_AND_AMBIENT_SOUND_MODE]:
+            [FunctionType.NOISE_CANCELLING]: 'noiseCancelling',
+            [FunctionType.AMBIENT_SOUND_MODE]: 'ambientSoundMode',
+            [FunctionType.NOISE_CANCELLING_AND_AMBIENT_SOUND_MODE]:
                     ['noiseCancelling', 'ambientSoundMode'],
         };
 
@@ -401,7 +401,7 @@ export const SonySocket = GObject.registerClass({
             }
         }
 
-        const map = Object.entries(FuntionType).reduce((acc, [name, value]) => {
+        const map = Object.entries(FunctionType).reduce((acc, [name, value]) => {
             acc[value] = name;
             return acc;
         }, {});
