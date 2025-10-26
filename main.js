@@ -14,7 +14,7 @@ import {EqualizerWidget} from './widgets/equalizerWidget.js';
 
 import {EqualizerPreset, AutoPowerOff} from './sonyDefsV1.js';
 
-//globalThis.TESTDEVICE = 'WH-1000XM4';
+// globalThis.TESTDEVICE = 'WH-1000XM4';
 globalThis.TESTDEVICE = '';
 
 Gio._promisify(Gio.DBusProxy, 'new');

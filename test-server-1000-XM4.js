@@ -3,11 +3,10 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
-import {Checksum, MessageType, booleanFromByte, isValidByte} from './sonyConfig.js';
+import {Checksum, MessageType} from './sonyConfig.js';
 
 import {
-    PayloadType, DeviceSeries, DeviceColor, FuntionType, BatteryType, AmbientSoundMode,
-    AutoPowerOff, Speak2ChatSensitivity, Speak2ChatTimeout, EqualizerPreset
+    PayloadType, AutoPowerOff, Speak2ChatSensitivity, Speak2ChatTimeout, EqualizerPreset
 } from './sonyDefsV1.js';
 
 class SonyProtocol {
@@ -278,12 +277,12 @@ class SonySocketServer {
 
             case PayloadType.CONNECT_GET_SUPPORT_FUNCTION:
                 {
-                    const devPayload = [PayloadType.CONNECT_RET_SUPPORT_FUNCTION];
-                    devPayload.push(0x04);
-                    devPayload.push(0x11);
-                    devPayload.push(0x51);
-                    devPayload.push(0x62);
-                    devPayload.push(0xE2);
+                    const devPayload = [
+                        PayloadType.CONNECT_RET_SUPPORT_FUNCTION,
+                        0x00, 0x16, 0x71, 0x62, 0xF5, 0x81, 0x51, 0xA1, 0xE1, 0xE2,
+                        0xD2, 0xF6, 0xD1, 0xF4, 0xF3, 0x39, 0x12, 0x13, 0x11, 0x30,
+                        0xC1, 0x14, 0x22, 0x21, 0x77, 0x3C,
+                    ];
                     await this._write(output, this._protocol.encodeMessage(MessageType.COMMAND_1,
                         devPayload), 'SUPPORT_FUNCTION');
                     this._sendBattery(output);
@@ -310,21 +309,7 @@ class SonySocketServer {
     /* eslint-disable no-await-in-loop */
     async _startTestCycle(output) {
         log('Starting test cycle');
-        /*
-export const Speak2ChatSensitivity = {
-    AUTO: 0x00,
-    HIGH: 0x01,
-    LOW: 0x02,
-};
 
-export const Speak2ChatTimeout = {
-    SHORT: 0x00,
-    STANDARD: 0x01,
-    LONG: 0x02,
-    OFF: 0x03,
-};
-
-*/
         const steps = [
             {type: 'ANC', mode: 'OFF'},
             {type: 'ANC', mode: 'ON'},

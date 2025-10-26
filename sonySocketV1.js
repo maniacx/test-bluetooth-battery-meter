@@ -370,44 +370,24 @@ export const SonySocket = GObject.registerClass({
         if (payload.length < 2)
             return;
 
-        const numFunctions = payload[1];
+        const numFunctions = payload[2];
         if (payload.length < 2 + numFunctions)
             return;
 
         this._supportedFunctions = {
-            powerOff: false,
-            battery: false,
-            leftRightBattery: false,
-            cradleBattery: false,
             noiseCancelling: false,
             ambientSoundMode: false,
-            leftRightConnectionStatus: false,
-            eq: false,
-            eqNonCustomizable: false,
-            autoPowerOff: false,
-            playbackController: false,
-            assignableSettings: false,
         };
 
         const functionMap = {
-            [FuntionType.POWER_OFF]: 'powerOff',
-            [FuntionType.BATTERY_LEVEL]: 'battery',
-            [FuntionType.LEFT_RIGHT_BATTERY_LEVEL]: 'leftRightBattery',
-            [FuntionType.CRADLE_BATTERY_LEVEL]: 'cradleBattery',
             [FuntionType.NOISE_CANCELLING]: 'noiseCancelling',
             [FuntionType.AMBIENT_SOUND_MODE]: 'ambientSoundMode',
             [FuntionType.NOISE_CANCELLING_AND_AMBIENT_SOUND_MODE]:
                     ['noiseCancelling', 'ambientSoundMode'],
-            [FuntionType.LEFT_RIGHT_CONNECTION_STATUS]: 'leftRightConnectionStatus',
-            [FuntionType.PRESET_EQ]: 'eq',
-            [FuntionType.PRESET_EQ_NONCUSTOMIZABLE]: 'eqNonCustomizable',
-            [FuntionType.AUTO_POWER_OFF]: 'autoPowerOff',
-            [FuntionType.PLAYBACK_CONTROLLER]: 'playbackController',
-            [FuntionType.ASSIGNABLE_SETTINGS]: 'assignableSettings',
         };
 
         for (let i = 0; i < numFunctions; i++) {
-            const func = payload[2 + i];
+            const func = payload[3 + i];
             const key = functionMap[func];
             if (!key)
                 continue;
@@ -421,8 +401,26 @@ export const SonySocket = GObject.registerClass({
             }
         }
 
-        this._log.info(`Supported functions: ${
-            JSON.stringify(this._supportedFunctions, null, 2)}`);
+        const map = Object.entries(FuntionType).reduce((acc, [name, value]) => {
+            acc[value] = name;
+            return acc;
+        }, {});
+
+        const availableFunctions = [];
+
+        for (let i = 0; i < numFunctions; i++) {
+            const func = payload[3 + i];
+            const funcName = map[func];
+            if (funcName)
+                availableFunctions.push(funcName);
+        }
+
+        if (availableFunctions.length > 0) {
+            const functionsLog = availableFunctions.join('\n');
+            this._log.info(`Support Functions:\n${functionsLog}`);
+        } else {
+            this._log.info('No supported functions found.');
+        }
     }
 
     _getBatteryRequest(batteryType) {
