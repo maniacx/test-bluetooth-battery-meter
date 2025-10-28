@@ -1176,6 +1176,8 @@ export const SonySocket = GObject.registerClass({
 
         if (this._asmType)
             this._getAmbientSoundControl();
+
+        this._callbacks?.deviceInitialized?.();
     }
 
     _requestDeviceInfoSupportFunctions() {

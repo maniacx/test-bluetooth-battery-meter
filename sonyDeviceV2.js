@@ -24,7 +24,6 @@ export const SonyDevice = GObject.registerClass({
         this._ambientLevel = 10;
         this._focusOnVoiceState = false;
         this._profileManager = profileManager;
-        this._battInfoRecieved = false;
         this._uiGuards = {
             ambientmode: false,
             s2cenable: false,
@@ -45,6 +44,7 @@ export const SonyDevice = GObject.registerClass({
         this._bgmProps = {active: false, distance: 0, mode: ListeningMode.STANDARD};
 
         this._callbacks = {
+            deviceInitialized: this.deviceInitialized.bind(this),
             updateBatteryProps: this.updateBatteryProps.bind(this),
             updateAmbientSoundControl: this.updateAmbientSoundControl.bind(this),
             updateSpeakToChatEnable: this.updateSpeakToChatEnable.bind(this),
@@ -241,6 +241,26 @@ export const SonyDevice = GObject.registerClass({
             this._callbacks);
     }
 
+    deviceInitialized() {
+        this._ancToggleMonitor();
+        this._ambientLevelSliderMonitor();
+        this._voiceFocusSwitchMonitor();
+        this._autoAdaptiveNoiseSwitchMonitor();
+        this._autoAdaptiveNoiseSensitivityDdMonitor();
+        this._s2cToggleMonitor();
+        this._s2cSensitivityDdMonitor();
+        this._s2cDurationDdMonitor();
+        this._bgmDistanceDdMonitor();
+        this._bgmModeDdMonitor();
+        this._voiceNotificationSwitchMonitor();
+        this._eqPresetDdMonitor();
+        this._eqCustomRowMonitor();
+        this._dseeRowSwitchMonitor();
+        this._autoPowerOffDdMonitor();
+        this._autoPowerOffSwitchMonitor();
+        this._pauseWhenTakeOffSwitchMonitor();
+    }
+
     updateBatteryProps(props) {
         this._props = {...this._props, ...props};
         const bat1level = props.battery1Level  ?? 0;
@@ -253,28 +273,6 @@ export const SonyDevice = GObject.registerClass({
         this._ui.bat1.setLabel(bat1level === 0 ? '---' : `${bat1level}%,  ${props.battery1Status}`);
         this._ui.bat2.setLabel(bat2level === 0 ? '---' : `${bat2level}%,  ${props.battery2Status}`);
         this._ui.bat3.setLabel(bat3level === 0 ? '---' : `${bat3level}%,  ${props.battery3Status}`);
-
-        if (!this._battInfoRecieved) {
-            this._ancToggleMonitor();
-            this._ambientLevelSliderMonitor();
-            this._voiceFocusSwitchMonitor();
-            this._autoAdaptiveNoiseSwitchMonitor();
-            this._autoAdaptiveNoiseSensitivityDdMonitor();
-            this._s2cToggleMonitor();
-            this._s2cSensitivityDdMonitor();
-            this._s2cDurationDdMonitor();
-            this._bgmDistanceDdMonitor();
-            this._bgmModeDdMonitor();
-            this._voiceNotificationSwitchMonitor();
-            this._eqPresetDdMonitor();
-            this._eqCustomRowMonitor();
-            this._dseeRowSwitchMonitor();
-            this._autoPowerOffDdMonitor();
-            this._autoPowerOffSwitchMonitor();
-            this._pauseWhenTakeOffSwitchMonitor();
-        }
-
-        this._battInfoRecieved = true;
     }
 
     updateAmbientSoundControl(mode, focusOnVoiceState, level, naMode, naSensitivity) {
@@ -608,6 +606,5 @@ export const SonyDevice = GObject.registerClass({
         this._sonySocket?.destroy();
         this._sonySocket = null;
         this.dataHandler = null;
-        this._battInfoRecieved = false;
     }
 });
