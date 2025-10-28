@@ -44,7 +44,6 @@ export const SonySocket = GObject.registerClass({
 
         this._batteryDualSupported = modelData.batteryDual ?? false;
         this._batteryDual2Supported = modelData.batteryDual2 ?? false;
-        this._batteryCaseSupported = false;
         this._batterySingleSupported = modelData.batterySingle ?? false;
         this._noNoiseCancellingSupported = modelData.noNoiseCancelling ?? false;
         this._ambientSoundControlSupported = modelData.ambientSoundControl ?? false;
@@ -1117,22 +1116,25 @@ export const SonySocket = GObject.registerClass({
         if (this._supportedFunction.length === 0)
             return;
 
-        if (this._supports(FunctionType1.BATTERY_LEVEL_INDICATOR))
+        if (this._supports(FunctionType1.BATTERY_LEVEL_INDICATOR)) {
             this._getBatteryRequest(BatteryType.SINGLE);
-        else if (this._supports(FunctionType1.BATTERY_LEVEL_WITH_THRESHOLD))
+        } else if (this._supports(FunctionType1.BATTERY_LEVEL_WITH_THRESHOLD)) {
             this._getBatteryRequest(BatteryType.SINGLE_THD);
+            this._getBatteryRequest(BatteryType.SINGLE);
+        }
 
-        if (this._supports(FunctionType1.LEFT_RIGHT_BATTERY_LEVEL_INDICATOR))
+        if (this._supports(FunctionType1.LEFT_RIGHT_BATTERY_LEVEL_INDICATOR)) {
             this._getBatteryRequest(BatteryType.DUAL);
-        else if (this._supports(FunctionType1.LR_BATTERY_LEVEL_WITH_THRESHOLD))
+        } else if (this._supports(FunctionType1.LR_BATTERY_LEVEL_WITH_THRESHOLD)) {
             this._getBatteryRequest(BatteryType.DUAL_THD);
+            this._getBatteryRequest(BatteryType.DUAL);
+        }
 
         if (this._supports(FunctionType1.CRADLE_BATTERY_LEVEL_INDICATOR)) {
-            this._batteryCaseSupported = true;
             this._getBatteryRequest(BatteryType.CASE);
         } else if (this._supports(FunctionType1.CRADLE_BATTERY_LEVEL_WITH_THRESHOLD)) {
-            this._batteryCaseSupported = true;
             this._getBatteryRequest(BatteryType.CASE_THD);
+            this._getBatteryRequest(BatteryType.CASE);
         }
 
         if (this._speakToChatEnabledSupported)
