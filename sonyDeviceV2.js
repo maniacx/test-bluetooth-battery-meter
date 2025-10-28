@@ -20,7 +20,6 @@ export const SonyDevice = GObject.registerClass({
         this._log = createLogger('SonyDevice');
         this._log.info('SonyDevice init ');
         this._devicePath = devicePath;
-        this._usesProtocolV2 = false;
         this._model = null;
         this._ambientLevel = 10;
         this._focusOnVoiceState = false;
@@ -59,7 +58,6 @@ export const SonyDevice = GObject.registerClass({
             updateAutomaticPowerOff: this.updateAutomaticPowerOff.bind(this),
             updateCodecIndicator: this.updateCodecIndicator.bind(this),
             updateUpscalingIndicator: this.updateUpscalingIndicator.bind(this),
-
 
         };
 
@@ -505,7 +503,9 @@ export const SonyDevice = GObject.registerClass({
     updateAudioSampling(enabled) {
         this._uiGuards.audioSampling = true;
         this._ui.dseeRow.active = enabled;
+        this._dseeEnabled = enabled;
         this._uiGuards.audioSampling = false;
+        this._updateUpscalingIndicatorVisibility();
     }
 
     _dseeRowSwitchMonitor() {
@@ -513,7 +513,9 @@ export const SonyDevice = GObject.registerClass({
             if (this._uiGuards.audioSampling)
                 return;
             const enabled = this._ui.dseeRow.active;
+            this._dseeEnabled = enabled;
             this._sonySocket.setAudioUpsampling(enabled);
+            this._updateUpscalingIndicatorVisibility();
         });
     }
 
@@ -588,7 +590,12 @@ export const SonyDevice = GObject.registerClass({
         if (mode === DseeType.DSEE)
             this._ui.dseeIndicator.icon_name = 'bbm-dsee-symbolic';
 
-        this._ui.dseeIndicator.visible = show;
+        this._dseeIndicatorEnabled = show;
+        this._updateUpscalingIndicatorVisibility();
+    }
+
+    _updateUpscalingIndicatorVisibility() {
+        this._ui.dseeIndicator.visible = this._dseeIndicatorEnabled && this._dseeEnabled;
     }
 
 

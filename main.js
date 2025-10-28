@@ -16,6 +16,7 @@ import {
     EqualizerPreset, AutoPowerOffTime, AutoAsmSensitivity, ListeningMode, BgmDistance
 } from './sonyDefsV2.js';
 
+// globalThis.TESTDEVICE = 'WF-1000XM5';
 // globalThis.TESTDEVICE = 'WH-1000XM5';
 // globalThis.TESTDEVICE = 'WF-C700N';
 globalThis.TESTDEVICE = '';

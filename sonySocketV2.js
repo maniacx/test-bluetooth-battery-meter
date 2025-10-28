@@ -412,7 +412,6 @@ export const SonySocket = GObject.registerClass({
             this._log.info('No supported functions found.');
     }
 
-
     _getBatteryRequest(batteryType) {
         this._log.info('GET BatteryRequest:');
 
@@ -782,7 +781,7 @@ export const SonySocket = GObject.registerClass({
     }
 
     _getVoiceNotifications() {
-        this._log.info('_getVoiceNotifications:');
+        this._log.info('GET VoiceNotifications');
 
         const payload = [PayloadTypeV2.VOICE_GUIDANCE_GET_PARAM];
         payload.push(0x03);
@@ -790,7 +789,7 @@ export const SonySocket = GObject.registerClass({
     }
 
     _parseVoiceNotifications(payload) {
-        this._log.info(`_parseVoiceNotifications: payload.length = ${payload.length}`);
+        this._log.info('PARSE VoiceNotifications');
 
         if (payload.length !== 4 && payload[1] !== 0x03)
             return;
@@ -803,7 +802,7 @@ export const SonySocket = GObject.registerClass({
     }
 
     setVoiceNotifications(enabled) {
-        this._log.info(`_setVoiceNotifications: ${enabled}`);
+        this._log.info(`SET VoiceNotifications: ${enabled}`);
 
         const payload = [PayloadTypeV2.VOICE_GUIDANCE_SET_PARAM];
         payload.push(0x03);
@@ -904,7 +903,7 @@ export const SonySocket = GObject.registerClass({
     }
 
     setAutomaticPowerOff(enabled, time) {
-        this._log.info(`setAutomaticPowerOff: enabled=${enabled} time: ${time}`);
+        this._log.info(`SET AutomaticPowerOff: enabled=${enabled} time: ${time}`);
 
         const state = enabled ? AutoPowerOffState.ENABLE : AutoPowerOffState.DISABLE;
         if (!isValidByte(time, AutoPowerOffTime)) {
