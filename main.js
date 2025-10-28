@@ -12,7 +12,7 @@ import {ToggleButtonRow} from './widgets/toggleButtonRow.js';
 import {DropDownRowWidget} from './widgets/dropDownRow.js';
 import {EqualizerWidget} from './widgets/equalizerWidget.js';
 
-import {EqualizerPreset, AutoPowerOff} from './sonyDefsV1.js';
+import {EqualizerPreset, AutoPowerOffTime} from './sonyDefsV1.js';
 
 // globalThis.TESTDEVICE = 'WH-1000XM4';
 globalThis.TESTDEVICE = '';
@@ -94,6 +94,19 @@ class BatteryApp {
 
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         const batteryGroup = new Adw.PreferencesGroup({title: 'Battery Information'});
+
+        const infoBox = new Gtk.Box({
+            orientation: Gtk.Orientation.HORIZONTAL,
+            spacing: 12,
+        });
+
+        batteryGroup.set_header_suffix(infoBox);
+        this._dseeIndicator = new Gtk.Image({visible: false});
+        this._codecIndicator = new Gtk.Image({visible: false});
+        infoBox.append(this._dseeIndicator);
+        infoBox.append(this._codecIndicator);
+
+
 
         this._battRow = new Adw.ActionRow({});
         page.add(batteryGroup);
@@ -310,36 +323,47 @@ class BatteryApp {
 
         this._moreGroup.add(this._pauseWhenTakenOff);
 
+        this._autoPowerOffSwitch = new Adw.SwitchRow({
+            title: 'Automatically Power Off',
+            subtitle: 'Automatically power off when not worn.',
+            visible: false,
+        });
+
+        this._autoPowerOffSwitch.connect('notify::active', () => {
+            this._log.info(`Automatically Power Off : ${this._autoPowerOffSwitch.active}`);
+            if (this._autoPowerOffDropdown)
+                this._autoPowerOffDropdown.visible = this._autoPowerOffSwitch.active;
+        });
+
+        this._moreGroup.add(this._autoPowerOffSwitch);
+
         this._autoPowerOffLabels = [
-            'Off',
             'After 5 minutes',
             'After 30 minutes',
             'After 1 hour',
             'After 3 hours',
-            'When taken off',
         ];
 
         this._autoPowerOffValues = [
-            AutoPowerOff.OFF.id,
-            AutoPowerOff.AFTER_5_MIN.id,
-            AutoPowerOff.AFTER_30_MIN.id,
-            AutoPowerOff.AFTER_1_HOUR.id,
-            AutoPowerOff.AFTER_3_HOUR.id,
-            AutoPowerOff.WHEN_TAKEN_OFF.id,
+            AutoPowerOffTime.AFTER_5_MIN,
+            AutoPowerOffTime.AFTER_30_MIN,
+            AutoPowerOffTime.AFTER_1_HOUR,
+            AutoPowerOffTime.AFTER_3_HOUR,
+            AutoPowerOffTime.AFTER_15_MIN,
         ];
 
         this._autoPowerOffDropdown = new DropDownRowWidget({
             title: 'Auto Power Off',
             options: this._autoPowerOffLabels,
             values: this._autoPowerOffValues,
-            initialValue: AutoPowerOff.AFTER_30_MIN.id,
+            initialValue: AutoPowerOffTime.AFTER_30_MIN,
         });
 
         this._autoPowerOffDropdown.visible = false;
 
         this._autoPowerOffDropdown.connect('notify::selected-item', () => {
-            const selectedId = this._autoPowerOffDropdown.selected_item;
-            this._log.info(`Auto Power Off changed (id): ${selectedId}`);
+            const selectedVal = this._autoPowerOffDropdown.selected_item;
+            this._log.info(`Auto Power Off changed (id): ${selectedVal}`);
         });
 
         this._moreGroup.add(this._autoPowerOffDropdown);
@@ -419,7 +443,13 @@ class BatteryApp {
             this._startDevice();
         } else {
             this._bluezDeviceProxy = getBluezDeviceProxy(this._devicePath);
+
             const uuids = this._bluezDeviceProxy.UUIDs;
+
+            if (!uuids) {
+                this._log.info(`Device ${hideMacAdddress(this._devicePath)} not paired`);
+                return;
+            }
 
             if (!uuids.includes(SonyUUIDv1)) {
                 this._log.info('Invalid Sony Device: Not Protocol V1 device');
@@ -483,6 +513,9 @@ class BatteryApp {
 
 
         const uiObjects = {
+            codecIndicator: this._codecIndicator,
+            dseeIndicator: this._dseeIndicator,
+
             bat1: this._battery1,
             bat2: this._battery2,
             bat3: this._battery3,
@@ -504,6 +537,7 @@ class BatteryApp {
             eqCustomRow: this._equalizerCustomRow,
             dseeRow: this._upscalingSwitchRow,
             pauseWhenTakeOffSwitch: this._pauseWhenTakenOff,
+            autoPowerOffSwitch: this._autoPowerOffSwitch,
             autoPowerOffDd: this._autoPowerOffDropdown,
             addCustomEqCallback: this.addCustomEq.bind(this),
             updateEqCustomRowVisibility: this._updateEqCustomRowVisibility.bind(this),

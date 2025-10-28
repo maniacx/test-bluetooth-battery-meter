@@ -7,8 +7,9 @@ import {SocketHandler} from './socketByProfile.js';
 import {Checksum, MessageType, booleanFromByte, isValidByte} from './sonyConfig.js';
 
 import {
-    PayloadType, DeviceSeries, DeviceColor, FunctionType, BatteryType, AmbientSoundMode,
-    AutoPowerOff, Speak2ChatSensitivity, Speak2ChatTimeout, EqualizerPreset
+    PayloadType, ValueType, DeviceSeries, DeviceColor, FunctionType, BatteryType, AmbientSoundMode,
+    Speak2ChatSensitivity, Speak2ChatTimeout, EqualizerPreset, AutoPowerOffState,
+    AutoPowerOffTime, AudioCodec, DseeType
 } from './sonyDefsV1.js';
 
 /**
@@ -270,12 +271,14 @@ export const SonySocket = GObject.registerClass({
         this._encodeSonyMessage(MessageType.ACK, [], 1 - seq);
     }
 
+    _supports(funcType) {
+        return this._supportedFunction?.includes(funcType);
+    }
+
     _getProtocolInfo() {
         this._log.info('GET ProtocolInfo');
 
-        const payload = [PayloadType.CONNECT_GET_PROTOCOL_INFO];
-        payload.push(0x00);
-
+        const payload = [PayloadType.CONNECT_GET_PROTOCOL_INFO, ValueType.FIXED];
         this._addMessageQueue(MessageType.COMMAND_1, payload, 'protocolInfo');
     }
 
@@ -292,18 +295,14 @@ export const SonySocket = GObject.registerClass({
     _getCapabilityInfo() {
         this._log.info('GET CapabilityInfo:');
 
-        const payload = [PayloadType.CONNECT_GET_CAPABILITY_INFO];
-        payload.push(0x00);
-
+        const payload = [PayloadType.CONNECT_GET_CAPABILITY_INFO, ValueType.FIXED];
         this._addMessageQueue(MessageType.COMMAND_1, payload, 'capabilityInfo');
     }
 
     _getDeviceInfoModel() {
         this._log.info('GET DeviceInfoModel:');
 
-        const payload = [PayloadType.CONNECT_GET_DEVICE_INFO];
-        payload.push(0x01);
-
+        const payload = [PayloadType.CONNECT_GET_DEVICE_INFO, ValueType.MODEL_NAME];
         this._addMessageQueue(MessageType.COMMAND_1, payload, 'deviceInfoModel');
     }
 
@@ -317,13 +316,10 @@ export const SonySocket = GObject.registerClass({
         this._log.info('Device Model Name:', name);
     }
 
-
     _getDeviceInfoFirmware() {
         this._log.info('GET DeviceInfoFirmware');
 
-        const payload = [PayloadType.CONNECT_GET_DEVICE_INFO];
-        payload.push(0x02);
-
+        const payload = [PayloadType.CONNECT_GET_DEVICE_INFO, ValueType.FW_VERSION];
         this._addMessageQueue(MessageType.COMMAND_1, payload, 'deviceInfoFirmware');
     }
 
@@ -340,9 +336,7 @@ export const SonySocket = GObject.registerClass({
     _getDeviceInfoSeriesColor() {
         this._log.info('GET DeviceInfoSeriesColor:');
 
-        const payload = [PayloadType.CONNECT_GET_DEVICE_INFO];
-        payload.push(0x03);
-
+        const payload = [PayloadType.CONNECT_GET_DEVICE_INFO, ValueType.SERIES_AND_COLOR_INFO];
         this._addMessageQueue(MessageType.COMMAND_1, payload, 'deviceInfoSeriesColor');
     }
 
@@ -351,7 +345,6 @@ export const SonySocket = GObject.registerClass({
 
         const seriesByte = payload[2];
         const colorByte = payload[3];
-
         const seriesName = DeviceSeries[seriesByte] || `Unknown(${seriesByte})`;
         const colorName = DeviceColor[colorByte] || `Unknown(${colorByte})`;
 
@@ -361,9 +354,7 @@ export const SonySocket = GObject.registerClass({
     _getSupportInfo() {
         this._log.info('GET SupportInfo:');
 
-        const payload = [PayloadType.CONNECT_GET_SUPPORT_FUNCTION];
-        payload.push(0x00);
-
+        const payload = [PayloadType.CONNECT_GET_SUPPORT_FUNCTION, ValueType.FIXED];
         this._addMessageQueue(MessageType.COMMAND_1, payload, 'supportInfo');
     }
 
@@ -819,7 +810,7 @@ export const SonySocket = GObject.registerClass({
     }
 
     setPauseWhenTakenOff(enabled) {
-        this._log.info(`setPauseWhenTakenOff: ${enabled}`);
+        this._log.info(`SET PauseWhenTakenOff: ${enabled}`);
 
         const payload = [PayloadType.SYSTEM_SET_PARAM];
         payload.push(0x03);
@@ -841,34 +832,76 @@ export const SonySocket = GObject.registerClass({
     _parseAutomaticPowerOff(payload) {
         this._log.info('PARSE AutomaticPowerOff');
 
-        if (payload.length !== 5)
+        const state = payload[3];
+        const time = payload[4];
+
+        if (!isValidByte(state, AutoPowerOffState)) {
+            this._log.info(`Invalid Value for byte1 _parseAutomaticPowerOff: id=${state}`);
             return;
+        }
 
-
-        const byte1 = payload[3];
-        const byte2 = payload[4];
-        const mode = Object.values(AutoPowerOff).find(v =>
-            v.bytes[0] === byte1 && v.bytes[1] === byte2
-        );
-        if (!mode)
+        if (!isValidByte(time, AutoPowerOffTime)) {
+            this._log.info(`Invalid Value for byte1 _parseAutomaticPowerOff: id=${time}`);
             return;
+        }
 
-        this._callbacks?.updateAutomaticPowerOff?.(mode.id);
+        const enabled = state === AutoPowerOffState.ENABLE;
+        this._currentAutoPowerTime = time;
+        this._callbacks?.updateAutomaticPowerOff?.(enabled, time);
     }
 
-    setAutomaticPowerOff(id) {
-        this._log.info(`setAutomaticPowerOff: id=${id}`);
+    setAutomaticPowerOff(enabled, time) {
+        this._log.info(`SET AutomaticPowerOff: enabled=${enabled} time: ${time}`);
 
-        const config = Object.values(AutoPowerOff).find(v => v.id === id);
-        if (!config)
+        const state = enabled ? AutoPowerOffState.ENABLE : AutoPowerOffState.DISABLE;
+        if (!isValidByte(time, AutoPowerOffTime)) {
+            this._log.info(`Invalid Value for setAutomaticPowerOff: time: ${time}`);
             return;
+        }
 
-        const payload = [PayloadType.SYSTEM_SET_PARAM];
+        const payload = [PayloadType.POWER_SET_PARAM];
         payload.push(0x04);
         payload.push(0x01);
-        payload.push(...config.bytes);
-
+        payload.push(state);
+        payload.push(time);
         this._addMessageQueue(MessageType.COMMAND_1, payload);
+    }
+
+    _getCodecIndicator() {
+        this._log.info('GET CodecIndicator');
+
+        const payload = [PayloadType.COMMON_GET_AUDIO_CODEC];
+        payload.push(0x00);
+        this._addMessageQueue(MessageType.COMMAND_1, payload, 'codecIndicator');
+    }
+
+    _parseCodecIndicator(payload) {
+        this._log.info('PARSE CodecIndicator');
+
+        const codec = payload[2];
+        if (!isValidByte(codec, AudioCodec))
+            return;
+
+        this._callbacks?.updateCodecIndicator?.(codec);
+    }
+
+    _getUpscalingIndicator() {
+        this._log.info('GET UpscalingIndicator');
+
+        const payload = [PayloadType.COMMON_GET_UPSCALING_EFFECT];
+        payload.push(0x00);
+        this._addMessageQueue(MessageType.COMMAND_1, payload, 'upscalingIndicator');
+    }
+
+    _parseUpscalingIndicator(payload) {
+        this._log.info('PARSE UpscalingIndicator');
+
+        const mode = payload[2];
+        const show = payload[3] !== 0x00;
+        if (!isValidByte(mode, DseeType))
+            return;
+
+        this._callbacks?.updateUpscalingIndicator?.(mode, show);
     }
 
     processData(chunk) {
@@ -987,6 +1020,18 @@ export const SonySocket = GObject.registerClass({
                             this.emit('ack-received', 'audioUpsampling');
                         }
                         break;
+
+                    case PayloadType.COMMON_RET_UPSCALING_EFFECT:
+                    case PayloadType.COMMON_NTFY_UPSCALING_EFFECT:
+                        this._parseCodecIndicator(payload);
+                        this.emit('ack-received', 'codecIndicator');
+                        break;
+
+                    case PayloadType.COMMON_RET_AUDIO_CODEC:
+                    case PayloadType.COMMON_NTFY_AUDIO_CODEC:
+                        this._getUpscalingIndicator(payload);
+                        this.emit('ack-received', 'upscalingIndicator');
+                        break;
                 }
             }
 
@@ -1049,7 +1094,7 @@ export const SonySocket = GObject.registerClass({
         this._getDeviceInfoSeriesColor();
 
         this._waitForResponse('supportInfo', () => this._getSupportInfo(), 5, 3)
-            .then(() => this._send)
+            .then(() => this._getCurrentState())
             .catch(err => this._log.error('supportInfo info initialization failed', err));
     }
 

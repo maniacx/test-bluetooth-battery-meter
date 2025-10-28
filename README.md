@@ -22,3 +22,8 @@ It allows socket-level experimentation and debugging in avoiding GNOME Shell res
 gjs-console -m /path/to/main.js
 ```
 
+
+<br>
+<picture>
+<img src="https://github.com/maniacx/test-bluetooth-battery-meter/blob/sony/readme-gui.png" width="100%">
+</picture>

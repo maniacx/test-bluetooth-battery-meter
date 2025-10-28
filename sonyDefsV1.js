@@ -205,6 +205,13 @@ export const FunctionType = {
     ASSIGNABLE_SETTINGS: 0xF6,
 };
 
+export const ValueType = {
+    FIXED: 0x00,
+    MODEL_NAME: 0x01,
+    FW_VERSION: 0x02,
+    SERIES_AND_COLOR_INFO: 0x03,
+};
+
 export const BatteryType = {
     SINGLE: 0x00,
     DUAL: 0x01,
@@ -257,12 +264,33 @@ export const EqualizerPreset = {
     CUSTOM_2: 0xA2,
 };
 
-export const AutoPowerOff = {
-    OFF: {id: 0, bytes: [0x11, 0x11]},
-    AFTER_5_MIN: {id: 1, bytes: [0x01, 0x00]},
-    AFTER_30_MIN: {id: 2, bytes: [0x01, 0x01]},
-    AFTER_1_HOUR: {id: 3, bytes: [0x01, 0x02]},
-    AFTER_3_HOUR: {id: 4, bytes: [0x01, 0x03]},
-    WHEN_TAKEN_OFF: {id: 5, bytes: [0x01, 0x10]},
+export const AutoPowerOffState = {
+    ENABLE: 0x10,
+    DISABLE: 0x11,
 };
 
+export const AutoPowerOffTime = {
+    AFTER_5_MIN: 0x00,
+    AFTER_30_MIN: 0x01,
+    AFTER_1_HOUR: 0x02,
+    AFTER_3_HOUR: 0x03,
+    AFTER_15_MIN: 0x04,
+};
+
+export const AudioCodec = {
+    UNSETTLED: 0x00,
+    SBC: 0x01,
+    AAC: 0x02,
+    LDAC: 0x10,
+    APT_X: 0x20,
+    APT_X_HD: 0x21,
+    LC3: 0x30,
+    OTHER: 0xFF,
+};
+
+export const DseeType = {
+    DSEE_HX: 0x00,
+    DSEE: 0x01,
+    DSEE_HX_AI: 0x02,
+    DSEE_ULTIMATE: 0x03,
+};

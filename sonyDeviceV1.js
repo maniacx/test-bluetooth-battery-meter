@@ -4,7 +4,7 @@ import GObject from 'gi://GObject';
 import {createLogger} from './logger.js';
 import {getBluezDeviceProxy} from './bluezDeviceProxy.js';
 import {SonySocket} from './sonySocketV1.js';
-import {AmbientSoundMode} from './sonyDefsV1.js';
+import {AmbientSoundMode, AudioCodec, DseeType} from './sonyDefsV1.js';
 import {SonyConfiguration} from './sonyConfig.js';
 
 export const SonyUUIDv1 = '96cc203e-5068-46ad-b32d-e316f5e069ba';
@@ -48,6 +48,9 @@ export const SonyDevice = GObject.registerClass({
             updateAudioSampling: this.updateAudioSampling.bind(this),
             updatePauseWhenTakenOff: this.updatePauseWhenTakenOff.bind(this),
             updateAutomaticPowerOff: this.updateAutomaticPowerOff.bind(this),
+            updateCodecIndicator: this.updateCodecIndicator.bind(this),
+            updateUpscalingIndicator: this.updateUpscalingIndicator.bind(this),
+
         };
 
         this._log.info('Branch: sony-v1-independent-seq-flip-lines');
@@ -176,7 +179,12 @@ export const SonyDevice = GObject.registerClass({
         }
         this._ui.dseeRow.visible = this._audioUpsamplingSupported;
         this._ui.pauseWhenTakeOffSwitch.visible = this._pauseWhenTakenOffSupported;
-        this._ui.autoPowerOffDd.visible = this._automaticPowerOffWhenTakenOffSupported;
+        this._ui.autoPowerOffSwitch.visible = this._automaticPowerOffWhenTakenOffSupported;
+        this._ui.autoPowerOffDd.visible = this._ui.autoPowerOffSwitch.active &&
+            this._automaticPowerOffWhenTakenOffSupported;
+
+        this._ui.codecIndicator.set_pixel_size(30);
+        this._ui.dseeIndicator.set_pixel_size(30);
 
         this._modelData = modelData;
 
@@ -185,7 +193,6 @@ export const SonyDevice = GObject.registerClass({
         else
             this._initializeProfile();
     }
-
 
     _initializeProfile() {
         let fd;
@@ -245,6 +252,7 @@ export const SonyDevice = GObject.registerClass({
             this._eqCustomRowMonitor();
             this._dseeRowSwitchMonitor();
             this._autoPowerOffDdMonitor();
+            this._autoPowerOffSwitchMonitor();
             this._pauseWhenTakeOffSwitchMonitor();
         }
 
@@ -348,7 +356,7 @@ export const SonyDevice = GObject.registerClass({
                 return;
             const val = this._ui.s2cSensitivityDd.selected_item;
             this._speak2ChatSensitivity = val;
-            this._sonySocket.setSpeakToChatEnabled(this._speak2ChatSensitivity,
+            this._sonySocket.setSpeakToChatConfig(this._speak2ChatSensitivity,
                 this._speak2ChatTimeout);
         });
     }
@@ -359,7 +367,7 @@ export const SonyDevice = GObject.registerClass({
                 return;
             const val = this._ui.s2cDurationDd.selected_item;
             this._speak2ChatTimeout = val;
-            this._sonySocket.setSpeakToChatEnabled(this._speak2ChatSensitivity,
+            this._sonySocket.setSpeakToChatConfig(this._speak2ChatSensitivity,
                 this._speak2ChatTimeout);
         });
     }
@@ -409,7 +417,9 @@ export const SonyDevice = GObject.registerClass({
     updateAudioSampling(enabled) {
         this._uiGuards.audioSampling = true;
         this._ui.dseeRow.active = enabled;
+        this._dseeEnabled = enabled;
         this._uiGuards.audioSampling = false;
+        this._updateUpscalingIndicatorVisibility();
     }
 
     _dseeRowSwitchMonitor() {
@@ -417,7 +427,9 @@ export const SonyDevice = GObject.registerClass({
             if (this._uiGuards.audioSampling)
                 return;
             const enabled = this._ui.dseeRow.active;
+            this._dseeEnabled = enabled;
             this._sonySocket.setAudioUpsampling(enabled);
+            this._updateUpscalingIndicatorVisibility();
         });
     }
 
@@ -436,8 +448,9 @@ export const SonyDevice = GObject.registerClass({
         });
     }
 
-    updateAutomaticPowerOff(mode) {
+    updateAutomaticPowerOff(enabled, mode) {
         this._uiGuards.automaticPowerOff = true;
+        this._ui.autoPowerOffSwitch.active = enabled;
         this._ui.autoPowerOffDd.selected_item = mode;
         this._uiGuards.automaticPowerOff = false;
     }
@@ -446,10 +459,60 @@ export const SonyDevice = GObject.registerClass({
         this._ui.autoPowerOffDd.connect('notify::selected-item', () => {
             if (this._uiGuards.automaticPowerOff)
                 return;
-            const val = this._ui.autoPowerOffDd.selected_item;
-            this._sonySocket.setAutomaticPowerOff(val);
+            const enabled = this._ui.autoPowerOffSwitch.active;
+            const mode = this._ui.autoPowerOffDd.selected_item;
+            this._sonySocket.setAutomaticPowerOff(enabled, mode);
         });
     }
+
+    _autoPowerOffSwitchMonitor() {
+        this._ui.autoPowerOffDd.connect('notify::active', () => {
+            if (this._uiGuards.automaticPowerOff)
+                return;
+            const enabled = this._ui.autoPowerOffSwitch.active;
+            const mode = this._ui.autoPowerOffDd.selected_item;
+            this._sonySocket.setAutomaticPowerOff(enabled, mode);
+        });
+    }
+
+    updateCodecIndicator(code) {
+        if (code === AudioCodec.SBC)
+            this._ui.codecIndicator.icon_name = 'bbm-sbc-symbolic';
+        else if (code === AudioCodec.AAC)
+            this._ui.codecIndicator.icon_name = 'bbm-aac-symbolic';
+        else if (code === AudioCodec.LDAC)
+            this._ui.codecIndicator.icon_name = 'bbm-ldac-symbolic';
+        else if (code === AudioCodec.APT_X)
+            this._ui.codecIndicator.icon_name = 'bbm-aptx-symbolic';
+        else if (code === AudioCodec.APT_X_HD)
+            this._ui.codecIndicator.icon_name = 'bbm-aptxhd-symbolic';
+        else if (code === AudioCodec.LC3)
+            this._ui.codecIndicator.icon_name = 'bbm-lc3-symbolic';
+
+        const visible = code !== AudioCodec.UNSETTLED && code !== AudioCodec.OTHER;
+        this._ui.codecIndicator.visible = visible;
+    }
+
+    updateUpscalingIndicator(mode, show) {
+        log(`mode: ${mode}, show: ${show}`);
+        if (mode === DseeType.DSEE_ULTIMATE)
+            this._ui.dseeIndicator.icon_name = 'bbm-dsee-ex-symbolic';
+        if (mode === DseeType.DSEE_HX_AI)
+            this._ui.dseeIndicator.icon_name = 'bbm-dsee-ex-symbolic';
+        if (mode === DseeType.DSEE_HX)
+            this._ui.dseeIndicator.icon_name = 'bbm-dsee-hx-symbolic';
+        if (mode === DseeType.DSEE)
+            this._ui.dseeIndicator.icon_name = 'bbm-dsee-symbolic';
+
+        this._dseeIndicatorEnabled = show;
+        this._updateUpscalingIndicatorVisibility();
+    }
+
+    _updateUpscalingIndicatorVisibility() {
+        this._ui.dseeIndicator.visible = this._dseeIndicatorEnabled && this._dseeEnabled;
+    }
+
+
 
     destroy() {
         if (this._bluezDeviceProxy && this._bluezSignalId)
