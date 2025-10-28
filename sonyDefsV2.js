@@ -184,7 +184,7 @@ export const DeviceColor = {
     0x0E: 'Violet',
 };
 
-export const FunctionType = {
+export const FunctionType1 = {
     CONCIERGE_DATA: 0x10,
     CONNECTION_STATUS: 0x11,
     CODEC_INDICATOR: 0x12,
@@ -317,6 +317,13 @@ export const FunctionType = {
     HEAD_GESTURE_ON_OFF_TRAINING: 0xFF,
 };
 
+export const ValueType = {
+    FIXED: 0x00,
+    MODEL_NAME: 0x01,
+    FW_VERSION: 0x02,
+    SERIES_AND_COLOR_INFO: 0x03,
+};
+
 export const BatteryType = {
     SINGLE: 0x00,
     DUAL: 0x01,
@@ -325,6 +332,24 @@ export const BatteryType = {
     DUAL_THD: 0x09,
     CASE_THD: 0x0A,
 };
+
+export const AsmType  = {
+    NC_ON_OFF: 0x1,
+    NC_ON_OFF_AND_ASM_ON_OFF: 0x11,
+    NC_MODE_SWITCH_AND_ASM_ON_OFF: 0x12,
+    NC_ON_OFF_AND_ASM_SEAMLESS: 0x13,
+    NC_MODE_SWITCH_AND_ASM_SEAMLESS: 0x14,
+    MODE_NC_ASM_AUTO_NC_MODE_SWITCH_AND_ASM_SEAMLESS: 0x15,
+    MODE_NC_ASM_DUAL_SINGLE_NC_MODE_SWITCH_AND_ASM_SEAMLESS: 0x16,
+    MODE_NC_ASM_DUAL_NC_MODE_SWITCH_AND_ASM_SEAMLESS: 0x17,
+    MODE_NC_NCSS_ASM_DUAL_NC_MODE_SWITCH_AND_ASM_SEAMLESS: 0x18,
+    MODE_NC_ASM_DUAL_NC_MODE_SWITCH_AND_ASM_SEAMLESS_NA: 0x19,
+    ASM_ON_OFF: 0x21,
+    ASM_SEAMLESS: 0x22,
+    NC_AMB_TOGGLE: 0x30,
+    NC_TEST_MODE: 0x40,
+};
+
 
 export const AmbientSoundMode = {
     ANC_OFF: 0x00,
@@ -384,12 +409,33 @@ export const BgmDistance = {
     CAFE: 0x02,
 };
 
-export const AutoPowerOff = {
-    OFF: {id: 0, bytes: [0x11, 0x11]},
-    AFTER_5_MIN: {id: 1, bytes: [0x01, 0x00]},
-    AFTER_30_MIN: {id: 2, bytes: [0x01, 0x01]},
-    AFTER_1_HOUR: {id: 3, bytes: [0x01, 0x02]},
-    AFTER_3_HOUR: {id: 4, bytes: [0x01, 0x03]},
-    WHEN_TAKEN_OFF: {id: 5, bytes: [0x01, 0x10]},
+export const AutoPowerOffState = {
+    ENABLE: 0x10,
+    DISABLE: 0x11,
 };
 
+export const AutoPowerOffTime = {
+    AFTER_5_MIN: 0x00,
+    AFTER_30_MIN: 0x01,
+    AFTER_1_HOUR: 0x02,
+    AFTER_3_HOUR: 0x03,
+    AFTER_15_MIN: 0x04,
+};
+
+export const AudioCodec = {
+    UNSETTLED: 0x00,
+    SBC: 0x01,
+    AAC: 0x02,
+    LDAC: 0x10,
+    APT_X: 0x20,
+    APT_X_HD: 0x21,
+    LC3: 0x30,
+    OTHER: 0xFF,
+};
+
+export const DseeType = {
+    DSEE_HX: 0x00,
+    DSEE: 0x01,
+    DSEE_HX_AI: 0x02,
+    DSEE_ULTIMATE: 0x03,
+};
