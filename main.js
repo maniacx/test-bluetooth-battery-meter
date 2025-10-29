@@ -431,8 +431,6 @@ class BatteryApp {
 
         this._autoPowerOffSwitch.connect('notify::active', () => {
             this._log.info(`Automatically Power Off : ${this._autoPowerOffSwitch.active}`);
-            if (this._autoPowerOffDropdown)
-                this._autoPowerOffDropdown.visible = this._autoPowerOffSwitch.active;
         });
 
         this._moreGroup.add(this._autoPowerOffSwitch);
@@ -621,7 +619,7 @@ class BatteryApp {
 
         this._deviceStarted = true;
 
-        GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 4, () => {
+        GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 8, () => {
             this._page.sensitive = true;
             return GLib.SOURCE_REMOVE;
         });

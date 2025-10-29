@@ -192,11 +192,12 @@ class SonySocketServer {
                     print(`Received seq=${msg.sequence} type=${msg.messageType} ` +
                         ` payload=${this._toHex(msg.payload)}`);
 
-                    const ackFrame = this._protocol.encodeAckFor(msg.sequence);
                     /* eslint-disable no-await-in-loop */
-
-                    await this._write(output, ackFrame, 'ACK');
-
+                    if (msg.messageType === MessageType.COMMAND_1 ||
+                                 msg.messageType === MessageType.COMMAND_2) {
+                        const ackFrame = this._protocol.encodeAckFor(msg.sequence);
+                        await this._write(output, ackFrame, 'ACK');
+                    }
                     if (msg.messageType === MessageType.COMMAND_1 &&
                                     msg.payload && msg.payload.length > 0)
                         await this._parseData(msg.payload, output);
@@ -325,6 +326,24 @@ class SonySocketServer {
             '3e0c0100000005230a37001e943c',
             '3e0c000000000825096400000064646e3c',
 
+            // Codec
+            '3e0c0000000003130202263c',
+            '3e0c0100000003130210353c',
+            '3e0c0100000003130202273c',
+            '3e0c0100000003150202293c',
+            '3e0c0000000003150202283c',
+            '3e0c0000000003150200263c',
+            '3e0c0100000003150202293c',
+
+            // dsee
+            '3e0c0000000003e90101fa3c', // enable dsse
+            '3e0c010000000413030200293c',
+            '3e0c000000000413030200283c',
+            '3e0c000000000413030200283c',
+            '3e0c000000000413030200283c',
+            '3e0c0000000004150302012b3c',
+            '3e0c0000000004150302002a3c',
+
             // SYSTEM_RET_PARAM: Speak2Chat Enable
             '3e0c0100000004f70c0001153c',
             '3e0c0100000004f70c0101153c',
@@ -391,22 +410,7 @@ class SonySocketServer {
             '3e0c010000000429051100503c',
             '3e0c0000000004290510004e3c',
 
-            // Codec
-            '3e0c0000000003130202263c',
-            '3e0c0100000003130210353c',
-            '3e0c0100000003130202273c',
-            '3e0c0100000003150202293c',
-            '3e0c0000000003150202283c',
-            '3e0c0000000003150200263c',
-            '3e0c0100000003150202293c',
 
-            // dsee
-            '3e0c010000000413030200293c',
-            '3e0c000000000413030200283c',
-            '3e0c000000000413030200283c',
-            '3e0c000000000413030200283c',
-            '3e0c0000000004150302012b3c',
-            '3e0c0000000004150302002a3c',
 
         ];
         /* eslint-disable no-await-in-loop */

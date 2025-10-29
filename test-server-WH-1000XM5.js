@@ -192,11 +192,12 @@ class SonySocketServer {
                     print(`Received seq=${msg.sequence} type=${msg.messageType} ` +
                         ` payload=${this._toHex(msg.payload)}`);
 
-                    const ackFrame = this._protocol.encodeAckFor(msg.sequence);
                     /* eslint-disable no-await-in-loop */
-
-                    await this._write(output, ackFrame, 'ACK');
-
+                    if (msg.messageType === MessageType.COMMAND_1 ||
+                                 msg.messageType === MessageType.COMMAND_2) {
+                        const ackFrame = this._protocol.encodeAckFor(msg.sequence);
+                        await this._write(output, ackFrame, 'ACK');
+                    }
                     if (msg.messageType === MessageType.COMMAND_1 &&
                                     msg.payload && msg.payload.length > 0)
                         await this._parseData(msg.payload, output);
@@ -403,7 +404,6 @@ class SonySocketServer {
             '3e0c000000000413030200283c',
             '3e0c0000000004150302012b3c',
             '3e0c0000000004150302002a3c',
-
 
         ];
         /* eslint-disable no-await-in-loop */

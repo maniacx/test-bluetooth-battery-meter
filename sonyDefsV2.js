@@ -333,6 +333,13 @@ export const BatteryType = {
     CASE_THD: 0x0A,
 };
 
+export const BatteryStatus = {
+    NOT_CHARGING: 0x00,
+    CHARGING: 0x01,
+    UNKNOWN: 0x02,
+    CHARGED: 0x03,
+};
+
 export const AsmType  = {
     NC_ON_OFF: 0x1,
     NC_ON_OFF_AND_ASM_ON_OFF: 0x11,
