@@ -1,5 +1,6 @@
 'use strict';
 import GObject from 'gi://GObject';
+import GLib from 'gi://GLib';
 
 import {createLogger} from './logger.js';
 import {getBluezDeviceProxy} from './bluezDeviceProxy.js';
@@ -21,7 +22,6 @@ export const SonyDevice = GObject.registerClass({
         this._ambientLevel = 10;
         this._focusOnVoiceState = false;
         this._profileManager = profileManager;
-        this._battInfoRecieved = false;
         this._uiGuards = {
             ambientmode: false,
             s2cenable: false,
@@ -39,6 +39,7 @@ export const SonyDevice = GObject.registerClass({
         this._ambientLevel = 10;
 
         this._callbacks = {
+            deviceInitialized: this.deviceInitialized.bind(this),
             updateBatteryProps: this.updateBatteryProps.bind(this),
             updateAmbientSoundControl: this.updateAmbientSoundControl.bind(this),
             updateSpeakToChatEnable: this.updateSpeakToChatEnable.bind(this),
@@ -181,7 +182,7 @@ export const SonyDevice = GObject.registerClass({
         this._ui.pauseWhenTakeOffSwitch.visible = this._pauseWhenTakenOffSupported;
         this._ui.autoPowerOffSwitch.visible = this._automaticPowerOffWhenTakenOffSupported;
         this._ui.autoPowerOffDd.visible = this._ui.autoPowerOffSwitch.active &&
-            this._automaticPowerOffWhenTakenOffSupported;
+            this._automaticPowerOffWhenTakenOffSupported && this._automaticPowerOffByTime;
 
         this._ui.codecIndicator.set_pixel_size(30);
         this._ui.dseeIndicator.set_pixel_size(30);
@@ -227,6 +228,22 @@ export const SonyDevice = GObject.registerClass({
             this._callbacks);
     }
 
+    deviceInitialized() {
+        this._ancToggleMonitor();
+        this._ambientLevelSliderMonitor();
+        this._voiceFocusSwitchMonitor();
+        this._s2cToggleMonitor();
+        this._s2cSensitivityDdMonitor();
+        this._s2cDurationDdMonitor();
+        this._voiceNotificationSwitchMonitor();
+        this._eqPresetDdMonitor();
+        this._eqCustomRowMonitor();
+        this._dseeRowSwitchMonitor();
+        this._autoPowerOffDdMonitor();
+        this._autoPowerOffSwitchMonitor();
+        this._pauseWhenTakeOffSwitchMonitor();
+    }
+
     updateBatteryProps(props) {
         this._props = {...this._props, ...props};
         const bat1level = props.battery1Level  ?? 0;
@@ -239,24 +256,6 @@ export const SonyDevice = GObject.registerClass({
         this._ui.bat1.setLabel(bat1level === 0 ? '---' : `${bat1level}%,  ${props.battery1Status}`);
         this._ui.bat2.setLabel(bat2level === 0 ? '---' : `${bat2level}%,  ${props.battery2Status}`);
         this._ui.bat3.setLabel(bat3level === 0 ? '---' : `${bat3level}%,  ${props.battery3Status}`);
-
-        if (!this._battInfoRecieved) {
-            this._ancToggleMonitor();
-            this._ambientLevelSliderMonitor();
-            this._voiceFocusSwitchMonitor();
-            this._s2cToggleMonitor();
-            this._s2cSensitivityDdMonitor();
-            this._s2cDurationDdMonitor();
-            this._voiceNotificationSwitchMonitor();
-            this._eqPresetDdMonitor();
-            this._eqCustomRowMonitor();
-            this._dseeRowSwitchMonitor();
-            this._autoPowerOffDdMonitor();
-            this._autoPowerOffSwitchMonitor();
-            this._pauseWhenTakeOffSwitchMonitor();
-        }
-
-        this._battInfoRecieved = true;
     }
 
     updateAmbientSoundControl(mode, focusOnVoiceState, level) {
@@ -342,9 +341,6 @@ export const SonyDevice = GObject.registerClass({
 
     updateSpeakToChatConfig(speak2ChatSensitivity, speak2ChatTimeout) {
         this._uiGuards.s2cConfig = true;
-        this._speak2ChatSensitivity = speak2ChatSensitivity;
-        this._speak2ChatTimeout = speak2ChatTimeout;
-
         this._ui.s2cSensitivityDd.selected_item = speak2ChatSensitivity;
         this._ui.s2cDurationDd.selected_item = speak2ChatTimeout;
         this._uiGuards.s2cConfig = false;
@@ -354,10 +350,10 @@ export const SonyDevice = GObject.registerClass({
         this._ui.s2cSensitivityDd.connect('notify::selected-item', () => {
             if (this._uiGuards.s2cConfig)
                 return;
-            const val = this._ui.s2cSensitivityDd.selected_item;
-            this._speak2ChatSensitivity = val;
-            this._sonySocket.setSpeakToChatConfig(this._speak2ChatSensitivity,
-                this._speak2ChatTimeout);
+            const speak2ChatSensitivity = this._ui.s2cSensitivityDd.selected_item;
+            const speak2ChatTimeout = this._ui.s2cDurationDd.selected_item;
+            this._sonySocket.setSpeakToChatConfig(speak2ChatSensitivity,
+                speak2ChatTimeout);
         });
     }
 
@@ -365,10 +361,10 @@ export const SonyDevice = GObject.registerClass({
         this._ui.s2cDurationDd.connect('notify::selected-item', () => {
             if (this._uiGuards.s2cConfig)
                 return;
-            const val = this._ui.s2cDurationDd.selected_item;
-            this._speak2ChatTimeout = val;
-            this._sonySocket.setSpeakToChatConfig(this._speak2ChatSensitivity,
-                this._speak2ChatTimeout);
+            const speak2ChatSensitivity = this._ui.s2cSensitivityDd.selected_item;
+            const speak2ChatTimeout = this._ui.s2cDurationDd.selected_item;
+            this._sonySocket.setSpeakToChatConfig(speak2ChatSensitivity,
+                speak2ChatTimeout);
         });
     }
 
@@ -399,8 +395,8 @@ export const SonyDevice = GObject.registerClass({
         this._ui.eqPresetDd.connect('notify::selected-item', () => {
             if (this._uiGuards.equalizer)
                 return;
-            const val = this._ui.eqPresetDd.selected_item;
-            this._sonySocket.setEqualizerPreset(val);
+            const presetCode = this._ui.eqPresetDd.selected_item;
+            this._sonySocket.setEqualizerPreset(presetCode);
         });
     }
 
@@ -410,7 +406,28 @@ export const SonyDevice = GObject.registerClass({
         this._eq.connect('eq-changed', (_w, arr) => {
             if (this._uiGuards.equalizer)
                 return;
-            this._sonySocket.setEqualizerCustomBands(arr);
+            const presetCode = this._ui.eqPresetDd.selected_item;
+            const customBand = arr;
+            this._scheduleEqUpdate(presetCode, customBand);
+        });
+    }
+
+    _scheduleEqUpdate(presetCode, customBand) {
+        this._eqPending = {presetCode, customBand};
+
+        if (this._eqTimeoutId)
+            return;
+
+        this._eqTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+            if (this._eqPending) {
+                const p = this._eqPending;
+                this._sonySocket.setEqualizer(p.presetCode, p.customBand);
+                this._eqPending = null;
+                return GLib.SOURCE_CONTINUE;
+            }
+
+            this._eqTimeoutId = 0;
+            return GLib.SOURCE_REMOVE;
         });
     }
 
@@ -466,11 +483,12 @@ export const SonyDevice = GObject.registerClass({
     }
 
     _autoPowerOffSwitchMonitor() {
-        this._ui.autoPowerOffDd.connect('notify::active', () => {
+        this._ui.autoPowerOffSwitch.connect('notify::active', () => {
             if (this._uiGuards.automaticPowerOff)
                 return;
             const enabled = this._ui.autoPowerOffSwitch.active;
             const mode = this._ui.autoPowerOffDd.selected_item;
+            this._ui.autoPowerOffDd.visible = enabled && this._automaticPowerOffByTime;
             this._sonySocket.setAutomaticPowerOff(enabled, mode);
         });
     }
@@ -494,7 +512,6 @@ export const SonyDevice = GObject.registerClass({
     }
 
     updateUpscalingIndicator(mode, show) {
-        log(`mode: ${mode}, show: ${show}`);
         if (mode === DseeType.DSEE_ULTIMATE)
             this._ui.dseeIndicator.icon_name = 'bbm-dsee-ex-symbolic';
         if (mode === DseeType.DSEE_HX_AI)
@@ -512,8 +529,6 @@ export const SonyDevice = GObject.registerClass({
         this._ui.dseeIndicator.visible = this._dseeIndicatorEnabled && this._dseeEnabled;
     }
 
-
-
     destroy() {
         if (this._bluezDeviceProxy && this._bluezSignalId)
             this._bluezDeviceProxy.disconnect(this._bluezSignalId);
@@ -522,6 +537,5 @@ export const SonyDevice = GObject.registerClass({
         this._sonySocket?.destroy();
         this._sonySocket = null;
         this.dataHandler = null;
-        this._battInfoRecieved = false;
     }
 });
