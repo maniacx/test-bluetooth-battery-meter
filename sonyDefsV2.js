@@ -119,7 +119,7 @@ export const PayloadType = {
     GENERAL_SETTING_GET_PARAM: 0xD6,
     GENERAL_SETTING_RET_PARAM: 0xD7,
     GENERAL_SETTING_SET_PARAM: 0xD8,
-    GENERAL_SETTING_NTNY_PARAM: 0xD9,
+    GENERAL_SETTING_NTFY_PARAM: 0xD9,
     AUDIO_GET_CAPABILITY: 0xE0,
     AUDIO_RET_CAPABILITY: 0xE1,
     AUDIO_GET_STATUS: 0xE2,
@@ -391,9 +391,12 @@ export const Speak2ChatTimeout = {
     OFF: 0x03,
 };
 
-export const PlaybackStatus = {
-    PLAY: 0x01,
-    PAUSE: 0x02,
+export const ButtonModes = {
+    AMBIENT_SOUND_CONTROL: 0x00,
+    VOLUME_CONTROL: 0x10,
+    PLAYBACK_CONTROL: 0x20,
+    AMBIENT_SOUND_CONTROL_QA: 0x35,
+    NO_FUNCTION: 0xFF,
 };
 
 export const EqualizerPreset = {

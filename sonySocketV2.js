@@ -10,7 +10,7 @@ import {
     PayloadType, PayloadTypeV2, ValueType, DeviceSeries, DeviceColor, FunctionType1, BatteryType,
     BatteryStatus, AmbientSoundMode, AutoAsmSensitivity, AsmType, Speak2ChatSensitivity, AudioCodec,
     DseeType, Speak2ChatTimeout, EqualizerPreset, ListeningMode, BgmDistance, AutoPowerOffState,
-    AutoPowerOffTime, AmbientButtonMode
+    AutoPowerOffTime, AmbientButtonMode, ButtonModes
 } from './sonyDefsV2.js';
 
 /**
@@ -70,6 +70,8 @@ export const SonySocket = GObject.registerClass({
         this._audioUpsamplingSupported = modelData.audioUpsampling ?? false;
         this._automaticPowerOffWhenTakenOff = modelData.automaticPowerOffWhenTakenOff ?? false;
         this._automaticPowerOffByTime = modelData.automaticPowerOffByTime ?? false;
+        this._buttonModesLeftRight = modelData.buttonModesLeftRight?.length > 0;
+
 
         this._noiseAdaptiveOn = true;
         this._noiseAdaptiveSensitivity = AutoAsmSensitivity.STANDARD;
@@ -845,6 +847,38 @@ export const SonySocket = GObject.registerClass({
             this._bgmProps.mode = mode;
     }
 
+    _getButtonModesLeftRight() {
+        this._log.info('GET ButtonModesLeftRight');
+
+        const payload = [PayloadType.SYSTEM_GET_PARAM];
+        payload.push(0x03);
+        this._addMessageQueue(MessageType.COMMAND_2, payload, 'GetButtonModesLeftRight');
+    }
+
+    _parseButtonModesLeftRight(payload) {
+        this._log.info('PARSE ButtonModesLeftRight');
+
+        const leftMode = payload[3];
+        const rightMode = payload[4];
+
+        if (payload[2] !== 0x02 || !isValidByte(leftMode, ButtonModes) ||
+                    !isValidByte(rightMode, ButtonModes))
+            return;
+
+        this._callbacks?.updateButtonModesLeftRight?.(leftMode, rightMode);
+    }
+
+    setButtonModesLeftRight(leftMode, rightMode) {
+        this._log.info(`SET ButtonModesLeftRight: ${leftMode}, ${rightMode}`);
+
+        const payload = [PayloadType.SYSTEM_SET_PARAM];
+        payload.push(0x03);
+        payload.push(0x02);
+        payload.push(leftMode);
+        payload.push(rightMode);
+        this._addMessageQueue(MessageType.COMMAND_2, payload, 'SetButtonModesLeftRight');
+    }
+
     _getVoiceNotifications() {
         this._log.info('GET VoiceNotifications');
 
@@ -910,7 +944,7 @@ export const SonySocket = GObject.registerClass({
     _getPauseWhenTakenOff() {
         this._log.info('GET PauseWhenTakenOff');
 
-        const payload = [PayloadType.POWER_GET_PARAM];
+        const payload = [PayloadType.SYSTEM_GET_PARAM];
         payload.push(0x01);
         this._addMessageQueue(MessageType.COMMAND_1, payload, 'GetPauseWhenTakenOff');
     }
@@ -1099,7 +1133,7 @@ export const SonySocket = GObject.registerClass({
 
                     case PayloadType.POWER_RET_PARAM:
                     case PayloadType.POWER_NTFY_PARAM:
-                        this.emit('ack-received', 'battery');
+                        this.emit('ack-received', 'automaticPowerOff');
                         this._parseAutomaticPowerOff(payload);
                         break;
 
@@ -1119,6 +1153,9 @@ export const SonySocket = GObject.registerClass({
                         if (payload[1] === 0x01) {
                             this.emit('ack-received', 'pauseWhenTakenOff');
                             this._parsePauseWhenTakenOff(payload);
+                        } else if (payload[1] === 0x03) {
+                            this.emit('ack-received', 'buttonModesLeftRight');
+                            this._parseButtonModesLeftRight(payload);
                         } else if (payload[1] === 0x0C) {
                             this.emit('ack-received', 'speakToChatEnable');
                             this._parseSpeakToChatEnable(payload);
@@ -1212,9 +1249,6 @@ export const SonySocket = GObject.registerClass({
             this._getBatteryRequest(BatteryType.CASE);
         }
 
-        if (this._pauseWhenTakenOffSupported)
-            this._getPauseWhenTakenOff();
-
         if (this._automaticPowerOffWhenTakenOff)
             this._getAutomaticPowerOff();
 
@@ -1237,6 +1271,12 @@ export const SonySocket = GObject.registerClass({
 
         if (this._asmType)
             this._getAmbientSoundControl();
+
+        if (this._pauseWhenTakenOffSupported)
+            this._getPauseWhenTakenOff();
+
+        if (this._buttonModesLeftRight)
+            this._getButtonModesLeftRight();
 
         if (this._speakToChatEnabledSupported)
             this._getSpeakToChatEnabled();

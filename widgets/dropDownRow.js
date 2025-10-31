@@ -25,16 +25,22 @@ export const DropDownRowWidget = GObject.registerClass({
 
         super._init({title, subtitle});
 
-        this._values = values;
-        this._updatingProgrammatically = false;
-
-        this._stringList = new Gtk.StringList();
-        for (const label of options)
-            this._stringList.append(label);
+        if (options.length === 0 || values.length === 0) {
+            this._values = ['none'];
+            this._stringList = new Gtk.StringList();
+            this._stringList.append('—');
+        } else {
+            this._values = values;
+            this._stringList = new Gtk.StringList();
+            for (const label of options)
+                this._stringList.append(label);
+        }
 
         let currentIndex = this._values.indexOf(initialValue);
         if (currentIndex === -1)
             currentIndex = 0;
+
+        this._updatingProgrammatically = false;
 
         this._dropdown = Gtk.DropDown.new(this._stringList, null);
         this._dropdown.valign = Gtk.Align.CENTER;
@@ -59,6 +65,24 @@ export const DropDownRowWidget = GObject.registerClass({
         const idx = this._values.indexOf(val);
         this._updatingProgrammatically = true;
         this._dropdown.selected = idx === -1 ? 0 : idx;
+        this._updatingProgrammatically = false;
+    }
+
+    updateList(options = null, values = null, initialValue = null) {
+        const currentValue = this.selected_item;
+        this._stringList.splice(0, this._stringList.get_n_items(), []);
+
+        for (const label of options)
+            this._stringList.append(label);
+
+        this._values = values;
+        const targetValue = initialValue !== null ? initialValue : currentValue;
+        let currentIndex = this._values.indexOf(targetValue);
+        if (currentIndex === -1)
+            currentIndex = 0;
+
+        this._updatingProgrammatically = true;
+        this._dropdown.selected = currentIndex;
         this._updatingProgrammatically = false;
     }
 });

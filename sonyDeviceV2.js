@@ -6,7 +6,7 @@ import {createLogger} from './logger.js';
 import {getBluezDeviceProxy} from './bluezDeviceProxy.js';
 import {SonySocket} from './sonySocketV2.js';
 import {
-    AmbientSoundMode, AutoAsmSensitivity, ListeningMode, AudioCodec, DseeType
+    AmbientSoundMode, AutoAsmSensitivity, ListeningMode, AudioCodec, DseeType, ButtonModes
 } from './sonyDefsV2.js';
 
 import {SonyConfiguration} from './sonyConfig.js';
@@ -60,7 +60,7 @@ export const SonyDevice = GObject.registerClass({
             updateAutomaticPowerOff: this.updateAutomaticPowerOff.bind(this),
             updateCodecIndicator: this.updateCodecIndicator.bind(this),
             updateUpscalingIndicator: this.updateUpscalingIndicator.bind(this),
-
+            updateButtonModesLeftRight: this.updateButtonModesLeftRight.bind(this),
         };
 
         this._log.info('Branch: sony-v2');
@@ -119,13 +119,16 @@ export const SonyDevice = GObject.registerClass({
         this._ambientSoundControl2Supported = modelData.ambientSoundControl2 ?? false;
         this._windNoiseReductionSupported = modelData.windNoiseReduction ?? false;
         this._ambientSoundControlNASupported = modelData.ambientSoundControlNA ?? false;
-        this._ambientSoundControlButtonMode = modelData.ambientSoundControlButtonMode ?? false;
 
         this._speakToChatEnabledSupported = modelData.speakToChatEnabled ?? false;
         this._speakToChatConfigSupported = modelData.speakToChatConfig ?? false;
         this._speakToChatFocusOnVoiceSupported = modelData.speakToChatFocusOnVoice ?? false;
 
         this._listeningModeSupported = modelData.listeningMode ?? false;
+
+        this._ambientSoundControlButtonMode = modelData.ambientSoundControlButtonMode ?? false;
+        this._buttonModesLeftRight = modelData.buttonModesLeftRight ?? false;
+
         this._voiceNotificationsSupported = modelData.voiceNotifications ?? false;
         this._equalizerSixBandsSupported = modelData.equalizerSixBands ?? false;
         this._equalizerTenBandsSupported = modelData.equalizerTenBands ?? false;
@@ -133,6 +136,7 @@ export const SonyDevice = GObject.registerClass({
         this._pauseWhenTakenOffSupported = modelData.pauseWhenTakenOff ?? false;
         this._automaticPowerOffWhenTakenOffSupported =
             modelData.automaticPowerOffWhenTakenOff ?? false;
+
 
         if (this._batteryDualSupported || this._batteryDual2Supported) {
             this._ui.bat1.setIcon(`bbm-${modelData.budsIcon}-left-symbolic`);
@@ -163,12 +167,12 @@ export const SonyDevice = GObject.registerClass({
             }
 
             this._ui.autoAdaptiveNoiseSwitch.visible = this._ambientSoundControlNASupported;
-            this._ui.autoAdaptiveNoiseSensitivityDd.visible =  this._ambientSoundControlNASupported;
+            this._ui.autoAdaptiveNoiseSensitivityDd.visible = this._ambientSoundControlNASupported;
 
             this._ui.ancToggle.updateConfig(btns);
         }
 
-        this._ui.ancToggleButtonWidget.visible = this._ambientSoundControlButtonMode;
+
 
         if (this._speakToChatEnabledSupported) {
             this._ui.s2cGroup.visible = true;
@@ -184,6 +188,39 @@ export const SonyDevice = GObject.registerClass({
         }
 
         this._ui.bgmGroup.visible = this._listeningModeSupported;
+
+        this._ui.ancToggleButtonWidget.visible = this._ambientSoundControlButtonMode;
+
+        this._buttonModesLeftRight = modelData.buttonModesLeftRight ?? false;
+
+        if (this._buttonModesLeftRight && this._buttonModesLeftRight.length > 0) {
+            const buttonModeMap = {
+                amb: ['Ambient Sound Control', ButtonModes.AMBIENT_SOUND_CONTROL],
+                ambqa: ['Ambient Sound Control / Quick Access',
+                    ButtonModes.AMBIENT_SOUND_CONTROL_QA],
+                pb: ['Playback Control', ButtonModes.PLAYBACK_CONTROL],
+                vol: ['Volume Control', ButtonModes.VOLUME_CONTROL],
+                na: ['Not Assigned', ButtonModes.NO_FUNCTION],
+            };
+
+            const options = [];
+            const values = [];
+
+            for (const key of this._buttonModesLeftRight) {
+                const entry = buttonModeMap[key];
+                if (!entry)
+                    continue;
+                const [label, value] = entry;
+                options.push(label);
+                values.push(value);
+            }
+
+            this._ui.leftBtnTchDropdown.updateList(options, values);
+            this._ui.rightBtnTchDropdown.updateList(options, values);
+            this._ui.leftBtnTchDropdown.visible = true;
+            this._ui.rightBtnTchDropdown.visible = true;
+        }
+
 
         this._ui.moreGroup.visible = this._voiceNotificationsSupported ||
             this._equalizerSixBandsSupported || this._equalizerTenBandsSupported ||
@@ -265,6 +302,7 @@ export const SonyDevice = GObject.registerClass({
         this._autoPowerOffDdMonitor();
         this._autoPowerOffSwitchMonitor();
         this._pauseWhenTakeOffSwitchMonitor();
+        this._buttonModesLeftRightMonitor();
     }
 
     updateBatteryProps(props) {
@@ -373,22 +411,6 @@ export const SonyDevice = GObject.registerClass({
         });
     }
 
-    updateAmbientSoundButton(value) {
-        this._uiGuards.ambientButton = true;
-        this._ui.ancToggleButtonWidget.toggled_value = value;
-        this._uiGuards.ambientButton = false;
-    }
-
-    _ambientToggleButtonWidgetMonitor() {
-        if (this._uiGuards.ambientButton)
-            return;
-        this._ui.ancToggleButtonWidget.connect('notify::toggled-value', () => {
-            const value = this._ui.ancToggleButtonWidget.toggled_value;
-            this._sonySocket.setAmbientSoundButton(value);
-        });
-    }
-
-
     updateSpeakToChatEnable(enabled) {
         this._uiGuards.s2cenable = true;
         this._ui.s2cToggle.toggled = enabled ? 2 : 1;
@@ -472,6 +494,43 @@ export const SonyDevice = GObject.registerClass({
             this._bgmProps.distance = value;
             this._sonySocket.setListeningModeBgm(this._bgmProps.mode,
                 this._bgmProps.distance);
+        });
+    }
+
+    updateAmbientSoundButton(value) {
+        this._uiGuards.ambientButton = true;
+        this._ui.ancToggleButtonWidget.toggled_value = value;
+        this._uiGuards.ambientButton = false;
+    }
+
+    _ambientToggleButtonWidgetMonitor() {
+        if (this._uiGuards.ambientButton)
+            return;
+        this._ui.ancToggleButtonWidget.connect('notify::toggled-value', () => {
+            const value = this._ui.ancToggleButtonWidget.toggled_value;
+            this._sonySocket.setAmbientSoundButton(value);
+        });
+    }
+
+    updateButtonModesLeftRight(leftMode, rightMode) {
+        this._uiGuards.buttonModesLR = true;
+        this._ui.leftBtnTchDropdown.selected_item = leftMode;
+        this._ui.rightBtnTchDropdown.selected_item = rightMode;
+        this._uiGuards.buttonModesLR = false;
+    }
+
+    _buttonModesLeftRightMonitor() {
+        if (this._uiGuards.buttonModesLR)
+            return;
+        this._ui.leftBtnTchDropdown.connect('notify::selected-item', () => {
+            const leftMode = this._ui.leftBtnTchDropdown.selected_item;
+            const rightMode = this._ui.rightBtnTchDropdown.selected_item;
+            this._sonySocket.setButtonModesLeftRight(leftMode, rightMode);
+        });
+        this._ui.rightBtnTchDropdown.connect('notify::selected-item', () => {
+            const leftMode = this._ui.leftBtnTchDropdown.selected_item;
+            const rightMode = this._ui.rightBtnTchDropdown.selected_item;
+            this._sonySocket.setButtonModesLeftRight(leftMode, rightMode);
         });
     }
 

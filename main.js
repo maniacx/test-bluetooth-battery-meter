@@ -225,29 +225,6 @@ class BatteryApp {
 
         this._ancGroup.add(this._autoAsmSensitivityDropdown);
 
-        const items = [
-            {name: 'Noise Cancellation', icon: 'bbm-anc-on-symbolic'},
-            {name: 'Ambient', icon: 'bbm-transperancy-symbolic'},
-            {name: 'Off', icon: 'bbm-anc-off-symbolic'},
-        ];
-
-        this._ancToggleButtonWidget = new CheckBoxesGroupWidget({
-            groupTitle: 'Button Settings',
-            rowTitle: '[NC/AMB] Button Settings',
-            rowSubtitle: 'Select the modes that needs to be toggled',
-            items,
-            applyBtnName: 'Apply',
-            initialValue: 0,
-        });
-        this._ancToggleButtonWidget.visible = false;
-
-        this._ancToggleButtonWidget.connect('notify::toggled-value', () => {
-            this._log.info(
-                `ANC Toggle button values : ${this._ancToggleButtonWidget.toggled_value}`);
-        });
-
-        page.add(this._ancToggleButtonWidget);
-
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
         this._awarenessGroup = new Adw.PreferencesGroup({title: 'Speak to Chat', visible: false});
@@ -352,6 +329,70 @@ class BatteryApp {
 
         this._listeningModeGroup.add(this._bgmDistanceDropdown);
         page.add(this._listeningModeGroup);
+
+
+        // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+        const items = [
+            {name: 'Noise Cancellation', icon: 'bbm-anc-on-symbolic'},
+            {name: 'Ambient', icon: 'bbm-transperancy-symbolic'},
+            {name: 'Off', icon: 'bbm-anc-off-symbolic'},
+        ];
+
+        this._ancToggleButtonWidget = new CheckBoxesGroupWidget({
+            groupTitle: 'ANC Button Configuration',
+            rowTitle: '[NC/AMB] Button Settings',
+            rowSubtitle: 'Select the modes that needs to be toggled',
+            items,
+            applyBtnName: 'Apply',
+            initialValue: 0,
+        });
+        this._ancToggleButtonWidget.visible = false;
+
+        this._ancToggleButtonWidget.connect('notify::toggled-value', () => {
+            this._log.info(
+                `ANC Toggle button values : ${this._ancToggleButtonWidget.toggled_value}`);
+        });
+
+        page.add(this._ancToggleButtonWidget);
+
+        // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        this._btnTchGroup = new Adw.PreferencesGroup({title: 'Button/Touch Settings'});
+        page.add(this._btnTchGroup);
+
+        this._leftBtnTchDropdown = new DropDownRowWidget({
+            title: 'Left Bud',
+            options: '',
+            values: '',
+            initialValue: 0,
+        });
+
+        this._leftBtnTchDropdown.visible = false;
+
+        this._leftBtnTchDropdown.connect('notify::selected-item', () => {
+            const val = this._leftBtnTchDropdown.selected_item;
+            this._log.info(`Left Btn/Tch val : ${val}`);
+        });
+
+        this._btnTchGroup.add(this._leftBtnTchDropdown);
+
+        this._rightBtnTchDropdown = new DropDownRowWidget({
+            title: 'Right Bud',
+            options: '',
+            values: '',
+            initialValue: 0,
+        });
+
+        this._rightBtnTchDropdown.visible = false;
+
+        this._rightBtnTchDropdown.connect('notify::selected-item', () => {
+            const val = this._rightBtnTchDropdown.selected_item;
+            this._log.info(`Right Btn/Tch val : ${val}`);
+        });
+
+        this._btnTchGroup.add(this._rightBtnTchDropdown);
+
+
 
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         this._moreGroup = new Adw.PreferencesGroup({title: 'More Settings'});
@@ -643,12 +684,11 @@ class BatteryApp {
 
         this._deviceStarted = true;
 
-        GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 8, () => {
+        const timeout = globalThis.TESTDEVICE ? 1 : 8;
+        GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, timeout, () => {
             this._page.sensitive = true;
             return GLib.SOURCE_REMOVE;
         });
-
-
 
         const uiObjects = {
             codecIndicator: this._codecIndicator,
@@ -665,7 +705,6 @@ class BatteryApp {
             voiceFocusSwitch: this._focuseSwitch,
             autoAdaptiveNoiseSwitch: this._autoAmbientSoundSwitch,
             autoAdaptiveNoiseSensitivityDd: this._autoAsmSensitivityDropdown,
-            ancToggleButtonWidget: this._ancToggleButtonWidget,
 
             s2cGroup: this._awarenessGroup,
             s2cToggle: this._awarenessToggle,
@@ -675,6 +714,11 @@ class BatteryApp {
             bgmGroup: this._listeningModeGroup,
             bgmModeDd: this._bgmModeDropdown,
             bgmDistanceDd: this._bgmDistanceDropdown,
+
+            ancToggleButtonWidget: this._ancToggleButtonWidget,
+
+            leftBtnTchDropdown: this._leftBtnTchDropdown,
+            rightBtnTchDropdown: this._rightBtnTchDropdown,
 
             moreGroup: this._moreGroup,
             voiceNotificationSwitch: this._voiceNotificationsSwitchRow,
