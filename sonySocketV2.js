@@ -10,7 +10,7 @@ import {
     PayloadType, PayloadTypeV2, ValueType, DeviceSeries, DeviceColor, FunctionType1, BatteryType,
     BatteryStatus, AmbientSoundMode, AutoAsmSensitivity, AsmType, Speak2ChatSensitivity, AudioCodec,
     DseeType, Speak2ChatTimeout, EqualizerPreset, ListeningMode, BgmDistance, AutoPowerOffState,
-    AutoPowerOffTime
+    AutoPowerOffTime, AmbientButtonMode
 } from './sonyDefsV2.js';
 
 /**
@@ -59,6 +59,7 @@ export const SonySocket = GObject.registerClass({
         this._ambientSoundControl2Supported = modelData.ambientSoundControl2 ?? false;
         this._ambientSoundControlNASupported = modelData.ambientSoundControlNA ?? false;
         this._windNoiseReductionSupported = modelData.windNoiseReduction ?? false;
+        this._ambientSoundControlButtonMode = modelData.ambientSoundControlButtonMode ?? false;
         this._speakToChatEnabledSupported = modelData.speakToChatEnabled ?? false;
         this._speakToChatConfigSupported = modelData.speakToChatConfig ?? false;
         this._speakToChatFocusOnVoiceSupported = modelData.speakToChatFocusOnVoice ?? false;
@@ -588,8 +589,64 @@ export const SonySocket = GObject.registerClass({
             this._noiseAdaptiveOn = adaptiveMode;
             this._noiseAdaptiveSensitivity = sensitivity;
         }
-
         this._addMessageQueue(MessageType.COMMAND_1, payload, 'SetAmbientSoundControl');
+    }
+
+    _getAmbientSoundButton() {
+        this._log.info('GET AmbientSoundButton');
+
+        const payload = [PayloadType.NCASM_GET_PARAM];
+        payload.push(0x30);
+        this._addMessageQueue(MessageType.COMMAND_1, payload, 'GetAmbientSoundButton');
+    }
+
+    _parseAmbientSoundButton(payload) {
+        this._log.info('PARSE AmbientSoundButton');
+
+        let buttonValue;
+        switch (payload[2]) {
+            case AmbientButtonMode.NC_ASM_OFF:
+                buttonValue = 0b111;
+                break;
+            case AmbientButtonMode.NC_ASM:
+                buttonValue = 0b011;
+                break;
+            case AmbientButtonMode.NC_OFF:
+                buttonValue = 0b101;
+                break;
+            case AmbientButtonMode.ASM_OFF:
+                buttonValue = 0b110;
+                break;
+            default:
+                return;
+        }
+        this._callbacks?.updateAmbientSoundButton?.(buttonValue);
+    }
+
+
+    setAmbientSoundButton(value) {
+        let buttonMode;
+        switch (value) {
+            case 0b111:
+                buttonMode = AmbientButtonMode.NC_ASM_OFF;
+                break;
+            case 0b011:
+                buttonMode = AmbientButtonMode.NC_ASM;
+                break;
+            case 0b101:
+                buttonMode = AmbientButtonMode.NC_OFF;
+                break;
+            case 0b110:
+                buttonMode = AmbientButtonMode.ASM_OFF;
+                break;
+            default:
+                return;
+        }
+
+        const payload = [PayloadType.NCASM_SET_PARAM];
+        payload.push(0x30);
+        payload.push(buttonMode);
+        this._addMessageQueue(MessageType.COMMAND_1, payload, 'SetAmbientSoundButton');
     }
 
     _getSpeakToChatEnabled() {
@@ -1048,8 +1105,13 @@ export const SonySocket = GObject.registerClass({
 
                     case PayloadType.NCASM_RET_PARAM:
                     case PayloadType.NCASM_NTFY_PARAM:
-                        this.emit('ack-received', 'ambientControl');
-                        this._parseAmbientSoundControl(payload);
+                        if (payload[1] === 0x30) {
+                            this.emit('ack-received', 'ambientSoundButton');
+                            this._parseAmbientSoundButton(payload);
+                        } else {
+                            this.emit('ack-received', 'ambientControl');
+                            this._parseAmbientSoundControl(payload);
+                        }
                         break;
 
                     case PayloadType.SYSTEM_RET_PARAM:
@@ -1178,6 +1240,9 @@ export const SonySocket = GObject.registerClass({
 
         if (this._speakToChatEnabledSupported)
             this._getSpeakToChatEnabled();
+
+        if (this._speakToChatConfigSupported)
+            this._getAmbientSoundButton();
 
         if (this._speakToChatConfigSupported)
             this._getSpeakToChatConfig();

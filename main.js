@@ -11,6 +11,7 @@ import {setLiveLogSink, hideMacAdddress} from './logger.js';
 import {ToggleButtonRow} from './widgets/toggleButtonRow.js';
 import {DropDownRowWidget} from './widgets/dropDownRow.js';
 import {EqualizerWidget} from './widgets/equalizerWidget.js';
+import {CheckBoxesGroupWidget} from './widgets/checkBoxesGroupWidget.js';
 
 import {
     EqualizerPreset, AutoPowerOffTime, AutoAsmSensitivity, ListeningMode, BgmDistance
@@ -223,6 +224,29 @@ class BatteryApp {
         });
 
         this._ancGroup.add(this._autoAsmSensitivityDropdown);
+
+        const items = [
+            {name: 'Noise Cancellation', icon: 'bbm-anc-on-symbolic'},
+            {name: 'Ambient', icon: 'bbm-transperancy-symbolic'},
+            {name: 'Off', icon: 'bbm-anc-off-symbolic'},
+        ];
+
+        this._ancToggleButtonWidget = new CheckBoxesGroupWidget({
+            groupTitle: 'Button Settings',
+            rowTitle: '[NC/AMB] Button Settings',
+            rowSubtitle: 'Select the modes that needs to be toggled',
+            items,
+            applyBtnName: 'Apply',
+            initialValue: 0,
+        });
+        this._ancToggleButtonWidget.visible = false;
+
+        this._ancToggleButtonWidget.connect('notify::toggled-value', () => {
+            this._log.info(
+                `ANC Toggle button values : ${this._ancToggleButtonWidget.toggled_value}`);
+        });
+
+        page.add(this._ancToggleButtonWidget);
 
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
@@ -641,6 +665,7 @@ class BatteryApp {
             voiceFocusSwitch: this._focuseSwitch,
             autoAdaptiveNoiseSwitch: this._autoAmbientSoundSwitch,
             autoAdaptiveNoiseSensitivityDd: this._autoAsmSensitivityDropdown,
+            ancToggleButtonWidget: this._ancToggleButtonWidget,
 
             s2cGroup: this._awarenessGroup,
             s2cToggle: this._awarenessToggle,

@@ -377,6 +377,13 @@ export const Speak2ChatSensitivity = {
     LOW: 0x02,
 };
 
+export const AmbientButtonMode = {
+    NC_ASM_OFF: 0x01,
+    NC_ASM: 0x02,
+    NC_OFF: 0x03,
+    ASM_OFF: 0x04,
+};
+
 export const Speak2ChatTimeout = {
     SHORT: 0x00,
     STANDARD: 0x01,

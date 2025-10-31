@@ -48,6 +48,7 @@ export const SonyDevice = GObject.registerClass({
             deviceInitialized: this.deviceInitialized.bind(this),
             updateBatteryProps: this.updateBatteryProps.bind(this),
             updateAmbientSoundControl: this.updateAmbientSoundControl.bind(this),
+            updateAmbientSoundButton: this.updateAmbientSoundButton.bind(this),
             updateSpeakToChatEnable: this.updateSpeakToChatEnable.bind(this),
             updateSpeakToChatConfig: this.updateSpeakToChatConfig.bind(this),
             updateEqualizer: this.updateEqualizer.bind(this),
@@ -118,6 +119,7 @@ export const SonyDevice = GObject.registerClass({
         this._ambientSoundControl2Supported = modelData.ambientSoundControl2 ?? false;
         this._windNoiseReductionSupported = modelData.windNoiseReduction ?? false;
         this._ambientSoundControlNASupported = modelData.ambientSoundControlNA ?? false;
+        this._ambientSoundControlButtonMode = modelData.ambientSoundControlButtonMode ?? false;
 
         this._speakToChatEnabledSupported = modelData.speakToChatEnabled ?? false;
         this._speakToChatConfigSupported = modelData.speakToChatConfig ?? false;
@@ -165,6 +167,8 @@ export const SonyDevice = GObject.registerClass({
 
             this._ui.ancToggle.updateConfig(btns);
         }
+
+        this._ui.ancToggleButtonWidget.visible = this._ambientSoundControlButtonMode;
 
         if (this._speakToChatEnabledSupported) {
             this._ui.s2cGroup.visible = true;
@@ -243,11 +247,12 @@ export const SonyDevice = GObject.registerClass({
     }
 
     deviceInitialized() {
-        this._ancToggleMonitor();
+        this._ambientToggleMonitor();
         this._ambientLevelSliderMonitor();
         this._voiceFocusSwitchMonitor();
         this._autoAdaptiveNoiseSwitchMonitor();
         this._autoAdaptiveNoiseSensitivityDdMonitor();
+        this._ambientToggleButtonWidgetMonitor();
         this._s2cToggleMonitor();
         this._s2cSensitivityDdMonitor();
         this._s2cDurationDdMonitor();
@@ -304,17 +309,17 @@ export const SonyDevice = GObject.registerClass({
         this._uiGuards.ambientmode = false;
     }
 
-    _ancToggleMonitor() {
+    _ambientToggleMonitor() {
         this._ui.ancToggle.connect('notify::toggled', () => {
             if (this._uiGuards.ambientmode)
                 return;
-            const val = this._ui.ancToggle.toggled;
+            const value = this._ui.ancToggle.toggled;
             let mode = AmbientSoundMode.ANC_OFF;
-            if (val === 2)
+            if (value === 2)
                 mode = AmbientSoundMode.ANC_ON;
-            else if (val === 3)
+            else if (value === 3)
                 mode = AmbientSoundMode.AMBIENT;
-            else if (val === 4)
+            else if (value === 4)
                 mode = AmbientSoundMode.WIND;
 
             this._ambientMode = mode;
@@ -367,6 +372,22 @@ export const SonyDevice = GObject.registerClass({
                 this._ambientLevel, this._naMode, this._naSensitivity);
         });
     }
+
+    updateAmbientSoundButton(value) {
+        this._uiGuards.ambientButton = true;
+        this._ui.ancToggleButtonWidget.toggled_value = value;
+        this._uiGuards.ambientButton = false;
+    }
+
+    _ambientToggleButtonWidgetMonitor() {
+        if (this._uiGuards.ambientButton)
+            return;
+        this._ui.ancToggleButtonWidget.connect('notify::toggled-value', () => {
+            const value = this._ui.ancToggleButtonWidget.toggled_value;
+            this._sonySocket.setAmbientSoundButton(value);
+        });
+    }
+
 
     updateSpeakToChatEnable(enabled) {
         this._uiGuards.s2cenable = true;
@@ -436,8 +457,8 @@ export const SonyDevice = GObject.registerClass({
         this._ui.bgmModeDd.connect('notify::selected-item', () => {
             if (this._uiGuards.bgm)
                 return;
-            const val = this._ui.bgmModeDd.selected_item;
-            this._bgmProps.mode = val;
+            const value = this._ui.bgmModeDd.selected_item;
+            this._bgmProps.mode = value;
             this._sonySocket.setListeningModeBgm(this._bgmProps.mode,
                 this._bgmProps.distance);
         });
@@ -447,8 +468,8 @@ export const SonyDevice = GObject.registerClass({
         this._ui.bgmDistanceDd.connect('notify::selected-item', () => {
             if (this._uiGuards.bgm)
                 return;
-            const val = this._ui.bgmDistanceDd.selected_item;
-            this._bgmProps.distance = val;
+            const value = this._ui.bgmDistanceDd.selected_item;
+            this._bgmProps.distance = value;
             this._sonySocket.setListeningModeBgm(this._bgmProps.mode,
                 this._bgmProps.distance);
         });

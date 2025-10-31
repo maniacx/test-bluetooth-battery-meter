@@ -309,6 +309,14 @@ class SonySocketServer {
 
     async _sendActualPackets(output) {
         const rawPackets = [
+
+            // ANC Toggle
+
+            '3e0c0000000003673002a83c',
+            '3e0c0000000003673004aa3c',
+            '3e0c0000000003673003a93c',
+            '3e0c0000000003673001a73c',
+            /*
             // ANC
             '3e0c010000000767170101000014a83c',
             '3e0c00000000076917010101000aa03c',
@@ -404,6 +412,7 @@ class SonySocketServer {
             '3e0c000000000413030200283c',
             '3e0c0000000004150302012b3c',
             '3e0c0000000004150302002a3c',
+            */
 
         ];
         /* eslint-disable no-await-in-loop */

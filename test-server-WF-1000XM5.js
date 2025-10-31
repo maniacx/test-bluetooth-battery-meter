@@ -309,6 +309,7 @@ class SonySocketServer {
 
     async _sendActualPackets(output) {
         const rawPackets = [
+
             // ANC
             '3e0c000000000767170101010014a83c',
             '3e0c010000000769170101000014aa3c',
