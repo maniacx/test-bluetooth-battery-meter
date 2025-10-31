@@ -116,7 +116,6 @@ export const SonyDevice = GObject.registerClass({
 
         this._noNoiseCancellingSupported = modelData.noNoiseCancelling ?? false;
         this._ambientSoundControlSupported = modelData.ambientSoundControl ?? false;
-        this._ambientSoundControl2Supported = modelData.ambientSoundControl2 ?? false;
         this._windNoiseReductionSupported = modelData.windNoiseReduction ?? false;
         this._ambientSoundControlNASupported = modelData.ambientSoundControlNA ?? false;
 
@@ -153,7 +152,7 @@ export const SonyDevice = GObject.registerClass({
             this._ui.bat1.setIcon(`bbm-${modelData.budsIcon}-symbolic`);
 
         if (!this._noNoiseCancellingSupported &&
-                (this._ambientSoundControlSupported || this._ambientSoundControl2Supported)) {
+                this._ambientSoundControlSupported) {
             this._ui.ancGroup.visible = true;
 
             const btns = {
@@ -165,6 +164,8 @@ export const SonyDevice = GObject.registerClass({
                 btns.btn4Name = 'Wind';
                 btns.btn4Icon = 'bbm-adaptive-symbolic';
             }
+
+            log(`this._ui.autoAdaptiveNoiseSwitch = ${this._ui.autoAdaptiveNoiseSwitch}`);
 
             this._ui.autoAdaptiveNoiseSwitch.visible = this._ambientSoundControlNASupported;
             this._ui.autoAdaptiveNoiseSensitivityDd.visible = this._ambientSoundControlNASupported;
@@ -341,8 +342,8 @@ export const SonyDevice = GObject.registerClass({
         this._ui?.ambientLevelSlider?.set_value(level);
 
         if (this._ambientSoundControlNASupported) {
-            this._ui.autoAmbientSoundSwitch.active = naMode;
-            this._ui.autoAsmSensitivityDropdown.selected_item = naSensitivity;
+            this._ui.autoAdaptiveNoiseSwitch.active = naMode;
+            this._ui.autoAdaptiveNoiseSensitivityDd.selected_item = naSensitivity;
         }
         this._uiGuards.ambientmode = false;
     }
@@ -464,6 +465,7 @@ export const SonyDevice = GObject.registerClass({
 
         this._ui.bgmDistanceDd.selected_item = bgmProps.distance;
         this._bgmProps = bgmProps;
+        this._ui.updateMenuSensitivityCallBack();
         this._uiGuards.bgm = false;
     }
 
@@ -472,6 +474,7 @@ export const SonyDevice = GObject.registerClass({
         this._ui.bgmModeDd.selected_item = bgmProps.mode;
         this._ui.bgmDistanceDd.selected_item = bgmProps.distance;
         this._bgmProps = bgmProps;
+        this._ui.updateMenuSensitivityCallBack();
         this._uiGuards.bgm = false;
     }
 
@@ -479,6 +482,7 @@ export const SonyDevice = GObject.registerClass({
         this._ui.bgmModeDd.connect('notify::selected-item', () => {
             if (this._uiGuards.bgm)
                 return;
+            this._ui.updateMenuSensitivityCallBack();
             const value = this._ui.bgmModeDd.selected_item;
             this._bgmProps.mode = value;
             this._sonySocket.setListeningModeBgm(this._bgmProps.mode,
@@ -490,6 +494,7 @@ export const SonyDevice = GObject.registerClass({
         this._ui.bgmDistanceDd.connect('notify::selected-item', () => {
             if (this._uiGuards.bgm)
                 return;
+            this._ui.updateMenuSensitivityCallBack();
             const value = this._ui.bgmDistanceDd.selected_item;
             this._bgmProps.distance = value;
             this._sonySocket.setListeningModeBgm(this._bgmProps.mode,

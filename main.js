@@ -17,9 +17,9 @@ import {
     EqualizerPreset, AutoPowerOffTime, AutoAsmSensitivity, ListeningMode, BgmDistance
 } from './sonyDefsV2.js';
 
+// globalThis.TESTDEVICE = 'WH-1000XM6';
 // globalThis.TESTDEVICE = 'WF-1000XM5';
 // globalThis.TESTDEVICE = 'WH-1000XM5';
-// globalThis.TESTDEVICE = 'WF-C700N';
 globalThis.TESTDEVICE = '';
 
 Gio._promisify(Gio.DBusProxy, 'new');
@@ -297,7 +297,6 @@ class BatteryApp {
 
         this._bgmModeDropdown.connect('notify::selected-item', () => {
             this._log.info(`BGM Mode  : ${this._bgmModeDropdown.selected_item}`);
-            this._updateMenuSensitivity();
         });
 
         this._listeningModeGroup.add(this._bgmModeDropdown);
@@ -714,6 +713,7 @@ class BatteryApp {
             bgmGroup: this._listeningModeGroup,
             bgmModeDd: this._bgmModeDropdown,
             bgmDistanceDd: this._bgmDistanceDropdown,
+            updateMenuSensitivityCallBack: this._updateMenuSensitivity.bind(this),
 
             ancToggleButtonWidget: this._ancToggleButtonWidget,
 

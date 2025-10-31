@@ -56,7 +56,6 @@ export const SonySocket = GObject.registerClass({
         this._batterySingleSupported = modelData.batterySingle ?? false;
         this._noNoiseCancellingSupported = modelData.noNoiseCancelling ?? false;
         this._ambientSoundControlSupported = modelData.ambientSoundControl ?? false;
-        this._ambientSoundControl2Supported = modelData.ambientSoundControl2 ?? false;
         this._ambientSoundControlNASupported = modelData.ambientSoundControlNA ?? false;
         this._windNoiseReductionSupported = modelData.windNoiseReduction ?? false;
         this._ambientSoundControlButtonMode = modelData.ambientSoundControlButtonMode ?? false;
@@ -73,7 +72,7 @@ export const SonySocket = GObject.registerClass({
         this._buttonModesLeftRight = modelData.buttonModesLeftRight?.length > 0;
 
 
-        this._noiseAdaptiveOn = true;
+        this._noiseAdaptiveOn = false;
         this._noiseAdaptiveSensitivity = AutoAsmSensitivity.STANDARD;
         this._bgmProps = {active: false, distance: 0, mode: ListeningMode.STANDARD};
 
@@ -534,14 +533,14 @@ export const SonySocket = GObject.registerClass({
             if (mode === null)
                 return;
 
-            let i = payload.length - (idx === 19 ? 4 : 2);
+            let i = payload.length - (idx === 0x19 ? 4 : 2);
             this._focusOnVoiceState = payload[i] === 0x01;
 
             i++;
             const level = payload[i];
             this._ambientSoundLevel = level >= 0 && level <= 20 ? level : 10;
 
-            if (idx === 19) {
+            if (idx === 0x19) {
                 i++;
                 const val = payload[i];
                 if (val === 0x00 || val === 0x01)
@@ -584,7 +583,7 @@ export const SonySocket = GObject.registerClass({
         this._focusOnVoiceState = focusOnVoice;
         this._ambientSoundLevel = level;
 
-        if (this._asmType === 0x19) {
+        if (idx === 0x19) {
             payload.push(adaptiveMode ? 0x01 : 0x00);
             payload.push(sensitivity);
 
@@ -788,11 +787,11 @@ export const SonySocket = GObject.registerClass({
     _getListeningMode() {
         this._log.info('GET ListeningMode:');
 
-        const payloadNonBgm = [PayloadType.AUDIO_GET_PARAM, 0x04];
-        this._addMessageQueue(MessageType.COMMAND_1, payloadNonBgm, 'GetListeningModeNonBgm');
-
         const payloadBgm = [PayloadType.AUDIO_GET_PARAM, 0x03];
         this._addMessageQueue(MessageType.COMMAND_1, payloadBgm, 'GetListeningModeBgm');
+
+        const payloadNonBgm = [PayloadType.AUDIO_GET_PARAM, 0x04];
+        this._addMessageQueue(MessageType.COMMAND_1, payloadNonBgm, 'GetListeningModeNonBgm');
     }
 
     _parseListeningModeBgm(payload) {
