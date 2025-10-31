@@ -55,6 +55,7 @@ export const SonyDevice = GObject.registerClass({
             updateListeningBgmMode: this.updateListeningBgmMode.bind(this),
             updateListeningNonBgmMode: this.updateListeningNonBgmMode.bind(this),
             updateVoiceNotifications: this.updateVoiceNotifications.bind(this),
+            updateVoiceNotificationsVolume: this.updateVoiceNotificationsVolume.bind(this),
             updateAudioSampling: this.updateAudioSampling.bind(this),
             updatePauseWhenTakenOff: this.updatePauseWhenTakenOff.bind(this),
             updateAutomaticPowerOff: this.updateAutomaticPowerOff.bind(this),
@@ -164,8 +165,6 @@ export const SonyDevice = GObject.registerClass({
                 btns.btn4Name = 'Wind';
                 btns.btn4Icon = 'bbm-adaptive-symbolic';
             }
-
-            log(`this._ui.autoAdaptiveNoiseSwitch = ${this._ui.autoAdaptiveNoiseSwitch}`);
 
             this._ui.autoAdaptiveNoiseSwitch.visible = this._ambientSoundControlNASupported;
             this._ui.autoAdaptiveNoiseSensitivityDd.visible = this._ambientSoundControlNASupported;
@@ -297,6 +296,7 @@ export const SonyDevice = GObject.registerClass({
         this._bgmDistanceDdMonitor();
         this._bgmModeDdMonitor();
         this._voiceNotificationSwitchMonitor();
+        this._voiceNotificationVolumeMonitor();
         this._eqPresetDdMonitor();
         this._eqCustomRowMonitor();
         this._dseeRowSwitchMonitor();
@@ -321,6 +321,8 @@ export const SonyDevice = GObject.registerClass({
     }
 
     updateAmbientSoundControl(mode, focusOnVoiceState, level, naMode, naSensitivity) {
+        log(`AMB mode: ${mode},  focusOnVoiceState: ${focusOnVoiceState},  level: ${level},` +
+                `naMode: ${naMode} naSensitivity: ${naSensitivity}`);
         this._uiGuards.ambientmode = true;
 
         this._ambientMode = mode;
@@ -339,7 +341,7 @@ export const SonyDevice = GObject.registerClass({
             this._ui.ancToggle.toggled = 4;
 
         this._ui.voiceFocusSwitch.active = focusOnVoiceState;
-        this._ui?.ambientLevelSlider?.set_value(level);
+        this._ui.ambientLevelSlider.value = level;
 
         if (this._ambientSoundControlNASupported) {
             this._ui.autoAdaptiveNoiseSwitch.active = naMode;
@@ -369,10 +371,10 @@ export const SonyDevice = GObject.registerClass({
     }
 
     _ambientLevelSliderMonitor() {
-        this._ui.ambientLevelSlider.connect('value-changed', () => {
+        this._ui.ambientLevelSlider.connect('notify::value', () => {
             if (this._uiGuards.ambientmode)
                 return;
-            const value = Math.round(this._ui.ambientLevelSlider.get_value());
+            const value = Math.round(this._ui.ambientLevelSlider.value);
 
             if (this._ambientLevel !== value) {
                 this._ambientLevel = value;
@@ -413,6 +415,7 @@ export const SonyDevice = GObject.registerClass({
     }
 
     updateSpeakToChatEnable(enabled) {
+        log(`SpeakToChatEnable enabled: ${enabled}`);
         this._uiGuards.s2cenable = true;
         this._ui.s2cToggle.toggled = enabled ? 2 : 1;
         this._uiGuards.s2cenable = false;
@@ -428,6 +431,8 @@ export const SonyDevice = GObject.registerClass({
     }
 
     updateSpeakToChatConfig(speak2ChatSensitivity, speak2ChatTimeout) {
+        log(`SpeakToChatConfig speak2ChatSensitivity: ${speak2ChatSensitivity},  ` +
+                `speak2ChatTimeout: ${speak2ChatTimeout}`);
         this._uiGuards.s2cConfig = true;
         this._ui.s2cSensitivityDd.selected_item = speak2ChatSensitivity;
         this._ui.s2cDurationDd.selected_item = speak2ChatTimeout;
@@ -457,6 +462,7 @@ export const SonyDevice = GObject.registerClass({
     }
 
     updateListeningBgmMode(bgmProps) {
+        log(`ListeningBgmMod props: ${bgmProps}`);
         this._uiGuards.bgm = true;
         if (bgmProps.active)
             this._ui.bgmModeDd.selected_item = ListeningMode.BGM;
@@ -470,6 +476,7 @@ export const SonyDevice = GObject.registerClass({
     }
 
     updateListeningNonBgmMode(bgmProps) {
+        log(`ListeningNonBgmMod props: ${bgmProps}`);
         this._uiGuards.bgm = true;
         this._ui.bgmModeDd.selected_item = bgmProps.mode;
         this._ui.bgmDistanceDd.selected_item = bgmProps.distance;
@@ -503,6 +510,7 @@ export const SonyDevice = GObject.registerClass({
     }
 
     updateAmbientSoundButton(value) {
+        log(`AmbientSoundButton value: ${value}`);
         this._uiGuards.ambientButton = true;
         this._ui.ancToggleButtonWidget.toggled_value = value;
         this._uiGuards.ambientButton = false;
@@ -518,6 +526,7 @@ export const SonyDevice = GObject.registerClass({
     }
 
     updateButtonModesLeftRight(leftMode, rightMode) {
+        log(`AmbientSoundButton leftMode: ${leftMode}, rightMode: ${rightMode}`);
         this._uiGuards.buttonModesLR = true;
         this._ui.leftBtnTchDropdown.selected_item = leftMode;
         this._ui.rightBtnTchDropdown.selected_item = rightMode;
@@ -540,6 +549,7 @@ export const SonyDevice = GObject.registerClass({
     }
 
     updateVoiceNotifications(enabled) {
+        log(`VoiceNotifications enabled: ${enabled}`);
         this._uiGuards.voiceNotifications = true;
         this._ui.voiceNotificationSwitch.active = enabled;
         this._uiGuards.voiceNotifications = false;
@@ -554,7 +564,26 @@ export const SonyDevice = GObject.registerClass({
         });
     }
 
+    // /
+    updateVoiceNotificationsVolume(vol) {
+        log(`VoiceNotifications vol: ${vol}`);
+        this._uiGuards.voiceNotificationsVol = true;
+        this._ui.voiceNotificationsVolume.value = vol;
+        this._uiGuards.voiceNotificationsVol = false;
+    }
+
+    _voiceNotificationVolumeMonitor() {
+        this._ui.voiceNotificationsVolume.connect('notify::value', () => {
+            if (this._uiGuards.voiceNotificationsVol)
+                return;
+            const vol = this._ui.voiceNotificationsVolume.value;
+            this._sonySocket.setVoiceNotificationsVolume(vol);
+        });
+    }
+    // //
+
     updateEqualizer(presetCode, customBands) {
+        log(`updateEqualizer presetCode: ${presetCode}, customBands: ${customBands}`);
         this._uiGuards.equalizer = true;
         this._ui.eqPresetDd.selected_item = presetCode;
         this._ui.updateEqCustomRowVisibility();
@@ -623,6 +652,7 @@ export const SonyDevice = GObject.registerClass({
     }
 
     updatePauseWhenTakenOff(enabled) {
+        log(`PauseWhenTakenOff enabled: ${enabled}`);
         this._uiGuards.pauseWhenTakenOff = true;
         this._ui.pauseWhenTakeOffSwitch.active = enabled;
         this._uiGuards.pauseWhenTakenOff = false;
@@ -638,6 +668,7 @@ export const SonyDevice = GObject.registerClass({
     }
 
     updateAutomaticPowerOff(enabled, mode) {
+        log(`AutomaticPowerOff enabled: ${enabled}, mode: ${mode}`);
         this._uiGuards.automaticPowerOff = true;
         this._ui.autoPowerOffSwitch.active = enabled;
         this._ui.autoPowerOffDd.selected_item = mode;

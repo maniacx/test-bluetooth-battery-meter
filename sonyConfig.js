@@ -274,6 +274,7 @@ export const SonyConfiguration = [
         speakToChatConfig: true,
         speakToChatFocusOnVoice: true,
         voiceNotifications: true,
+        voiceNotificationsVolume: true,
         automaticPowerOffWhenTakenOff: true,
         equalizerTenBands: true,
         listeningMode: true,

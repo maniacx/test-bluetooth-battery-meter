@@ -66,11 +66,11 @@ export const SonySocket = GObject.registerClass({
         this._equalizerSixBands = modelData.equalizerSixBands ?? false;
         this._equalizerTenBands = modelData.equalizerTenBands ?? false;
         this._voiceNotifications = modelData.voiceNotifications ?? false;
+        this._voiceNotificationsVolume = modelData.voiceNotificationsVolume ?? false;
         this._audioUpsamplingSupported = modelData.audioUpsampling ?? false;
         this._automaticPowerOffWhenTakenOff = modelData.automaticPowerOffWhenTakenOff ?? false;
         this._automaticPowerOffByTime = modelData.automaticPowerOffByTime ?? false;
         this._buttonModesLeftRight = modelData.buttonModesLeftRight?.length > 0;
-
 
         this._noiseAdaptiveOn = false;
         this._noiseAdaptiveSensitivity = AutoAsmSensitivity.STANDARD;
@@ -532,26 +532,27 @@ export const SonySocket = GObject.registerClass({
             }
             if (mode === null)
                 return;
+        }
 
-            let i = payload.length - (idx === 0x19 ? 4 : 2);
-            this._focusOnVoiceState = payload[i] === 0x01;
+        let i = payload.length - (idx === 0x19 ? 4 : 2);
+        this._focusOnVoiceState = payload[i] === 0x01;
+
+        i++;
+        const level = payload[i];
+        this._ambientSoundLevel = level >= 0 && level <= 20 ? level : 10;
+
+        if (idx === 0x19) {
+            i++;
+            const val = payload[i];
+            if (val === 0x00 || val === 0x01)
+                this._noiseAdaptiveOn = val === 0x01;
 
             i++;
-            const level = payload[i];
-            this._ambientSoundLevel = level >= 0 && level <= 20 ? level : 10;
-
-            if (idx === 0x19) {
-                i++;
-                const val = payload[i];
-                if (val === 0x00 || val === 0x01)
-                    this._noiseAdaptiveOn = val === 0x01;
-
-                i++;
-                const noiseAdaptiveSensitivity = payload[i];
-                if (isValidByte(noiseAdaptiveSensitivity, AutoAsmSensitivity))
-                    this._noiseAdaptiveSensitivity = noiseAdaptiveSensitivity;
-            }
+            const noiseAdaptiveSensitivity = payload[i];
+            if (isValidByte(noiseAdaptiveSensitivity, AutoAsmSensitivity))
+                this._noiseAdaptiveSensitivity = noiseAdaptiveSensitivity;
         }
+
 
         this._callbacks?.updateAmbientSoundControl?.(mode, this._focusOnVoiceState,
             this._ambientSoundLevel, this._noiseAdaptiveOn, this._noiseAdaptiveSensitivity);
@@ -908,6 +909,36 @@ export const SonySocket = GObject.registerClass({
         this._addMessageQueue(MessageType.COMMAND_2, payload, 'SetVoiceNotifications');
     }
 
+    _getVoiceNotificationsVolume() {
+        this._log.info('GET VoiceNotificationsVolume');
+
+        const payload = [PayloadTypeV2.VOICE_GUIDANCE_GET_PARAM];
+        payload.push(0x20);
+        this._addMessageQueue(MessageType.COMMAND_2, payload, 'GetVoiceNotificationsVolume');
+    }
+
+    _parseVoiceNotificationsVolume(payload) {
+        this._log.info('PARSE VoiceNotificationsVolume');
+
+        const byte = payload[2];
+        const vol = byte > 127 ? byte - 256 : byte;
+        if (vol < -2 || vol > 2)
+            return;
+
+        this._callbacks?.updateVoiceNotificationsVolume?.(vol);
+    }
+
+    setVoiceNotificationsVolume(vol) {
+        this._log.info(`SET VoiceNotificationsVolume: ${vol}`);
+
+        const byte = vol < 0 ? 256 + vol : vol;
+        const payload = [PayloadTypeV2.VOICE_GUIDANCE_SET_PARAM];
+        payload.push(0x20);
+        payload.push(byte);
+        this._addMessageQueue(MessageType.COMMAND_2, payload, 'SetVoiceNotificationsVolume');
+    }
+
+
     _getAudioUpsampling() {
         this._log.info('GET AudioUpsampling');
 
@@ -1205,8 +1236,13 @@ export const SonySocket = GObject.registerClass({
                 switch (payload[0]) {
                     case PayloadTypeV2.VOICE_GUIDANCE_RET_PARAM:
                     case PayloadTypeV2.VOICE_GUIDANCE_NTFY_PARAM:
-                        this.emit('ack-received', 'voiceNotifications');
-                        this._parseVoiceNotifications(payload);
+                        if (payload[1] === 0x03) {
+                            this.emit('ack-received', 'voiceNotifications');
+                            this._parseVoiceNotifications(payload);
+                        } else if (payload[1] === 0x20) {
+                            this.emit('ack-received', 'voiceNotificationsVolume');
+                            this._parseVoiceNotificationsVolume(payload);
+                        }
                         break;
                 }
             }
@@ -1288,6 +1324,9 @@ export const SonySocket = GObject.registerClass({
 
         if (this._voiceNotifications)
             this._getVoiceNotifications();
+
+        if (this._voiceNotificationsVolume)
+            this._getVoiceNotificationsVolume();
 
         this._callbacks?.deviceInitialized?.();
     }

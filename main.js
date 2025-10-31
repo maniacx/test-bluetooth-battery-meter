@@ -10,6 +10,7 @@ import {ProfileManager} from './profileManager.js';
 import {setLiveLogSink, hideMacAdddress} from './logger.js';
 import {ToggleButtonRow} from './widgets/toggleButtonRow.js';
 import {DropDownRowWidget} from './widgets/dropDownRow.js';
+import {SliderRowWidget} from './widgets/sliderRowWidget.js';
 import {EqualizerWidget} from './widgets/equalizerWidget.js';
 import {CheckBoxesGroupWidget} from './widgets/checkBoxesGroupWidget.js';
 
@@ -160,26 +161,23 @@ class BatteryApp {
 
         this._ancGroup.add(this._ancToggle);
 
-        this._slider = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 20, 1);
-        this._slider.hexpand = true;
-        this._slider.margin_start = 50;
-        this._slider.margin_end = 50;
-        this._slider.margin_top = 4;
-        this._slider.margin_bottom = 4;
-        this._slider.add_mark(0, Gtk.PositionType.BOTTOM, 'Less');
-        this._slider.add_mark(20, Gtk.PositionType.BOTTOM, 'More');
-
-        this._levelSliderRow = new Adw.ActionRow({title: 'Ambient Level'});
-        this._levelSliderRow.add_suffix(this._slider);
-
-        this._slider.set_value(10);
-
-        this._slider.connect('value-changed', () => {
-            const value = Math.round(this._slider.get_value());
-            if (this._sliderValue !== value)
-                this._log.info(`Ambient level changed : ${value}`);
+        this._ambientLevel = new SliderRowWidget({
+            rowTitle: 'Ambient Level',
+            rowSubtitle: '',
+            initialValue: 50,
+            marks: [
+                {mark: 0, label: 'Less'},
+                {mark: 20, label: 'More'},
+            ],
+            range: [0, 20, 1],
+            snapOnStep: false,
         });
-        this._ancGroup.add(this._levelSliderRow);
+
+        this._ambientLevel.connect('notify::value', () => {
+            this._log.info(`Ambient level : ${this._ambientLevel.value}`);
+        });
+
+        this._ancGroup.add(this._ambientLevel);
 
         this._focuseSwitch = new Adw.SwitchRow({title: 'Focus on Voice'});
         this._focuseSwitch.connect('notify::active', () =>
@@ -193,8 +191,7 @@ class BatteryApp {
         this._autoAmbientSoundSwitch.connect('notify::active', () => {
             this._log.info(`Auto Ambient : ${this._autoAmbientSoundSwitch.get_active()}`);
             this._focuseSwitch.sensitive =  !this._autoAmbientSoundSwitch.active;
-            this._levelSliderRow.sensitive = !this._autoAmbientSoundSwitch.active;
-            this._slider.sensitive = !this._autoAmbientSoundSwitch.active;
+            this._ambientLevel.sensitive = !this._autoAmbientSoundSwitch.active;
             if (this._autoAsmSensitivityDropdown)
                 this._autoAsmSensitivityDropdown.sensitive = this._autoAmbientSoundSwitch.active;
         });
@@ -215,8 +212,7 @@ class BatteryApp {
         this._autoAsmSensitivityDropdown.visible = false;
         this._autoAsmSensitivityDropdown.sensitive = this._autoAmbientSoundSwitch.active;
         this._focuseSwitch.sensitive = !this._autoAmbientSoundSwitch.active;
-        this._levelSliderRow.sensitive = !this._autoAmbientSoundSwitch.active;
-        this._slider.sensitive = !this._autoAmbientSoundSwitch.active;
+        this._ambientLevel.sensitive = !this._autoAmbientSoundSwitch.active;
 
         this._autoAsmSensitivityDropdown.connect('notify::selected-item', () => {
             const val = this._autoAsmSensitivityDropdown.selected_item;
@@ -398,17 +394,38 @@ class BatteryApp {
         page.add(this._moreGroup);
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-        this._voiceNotificationsSwitchRow = new Adw.SwitchRow({
+        this._voiceNotificationsSwitch = new Adw.SwitchRow({
             title: 'Voice Notification',
             subtitle: 'Enable voice notification',
             visible: false,
         });
 
-        this._voiceNotificationsSwitchRow.connect('notify::active', () => {
-            this._log.info(`Voice Notification : ${this._voiceNotificationsSwitchRow.active}`);
+        this._voiceNotificationsSwitch.connect('notify::active', () => {
+            this._log.info(`Voice Notification : ${this._voiceNotificationsSwitch.active}`);
         });
 
-        this._moreGroup.add(this._voiceNotificationsSwitchRow);
+        this._moreGroup.add(this._voiceNotificationsSwitch);
+
+        this._voiceNotificationsVolume = new SliderRowWidget({
+            rowTitle: 'Voice Notification Volume',
+            rowSubtitle: '',
+            marks: [
+                {mark: -2, label: '-2'},
+                {mark: -1, label: '-1'},
+                {mark: 0, label: '0'},
+                {mark: 1, label: '+1'},
+                {mark: 2, label: '+2'},
+            ],
+            initialValue: 50,
+            range: [-2, 2, 1],
+            snapOnStep: true,
+        });
+
+        this._voiceNotificationsVolume.connect('notify::value', () => {
+            this._log.info(`Voice Notification Volume : ${this._voiceNotificationsVolume.value}`);
+        });
+
+        this._moreGroup.add(this._voiceNotificationsVolume);
 
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
@@ -699,8 +716,7 @@ class BatteryApp {
 
             ancGroup: this._ancGroup,
             ancToggle: this._ancToggle,
-            ambientLevelRow: this._levelSliderRow,
-            ambientLevelSlider: this._slider,
+            ambientLevelSlider: this._ambientLevel,
             voiceFocusSwitch: this._focuseSwitch,
             autoAdaptiveNoiseSwitch: this._autoAmbientSoundSwitch,
             autoAdaptiveNoiseSensitivityDd: this._autoAsmSensitivityDropdown,
@@ -721,7 +737,8 @@ class BatteryApp {
             rightBtnTchDropdown: this._rightBtnTchDropdown,
 
             moreGroup: this._moreGroup,
-            voiceNotificationSwitch: this._voiceNotificationsSwitchRow,
+            voiceNotificationSwitch: this._voiceNotificationsSwitch,
+            voiceNotificationsVolume: this._voiceNotificationsVolume,
             eqPresetDd: this._eqPresetDropdown,
             eqCustomRow: this._equalizerCustomRow,
             dseeRow: this._upscalingSwitchRow,
