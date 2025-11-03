@@ -249,6 +249,7 @@ export const SonyConfiguration = [
         batterySingle: true,
         powerOffFromPhone: true,
         ambientSoundControl: true,
+        ambientSoundControlButtonMode: true,
         speakToChatEnabled: true,
         speakToChatConfig: true,
         speakToChatFocusOnVoice: true,

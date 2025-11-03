@@ -36,6 +36,8 @@ export const SonySocket = GObject.registerClass({
         this._initComplete = false;
         this._processingQueue = false;
         this._currentMessage = null;
+        this._pendingRequestQueue = [];
+        this._pendingRequestRetries = 4;
         this._seq = 0;
         this._frameBuf = new Uint8Array(0);
         this._callbacks = callbacks;
@@ -55,7 +57,6 @@ export const SonySocket = GObject.registerClass({
         this._batterySingleSupported = modelData.batterySingle ?? false;
         this._noNoiseCancellingSupported = modelData.noNoiseCancelling ?? false;
         this._ambientSoundControlSupported = modelData.ambientSoundControl ?? false;
-        this._ambientSoundControl2Supported = modelData.ambientSoundControl2 ?? false;
         this._windNoiseReductionSupported = modelData.windNoiseReduction ?? false;
         this._speakToChatEnabledSupported = modelData.speakToChatEnabled ?? false;
         this._speakToChatConfigSupported = modelData.speakToChatConfig ?? false;
@@ -96,6 +97,12 @@ export const SonySocket = GObject.registerClass({
             return;
 
         const {type, payload} = this._currentMessage;
+        if (this._currentMessage.ackType === 'EndOfGetMessage') {
+            this._currentMessage = null;
+            this._checkForPendingRequest();
+            this._processNextQueuedMessage();
+            return;
+        }
         this._encodeSonyMessage(type, payload);
 
         if (this._ackTimeoutId) {
@@ -106,6 +113,7 @@ export const SonySocket = GObject.registerClass({
         this._ackTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 300, () => {
             const ackType = this._currentMessage?.ackType ?? 'Unknown';
             this._log.info(`ACK not received after 300ms for ${ackType}, continuing.`);
+
             this._currentMessage = null;
 
             if (this._messageQueue.length === 0)
@@ -118,6 +126,25 @@ export const SonySocket = GObject.registerClass({
         });
     }
 
+    _checkForPendingRequest() {
+        this._log.info('PendingRequestQueue = ' + this._pendingRequestQueue);
+        if (this._pendingRequestRetries > 0 && this._pendingRequestQueue?.length > 0) {
+            this._pendingRequestRetries--;
+
+            if (this._pendingTimeoutId)
+                GLib.source_remove(this._pendingTimeoutId);
+
+            this._pendingTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 4, () => {
+                this._resendPendingRequest();
+                this._pendingTimeoutId = null;
+                return GLib.SOURCE_REMOVE;
+            });
+        } else {
+            this._pendingRequestRetries = 0;
+            delete this._pendingRequestQueue;
+        }
+    }
+
     _onAcknowledgeReceived(_, ackType) {
         if (ackType !== 'ack')
             return;
@@ -126,6 +153,12 @@ export const SonySocket = GObject.registerClass({
             this._log.info('ACK Received.');
         else
             this._log.info(`ACK Received for ${this._currentMessage.ackType}`);
+
+        if (this._pendingRequestQueue?.length > 0) {
+            const index = this._pendingRequestQueue.indexOf(this._currentMessage.ackType);
+            if (index !== -1)
+                this._pendingRequestQueue.splice(index, 1);
+        }
 
         if (this._ackTimeoutId) {
             GLib.source_remove(this._ackTimeoutId);
@@ -279,7 +312,6 @@ export const SonySocket = GObject.registerClass({
             attempt();
         });
     }
-
 
     _encodeAck(seq) {
         this._encodeSonyMessage(MessageType.ACK, [], 1 - seq);
@@ -435,13 +467,39 @@ export const SonySocket = GObject.registerClass({
         }
     }
 
-    _getBatteryRequest(batteryType) {
+    _tagEndOfGetMessage() {
+        this._log.info('TAG EndOfGetMessage:');
+
+        const payload = [0x00];
+        const ackType = 'EndOfGetMessage';
+        this._addMessageQueue(MessageType.COMMAND_1, payload, ackType);
+    }
+
+    _getSingleBatteryRequest() {
         this._log.info('GET BatteryRequest:');
 
-        const payloadType = PayloadType.COMMON_GET_BATTERY_LEVEL;
-        const payload = [payloadType, batteryType];
+        const payload = [PayloadType.COMMON_GET_BATTERY_LEVEL, BatteryType.SINGLE];
+        const ackType = 'GetBatteryTypeSingle';
+        this._pendingRequestQueue?.push(ackType);
+        this._addMessageQueue(MessageType.COMMAND_1, payload, ackType);
+    }
 
-        this._addMessageQueue(MessageType.COMMAND_1, payload, `GetBatteryType${batteryType}`);
+    _getDualBatteryRequest() {
+        this._log.info('GET BatteryRequest:');
+
+        const payload = [PayloadType.COMMON_GET_BATTERY_LEVEL, BatteryType.DUAL];
+        const ackType = 'GetBatteryTypeDual';
+        this._pendingRequestQueue?.push(ackType);
+        this._addMessageQueue(MessageType.COMMAND_1, payload, ackType);
+    }
+
+    _getCaseBatteryRequest() {
+        this._log.info('GET BatteryRequest:');
+
+        const payload = [PayloadType.COMMON_GET_BATTERY_LEVEL, BatteryType.CASE];
+        const ackType = 'GetBatteryTypeCase';
+        this._pendingRequestQueue?.push(ackType);
+        this._addMessageQueue(MessageType.COMMAND_1, payload, ackType);
     }
 
     _parseBatteryStatus(payload) {
@@ -511,7 +569,9 @@ export const SonySocket = GObject.registerClass({
 
         const payload = [PayloadType.NC_ASM_GET_PARAM];
         payload.push(code);
-        this._addMessageQueue(MessageType.COMMAND_1, payload, 'GetAmbientControl');
+        const ackType = 'GetAmbientControl';
+        this._pendingRequestQueue?.push(ackType);
+        this._addMessageQueue(MessageType.COMMAND_1, payload, ackType);
     }
 
     _parseAmbientSoundControl(payload) {
@@ -597,7 +657,9 @@ export const SonySocket = GObject.registerClass({
 
         const payload = [PayloadType.SYSTEM_GET_PARAM];
         payload.push(0x05);
-        this._addMessageQueue(MessageType.COMMAND_1, payload, 'GetSpeakToChatEnable');
+        const ackType = 'GetSpeakToChatEnable';
+        this._pendingRequestQueue?.push(ackType);
+        this._addMessageQueue(MessageType.COMMAND_1, payload, ackType);
     }
 
     _parseSpeakToChatEnable(payload) {
@@ -628,7 +690,9 @@ export const SonySocket = GObject.registerClass({
 
         const payload = [PayloadType.SYSTEM_GET_EXTENDED_PARAM];
         payload.push(0x05);
-        this._addMessageQueue(MessageType.COMMAND_1, payload, 'GetSpeakToChatConfig');
+        const ackType = 'GetSpeakToChatConfig';
+        this._pendingRequestQueue?.push(ackType);
+        this._addMessageQueue(MessageType.COMMAND_1, payload, ackType);
     }
 
     _parseSpeakToChatConfig(payload) {
@@ -671,8 +735,9 @@ export const SonySocket = GObject.registerClass({
 
         const payload = [PayloadType.EQ_EBB_GET_PARAM];
         payload.push(0x01);
-
-        this._addMessageQueue(MessageType.COMMAND_1, payload, 'GetEqualizer');
+        const ackType = 'GetEqualizer';
+        this._pendingRequestQueue?.push(ackType);
+        this._addMessageQueue(MessageType.COMMAND_1, payload, ackType);
     }
 
     _parseEqualizer(payload) {
@@ -734,7 +799,9 @@ export const SonySocket = GObject.registerClass({
         const payload = [PayloadType.VPT_GET_PARAM];
         payload.push(0x01);
         payload.push(0x01);
-        this._addMessageQueue(MessageType.COMMAND_2, payload, 'GetVoiceNotifications');
+        const ackType = 'GetVoiceNotifications';
+        this._pendingRequestQueue?.push(ackType);
+        this._addMessageQueue(MessageType.COMMAND_2, payload, ackType);
     }
 
     _parseVoiceNotifications(payload) {
@@ -766,7 +833,9 @@ export const SonySocket = GObject.registerClass({
 
         const payload = [PayloadType.AUDIO_GET_PARAM];
         payload.push(0x02);
-        this._addMessageQueue(MessageType.COMMAND_1, payload, 'GetAudioUpsampling');
+        const ackType = 'GetAudioUpsampling';
+        this._pendingRequestQueue?.push(ackType);
+        this._addMessageQueue(MessageType.COMMAND_1, payload, ackType);
     }
 
     _parseAudioUpsampling(payload) {
@@ -799,7 +868,9 @@ export const SonySocket = GObject.registerClass({
 
         const payload = [PayloadType.SYSTEM_GET_PARAM];
         payload.push(0x03);
-        this._addMessageQueue(MessageType.COMMAND_1, payload, 'GetPauseWhenTakenOff');
+        const ackType = 'GetPauseWhenTakenOff';
+        this._pendingRequestQueue?.push(ackType);
+        this._addMessageQueue(MessageType.COMMAND_1, payload, ackType);
     }
 
     _parsePauseWhenTakenOff(payload) {
@@ -830,7 +901,9 @@ export const SonySocket = GObject.registerClass({
 
         const payload = [PayloadType.SYSTEM_GET_PARAM];
         payload.push(0x04);
-        this._addMessageQueue(MessageType.COMMAND_1, payload, 'GetAutomaticPowerOff');
+        const ackType = 'GetAutomaticPowerOff';
+        this._pendingRequestQueue?.push(ackType);
+        this._addMessageQueue(MessageType.COMMAND_1, payload, ackType);
     }
 
     _parseAutomaticPowerOff(payload) {
@@ -876,7 +949,9 @@ export const SonySocket = GObject.registerClass({
 
         const payload = [PayloadType.COMMON_GET_AUDIO_CODEC];
         payload.push(0x00);
-        this._addMessageQueue(MessageType.COMMAND_1, payload, 'GetCodecIndicator');
+        const ackType = 'GetCodecIndicator';
+        this._pendingRequestQueue?.push(ackType);
+        this._addMessageQueue(MessageType.COMMAND_1, payload, ackType);
     }
 
     _parseCodecIndicator(payload) {
@@ -894,7 +969,9 @@ export const SonySocket = GObject.registerClass({
 
         const payload = [PayloadType.COMMON_GET_UPSCALING_EFFECT];
         payload.push(0x00);
-        this._addMessageQueue(MessageType.COMMAND_1, payload, 'GetUpscalingIndicator');
+        const ackType = 'GetUpscalingIndicator';
+        this._pendingRequestQueue?.push(ackType);
+        this._addMessageQueue(MessageType.COMMAND_1, payload, ackType);
     }
 
     _parseUpscalingIndicator(payload) {
@@ -1053,17 +1130,49 @@ export const SonySocket = GObject.registerClass({
         }
     }
 
+    _resendPendingRequest() {
+        if (this._pendingRequestQueue?.length > 0) {
+            const pending = [...this._pendingRequestQueue];
+            this._pendingRequestQueue.length = 0;
+            for (const item of pending) {
+                if (item === 'GetBatteryTypeSingle')
+                    this._getSingleBatteryRequest();
+                else if (item === 'GetBatteryTypeDual')
+                    this._getDualBatteryRequest();
+                else if (item === 'GetBatteryTypeCase')
+                    this._getCaseBatteryRequest();
+                else if (item === 'GetAmbientControl')
+                    this._getAmbientSoundControl();
+                else if (item === 'GetSpeakToChatEnable')
+                    this._getSpeakToChatEnabled();
+                else if (item === 'GetSpeakToChatConfig')
+                    this._getSpeakToChatConfig();
+                else if (item === 'GetEqualizer')
+                    this._getEqualizer();
+                else if (item === 'GetVoiceNotifications')
+                    this._getVoiceNotifications();
+                else if (item === 'GetAudioUpsampling')
+                    this._getAudioUpsampling();
+                else if (item === 'GetPauseWhenTakenOff')
+                    this._getPauseWhenTakenOff();
+                else if (item === 'GetAutomaticPowerOff')
+                    this._getAutomaticPowerOff();
+            }
+            this._tagEndOfGetMessage();
+        }
+    }
+
     _getCurrentState() {
         this._log.info('GET CurrentState');
 
         if (this._batterySingleSupported)
-            this._getBatteryRequest(BatteryType.SINGLE);
+            this._getSingleBatteryRequest();
 
-        if (this._batteryDualSupported || this._batteryDual2Supported)
-            this._getBatteryRequest(BatteryType.DUAL);
+        if (this._batteryDualSupported)
+            this._getDualBatteryRequest();
 
         if (this._batteryCaseSupported)
-            this._getBatteryRequest(BatteryType.CASE);
+            this._getCaseBatteryRequest();
 
         if (this._supportedFunctions.upscalingIndicator)
             this._getUpscalingIndicator();
@@ -1077,8 +1186,7 @@ export const SonySocket = GObject.registerClass({
         if (this._equalizerSixBands)
             this._getEqualizer();
 
-        if (!this._noNoiseCancellingSupported && (this._ambientSoundControlSupported ||
-                    this._ambientSoundControl2Supported || this._windNoiseReductionSupported))
+        if (this._ambientSoundControlSupported)
             this._getAmbientSoundControl();
 
         if (this._audioUpsamplingSupported)
@@ -1095,6 +1203,8 @@ export const SonySocket = GObject.registerClass({
 
         if (this._speakToChatConfigSupported)
             this._getSpeakToChatConfig();
+
+        this._tagEndOfGetMessage();
 
         this._callbacks?.deviceInitialized?.();
     }
@@ -1117,27 +1227,32 @@ export const SonySocket = GObject.registerClass({
     }
 
     postConnectInitialization() {
-        this.ackSignalId = this.connect('ack-received', this._onAcknowledgeReceived.bind(this));
+        this._ackSignalId = this.connect('ack-received', this._onAcknowledgeReceived.bind(this));
         this._sendInit();
     }
 
     destroy() {
-        this._seq = 0;
-        if (this._ackTimeoutId)
-            GLib.source_remove(this._ackTimeoutId);
-        this._ackTimeoutId = null;
-
-        if (this.ackSignalId)
-            this.disconnect(this.ackSignalId);
-        this.ackSignalId = null;
+        if (this._ackSignalId)
+            this.disconnect(this._ackSignalId);
+        this._ackSignalId = null;
 
         if (this._responseSignalId)
             this.disconnect(this._responseSignalId);
         this._responseSignalId = null;
 
+        this._seq = 0;
+
+        if (this._ackTimeoutId)
+            GLib.source_remove(this._ackTimeoutId);
+        this._ackTimeoutId = null;
+
         if (this._responseTimeoutId)
             GLib.source_remove(this._responseTimeoutId);
         this._responseTimeoutId = null;
+
+        if (this._pendingTimeoutId)
+            GLib.source_remove(this._pendingTimeoutId);
+        this._pendingTimeoutId = null;
 
         super.destroy();
     }
