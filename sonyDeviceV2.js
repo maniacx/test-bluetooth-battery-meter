@@ -4,10 +4,10 @@ import GLib from 'gi://GLib';
 
 import {createLogger} from './logger.js';
 import {getBluezDeviceProxy} from './bluezDeviceProxy.js';
-import {SonySocket} from './sonySocketV2.js';
+import {SonySocketV2} from './sonySocketV2.js';
 import {
     AmbientSoundMode, AutoAsmSensitivity, ListeningMode, AudioCodec, DseeType, ButtonModes
-} from './sonyDefsV2.js';
+} from './sonyConfig.js';
 
 import {SonyConfiguration} from './sonyConfig.js';
 
@@ -52,8 +52,8 @@ export const SonyDevice = GObject.registerClass({
             updateSpeakToChatEnable: this.updateSpeakToChatEnable.bind(this),
             updateSpeakToChatConfig: this.updateSpeakToChatConfig.bind(this),
             updateEqualizer: this.updateEqualizer.bind(this),
-            updateListeningBgmMode: this.updateListeningBgmMode.bind(this),
-            updateListeningNonBgmMode: this.updateListeningNonBgmMode.bind(this),
+            updateBgmMode: this.updateBgmMode.bind(this),
+            updateCinemaMode: this.updateCinemaMode.bind(this),
             updateVoiceNotifications: this.updateVoiceNotifications.bind(this),
             updateVoiceNotificationsVolume: this.updateVoiceNotificationsVolume.bind(this),
             updateAudioSampling: this.updateAudioSampling.bind(this),
@@ -276,7 +276,7 @@ export const SonyDevice = GObject.registerClass({
 
     _startSonySocket(fd) {
         this._log.info(`Start Socket with fd: ${fd}`);
-        this._sonySocket = new SonySocket(
+        this._sonySocket = new SonySocketV2(
             this._devicePath,
             fd,
             this._modelData,
@@ -461,27 +461,22 @@ export const SonyDevice = GObject.registerClass({
         });
     }
 
-    updateListeningBgmMode(bgmProps) {
-        log(`ListeningBgmMod props: ${bgmProps}`);
+    updateBgmMode(enable, distance) {
         this._uiGuards.bgm = true;
-        if (bgmProps.active)
+        if (enable)
             this._ui.bgmModeDd.selected_item = ListeningMode.BGM;
         else
-            this._ui.bgmModeDd.selected_item = bgmProps.mode;
+            this._ui.bgmModeDd.selected_item = ListeningMode.STANDARD;
 
-        this._ui.bgmDistanceDd.selected_item = bgmProps.distance;
-        this._bgmProps = bgmProps;
+        this._ui.bgmDistanceDd.selected_item = distance;
         this._ui.updateMenuSensitivityCallBack();
         this._uiGuards.bgm = false;
     }
 
-    updateListeningNonBgmMode(bgmProps) {
-        log(`ListeningNonBgmMod props: ${bgmProps}`);
+    updateCinemaMode(enable) {
         this._uiGuards.bgm = true;
-        this._ui.bgmModeDd.selected_item = bgmProps.mode;
-        this._ui.bgmDistanceDd.selected_item = bgmProps.distance;
-        this._bgmProps = bgmProps;
-        this._ui.updateMenuSensitivityCallBack();
+        if (enable)
+            this._ui.bgmModeDd.selected_item = ListeningMode.CINEMA;
         this._uiGuards.bgm = false;
     }
 
@@ -490,10 +485,9 @@ export const SonyDevice = GObject.registerClass({
             if (this._uiGuards.bgm)
                 return;
             this._ui.updateMenuSensitivityCallBack();
-            const value = this._ui.bgmModeDd.selected_item;
-            this._bgmProps.mode = value;
-            this._sonySocket.setListeningModeBgm(this._bgmProps.mode,
-                this._bgmProps.distance);
+            const mode = this._ui.bgmModeDd.selected_item;
+            const distance = this._ui.bgmDistanceDd.selected_item;
+            this._sonySocket.setListeningMode(mode, distance);
         });
     }
 
@@ -502,10 +496,9 @@ export const SonyDevice = GObject.registerClass({
             if (this._uiGuards.bgm)
                 return;
             this._ui.updateMenuSensitivityCallBack();
-            const value = this._ui.bgmDistanceDd.selected_item;
-            this._bgmProps.distance = value;
-            this._sonySocket.setListeningModeBgm(this._bgmProps.mode,
-                this._bgmProps.distance);
+            const mode = this._ui.bgmModeDd.selected_item;
+            const distance = this._ui.bgmDistanceDd.selected_item;
+            this._sonySocket.setListeningMode(mode, distance);
         });
     }
 

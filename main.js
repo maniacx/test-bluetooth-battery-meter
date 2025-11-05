@@ -16,12 +16,12 @@ import {CheckBoxesGroupWidget} from './widgets/checkBoxesGroupWidget.js';
 
 import {
     EqualizerPreset, AutoPowerOffTime, AutoAsmSensitivity, ListeningMode, BgmDistance
-} from './sonyDefsV2.js';
+} from './sonyConfig.js';
 
-// globalThis.TESTDEVICE = 'WH-1000XM6';
+globalThis.TESTDEVICE = 'WH-1000XM6';
 // globalThis.TESTDEVICE = 'WF-1000XM5';
 // globalThis.TESTDEVICE = 'WH-1000XM5';
-globalThis.TESTDEVICE = '';
+// globalThis.TESTDEVICE = '';
 
 Gio._promisify(Gio.DBusProxy, 'new');
 Gio._promisify(Gio.DBusProxy, 'new_for_bus');
