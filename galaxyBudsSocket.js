@@ -28,7 +28,11 @@ class GalaxyBudsSocket extends SocketHandler {
         this._startOfMessage = this._isLegacy ? SOM_BUDS : SOM_BUDS_PLUS;
         this._endOfMessage = this._isLegacy ? EOM_BUDS : EOM_BUDS_PLUS;
         this._callbacks = callbacks;
-        this.startSocket(fd);
+
+        if (globalThis.TESTDEVICE)
+            this.startTestSocket();
+        else
+            this.startSocket(fd);
     }
 
     _checksum(data) {
@@ -168,12 +172,11 @@ class GalaxyBudsSocket extends SocketHandler {
             battery3Level: caseLevel,
             battery3Status: caseStatus,
         };
+
         if (caseLevel > 100) {
             // Don't update when case level > 100
-            delete props.battery3Level;
+            props.battery3Level = 0;
         }
-
-        print(JSON.stringify(props));
 
         if (this._callbacks?.updateBatteryProps)
             this._callbacks.updateBatteryProps(props);
@@ -197,7 +200,7 @@ class GalaxyBudsSocket extends SocketHandler {
 
         if (ancCfg.modes.includes(b)) {
             const modeName = Object.keys(GalaxyBudsAnc).find(k => GalaxyBudsAnc[k] === b);
-            print(`ANC mode: ${modeName}`);
+
             if (this._callbacks?.updateAmbientSoundControl)
                 this._callbacks.updateAmbientSoundControl(modeName);
         }
@@ -240,7 +243,7 @@ class GalaxyBudsSocket extends SocketHandler {
           .find(k => GalaxyBudsEarDetectionState[k] === (raw & 0x0F));
         }
 
-        print(`Ear L:${left}  R:${right}`);
+
         if (this._callbacks?.updateInEarState)
             this._callbacks.updateInEarState(left, right);
     }

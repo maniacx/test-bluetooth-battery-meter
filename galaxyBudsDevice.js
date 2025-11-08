@@ -3,22 +3,18 @@ import GObject from 'gi://GObject';
 
 import {createLogger} from './logger.js';
 import {getBluezDeviceProxy} from './bluezDeviceProxy.js';
-import {createConfig, createProperties, DataHandler} from './dataHandler.js';
 import {GalaxyBudsSocket} from './galaxyBudsSocket.js';
 import {checkForSamsungBuds} from './galaxyBudsDetector.js';
 import {GalaxyBudsAnc, GalaxyBudsModelList, BudsUUID, BudsLegacyUUID} from './galaxyBudsConfig.js';
 
 export const GalaxyBudsDevice = GObject.registerClass({
 }, class GalaxyBudsDevice extends GObject.Object {
-    _init(devicePath, updateDeviceMapCb, profileManager) {
+    _init(devicePath, uiObjects, profileManager) {
         super._init();
         this._log = createLogger('GalaxyBudsDevice');
         this._log.info('GalaxyBudsDevice init ');
         this._devicePath = devicePath;
-        this._config = createConfig();
-        this._props = createProperties();
-        this._model = null;
-        this.updateDeviceMapCb = updateDeviceMapCb;
+        this._ui = uiObjects;
         this._profileManager = profileManager;
         this._battInfoRecieved = false;
 
@@ -28,7 +24,12 @@ export const GalaxyBudsDevice = GObject.registerClass({
             updateInEarState: this.updateInEarState.bind(this),
         };
 
-        this._initialize();
+        if (globalThis.TESTDEVICE) {
+            this._uuids = [BudsUUID];
+            this._initializeModel('v0075pA223d0143', globalThis.TESTDEVICE);
+        } else {
+            this._initialize();
+        }
     }
 
     _initialize() {
@@ -98,34 +99,22 @@ export const GalaxyBudsDevice = GObject.registerClass({
 
         this._log.info(`Found modelData for name "${name}": ${JSON.stringify(modelData, null, 2)}`);
 
-        //       this._batteryDualSupported = modelData.batteryDual ?? false;
-        //       this._batteryDual2Supported = modelData.batteryDual2 ?? false;
-        //       this._batteryCaseSupported = modelData.batteryCase ?? false;
-        //       this._batterySingleSupported = modelData.batterySingle ?? false;
+        this._ui.bat1.setIcon(`bbm-${modelData.budsIcon}-left-symbolic`);
+        this._ui.bat2.setIcon(`bbm-${modelData.budsIcon}-right-symbolic`);
+        this._ui.bat2.visible = true;
 
-        this._noNoiseCancellingSupported = !modelData.anc.supported;
-        this._ambientSoundControlSupported =
-            !modelData.anc.modes.includes(GalaxyBudsAnc.AmbientSound);
-        this._adaptiveSoundControlSupported =
-            !modelData.anc.modes.includes(GalaxyBudsAnc.Adaptive);
-
-        this._config.battery1Icon = `${modelData.budsIcon}-left`;
-        this._config.battery2Icon = `${modelData.budsIcon}-right`;
-
-        this._config.battery3Icon = `${modelData.case}`;
-
-
-        if (!this._noNoiseCancellingSupported &&
-                this._ambientSoundControlSupported) {
-            this._config.set1Button1Icon = 'bbm-anc-off-symbolic.svg';
-            this._config.set1Button2Icon = 'bbm-anc-on-symbolic.svg';
-            this._config.set1Button3Icon = 'bbm-transperancy-symbolic.svg';
-            if (this._adaptiveSoundControlSupported)
-                this._config.set1Button4Icon = 'bbm-adaptive-symbolic.svg';
+        if (modelData.battery.status.c !== null) {
+            this._ui.bat3.setIcon(`bbm-${modelData.case}-symbolic`);
+            this._ui.bat3.visible = true;
         }
 
+
         this._modelData = modelData;
-        this._initializeProfile();
+
+        if (globalThis.TESTDEVICE)
+            this._startGalaxyBudsSocket(-1);
+        else
+            this._initializeProfile();
     }
 
     _initializeProfile() {
@@ -163,6 +152,11 @@ export const GalaxyBudsDevice = GObject.registerClass({
             this._callbacks);
     }
 
+    _deviceInitialized() {
+
+    }
+
+
     _startConfiguration(battInfo) {
         const bat1level = battInfo.battery1Level  ?? 0;
         const bat2level = battInfo.battery2Level  ?? 0;
@@ -171,49 +165,32 @@ export const GalaxyBudsDevice = GObject.registerClass({
         if (bat1level <= 0 && bat2level <= 0 && bat3level <= 0)
             return;
 
-        this._battInfoRecieved = true;
-
-        this._log.info(`about to start handler: ${bat1level}, ${bat2level}, ${bat3level}`);
-        this.dataHandler = new DataHandler(this._config, this._props,
-            this.set1ButtonClicked.bind(this), this.set2ButtonClicked.bind(this));
-        this._log.info('did start handler');
-
-        this.updateDeviceMapCb(this._devicePath, this.dataHandler);
+        if (!this._battInfoRecieved) {
+            this._battInfoRecieved = true;
+            this._deviceInitialized();
+        }
     }
 
     updateBatteryProps(props) {
         this._props = {...this._props, ...props};
-        if (!this._battInfoRecieved)
-            this._startConfiguration(props);
+        const bat1level = props.battery1Level  ?? 0;
+        const bat2level = props.battery2Level  ?? 0;
+        const bat3level = props.battery3Level  ?? 0;
 
-        this.dataHandler?.setProps(this._props);
-    }
-
-    updateAmbientSoundControl(mode) {
-        if (this._noNoiseCancellingSupported)
+        if (bat1level <= 0 && bat2level <= 0 && bat3level <= 0)
             return;
 
-        if (mode === GalaxyBudsAnc.Off)
-            this._props.toggle1State = 1;
-        else if (mode === GalaxyBudsAnc.NoiseReduction)
-            this._props.toggle1State = 2;
-        else if (this._ambientSoundControlSupported && mode === GalaxyBudsAnc.AmbientSound)
-            this._props.toggle1State = 3;
-        else if (this._adaptiveSoundControlSupported && mode === GalaxyBudsAnc.Adaptive)
-            this._props.toggle1State = 4;
+        this._ui.bat1.setLabel(bat1level === 0 ? '---' : `${bat1level}%,  ${props.battery1Status}`);
+        this._ui.bat2.setLabel(bat2level === 0 ? '---' : `${bat2level}%,  ${props.battery2Status}`);
+        this._ui.bat3.setLabel(bat3level === 0 ? '---' : `${bat3level}%,  ${props.battery3Status}`);
+    }
 
-        this.dataHandler?.setProps(this._props);
+    updateAmbientSoundControl() {
     }
 
     updateInEarState(left, right) {
-        this._props.tmpInEarLeft = left;
-        this._props.tmpInEarRight = right;
-        this.dataHandler?.setProps(this._props);
-    }
-
-    updatePlaybackState(state) {
-        this._props.tmpPlayPauseStatus = state;
-        this.dataHandler?.setProps(this._props);
+        this._ui.inEarL.setLabel(left);
+        this._ui.inEarR.setLabel(right);
     }
 
     set1ButtonClicked(index) {

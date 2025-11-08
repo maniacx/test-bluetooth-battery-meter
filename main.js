@@ -1,12 +1,20 @@
 import Adw from 'gi://Adw';
 import Gio from 'gi://Gio';
 import Gtk from 'gi://Gtk';
+import GLib from 'gi://GLib';
 
 import {createLogger} from './logger.js';
 import {getBluezDeviceProxy} from './bluezDeviceProxy.js';
 import {GalaxyBudsDevice} from './galaxyBudsDevice.js';
 import {ProfileManager} from './profileManager.js';
 import {setLiveLogSink, hideMacAdddress} from './logger.js';
+import {ToggleButtonRow} from './widgets/toggleButtonRow.js';
+import {DropDownRowWidget} from './widgets/dropDownRow.js';
+import {SliderRowWidget} from './widgets/sliderRowWidget.js';
+import {EqualizerWidget} from './widgets/equalizerWidget.js';
+
+globalThis.TESTDEVICE = 'GalaxyBuds3Pro';
+// globalThis.TESTDEVICE = '';
 
 Gio._promisify(Gio.DBusProxy, 'new');
 Gio._promisify(Gio.DBusProxy, 'new_for_bus');
@@ -26,19 +34,18 @@ class BatteryApp {
             flags: Gio.ApplicationFlags.FLAGS_NONE,
         });
 
-        this.application.connect('activate', this._onActivate.bind(this));
+        this._log = createLogger('Main');
+
+        this.application.connect('activate', () => {
+            try {
+                this._onActivate();
+            } catch (e) {
+                this._log.error(e);
+            }
+        });
         this._devicePath = devicePath;
-        this._dataHandler = null;
-        this._battL = '--';
-        this._battR = '--';
-        this._battC = '--';
-        this._battStatusL = '--';
-        this._battStatusR = '--';
-        this._battStatusC = '--';
-        this._leftBudsStatus =  '--';
-        this._rightBudsStatus =  '--';
-        this._attenuationStatus = '--';
-        this._mediaStatus = '--';
+        this._deviceStarted = false;
+        this._deviceConnected = false;
     }
 
     run(argv) {
@@ -74,9 +81,19 @@ class BatteryApp {
         });
 
         const page = new Adw.PreferencesPage();
+        this._page = page;
+        this._page.sensitive = false;
+
+        const currentFile = import.meta.url.replace('file://', '');
+        const scriptDir = Gio.File.new_for_path(GLib.path_get_dirname(currentFile));
+        const iconsDir = scriptDir.get_child('icons');
+        const iconsPath = iconsDir.get_path();
+        const iconTheme = Gtk.IconTheme.get_for_display(this._window.get_display());
+        iconTheme.add_search_path(iconsPath);
 
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         const batteryGroup = new Adw.PreferencesGroup({title: 'Battery Information'});
+        page.add(batteryGroup);
 
         this._battRow = new Adw.ActionRow({});
 
@@ -90,9 +107,21 @@ class BatteryApp {
             margin_end: 12,
         });
 
-        this._battery1 = new Gtk.Button({sensitive: false});
-        this._battery2 = new Gtk.Button({sensitive: false});
-        this._battery3 = new Gtk.Button({sensitive: false});
+        const bat1 = new Adw.ButtonContent({label: '---', icon_name: 'bbm-gatt-bas-symbolic'});
+        const bat2 = new Adw.ButtonContent({label: '---'});
+        const bat3 = new Adw.ButtonContent({label: '---'});
+
+        this._battery1 = new Gtk.Button({sensitive: false, child: bat1});
+        this._battery2 = new Gtk.Button({sensitive: false, child: bat2, visible: false});
+        this._battery3 = new Gtk.Button({sensitive: false, child: bat3, visible: false});
+
+        this._battery1.setLabel = bat1.set_label.bind(bat1);
+        this._battery2.setLabel = bat2.set_label.bind(bat2);
+        this._battery3.setLabel = bat3.set_label.bind(bat3);
+
+        this._battery1.setIcon = bat1.set_icon_name.bind(bat1);
+        this._battery2.setIcon = bat2.set_icon_name.bind(bat2);
+        this._battery3.setIcon = bat3.set_icon_name.bind(bat3);
 
         batteryBox1.append(this._battery1);
         batteryBox1.append(this._battery2);
@@ -101,10 +130,10 @@ class BatteryApp {
         this._battRow.child = batteryBox1;
         batteryGroup.add(this._battRow);
 
-        page.add(batteryGroup);
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-        const inEarGroup = new Adw.PreferencesGroup({title: 'Status'});
+        const inEarGroup = new Adw.PreferencesGroup({title: 'In Ear Status'});
+        page.add(inEarGroup);
 
         this._inEarRow = new Adw.ActionRow({});
 
@@ -118,95 +147,27 @@ class BatteryApp {
             margin_end: 12,
         });
 
-        this._inEarRowL = new Gtk.Button({sensitive: false});
-        this._inEarRowR = new Gtk.Button({sensitive: false});
-        this._inPausePlay = new Gtk.Button({sensitive: false});
-        this._attStatus = new Gtk.Button({sensitive: false});
+        const inEarL =
+            new Adw.ButtonContent({label: 'Disconnected', icon_name: 'bbm-left-symbolic'});
+        const inEarR =
+            new Adw.ButtonContent({label: 'Disconnected', icon_name: 'bbm-right-symbolic'});
 
-        inEarBox.append(this._inEarRowL);
-        inEarBox.append(this._inEarRowR);
-        inEarBox.append(this._inPausePlay);
-        inEarBox.append(this._attStatus);
+        this._inEarL = new Gtk.Button({sensitive: false, child: inEarL});
+        this._inEarR = new Gtk.Button({sensitive: false, child: inEarR});
+
+
+        this._inEarL.setLabel = inEarL.set_label.bind(inEarL);
+        this._inEarR.setLabel = inEarR.set_label.bind(inEarR);
+
+        this._inEarL.setIcon = inEarL.set_icon_name.bind(inEarL);
+        this._inEarR.setIcon = inEarR.set_icon_name.bind(inEarR);
+
+        inEarBox.append(this._inEarL);
+        inEarBox.append(this._inEarR);
 
         this._inEarRow.child = inEarBox;
         inEarGroup.add(this._inEarRow);
-
-        page.add(inEarGroup);
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-        this._ancGroup = new Adw.PreferencesGroup({title: 'Noise Cancellation'});
-        const ancRow = new Adw.ActionRow({activatable: false});
-
-        const toggleBox1 = new Gtk.Box({
-            orientation: Gtk.Orientation.HORIZONTAL,
-            spacing: 6,
-            homogeneous: true,
-            margin_top: 6,
-            margin_bottom: 6,
-            margin_start: 12,
-            margin_end: 12,
-        });
-
-        this._ancOffButton = new Gtk.Button({label: 'Off'});
-        this._ancOffButton.connect('clicked', () => {
-            this._galaxyBudsDevice?.set1ButtonClicked(1);
-        });
-
-        this._ancOnButton = new Gtk.Button({label: 'ANC'});
-        this._ancOnButton.connect('clicked', () => {
-            this._galaxyBudsDevice?.set1ButtonClicked(2);
-        });
-
-        this._ambientButton = new Gtk.Button({label: 'Ambient'});
-        this._ambientButton.connect('clicked', () => {
-            this._galaxyBudsDevice?.set1ButtonClicked(3);
-        });
-
-        this._windButton = new Gtk.Button({label: 'Wind'});
-        this._windButton.connect('clicked', () => {
-            this._galaxyBudsDevice?.set1ButtonClicked(4);
-        });
-
-        toggleBox1.append(this._ancOffButton);
-        toggleBox1.append(this._ancOnButton);
-        toggleBox1.append(this._ambientButton);
-        toggleBox1.append(this._windButton);
-
-        ancRow.child = toggleBox1;
-        this._ancGroup.add(ancRow);
-        page.add(this._ancGroup);
-
-        // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-        this._awarenessGroup = new Adw.PreferencesGroup({title: 'Speak to Chat'});
-        const awarenessrow = new Adw.ActionRow({activatable: false});
-
-        const toggleBox2 = new Gtk.Box({
-            orientation: Gtk.Orientation.HORIZONTAL,
-            spacing: 6,
-            homogeneous: true,
-            margin_top: 6,
-            margin_bottom: 6,
-            margin_start: 12,
-            margin_end: 12,
-        });
-
-        this._speak2chatOnButton = new Gtk.ToggleButton({label: 'Speak to Chat On'});
-        this._speak2chatOnButton.connect('clicked', () => {
-            this._galaxyBudsDevice?.set2ButtonClicked(1);
-        });
-
-        this._speak2chatOffButton = new Gtk.ToggleButton({label: 'Speak to Chat Off'});
-        this._speak2chatOffButton.connect('clicked', () => {
-            this._galaxyBudsDevice?.set2ButtonClicked(2);
-        });
-
-        toggleBox2.append(this._speak2chatOnButton);
-        toggleBox2.append(this._speak2chatOffButton);
-
-        awarenessrow.child = toggleBox2;
-        this._awarenessGroup.add(awarenessrow);
-        page.add(this._awarenessGroup);
 
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
@@ -215,6 +176,7 @@ class BatteryApp {
         const scrolled = new Gtk.ScrolledWindow({
             vexpand: true,
         });
+        scrolled.set_size_request(-1, 220);
 
         this._logBuffer = new Gtk.TextBuffer();
         this._logView = new Gtk.TextView({
@@ -239,28 +201,25 @@ class BatteryApp {
             this._logView.scroll_to_mark(mark, 0, false, 0, 0);
         });
 
-        this._ancGroup.visible = false;
-        this._ancOffButton.visible = false;
-        this._ancOnButton.visible = false;
-        this._ambientButton.visible = false;
-        this._windButton.visible = false;
-        this._awarenessGroup.visible = false;
 
-        this._updateGuiData();
         this._initialize();
     }
 
     _initialize() {
-        this._bluezDeviceProxy = getBluezDeviceProxy(this._devicePath);
-        const connected = this._bluezDeviceProxy.Connected;
-        this._log.info(
-            `Device connection status: ${connected} Path: ${hideMacAdddress(this._devicePath)}`);
-        if (!connected) {
-            this._log.info('Device not connected. Waiting for device');
-            this._bluezSignalId = this._bluezDeviceProxy.connect(
-                'g-properties-changed', () => this._onBluezPropertiesChanged());
-        } else {
+        if (globalThis.TESTDEVICE) {
             this._startDevice();
+        } else {
+            this._bluezDeviceProxy = getBluezDeviceProxy(this._devicePath);
+            const connected = this._bluezDeviceProxy.Connected;
+            this._log.info(`Device connection status: ${connected}` +
+                `Path: ${hideMacAdddress(this._devicePath)}`);
+            if (!connected) {
+                this._log.info('Device not connected. Waiting for device');
+                this._bluezSignalId = this._bluezDeviceProxy.connect(
+                    'g-properties-changed', () => this._onBluezPropertiesChanged());
+            } else {
+                this._startDevice();
+            }
         }
     }
 
@@ -276,73 +235,26 @@ class BatteryApp {
     }
 
     _startDevice() {
+        const timeout = globalThis.TESTDEVICE ? 1 : 8;
+        GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, timeout, () => {
+            this._page.sensitive = true;
+            return GLib.SOURCE_REMOVE;
+        });
+
+        const uiObjects = {
+            bat1: this._battery1,
+            bat2: this._battery2,
+            bat3: this._battery3,
+
+            inEarL: this._inEarL,
+            inEarR: this._inEarR,
+
+        };
+
         this._log.info('Start Device');
         this._profileManager = new ProfileManager();
         this._galaxyBudsDevice = new GalaxyBudsDevice(
-            this._devicePath, this.updateDeviceMapCb.bind(this), this._profileManager);
-    }
-
-    updateDeviceMapCb(path, dataHandler) {
-        if (this._dataHandler)
-            return;
-        this._dataHandler = dataHandler;
-        this._ancGroup.visible = !this._galaxyBudsDevice._noNoiseCancellingSupported;
-        this._ancOffButton.visible = !this._galaxyBudsDevice._noNoiseCancellingSupported;
-        this._ancOnButton.visible = !this._galaxyBudsDevice._noNoiseCancellingSupported;
-        this._ambientButton.visible = this._galaxyBudsDevice._ambientSoundControlSupported ||
-                                      this._galaxyBudsDevice._ambientSoundControl2Supported;
-        this._windButton.visible = this._galaxyBudsDevice._windNoiseReductionSupported;
-        this._awarenessGroup.visible = this._galaxyBudsDevice._speakToChatEnabledSupported;
-
-        // ///
-        this._dataHandler.connect('properties-changed', () => {
-            this._props = this._dataHandler.getProps();
-            this._battL = this._props.battery1Level;
-            this._battR = this._props.battery2Level;
-            this._battC = this._props.battery3Level;
-
-            this._battStatusL = this._props.battery1Status;
-            this._battStatusR = this._props.battery2Status;
-            this._battStatusC = this._props.battery3Status;
-            this._leftBudsStatus = this._props.tmpInEarLeft;
-            this._rightBudsStatus = this._props.tmpInEarRight;
-            this._attenuationStatus = this._props.tmpAwarnessAtt;
-            this._mediaStatus = this._props.tmpPlayPauseStatus;
-
-            this._updateGuiData();
-
-            const ctx1 = [
-                this._ancOffButton,
-                this._ancOnButton,
-                this._ambientButton,
-                this._windButton,
-            ];
-            ctx1.forEach(btn => btn.get_style_context().remove_class('accent'));
-
-            const index1 = {1: 0, 2: 1, 3: 2, 4: 3}[this._props.toggle1State];
-            if (index1 !== undefined)
-                ctx1[index1].get_style_context().add_class('accent');
-
-            const ctx2 = [
-                this._speak2chatOnButton,
-                this._speak2chatOffButton,
-            ];
-            ctx2.forEach(btn => btn.get_style_context().remove_class('accent'));
-
-            const index2 = {1: 0, 2: 1}[this._props.toggle2State];
-            if (index2 !== undefined)
-                ctx2[index2].get_style_context().add_class('accent');
-        });
-    }
-
-    _updateGuiData() {
-        this._battery1.label = `Battery1: ${this._battL}, ${this._battStatusL}`;
-        this._battery2.label = `Battery2: ${this._battR}, ${this._battStatusR}`;
-        this._battery3.label = `Battery3: ${this._battC}, ${this._battStatusC}`;
-        this._inEarRowL.label = `InEar Bud1 : ${this._leftBudsStatus}`;
-        this._inEarRowR.label = `InEar Bud2 : ${this._rightBudsStatus}`;
-        this._inPausePlay.label = `Media Trigger : ${this._mediaStatus}`;
-        this._attStatus.label = `Attenuation Triggered : ${this._attenuationStatus}`;
+            this._devicePath, uiObjects, this._profileManager);
     }
 }
 
