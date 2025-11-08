@@ -246,7 +246,7 @@ class GalaxyBudsSocket extends SocketHandler {
     }
 
     postConnectInitialization() {
-        this.sendMessage(this.encode(GalaxyBudsMsgIds.STATUS_UPDATED));
+        this.sendMessage(this.encode(GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED));
     }
 
     processData(bytes) {
