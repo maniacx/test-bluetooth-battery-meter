@@ -189,19 +189,19 @@ class GalaxyBudsSocket extends SocketHandler {
     _processEar(resp) {
         const id = resp.id;
         const p = resp.payload;
-        const earCfg = this._modelData.earDetection;
+        const legacy = this._modelData.earDetectionLegacy ?? false;
         let raw;
 
         if (id === GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED)
-            raw = p[earCfg.offset];
+            raw = p[6];
         else if (id === GalaxyBudsMsgIds.STATUS_UPDATED)
-            raw = p[earCfg.offset - 1];  // offset is only 5 for Galaxy Buds Live instead of 6 in this case
+            raw = p[5];
         else
             return;
 
         print(`L: ${raw >> 4}, R: ${raw & 0x0F}`);
         let left, right;
-        if (earCfg.legacy) {
+        if (legacy) {
             switch (raw) {
                 case GalaxyBudsLegacyEarDetectionState.Both:
                     left = right = 'Wearing';
@@ -240,7 +240,7 @@ class GalaxyBudsSocket extends SocketHandler {
         const resp = this.extract(bytes);
         if (!resp)
             return;
-        this._log.info('got response');
+
         this._processBattery(resp);
         this._processAnc(resp);
         this._processEar(resp);

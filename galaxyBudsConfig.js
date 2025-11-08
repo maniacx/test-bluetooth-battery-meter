@@ -105,7 +105,7 @@ export const GalaxyBudsModelList = [
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 4, // GBC spec
         anc: {supported: false, modes: []},
-        earDetection: {offset: 6, legacy: true},
+        earDetectionLegacy: true,
         battery: {
             status: {l: 1, r: 2, c: null},
             statusChargeOffset: null,
@@ -146,7 +146,7 @@ export const GalaxyBudsModelList = [
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 2, // 3 if ExtraLoud is set
         anc: {supported: false, modes: []},
-        earDetection: {offset: 6, legacy: false},
+        earDetectionLegacy: {offset: 6, legacy: false},
         battery: {
             status: {l: 1, r: 2, c: 6},
             statusChargeOffset: null,
@@ -189,7 +189,6 @@ export const GalaxyBudsModelList = [
         iconResourceKey: 'Bean',
         maximumAmbientVolume: 0, // ambient unsupported
         anc: {supported: false, modes: []},
-        earDetection: {offset: 6, legacy: false},
         battery: {
             status: {l: 1, r: 2, c: 6},
             statusChargeOffset: null,
@@ -251,7 +250,6 @@ export const GalaxyBudsModelList = [
                 GalaxyBudsAnc.NoiseReduction,
             ],
         },
-        earDetection: {offset: 6, legacy: false},
         battery: {
             status: {l: 1, r: 2, c: 6},
             statusChargeOffset: 7,
@@ -317,7 +315,6 @@ export const GalaxyBudsModelList = [
                 GalaxyBudsAnc.NoiseReduction,
             ],
         },
-        earDetection: {offset: 6, legacy: false},
         battery: {
             status: {l: 1, r: 2, c: 6},
             statusChargeOffset: 7,
@@ -384,7 +381,6 @@ export const GalaxyBudsModelList = [
                 GalaxyBudsAnc.NoiseReduction,
             ],
         },
-        earDetection: {offset: 6, legacy: false},
         battery: {
             status: {l: 1, r: 2, c: 6},
             statusChargeOffset: 7,
@@ -444,7 +440,6 @@ export const GalaxyBudsModelList = [
                 GalaxyBudsAnc.NoiseReduction,
             ],
         },
-        earDetection: {offset: 6, legacy: false},
         battery: {
             status: {l: 1, r: 2, c: 6},
             statusChargeOffset: 7,
@@ -506,7 +501,6 @@ export const GalaxyBudsModelList = [
                 GalaxyBudsAnc.NoiseReduction,
             ],
         },
-        earDetection: {offset: 6, legacy: false},
         battery: {
             status: {l: 1, r: 2, c: 6},
             statusChargeOffset: 7,
@@ -574,7 +568,6 @@ export const GalaxyBudsModelList = [
                 GalaxyBudsAnc.NoiseReduction,
             ],
         },
-        earDetection: {offset: 6, legacy: false},
         battery: {
             status: {l: 1, r: 2, c: 6},
             statusChargeOffset: 7,
