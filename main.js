@@ -13,8 +13,9 @@ import {DropDownRowWidget} from './widgets/dropDownRow.js';
 import {SliderRowWidget} from './widgets/sliderRowWidget.js';
 import {EqualizerWidget} from './widgets/equalizerWidget.js';
 
-globalThis.TESTDEVICE = 'GalaxyBuds3Pro';
-// globalThis.TESTDEVICE = '';
+// globalThis.TESTDEVICE = 'Galaxy Buds 3 Pro';
+// globalThis.TESTDEVICE = 'Galaxy Buds';
+globalThis.TESTDEVICE = '';
 
 Gio._promisify(Gio.DBusProxy, 'new');
 Gio._promisify(Gio.DBusProxy, 'new_for_bus');
@@ -167,6 +168,46 @@ class BatteryApp {
 
         this._inEarRow.child = inEarBox;
         inEarGroup.add(this._inEarRow);
+
+        // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+        this._ancGroup = new Adw.PreferencesGroup({title: 'Noise Cancellation'});
+        page.add(this._ancGroup);
+
+        this._ancToggle = new ToggleButtonRow();
+        this._ancToggle.connect('notify::toggled', () =>
+            this._log.info(`ANC toggled : ${this._ancToggle.toggled}`));
+
+        this._ancGroup.add(this._ancToggle);
+
+        this._ambientLevel = new SliderRowWidget({
+            rowTitle: 'Ambient Level',
+            rowSubtitle: '',
+            initialValue: 50,
+            marks: [
+                {mark: 0, label: 'Less'},
+                {mark: 20, label: 'More'},
+            ],
+            range: [0, 20, 1],
+            snapOnStep: false,
+        });
+
+        this._ambientLevel.visible = false;
+
+        this._ambientLevel.connect('notify::value', () => {
+            this._log.info(`Ambient level : ${this._ambientLevel.value}`);
+        });
+
+        this._ancGroup.add(this._ambientLevel);
+
+        this._focuseSwitch = new Adw.SwitchRow({title: 'Focus on Voice'});
+        this._focuseSwitch.connect('notify::active', () =>
+            this._log.info(`Focus on Voice changed : ${this._focuseSwitch.get_active()}`));
+
+        this._focuseSwitch.visible = false;
+
+        this._ancGroup.add(this._focuseSwitch);
+
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
         // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -248,6 +289,11 @@ class BatteryApp {
 
             inEarL: this._inEarL,
             inEarR: this._inEarR,
+
+            ancGroup: this._ancGroup,
+            ancToggle: this._ancToggle,
+            ambientLevelSlider: this._ambientLevel,
+            voiceFocusSwitch: this._focuseSwitch,
 
         };
 

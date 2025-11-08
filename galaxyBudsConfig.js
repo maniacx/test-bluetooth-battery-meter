@@ -55,8 +55,10 @@ export const GalaxyBudsMsgIds = {
     EXTENDED_STATUS_UPDATED: 0x61,
     NOISE_CONTROLS_UPDATE: 0x77,
     NOISE_CONTROLS: 0x78,
+    SET_AMBIENT_MODE: 0x80,
     AMBIENT_MODE_UPDATED: 0x81,
     AMBIENT_VOLUME: 0x84,
+    SET_NOISE_REDUCTION: 0x98,
     NOISE_REDUCTION_MODE_UPDATE: 0x9B,
 };
 
@@ -65,7 +67,7 @@ export const LegacyMsgIds = {
     AMBIENT_VOICE_FOCUS: 0x85,
     AMBIENT_WEARING_STATUS_UPDATED: 0x89,
     TAP_TEST_MODE_EVENT: 0x8E,
-}
+};
 
 export const GalaxyBudsMsgTypes = {
     Request: 0,
@@ -120,19 +122,16 @@ export const GalaxyBudsModelList = [
         voltage: true,
         current: true,
         pairingMode: true,
-        ambientSoundVolume: true,
         sppLegacyMessageHeader: true,
         usageReport: true,
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 4, // GBC spec
 
-
-        ambientSound: true,
+        ambientSoundOnOff: true,
         ambientSoundLegacy: true,
         ambientVoiceFocus: true,
-        ambientSoundVolume: {pos: 9, max: 4}
+        ambientSoundVolume: {pos: 9, max: 4},
 
-        ancConfig: {supported: false, modes: []},
         earDetectionLegacy: true,
         battery: {
             status: {l: 1, r: 2, c: null},
@@ -164,7 +163,6 @@ export const GalaxyBudsModelList = [
         voltage: true,
         callPathControl: true,
         pairingMode: true,
-        ambientSoundVolume: true,
         deviceColor: true,
         smartThingsFind: true,
         usageReport: true,
@@ -172,10 +170,9 @@ export const GalaxyBudsModelList = [
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 2, // 3 if ExtraLoud is set
 
-        ambientSound: true,
-        ambientSoundVolume: {pos: 9, max: 2}, // 3 if ExtraLoud is set 
+        ambientSoundOnOff: true,
+        ambientSoundVolume: {pos: 9, max: 2}, // 3 if ExtraLoud is set
 
-        ancConfig: {supported: false, modes: []},
         earDetectionLegacy: {offset: 6, legacy: false},
         battery: {
             status: {l: 1, r: 2, c: 6},
@@ -197,7 +194,6 @@ export const GalaxyBudsModelList = [
         legacySomEom: false,
         seamlessConnection: true,
         ambientPassthrough: true,
-        anc: true,
         gamingMode: true,
         caseBattery: true,
         fragmentedMessages: true,
@@ -210,7 +206,6 @@ export const GalaxyBudsModelList = [
         debugSku: true,
         callPathControl: true,
         pairingMode: true,
-        ambientSoundVolume: true,
         deviceColor: true,
         smartThingsFind: true,
         usageReport: true,
@@ -218,10 +213,9 @@ export const GalaxyBudsModelList = [
         iconResourceKey: 'Bean',
         maximumAmbientVolume: 0, // ambient unsupported
 
-        anc= true,
+        anc: true,
         noiseCancellationOnOff: true,
 
-        ancConfig: {supported: false, modes: []},
         battery: {
             status: {l: 1, r: 2, c: 6},
             statusChargeOffset: null,
@@ -245,7 +239,6 @@ export const GalaxyBudsModelList = [
         doubleTapVolume: true,
         firmwareUpdates: true,
         detectConversations: true,
-        noiseControl: true,
         gamingMode: true,
         caseBattery: true,
         fragmentedMessages: true,
@@ -261,7 +254,6 @@ export const GalaxyBudsModelList = [
         callPathControl: true,
         noiseControlModeDualSide: true,
         pairingMode: true,
-        ambientSoundVolume: true,
         noiseControlsWithOneEarbud: true,
         deviceColor: true,
         smartThingsFind: true,
@@ -271,28 +263,17 @@ export const GalaxyBudsModelList = [
         maximumAmbientVolume: 3, // from GBC
 
         ambientSound: true,
-        ambientSoundVolume: {pos: 23, max: 3}, 
+        ambientSoundVolume: {pos: 23, max: 3},
         anc: true,
         noiseControl: true,
 
-        ancConfig: {
-            supported: true,
-            extendedOffset: 12,
-            noiseUpdateOffset: 0,
-            ackOffset: 1,
-            modes: [
-                GalaxyBudsAnc.Off,
-                GalaxyBudsAnc.AmbientSound,
-                GalaxyBudsAnc.NoiseReduction,
-            ],
-        },
         battery: {
             status: {l: 1, r: 2, c: 6},
             statusChargeOffset: 7,
-            statusChargeMask: 0b00010001 | 0b00000100,
+            statusChargeMask: 21,
             extended: {l: 2, r: 3, c: 7},
             extChargeOffset: 43,
-            extChargeMask: 0b00010001 | 0b00000100,
+            extChargeMask: 21,
         },
         albumArtIcon: 'earbuds',
         budsIcon: 'earbuds-stem3',
@@ -340,28 +321,17 @@ export const GalaxyBudsModelList = [
 
 
         ambientSound: true,
-        ambientSoundVolume: {pos: 23, max: 2}, 
+        ambientSoundVolume: {pos: 23, max: 2},
         anc: true,
         noiseControl: true,
 
-        ancConfig: {
-            supported: true,
-            extendedOffset: 12,
-            noiseUpdateOffset: 0,
-            ackOffset: 1,
-            modes: [
-                GalaxyBudsAnc.Off,
-                GalaxyBudsAnc.AmbientSound,
-                GalaxyBudsAnc.NoiseReduction,
-            ],
-        },
         battery: {
             status: {l: 1, r: 2, c: 6},
             statusChargeOffset: 7,
-            statusChargeMask: 0b00010001 | 0b00000100,
+            statusChargeMask: 21,
             extended: {l: 2, r: 3, c: 7},
             extChargeOffset: 36,
-            extChargeMask: 0b00010001 | 0b00000100,
+            extChargeMask: 21,
         },
         albumArtIcon: 'earbuds',
         budsIcon: 'earbuds-stem3',
@@ -407,29 +377,17 @@ export const GalaxyBudsModelList = [
         maximumAmbientVolume: 2,
 
         ambientSound: true,
-        ambientSoundVolume: {pos: 23, max: 2}, 
+        ambientSoundVolume: {pos: 23, max: 2},
         anc: true,
         noiseControl: true,
 
-        ancConfig: {
-            supported: true,
-            extendedOffset: 12,
-            noiseUpdateOffset: 0,
-            ackOffset: 1,
-            modes: [
-                GalaxyBudsAnc.Off,
-                GalaxyBudsAnc.AmbientSound,
-                GalaxyBudsAnc.Adaptive,
-                GalaxyBudsAnc.NoiseReduction,
-            ],
-        },
         battery: {
             status: {l: 1, r: 2, c: 6},
             statusChargeOffset: 7,
-            statusChargeMask: 0b00010001 | 0b00000100,
+            statusChargeMask: 21,
             extended: {l: 2, r: 3, c: 7},
             extChargeOffset: 43,
-            extChargeMask: 0b00010001 | 0b00000100,
+            extChargeMask: 21,
         },
         albumArtIcon: 'earbuds',
         budsIcon: 'earbuds-stem3',
@@ -469,28 +427,17 @@ export const GalaxyBudsModelList = [
         maximumAmbientVolume: 2,
 
         ambientSound: true,
-        ambientSoundVolume: {pos: 23, max: 2}, 
+        ambientSoundVolume: {pos: 23, max: 2},
         anc: true,
         noiseControl: true,
 
-        ancConfig: {
-            supported: true,
-            extendedOffset: 12,
-            noiseUpdateOffset: 0,
-            ackOffset: 1,
-            modes: [
-                GalaxyBudsAnc.Off,
-                GalaxyBudsAnc.AmbientSound,
-                GalaxyBudsAnc.NoiseReduction,
-            ],
-        },
         battery: {
             status: {l: 1, r: 2, c: 6},
             statusChargeOffset: 7,
-            statusChargeMask: 0b00010001 | 0b00000100,
+            statusChargeMask: 21,
             extended: {l: 2, r: 3, c: 7},
             extChargeOffset: 43,
-            extChargeMask: 0b00010001 | 0b00000100,
+            extChargeMask: 21,
         },
         albumArtIcon: 'earbuds',
         budsIcon: 'earbuds-stem3',
@@ -522,7 +469,6 @@ export const GalaxyBudsModelList = [
         chargingState: true,
         noiseControlModeDualSide: true,
         pairingMode: true,
-        ambientSoundVolume: true,
         deviceColor: true,
         rename: true,
         spatialSensor: true,
@@ -533,27 +479,17 @@ export const GalaxyBudsModelList = [
         maximumAmbientVolume: 2,
 
         ambientSound: true,
-        ambientSoundVolume: {pos: 23, max: 2}, 
+        ambientSoundVolume: {pos: 23, max: 2},
         anc: true,
         noiseControl: true,
 
-        ancConfig: {
-            supported: true,
-            extendedOffset: 12,
-            noiseUpdateOffset: 0,
-            ackOffset: 1,
-            modes: [
-                GalaxyBudsAnc.Off,
-                GalaxyBudsAnc.NoiseReduction,
-            ],
-        },
         battery: {
             status: {l: 1, r: 2, c: 6},
             statusChargeOffset: 7,
-            statusChargeMask: 0b00010001 | 0b00000100,
+            statusChargeMask: 21,
             extended: {l: 2, r: 3, c: 7},
             extChargeOffset: 42,
-            extChargeMask: 0b00010001 | 0b00000100,
+            extChargeMask: 21,
         },
         albumArtIcon: 'earbuds',
         budsIcon: 'earbuds-stem3',
@@ -600,29 +536,17 @@ export const GalaxyBudsModelList = [
         maximumAmbientVolume: 2,
 
         ambientSound: true,
-        ambientSoundVolume: {pos: 23, max: 2}, 
+        ambientSoundVolume: {pos: 23, max: 2},
         anc: true,
         noiseControl: true,
 
-        ancConfig: {
-            supported: true,
-            extendedOffset: 12,
-            noiseUpdateOffset: 0,
-            ackOffset: 1,
-            modes: [
-                GalaxyBudsAnc.Off,
-                GalaxyBudsAnc.AmbientSound,
-                GalaxyBudsAnc.Adaptive,
-                GalaxyBudsAnc.NoiseReduction,
-            ],
-        },
         battery: {
             status: {l: 1, r: 2, c: 6},
             statusChargeOffset: 7,
-            statusChargeMask: 0b00010001 | 0b00000100,
+            statusChargeMask: 21,
             extended: {l: 2, r: 3, c: 7},
             extChargeOffset: 42,
-            extChargeMask: 0b00010001 | 0b00000100,
+            extChargeMask: 21,
         },
         albumArtIcon: 'earbuds',
         budsIcon: 'earbuds-stem3',

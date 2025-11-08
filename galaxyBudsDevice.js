@@ -1,11 +1,12 @@
 'use strict';
+import Gtk from 'gi://Gtk';
 import GObject from 'gi://GObject';
 
 import {createLogger} from './logger.js';
 import {getBluezDeviceProxy} from './bluezDeviceProxy.js';
 import {GalaxyBudsSocket} from './galaxyBudsSocket.js';
 import {checkForSamsungBuds} from './galaxyBudsDetector.js';
-import {GalaxyBudsAnc, GalaxyBudsModelList, BudsUUID, BudsLegacyUUID} from './galaxyBudsConfig.js';
+import {GalaxyBudsModelList, BudsUUID, BudsLegacyUUID} from './galaxyBudsConfig.js';
 
 export const GalaxyBudsDevice = GObject.registerClass({
 }, class GalaxyBudsDevice extends GObject.Object {
@@ -17,11 +18,18 @@ export const GalaxyBudsDevice = GObject.registerClass({
         this._ui = uiObjects;
         this._profileManager = profileManager;
         this._battInfoRecieved = false;
+        this._uiGuards = {};
 
         this._callbacks = {
             updateBatteryProps: this.updateBatteryProps.bind(this),
-            updateAmbientSoundControl: this.updateAmbientSoundControl.bind(this),
             updateInEarState: this.updateInEarState.bind(this),
+
+            updateAmbientSoundOnOff: this.updateAmbientSoundOnOff.bind(this),
+            updateFocusOnVoice: this.updateFocusOnVoice.bind(this),
+            updateAmbientVolume: this.updateAmbientVolume.bind(this),
+            updateNCOnOff: this.updateNCOnOff.bind(this),
+            updateNCModes: this.updateNCModes.bind(this),
+
         };
 
         if (globalThis.TESTDEVICE) {
@@ -98,6 +106,7 @@ export const GalaxyBudsDevice = GObject.registerClass({
         }
 
         this._log.info(`Found modelData for name "${name}": ${JSON.stringify(modelData, null, 2)}`);
+        this._modelData = modelData;
 
         this._ui.bat1.setIcon(`bbm-${modelData.budsIcon}-left-symbolic`);
         this._ui.bat2.setIcon(`bbm-${modelData.budsIcon}-right-symbolic`);
@@ -108,8 +117,42 @@ export const GalaxyBudsDevice = GObject.registerClass({
             this._ui.bat3.visible = true;
         }
 
+        if (this._modelData.ambientSoundOnOff) {
+            const btns = {
+                btn1Name: 'Off', btn1Icon: 'bbm-anc-off-symbolic',
+                btn2Name: 'Ambient', btn2Icon: 'bbm-transperancy-symbolic',
+            };
+            this._ui.ancToggle.updateConfig(btns);
+        } else if (this._modelData.noiseCancellationOnOff) {
+            const btns = {
+                btn1Name: 'Off', btn1Icon: 'bbm-anc-off-symbolic',
+                btn2Name: 'On', btn2Icon: 'bbm-anc-on-symbolic',
+            };
+            this._ui.ancToggle.updateConfig(btns);
+        } else if (this._modelData.noiseControl) {
+            const btns = {
+                btn1Name: 'Off', btn1Icon: 'bbm-anc-off-symbolic',
+                btn2Name: 'On', btn2Icon: 'bbm-anc-on-symbolic',
+                btn3Name: 'Ambient', btn3Icon: 'bbm-transperancy-symbolic',
+            };
+            this._ui.ancToggle.updateConfig(btns);
+        }
 
-        this._modelData = modelData;
+        this._ui.voiceFocusSwitch.visible = this._modelData.ambientVoiceFocus ?? false;
+        this._ui.ambientLevelSlider.visible = this._modelData.ambientSoundVolume ?? false;
+        if (this._modelData.ambientSoundVolume) {
+            const adjustment = new Gtk.Adjustment({
+                value: 0,
+                lower: 0,
+                upper: this._modelData.ambientSoundVolume.max,
+                step_increment: 1,
+                page_increment: 10,
+                page_size: 0,
+            });
+
+            this._ui.ambientLevelSlider._slider.set_adjustment(adjustment);
+            this._ui.ambientLevelSlider.visible = true;
+        }
 
         if (globalThis.TESTDEVICE)
             this._startGalaxyBudsSocket(-1);
@@ -153,22 +196,9 @@ export const GalaxyBudsDevice = GObject.registerClass({
     }
 
     _deviceInitialized() {
-
-    }
-
-
-    _startConfiguration(battInfo) {
-        const bat1level = battInfo.battery1Level  ?? 0;
-        const bat2level = battInfo.battery2Level  ?? 0;
-        const bat3level = battInfo.battery3Level  ?? 0;
-
-        if (bat1level <= 0 && bat2level <= 0 && bat3level <= 0)
-            return;
-
-        if (!this._battInfoRecieved) {
-            this._battInfoRecieved = true;
-            this._deviceInitialized();
-        }
+        this._ambientToggleMonitor();
+        this._ambientLevelSliderMonitor();
+        this._voiceFocusSwitchMonitor();
     }
 
     updateBatteryProps(props) {
@@ -183,9 +213,11 @@ export const GalaxyBudsDevice = GObject.registerClass({
         this._ui.bat1.setLabel(bat1level === 0 ? '---' : `${bat1level}%,  ${props.battery1Status}`);
         this._ui.bat2.setLabel(bat2level === 0 ? '---' : `${bat2level}%,  ${props.battery2Status}`);
         this._ui.bat3.setLabel(bat3level === 0 ? '---' : `${bat3level}%,  ${props.battery3Status}`);
-    }
 
-    updateAmbientSoundControl() {
+        if (!this._battInfoRecieved) {
+            this._battInfoRecieved = true;
+            this._deviceInitialized();
+        }
     }
 
     updateInEarState(left, right) {
@@ -193,12 +225,78 @@ export const GalaxyBudsDevice = GObject.registerClass({
         this._ui.inEarR.setLabel(right);
     }
 
-    set1ButtonClicked(index) {
-        this._log.info(`set1ButtonClicked(${index}) called`);
+    updateAmbientSoundOnOff(enabled) {
+        this._uiGuards.ambientmode = true;
+        this._ui.ancToggle.toggled =  enabled ? 2 : 1;
+        this._uiGuards.ambientmode = false;
     }
 
-    set2ButtonClicked(index) {
-        this._log.info(`set2ButtonClicked(${index}) called`);
+    updateNCOnOff(enabled) {
+        this._uiGuards.ambientmode = true;
+        this._ui.ancToggle.toggled =  enabled ? 2 : 1;
+        this._uiGuards.ambientmode = false;
+    }
+
+    updateNCModes(mode) {
+        this._uiGuards.ambientmode = true;
+        this._ui.ancToggle.toggled = mode + 1;
+        this._uiGuards.ambientmode = false;
+    }
+
+    _ambientToggleMonitor() {
+        this._ui.ancToggle.connect('notify::toggled', () => {
+            if (this._uiGuards.ambientmode)
+                return;
+
+            const val = this._ui.ancToggle.toggled;
+            if (val === 0)
+                return;
+
+            if (this._modelData.ambientSoundOnOff) {
+                const enabled = val === 2;
+                this._galaxyBudsSocket.setAmbientSoundOnOff(enabled);
+            } else if (this._modelData.noiseCancellationOnOff) {
+                const enabled = val === 2;
+                this._galaxyBudsSocket.setNCOnOff(enabled);
+            } else if (this._modelData.noiseControl) {
+                const mode = val - 1;
+                this._galaxyBudsSocket.setNCModes(mode);
+            }
+        });
+    }
+
+    updateFocusOnVoice(enabled) {
+        this._uiGuards.fov = true;
+        this._ui.voiceFocusSwitch.active = enabled;
+        this._uiGuards.fov = false;
+    }
+
+    _voiceFocusSwitchMonitor() {
+        this._ui.voiceFocusSwitch.connect('notify::active', () => {
+            if (this._uiGuards.fov)
+                return;
+
+            this._galaxyBudsSocket.setFocusOnVoice(this._ui.voiceFocusSwitch.active);
+        });
+    }
+
+    updateAmbientVolume(level) {
+        this._uiGuards.ambientlevel = true;
+        this._ui.ambientLevelSlider.value = level;
+        this._uiGuards.ambientlevel = false;
+    }
+
+    _ambientLevelSliderMonitor() {
+        this._ui.ambientLevelSlider.connect('notify::value', () => {
+            if (this._uiGuards.ambientlevel)
+                return;
+
+            const value = Math.round(this._ui.ambientLevelSlider.value);
+            if (this._ambientLevel !== value) {
+                this._ambientLevel = value;
+                this._galaxyBudsSocket.setAmbientVolume(value);
+            }
+        });
     }
 
     destroy() {
