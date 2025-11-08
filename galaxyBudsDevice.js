@@ -217,11 +217,11 @@ export const GalaxyBudsDevice = GObject.registerClass({
     }
 
     set1ButtonClicked(index) {
-        this._socketLog.info(`set1ButtonClicked(${index}) called`);
+        this._log.info(`set1ButtonClicked(${index}) called`);
     }
 
     set2ButtonClicked(index) {
-        this._socketLog.info(`set2ButtonClicked(${index}) called`);
+        this._log.info(`set2ButtonClicked(${index}) called`);
     }
 
     destroy() {
