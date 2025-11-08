@@ -19,8 +19,14 @@ class GalaxyBudsSocket extends SocketHandler {
         this._log.info('GalaxyBudsSocket init');
         this._modelData = modelData;
         this._isLegacy = this._modelData.legacy;
-        this._startOfMessage = 0;
-        this._endOfMessage = 0;
+
+        const SOM_BUDS = 0xFE;
+        const EOM_BUDS = 0xEE;
+        const SOM_BUDS_PLUS = 0xFD;
+        const EOM_BUDS_PLUS = 0xDD;
+
+        this._startOfMessage = this._isLegacy ? SOM_BUDS : SOM_BUDS_PLUS;
+        this._endOfMessage = this._isLegacy ? EOM_BUDS : EOM_BUDS_PLUS;
         this._callbacks = callbacks;
         this.startSocket(fd);
     }
@@ -44,8 +50,19 @@ class GalaxyBudsSocket extends SocketHandler {
             this._log.error(`buffer length too short: ${buffer.length}`);
             return null;
         }
-        this._startOfMessage = buffer[0];
-        this._endOfMessage = buffer[buffer.length - 1];
+
+        if (buffer[0] !== this._startOfMessage ||
+            buffer[buffer.length - 1] !== this._endOfMessage) {
+            const som = buffer[0].toString(16);
+            const eom = buffer[buffer.length - 1].toString(16);
+            const expectedSom = this._startOfMessage.toString(16);
+            const expectedEom = this._endOfMessage.toString(16);
+            this._log.error(
+                `SOM/EOM mismatch: got ${som}/${eom}, expected ${expectedSom}/${expectedEom}`
+            );
+            return null;
+        }
+
 
         let type, size;
         if (this._isLegacy) {
@@ -230,8 +247,6 @@ class GalaxyBudsSocket extends SocketHandler {
     }
 
     postConnectInitialization() {
-        this._startOfMessage = 0xAA;
-        this._endOfMessage = 0x55;
         this.sendMessage(this.encode(GalaxyBudsMsgIds.STATUS_UPDATED));
     }
 
