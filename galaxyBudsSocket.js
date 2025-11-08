@@ -216,7 +216,6 @@ class GalaxyBudsSocket extends SocketHandler {
         else
             return;
 
-        print(`L: ${raw >> 4}, R: ${raw & 0x0F}`);
         let left, right;
         if (legacy) {
             switch (raw) {
@@ -251,14 +250,31 @@ class GalaxyBudsSocket extends SocketHandler {
     }
 
     processData(bytes) {
-        this._log.info(`called processData: legacy: ${this._isLegacy}`);
         const resp = this.extract(bytes);
         if (!resp)
             return;
 
-        this._processBattery(resp);
-        this._processAnc(resp);
-        this._processEar(resp);
+        const {id} = resp;
+
+        switch (id) {
+            case GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED:
+                this._processBattery(resp);
+                this._processAnc(resp);
+                this._processEar(resp);
+                break;
+
+            case GalaxyBudsMsgIds.STATUS_UPDATED:
+                this._processBattery(resp);
+                this._processEar(resp);
+                break;
+
+            case GalaxyBudsMsgIds.NOISE_CONTROLS_UPDATE:
+                this._processAnc(resp);
+                break;
+
+            default:
+                break;
+        }
     }
 }
 );
