@@ -105,17 +105,24 @@ class GalaxyBudsSocket extends SocketHandler {
     encode(msgId, payload = []) {
         const size = 1 + payload.length + 2;
         const buf = [this._startOfMessage];
-        if (this._isLegacy)
-            buf.push(GalaxyBudsMsgTypes.Request, size);
-        else
-            buf.push(size & 0xFF, size >> 8);
 
-        buf.push(msgId, ...payload, ...this._checksumMsg(msgId, payload), this._endOfMessage);
+        if (this._isLegacy) {
+            buf.push(GalaxyBudsMsgTypes.Request, size);
+        } else {
+            const headerLo = size & 0xFF;
+            const headerHi = size >> 8 & 0xFF;
+            buf.push(headerLo, headerHi);
+        }
+
+        buf.push(msgId, ...payload);
+        const crc = this._checksum([msgId, ...payload]);
+        buf.push(crc & 0xFF, crc >> 8 & 0xFF);
+        buf.push(this._endOfMessage);
         return Uint8Array.from(buf);
     }
 
-    setAnc(mode) {
-        const pkt = this.encode(GalaxyBudsMsgIds.NOISE_CONTROLS, [mode]);
+    _sendPacket(msgId, payload = []) {
+        const pkt = this.encode(msgId, payload);
         this.sendMessage(pkt);
     }
 
