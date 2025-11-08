@@ -104,7 +104,7 @@ export const GalaxyBudsModelList = [
 
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 4, // GBC spec
-        anc: {supported: false, modes: []},
+        ancConfig: {supported: false, modes: []},
         earDetectionLegacy: true,
         battery: {
             status: {l: 1, r: 2, c: null},
@@ -145,7 +145,7 @@ export const GalaxyBudsModelList = [
 
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 2, // 3 if ExtraLoud is set
-        anc: {supported: false, modes: []},
+        ancConfig: {supported: false, modes: []},
         earDetectionLegacy: {offset: 6, legacy: false},
         battery: {
             status: {l: 1, r: 2, c: 6},
@@ -188,7 +188,7 @@ export const GalaxyBudsModelList = [
 
         iconResourceKey: 'Bean',
         maximumAmbientVolume: 0, // ambient unsupported
-        anc: {supported: false, modes: []},
+        ancConfig: {supported: false, modes: []},
         battery: {
             status: {l: 1, r: 2, c: 6},
             statusChargeOffset: null,
@@ -239,7 +239,7 @@ export const GalaxyBudsModelList = [
 
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 3, // from GBC
-        anc: {
+        ancConfig: {
             supported: true,
             extendedOffset: 12,
             noiseUpdateOffset: 0,
@@ -304,7 +304,7 @@ export const GalaxyBudsModelList = [
 
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 2,
-        anc: {
+        ancConfig: {
             supported: true,
             extendedOffset: 12,
             noiseUpdateOffset: 0,
@@ -369,7 +369,7 @@ export const GalaxyBudsModelList = [
 
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 2,
-        anc: {
+        ancConfig: {
             supported: true,
             extendedOffset: 12,
             noiseUpdateOffset: 0,
@@ -429,7 +429,7 @@ export const GalaxyBudsModelList = [
 
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 2,
-        anc: {
+        ancConfig: {
             supported: true,
             extendedOffset: 12,
             noiseUpdateOffset: 0,
@@ -491,7 +491,7 @@ export const GalaxyBudsModelList = [
 
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 2,
-        anc: {
+        ancConfig: {
             supported: true,
             extendedOffset: 12,
             noiseUpdateOffset: 0,
@@ -556,7 +556,7 @@ export const GalaxyBudsModelList = [
 
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 2,
-        anc: {
+        ancConfig: {
             supported: true,
             extendedOffset: 12,
             noiseUpdateOffset: 0,
