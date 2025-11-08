@@ -15,6 +15,8 @@ export const GalaxyBudsSocket = GObject.registerClass(
 class GalaxyBudsSocket extends SocketHandler {
     _init(devicePath, fd, modelData, callbacks) {
         super._init(devicePath, fd);
+        this._log = createLogger('GalaxyBudsSocket');
+        this._log.info('GalaxyBudsSocket init');
         this._modelData = modelData;
         this._isLegacy = this._modelData.legacy;
         this._startOfMessage = 0;
@@ -39,7 +41,7 @@ class GalaxyBudsSocket extends SocketHandler {
 
     extract(buffer) {
         if (buffer.length < 6) {
-            this._socketLog.error(`buffer length too short: ${buffer.length}`);
+            this._log.error(`buffer length too short: ${buffer.length}`);
             return null;
         }
         this._startOfMessage = buffer[0];
@@ -59,7 +61,7 @@ class GalaxyBudsSocket extends SocketHandler {
         const payloadSize = Math.max(size - 3, 0);
         const expectedLen = 4 + payloadSize + 2 + 1;
         if (buffer.length < expectedLen) {
-            this._socketLog.error(`buffer length too shot: ${buffer.length} < ${expectedLen}`);
+            this._log.error(`buffer length too shot: ${buffer.length} < ${expectedLen}`);
             return null;
         }
 
@@ -69,7 +71,7 @@ class GalaxyBudsSocket extends SocketHandler {
         const expectedCrc = crcHi << 8 | crcLo;
         const actualCrc = this._checksum([id, ...payload]);
         if (actualCrc !== expectedCrc) {
-            this._socketLog.error('bad CRC');
+            this._log.error('bad CRC');
             return null;
         }
 
@@ -97,7 +99,7 @@ class GalaxyBudsSocket extends SocketHandler {
         const batCfg = this._modelData.battery;
         const id      = resp.id;
         const p       = resp.payload;
-        this._socketLog.bytes(`Process Battery (${p.length}, id=${id}):`, Array.from(p).map(
+        this._log.bytes(`Process Battery (${p.length}, id=${id}):`, Array.from(p).map(
             b => b.toString(16).padStart(2, '0')).join(' '));
         let l, r, c, mask;
 
@@ -234,11 +236,11 @@ class GalaxyBudsSocket extends SocketHandler {
     }
 
     processData(bytes) {
-        this._socketLog.info(`called processData: legacy: ${this._isLegacy}`);
+        this._log.info(`called processData: legacy: ${this._isLegacy}`);
         const resp = this.extract(bytes);
         if (!resp)
             return;
-        this._socketLog.info('got response');
+        this._log.info('got response');
         this._processBattery(resp);
         this._processAnc(resp);
         this._processEar(resp);

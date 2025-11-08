@@ -1,21 +1,54 @@
 'use strict';
 
+import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
+
+const currentDir = GLib.path_get_dirname(import.meta.url.replace('file://', ''));
+const logDir = GLib.build_filenamev([currentDir, 'log']);
 let liveLogSink = null;
+let logFileStream = null;
+
+function initLogFile() {
+    try {
+        const logDirFile = Gio.File.new_for_path(logDir);
+        if (!logDirFile.query_exists(null))
+            logDirFile.make_directory_with_parents(null);
+
+        const timestamp = GLib.DateTime.new_now_local().format('%Y%m%d%H%M%S');
+        const logFilePath = GLib.build_filenamev([logDir, `test-bbm-${timestamp}.log`]);
+
+        const file = Gio.File.new_for_path(logFilePath);
+        logFileStream = file.replace(null, false, Gio.FileCreateFlags.NONE, null);
+        const header = `[${new Date().toISOString()}] Log started\n\n`;
+        logFileStream.write_all(header, null);
+    } catch (e) {
+        print('Failed to initialize log file:', e);
+    }
+}
+
+initLogFile();
 
 export function setLiveLogSink(sinkCallback) {
     liveLogSink = sinkCallback;
 }
 
 function WriteLogLine(prefix, msg) {
-    if (!liveLogSink)
-        return;
-
     const timestamp = new Date().toISOString();
     const line = `[${timestamp}] ${prefix}: ${msg}\n \n`;
 
+    if (liveLogSink)
+        liveLogSink(line);
 
-    liveLogSink(line);
-    if (line.includes('BYT'))
+    try {
+        if (logFileStream) {
+            logFileStream.write_all(line, null);
+            logFileStream.flush(null);
+        }
+    } catch (e) {
+        print('Failed to write log line:', e);
+    }
+
+    if (line.includes('BYT') && liveLogSink)
         liveLogSink(' \n');
 }
 
@@ -35,7 +68,6 @@ export function createLogger(tag) {
     };
 }
 
-
 export function hideMacAdddress(devicePath) {
     const match = devicePath.match(/dev_([0-9A-Fa-f_]+)/);
     if (!match)
@@ -51,3 +83,4 @@ export function hideMacAdddress(devicePath) {
 
     return devicePath;
 }
+
