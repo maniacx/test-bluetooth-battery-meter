@@ -69,20 +69,20 @@ export const GalaxyBudsDevice = GObject.registerClass({
     }
 
     _initializeModel(modalias, name) {
-        if(this._uuids.includes(BudsUUID)) {
-            this._log.info('this._deviceType = galaxybuds')
+        if (this._uuids.includes(BudsUUID)) {
+            this._log.info('this._deviceType = galaxybuds');
             this._deviceType = 'galaxybuds';
-        } else if (uuids.includes(BudsLegacyUUID)) {
-            this._log.info('this._deviceType = galaxybudslegacy')
+        } else if (this._uuids.includes(BudsLegacyUUID)) {
+            this._log.info('this._deviceType = galaxybudslegacy');
             this._deviceType = 'galaxybudslegacy';
         } else {
-            this._log.info('No valid UUID found')
+            this._log.info('No valid UUID found');
             return;
         }
 
         const modelId = checkForSamsungBuds(this._uuids, modalias, name);
         if (!modelId) {
-            this._log.info('No valid modelId found') 
+            this._log.info('No valid modelId found');
             return;
         }
         this._log.info(`got model id: ${modelId}`);
@@ -176,7 +176,7 @@ export const GalaxyBudsDevice = GObject.registerClass({
         this._log.info(`about to start handler: ${bat1level}, ${bat2level}, ${bat3level}`);
         this.dataHandler = new DataHandler(this._config, this._props,
             this.set1ButtonClicked.bind(this), this.set2ButtonClicked.bind(this));
-        this._log.info(`did start handler`);
+        this._log.info('did start handler');
 
         this.updateDeviceMapCb(this._devicePath, this.dataHandler);
     }
@@ -189,7 +189,7 @@ export const GalaxyBudsDevice = GObject.registerClass({
         this.dataHandler?.setProps(this._props);
     }
 
-    updateAmbientSoundControl(mode,) {
+    updateAmbientSoundControl(mode) {
         if (this._noNoiseCancellingSupported)
             return;
 
@@ -206,8 +206,8 @@ export const GalaxyBudsDevice = GObject.registerClass({
     }
 
     updateInEarState(left, right) {
-        this._props.tmpInEarLeft = left
-        this._props.tmpInEarRight = right
+        this._props.tmpInEarLeft = left;
+        this._props.tmpInEarRight = right;
         this.dataHandler?.setProps(this._props);
     }
 
@@ -217,18 +217,9 @@ export const GalaxyBudsDevice = GObject.registerClass({
     }
 
     set1ButtonClicked(index) {
-        if (this._noNoiseCancellingSupported)
-            return;
-
-        if (index === 1)
-            this._galaxyBudsSocket.setAmbientSoundControl(AmbientSoundMode.Off);
-        else if (index === 2)
-            this._galaxyBudsSocket.setAmbientSoundControl(AmbientSoundMode.NoiseReduction);
-        else if (this._ambientSoundControlSupported && index === 3)
-            this._galaxyBudsSocket.setAmbientSoundControl(AmbientSoundMode.AmbientSound);
-        else if (this._adaptiveSoundControlSupported && index === 4)
-            this._galaxyBudsSocket.setAmbientSoundControl(AmbientSoundMode.Adaptive);
+        this._socketLog.info(`set1ButtonClicked(${index}) called`);
     }
+
     set2ButtonClicked(index) {
         this._socketLog.info(`set2ButtonClicked(${index}) called`);
     }

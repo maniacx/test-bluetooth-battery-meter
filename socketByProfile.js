@@ -50,9 +50,9 @@ class SocketHandler extends GObject.Object {
     }
 
     async _receiveLoop() {
-        this._socketLog.info("receiveLoop start");
+        this._socketLog.info('receiveLoop start');
         if (!this.running) {
-            this._socketLog.info("receiveLoop exit");
+            this._socketLog.info('receiveLoop exit');
             return;
         }
 

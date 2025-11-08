@@ -1,6 +1,7 @@
 import {
     GalaxyBudsModel, BudsNewUUID, BudsUUID, BudsLegacyUUID, LeAudioUUID, HandsFreeUUID,
-    DeviceIdPrefixUUID } from './galaxyBudsConfig.js';
+    DeviceIdPrefixUUID
+} from './galaxyBudsConfig.js';
 
 export function checkForSamsungBuds(uuids, modalias, name) {
     print(`name: ${name}`);

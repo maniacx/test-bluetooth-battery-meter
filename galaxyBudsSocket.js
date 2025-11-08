@@ -4,13 +4,11 @@ import {createLogger} from './logger.js';
 import {SocketHandler} from './socketByProfile.js';
 import {
     crc16Tab,
-    GalaxyBudsModel,
     GalaxyBudsMsgIds,
     GalaxyBudsMsgTypes,
     GalaxyBudsAnc,
     GalaxyBudsEarDetectionState,
-    GalaxyBudsLegacyEarDetectionState,
-    GalaxyBudsModelList
+    GalaxyBudsLegacyEarDetectionState
 } from './galaxyBudsConfig.js';
 
 export const GalaxyBudsSocket = GObject.registerClass(
@@ -71,7 +69,7 @@ class GalaxyBudsSocket extends SocketHandler {
         const expectedCrc = crcHi << 8 | crcLo;
         const actualCrc = this._checksum([id, ...payload]);
         if (actualCrc !== expectedCrc) {
-            this._socketLog.error(`bad CRC`);
+            this._socketLog.error('bad CRC');
             return null;
         }
 
@@ -91,7 +89,7 @@ class GalaxyBudsSocket extends SocketHandler {
     }
 
     setAnc(mode) {
-        const pkt = this.encode(GalaxyBudsMsgIds.NOISE_CONTROLS, [val]);
+        const pkt = this.encode(GalaxyBudsMsgIds.NOISE_CONTROLS, [mode]);
         this.sendMessage(pkt);
     }
 
@@ -181,10 +179,9 @@ class GalaxyBudsSocket extends SocketHandler {
         if (ancCfg.modes.includes(b)) {
             const modeName = Object.keys(GalaxyBudsAnc).find(k => GalaxyBudsAnc[k] === b);
             print(`ANC mode: ${modeName}`);
-        if (this._callbacks?.updateAmbientSoundControl)
-            this._callbacks.updateAmbientSoundControl(modeName);
+            if (this._callbacks?.updateAmbientSoundControl)
+                this._callbacks.updateAmbientSoundControl(modeName);
         }
-
     }
 
     _processEar(resp) {
@@ -226,9 +223,8 @@ class GalaxyBudsSocket extends SocketHandler {
         }
 
         print(`Ear L:${left}  R:${right}`);
-        if (this._callbacks?.updateInEarState) {
+        if (this._callbacks?.updateInEarState)
             this._callbacks.updateInEarState(left, right);
-        }
     }
 
     postConnectInitialization() {
@@ -242,7 +238,7 @@ class GalaxyBudsSocket extends SocketHandler {
         const resp = this.extract(bytes);
         if (!resp)
             return;
-        this._socketLog.info("got response");
+        this._socketLog.info('got response');
         this._processBattery(resp);
         this._processAnc(resp);
         this._processEar(resp);
