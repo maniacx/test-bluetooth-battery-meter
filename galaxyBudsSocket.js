@@ -271,6 +271,34 @@ class GalaxyBudsSocket extends SocketHandler {
             this._callbacks.updateAmbientVolume(vol);
     }
 
+    _processNCOnOff(resp) {
+        if (!this._modelData.noiseCancellationOnOff)
+            return;
+        const id = resp.id;
+        const p = resp.payload;
+        const pos = id === GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED ? 12 : 0;
+        const enabled = booleanFromByte(p[pos]);
+        if (enabled === null)
+            return;
+
+        if (this._callbacks?.updateNCOnOff)
+            this._callbacks.updateNCOnOff(enabled);
+    }
+
+    _processNCModes(resp) {
+        if (!this._modelData.noiseControl)
+            return;
+        const id = resp.id;
+        const p = resp.payload;
+        const pos = id === GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED ? 12 : 0;
+        const mode = isValidByte(p[pos]);
+        if (mode === null)
+            return;
+
+        if (this._callbacks?.updateNCModes)
+            this._callbacks.updateNCModes(mode);
+    }
+
     postConnectInitialization() {
         this.sendMessage(this.encode(GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED));
     }
@@ -289,7 +317,8 @@ class GalaxyBudsSocket extends SocketHandler {
                 this._processAmbientSound(resp);
                 this._processFocusOnVoice(resp);
                 this._processAmbientVolume(resp);
-                // this._processAnc(resp);
+                this._processNCOnOff(resp);
+                this._processNCModes(resp);
                 break;
 
             case GalaxyBudsMsgIds.STATUS_UPDATED:
@@ -309,6 +338,15 @@ class GalaxyBudsSocket extends SocketHandler {
             case GalaxyBudsMsgIds.AMBIENT_VOLUME:
                 this._processAmbientVolume(resp);
                 break;
+
+            case GalaxyBudsMsgIds.NOISE_REDUCTION_MODE_UPDATE:
+                this._processNCOnOff(resp);
+                break;
+
+            case GalaxyBudsMsgIds.NOISE_CONTROLS_UPDATE:
+                this._processNCModes(resp);
+                break;
+
 
             default:
                 break;

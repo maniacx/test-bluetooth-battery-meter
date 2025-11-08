@@ -55,15 +55,16 @@ export const GalaxyBudsMsgIds = {
     EXTENDED_STATUS_UPDATED: 0x61,
     NOISE_CONTROLS_UPDATE: 0x77,
     NOISE_CONTROLS: 0x78,
-    AMBIENT_MODE_UPDATED: 129,
-    AMBIENT_VOLUME: 132,
+    AMBIENT_MODE_UPDATED: 0x81,
+    AMBIENT_VOLUME: 0x84,
+    NOISE_REDUCTION_MODE_UPDATE: 0x9B,
 };
 
 export const LegacyMsgIds = {
-    SPP_ROLE_STATE: 115,
-    AMBIENT_VOICE_FOCUS: 133,
-    AMBIENT_WEARING_STATUS_UPDATED: 137,
-    TAP_TEST_MODE_EVENT: 142,
+    SPP_ROLE_STATE: 0x73,
+    AMBIENT_VOICE_FOCUS: 0x85,
+    AMBIENT_WEARING_STATUS_UPDATED: 0x89,
+    TAP_TEST_MODE_EVENT: 0x8E,
 }
 
 export const GalaxyBudsMsgTypes = {
@@ -151,7 +152,6 @@ export const GalaxyBudsModelList = [
         modelId: GalaxyBudsModel.GalaxyBudsPlus,
         name: 'Galaxy Buds+',
         legacySomEom: false,
-
         ambientSidetone: true,
         ambientExtraLoud: true,
         seamlessConnection: true,
@@ -171,7 +171,6 @@ export const GalaxyBudsModelList = [
         hiddenAtMode: true,
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 2, // 3 if ExtraLoud is set
-
 
         ambientSound: true,
         ambientSoundVolume: {pos: 9, max: 2}, // 3 if ExtraLoud is set 
@@ -219,6 +218,8 @@ export const GalaxyBudsModelList = [
         iconResourceKey: 'Bean',
         maximumAmbientVolume: 0, // ambient unsupported
 
+        anc= true,
+        noiseCancellationOnOff: true,
 
         ancConfig: {supported: false, modes: []},
         battery: {
@@ -251,8 +252,6 @@ export const GalaxyBudsModelList = [
         spatialSensor: true,
         voltage: true,
         bixbyWakeup: true,
-
-        anc: true,
         ancNoiseReductionLevels: true,
         buildInfo: true,
         ambientSidetone: true,
@@ -273,6 +272,8 @@ export const GalaxyBudsModelList = [
 
         ambientSound: true,
         ambientSoundVolume: {pos: 23, max: 3}, 
+        anc: true,
+        noiseControl: true,
 
         ancConfig: {
             supported: true,
@@ -308,7 +309,7 @@ export const GalaxyBudsModelList = [
         doubleTapVolume: true,
         firmwareUpdates: true,
         detectConversations: true,
-        noiseControl: true,
+
         noiseControlModeDualSide: true,
         gamingMode: true,
         caseBattery: true,
@@ -318,8 +319,6 @@ export const GalaxyBudsModelList = [
         gearFitTest: true,
         extraClearCallSound: true,
         ambientExtraLoud: true,
-
-        anc: true,
         ambientSidetone: true,
         ambientCustomize: true,
         noiseControlsWithOneEarbud: true,
@@ -341,6 +340,9 @@ export const GalaxyBudsModelList = [
 
 
         ambientSound: true,
+        ambientSoundVolume: {pos: 23, max: 2}, 
+        anc: true,
+        noiseControl: true,
 
         ancConfig: {
             supported: true,
@@ -376,7 +378,6 @@ export const GalaxyBudsModelList = [
         doubleTapVolume: true,
         firmwareUpdates: true,
         detectConversations: true,
-        noiseControl: true,
         noiseControlModeDualSide: true,
         gamingMode: true,
         caseBattery: true,
@@ -386,7 +387,6 @@ export const GalaxyBudsModelList = [
         gearFitTest: true,
         extraClearCallSound: true,
         ambientExtraLoud: true,
-        anc: true,
         ambientSidetone: true,
         ambientCustomize: true,
         noiseControlsWithOneEarbud: true,
@@ -407,6 +407,9 @@ export const GalaxyBudsModelList = [
         maximumAmbientVolume: 2,
 
         ambientSound: true,
+        ambientSoundVolume: {pos: 23, max: 2}, 
+        anc: true,
+        noiseControl: true,
 
         ancConfig: {
             supported: true,
@@ -442,13 +445,11 @@ export const GalaxyBudsModelList = [
         stereoPan: true,
         doubleTapVolume: true,
         firmwareUpdates: true,
-        noiseControl: true,
         gamingMode: true,
         caseBattery: true,
         gearFitTest: true,
         fragmentedMessages: true,
         bixbyWakeup: true,
-        anc: true,
         ancNoiseReductionLevels: true,
         ambientSidetone: true,
         ambientCustomize: true,
@@ -468,6 +469,9 @@ export const GalaxyBudsModelList = [
         maximumAmbientVolume: 2,
 
         ambientSound: true,
+        ambientSoundVolume: {pos: 23, max: 2}, 
+        anc: true,
+        noiseControl: true,
 
         ancConfig: {
             supported: true,
@@ -501,9 +505,6 @@ export const GalaxyBudsModelList = [
         seamlessConnection: true,
         stereoPan: true,
         firmwareUpdates: true,
-        noiseControl: true,
-
-        anc: true,
         gamingMode: true,
         caseBattery: true,
         fragmentedMessages: true,
@@ -532,6 +533,9 @@ export const GalaxyBudsModelList = [
         maximumAmbientVolume: 2,
 
         ambientSound: true,
+        ambientSoundVolume: {pos: 23, max: 2}, 
+        anc: true,
+        noiseControl: true,
 
         ancConfig: {
             supported: true,
@@ -566,7 +570,6 @@ export const GalaxyBudsModelList = [
         doubleTapVolume: true,
         firmwareUpdates: true,
         detectConversations: true,
-        noiseControl: true,
         noiseControlModeDualSide: true,
         gamingMode: true,
         caseBattery: true,
@@ -576,7 +579,6 @@ export const GalaxyBudsModelList = [
         gearFitTest: true,
         extraClearCallSound: true,
         ambientExtraLoud: true,
-        anc: true,
         ambientSidetone: true,
         ambientCustomize: true,
         noiseControlsWithOneEarbud: true,
@@ -598,6 +600,9 @@ export const GalaxyBudsModelList = [
         maximumAmbientVolume: 2,
 
         ambientSound: true,
+        ambientSoundVolume: {pos: 23, max: 2}, 
+        anc: true,
+        noiseControl: true,
 
         ancConfig: {
             supported: true,
