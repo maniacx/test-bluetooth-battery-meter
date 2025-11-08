@@ -1,3 +1,17 @@
+export function booleanFromByte(val) {
+    switch (val) {
+        case 0x00:
+            return false;
+        case 0x01:
+            return true;
+        default:
+            return null;
+    }
+}
+
+export function isValidByte(val, enumObj) {
+    return Object.values(enumObj).includes(val);
+}
 
 export const crc16Tab = Uint16Array.from([
     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5, 0x60C6, 0x70E7, 0x8108, 0x9129,
@@ -41,7 +55,16 @@ export const GalaxyBudsMsgIds = {
     EXTENDED_STATUS_UPDATED: 0x61,
     NOISE_CONTROLS_UPDATE: 0x77,
     NOISE_CONTROLS: 0x78,
+    AMBIENT_MODE_UPDATED: 129,
+    AMBIENT_VOLUME: 132,
 };
+
+export const LegacyMsgIds = {
+    SPP_ROLE_STATE: 115,
+    AMBIENT_VOICE_FOCUS: 133,
+    AMBIENT_WEARING_STATUS_UPDATED: 137,
+    TAP_TEST_MODE_EVENT: 142,
+}
 
 export const GalaxyBudsMsgTypes = {
     Request: 0,
@@ -90,8 +113,6 @@ export const GalaxyBudsModelList = [
         name: 'Galaxy Buds',
         legacySomEom: true,
         seamlessConnection: true,
-        ambientVoiceFocus: true,
-        ambientSound: true,
         legacyAmbientSoundVolumeLevels: true,
         buildInfo: true,
         batteryType: true,
@@ -101,9 +122,15 @@ export const GalaxyBudsModelList = [
         ambientSoundVolume: true,
         sppLegacyMessageHeader: true,
         usageReport: true,
-
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 4, // GBC spec
+
+
+        ambientSound: true,
+        ambientSoundLegacy: true,
+        ambientVoiceFocus: true,
+        ambientSoundVolume: {pos: 9, max: 4}
+
         ancConfig: {supported: false, modes: []},
         earDetectionLegacy: true,
         battery: {
@@ -124,7 +151,7 @@ export const GalaxyBudsModelList = [
         modelId: GalaxyBudsModel.GalaxyBudsPlus,
         name: 'Galaxy Buds+',
         legacySomEom: false,
-        ambientSound: true,
+
         ambientSidetone: true,
         ambientExtraLoud: true,
         seamlessConnection: true,
@@ -142,9 +169,13 @@ export const GalaxyBudsModelList = [
         smartThingsFind: true,
         usageReport: true,
         hiddenAtMode: true,
-
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 2, // 3 if ExtraLoud is set
+
+
+        ambientSound: true,
+        ambientSoundVolume: {pos: 9, max: 2}, // 3 if ExtraLoud is set 
+
         ancConfig: {supported: false, modes: []},
         earDetectionLegacy: {offset: 6, legacy: false},
         battery: {
@@ -185,9 +216,10 @@ export const GalaxyBudsModelList = [
         smartThingsFind: true,
         usageReport: true,
         hiddenAtMode: true,
-
         iconResourceKey: 'Bean',
         maximumAmbientVolume: 0, // ambient unsupported
+
+
         ancConfig: {supported: false, modes: []},
         battery: {
             status: {l: 1, r: 2, c: 6},
@@ -219,7 +251,7 @@ export const GalaxyBudsModelList = [
         spatialSensor: true,
         voltage: true,
         bixbyWakeup: true,
-        ambientSound: true,
+
         anc: true,
         ancNoiseReductionLevels: true,
         buildInfo: true,
@@ -236,9 +268,12 @@ export const GalaxyBudsModelList = [
         smartThingsFind: true,
         usageReport: true,
         hiddenAtMode: true,
-
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 3, // from GBC
+
+        ambientSound: true,
+        ambientSoundVolume: {pos: 23, max: 3}, 
+
         ancConfig: {
             supported: true,
             extendedOffset: 12,
@@ -283,7 +318,7 @@ export const GalaxyBudsModelList = [
         gearFitTest: true,
         extraClearCallSound: true,
         ambientExtraLoud: true,
-        ambientSound: true,
+
         anc: true,
         ambientSidetone: true,
         ambientCustomize: true,
@@ -301,9 +336,12 @@ export const GalaxyBudsModelList = [
         rename: true,
         smartThingsFind: true,
         usageReport: true,
-
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 2,
+
+
+        ambientSound: true,
+
         ancConfig: {
             supported: true,
             extendedOffset: 12,
@@ -348,7 +386,6 @@ export const GalaxyBudsModelList = [
         gearFitTest: true,
         extraClearCallSound: true,
         ambientExtraLoud: true,
-        ambientSound: true,
         anc: true,
         ambientSidetone: true,
         ambientCustomize: true,
@@ -366,9 +403,11 @@ export const GalaxyBudsModelList = [
         rename: true,
         smartThingsFind: true,
         usageReport: true,
-
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 2,
+
+        ambientSound: true,
+
         ancConfig: {
             supported: true,
             extendedOffset: 12,
@@ -409,7 +448,6 @@ export const GalaxyBudsModelList = [
         gearFitTest: true,
         fragmentedMessages: true,
         bixbyWakeup: true,
-        ambientSound: true,
         anc: true,
         ancNoiseReductionLevels: true,
         ambientSidetone: true,
@@ -426,9 +464,11 @@ export const GalaxyBudsModelList = [
         rename: true,
         smartThingsFind: true,
         usageReport: true,
-
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 2,
+
+        ambientSound: true,
+
         ancConfig: {
             supported: true,
             extendedOffset: 12,
@@ -462,7 +502,7 @@ export const GalaxyBudsModelList = [
         stereoPan: true,
         firmwareUpdates: true,
         noiseControl: true,
-        ambientSound: true,
+
         anc: true,
         gamingMode: true,
         caseBattery: true,
@@ -488,9 +528,11 @@ export const GalaxyBudsModelList = [
         smartThingsFind: true,
         usageReport: true,
         hotCommandLanguageUpdate: true,
-
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 2,
+
+        ambientSound: true,
+
         ancConfig: {
             supported: true,
             extendedOffset: 12,
@@ -534,7 +576,6 @@ export const GalaxyBudsModelList = [
         gearFitTest: true,
         extraClearCallSound: true,
         ambientExtraLoud: true,
-        ambientSound: true,
         anc: true,
         ambientSidetone: true,
         ambientCustomize: true,
@@ -553,9 +594,11 @@ export const GalaxyBudsModelList = [
         smartThingsFind: true,
         usageReport: true,
         hotCommandLanguageUpdate: true,
-
         iconResourceKey: 'Pro',
         maximumAmbientVolume: 2,
+
+        ambientSound: true,
+
         ancConfig: {
             supported: true,
             extendedOffset: 12,

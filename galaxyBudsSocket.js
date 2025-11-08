@@ -5,10 +5,13 @@ import {SocketHandler} from './socketByProfile.js';
 import {
     crc16Tab,
     GalaxyBudsMsgIds,
+    LegacyMsgIds,
     GalaxyBudsMsgTypes,
     GalaxyBudsAnc,
     GalaxyBudsEarDetectionState,
-    GalaxyBudsLegacyEarDetectionState
+    GalaxyBudsLegacyEarDetectionState,
+    booleanFromByte,
+    isValidByte
 } from './galaxyBudsConfig.js';
 
 export const GalaxyBudsSocket = GObject.registerClass(
@@ -182,30 +185,6 @@ class GalaxyBudsSocket extends SocketHandler {
             this._callbacks.updateBatteryProps(props);
     }
 
-    _processAnc(resp) {
-        if (!this._modelData.anc.supported)
-            return;
-        const id = resp.id;
-        const p = resp.payload;
-        const ancCfg = this._modelData.anc;
-        let b;
-
-        if (id === GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED)
-            b = p[ancCfg.extendedOffset];
-        else if (id === GalaxyBudsMsgIds.NOISE_CONTROLS_UPDATE)
-            b = p[ancCfg.noiseUpdateOffset];
-        else if (id === GalaxyBudsMsgIds.UNIVERSAL_MSG_ID_ACKNOWLEDGEMENT &&
-               p[0] === GalaxyBudsMsgIds.NOISE_CONTROLS)
-            b = p[ancCfg.ackOffset];
-
-        if (ancCfg.modes.includes(b)) {
-            const modeName = Object.keys(GalaxyBudsAnc).find(k => GalaxyBudsAnc[k] === b);
-
-            if (this._callbacks?.updateAmbientSoundControl)
-                this._callbacks.updateAmbientSoundControl(modeName);
-        }
-    }
-
     _processEar(resp) {
         const id = resp.id;
         const p = resp.payload;
@@ -243,9 +222,53 @@ class GalaxyBudsSocket extends SocketHandler {
           .find(k => GalaxyBudsEarDetectionState[k] === (raw & 0x0F));
         }
 
-
         if (this._callbacks?.updateInEarState)
             this._callbacks.updateInEarState(left, right);
+    }
+
+    _processAmbientSound(resp) {
+        if (!this._modelData.ambientSound)
+            return;
+        const id = resp.id;
+        const p = resp.payload;
+        let pos = 0;
+        if (id === GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED)
+            pos = this._modelData.ambientSoundLegacy ? 7 : 8;
+
+        const enabled = booleanFromByte(p[pos]);
+        if (enabled === null)
+            return;
+
+        if (this._callbacks?.updateAmbientSound)
+            this._callbacks.updateAmbientSound(enabled);
+    }
+
+    _processFocusOnVoice(resp) {
+        if (!this._modelData.ambientVoiceFocus)
+            return;
+        const id = resp.id;
+        const p = resp.payload;
+        const pos = id === GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED ? 8 : 0;
+        const enabled = booleanFromByte(p[pos]);
+        if (enabled === null)
+            return;
+
+        if (this._callbacks?.updateFocusOnVoice)
+            this._callbacks.updateFocusOnVoice(enabled);
+    }
+
+    _processAmbientVolume(resp) {
+        if (!this._modelData.ambientSoundVolume)
+            return;
+        const id = resp.id;
+        const p = resp.payload;
+        let pos = 0;
+        if (id === GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED)
+            pos = this._modelData.ambientSoundVolume.pos;
+
+        const vol = p[pos];
+        if (this._callbacks?.updateAmbientVolume)
+            this._callbacks.updateAmbientVolume(vol);
     }
 
     postConnectInitialization() {
@@ -262,8 +285,11 @@ class GalaxyBudsSocket extends SocketHandler {
         switch (id) {
             case GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED:
                 this._processBattery(resp);
-                this._processAnc(resp);
                 this._processEar(resp);
+                this._processAmbientSound(resp);
+                this._processFocusOnVoice(resp);
+                this._processAmbientVolume(resp);
+                // this._processAnc(resp);
                 break;
 
             case GalaxyBudsMsgIds.STATUS_UPDATED:
@@ -271,8 +297,17 @@ class GalaxyBudsSocket extends SocketHandler {
                 this._processEar(resp);
                 break;
 
-            case GalaxyBudsMsgIds.NOISE_CONTROLS_UPDATE:
-                this._processAnc(resp);
+            case GalaxyBudsMsgIds.AMBIENT_MODE_UPDATED:
+                this._processAmbientSound(resp);
+                break;
+
+            case LegacyMsgIds.AMBIENT_VOICE_FOCUS:
+                if (this._modelData.ambientSoundLegacy)
+                    this._processFocusOnVoice(resp);
+                break;
+
+            case GalaxyBudsMsgIds.AMBIENT_VOLUME:
+                this._processAmbientVolume(resp);
                 break;
 
             default:
