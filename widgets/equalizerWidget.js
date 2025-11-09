@@ -1,5 +1,6 @@
 import Gtk from 'gi://Gtk';
 import GObject from 'gi://GObject';
+import GLib from 'gi://GLib';
 
 export const EqualizerWidget = GObject.registerClass({
     GTypeName: 'EqualizerWidget',
@@ -17,11 +18,13 @@ export const EqualizerWidget = GObject.registerClass({
         });
 
         this.set_size_request(-1, 200);
-
         this._values = freqs.map((_, i) => Math.round(initialValues[i] ?? 0));
         this._range = range;
         this._sliders = [];
         this._valueLabels = [];
+        this._eqPending = null;
+        this._eqTimeoutId = 0;
+        this._updateDelay = 500;
 
         freqs.forEach((freq, i) => {
             const vbox = new Gtk.Box({
@@ -72,7 +75,7 @@ export const EqualizerWidget = GObject.registerClass({
                     slider._lastStepValue = val;
                     this._values[i] = val;
                     valueLabel.label = `${val} dB`;
-                    this.emit('eq-changed', this._values.slice());
+                    this._scheduleEqChanged();
                 }
             });
 
@@ -80,6 +83,25 @@ export const EqualizerWidget = GObject.registerClass({
             vbox.append(slider);
             vbox.append(valueLabel);
             this.append(vbox);
+        });
+    }
+
+    _scheduleEqChanged() {
+        this._eqPending = this._values.slice();
+
+        if (this._eqTimeoutId)
+            return;
+
+        this._eqTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, this._updateDelay, () => {
+            if (this._eqPending) {
+                const latest = this._eqPending;
+                this.emit('eq-changed', latest);
+                this._eqPending = null;
+                return GLib.SOURCE_CONTINUE;
+            }
+
+            this._eqTimeoutId = 0;
+            return GLib.SOURCE_REMOVE;
         });
     }
 

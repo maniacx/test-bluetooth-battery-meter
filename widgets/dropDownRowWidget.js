@@ -87,4 +87,3 @@ export const DropDownRowWidget = GObject.registerClass({
     }
 });
 
-

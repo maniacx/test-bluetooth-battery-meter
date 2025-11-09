@@ -4,12 +4,14 @@ import {createLogger} from './logger.js';
 import {SocketHandler} from './socketByProfile.js';
 import {
     crc16Tab,
+    GalaxyBudsModel,
     GalaxyBudsMsgIds,
     LegacyMsgIds,
     GalaxyBudsMsgTypes,
     GalaxyBudsAnc,
     GalaxyBudsEarDetectionState,
     GalaxyBudsLegacyEarDetectionState,
+    EqPresets,
     booleanFromByte,
     isValidByte
 } from './galaxyBudsConfig.js';
@@ -20,16 +22,24 @@ class GalaxyBudsSocket extends SocketHandler {
         super._init(devicePath, fd);
         this._log = createLogger('GalaxyBudsSocket');
         this._log.info('GalaxyBudsSocket init');
-        this._modelData = modelData;
-        this._isLegacy = this._modelData.legacy;
+
+        this._modelId = modelData.modelId;
+        log(`this._modelId = ${this._modelId}`);
+        this._features = modelData.features;
 
         const SOM_BUDS = 0xFE;
         const EOM_BUDS = 0xEE;
         const SOM_BUDS_PLUS = 0xFD;
         const EOM_BUDS_PLUS = 0xDD;
 
-        this._startOfMessage = this._isLegacy ? SOM_BUDS : SOM_BUDS_PLUS;
-        this._endOfMessage = this._isLegacy ? EOM_BUDS : EOM_BUDS_PLUS;
+        this._startOfMessage = SOM_BUDS_PLUS;
+        this._endOfMessage = EOM_BUDS_PLUS;
+
+        if (this._modelId === GalaxyBudsModel.GalaxyBuds) {
+            this._startOfMessage = SOM_BUDS;
+            this._endOfMessage = EOM_BUDS;
+        }
+
         this._callbacks = callbacks;
 
         if (globalThis.TESTDEVICE)
@@ -126,29 +136,64 @@ class GalaxyBudsSocket extends SocketHandler {
         this.sendMessage(pkt);
     }
 
-    _processBattery(resp) {
-        const batCfg = this._modelData.battery;
-        const id      = resp.id;
-        const p       = resp.payload;
-        this._log.bytes(`Process Battery (${p.length}, id=${id}):`, Array.from(p).map(
-            b => b.toString(16).padStart(2, '0')).join(' '));
-        let l, r, c, mask;
-
-        if (id === GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED && batCfg.extended) {
-            l    = p[batCfg.extended.l];
-            r    = p[batCfg.extended.r];
-            c    = p[batCfg.extended.c] ?? 255;
-            mask = p[batCfg.extChargeOffset] & batCfg.extChargeMask;
-        } else if (id === GalaxyBudsMsgIds.STATUS_UPDATED && batCfg.status) {
-            l    = p[batCfg.status.l];
-            r    = p[batCfg.status.r];
-            c    = p[batCfg.status.c] ?? 255;
-            mask = p[batCfg.statusChargeOffset] & batCfg.statusChargeMask;
-        } else {
+    processData(bytes) {
+        const resp = this.extract(bytes);
+        if (!resp)
             return;
-        }
 
-        const caseLevel = c === 255 ? 0 : c;
+        const {id, payload} = resp;
+
+        switch (id) {
+            case GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED:
+                this._parseExtendedStatusUpdate(payload);
+                break;
+
+            case GalaxyBudsMsgIds.STATUS_UPDATED:
+                this._parseStatusUpdate(payload);
+                break;
+
+            case GalaxyBudsMsgIds.AMBIENT_MODE_UPDATED:
+                this._processAmbientMode(payload[0]);
+                break;
+
+            case LegacyMsgIds.AMBIENT_VOICE_FOCUS:
+                this._processAmbientVoiceFocusDecoder(payload[0]);
+                break;
+
+            case GalaxyBudsMsgIds.AMBIENT_VOLUME:
+                this._processAmbientVolume(payload[0]);
+                break;
+
+            case GalaxyBudsMsgIds.NOISE_REDUCTION_MODE_UPDATE:
+                this._processNCOnOff(payload[0]);
+                break;
+
+            case GalaxyBudsMsgIds.NOISE_CONTROLS_UPDATE:
+                this._processNCModes(payload[0]);
+                break;
+
+            case GalaxyBudsMsgIds.SET_TOUCHPAD_OPTION:
+                this._recvTouchpadOptionL(Boolean(payload[0]));
+                this._recvTouchpadOptionR(Boolean(payload[1]));
+                break;
+
+            case GalaxyBudsMsgIds.LOCK_TOUCHPAD:
+                this._processAdvanceTouch(payload);
+                break;
+        }
+    }
+
+    postConnectInitialization() {
+        this.sendMessage(this.encode(GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED));
+    }
+
+    _processBattery(battery) {
+        const l = battery.left;
+        const r = battery.right;
+        const c = battery.case ?? 255;
+        const mask = battery.mask ?? 0;
+
+        const caseLevel = c > 100 ? 0 : c;
 
         let leftStatus;
         if (l === 0)
@@ -183,30 +228,14 @@ class GalaxyBudsSocket extends SocketHandler {
             battery3Status: caseStatus,
         };
 
-        if (caseLevel > 100) {
-            // Don't update when case level > 100
-            props.battery3Level = 0;
-        }
-
         this._callbacks?.updateBatteryProps?.(props);
     }
 
-    _processEar(resp) {
-        const id = resp.id;
-        const p = resp.payload;
-        const legacy = this._modelData.earDetectionLegacy ?? false;
-        let raw;
-
-        if (id === GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED)
-            raw = p[6];
-        else if (id === GalaxyBudsMsgIds.STATUS_UPDATED)
-            raw = p[5];
-        else
-            return;
-
+    _processEar(byte) {
         let left, right;
-        if (legacy) {
-            switch (raw) {
+
+        if (this._modelId === GalaxyBudsModel.GalaxyBuds) {
+            switch (byte) {
                 case GalaxyBudsLegacyEarDetectionState.Both:
                     left = right = 'Wearing';
                     break;
@@ -220,49 +249,390 @@ class GalaxyBudsSocket extends SocketHandler {
                     break;
                 default:
                     left = right = 'Idle';
+                    break;
             }
         } else {
+            const leftVal = byte >> 4;
+            const rightVal = byte & 0x0F;
+
             left = Object.keys(GalaxyBudsEarDetectionState)
-          .find(k => GalaxyBudsEarDetectionState[k] === raw >> 4);
+            .find(k => GalaxyBudsEarDetectionState[k] === leftVal);
             right = Object.keys(GalaxyBudsEarDetectionState)
-          .find(k => GalaxyBudsEarDetectionState[k] === (raw & 0x0F));
+            .find(k => GalaxyBudsEarDetectionState[k] === rightVal);
         }
 
         this._callbacks?.updateInEarState?.(left, right);
     }
 
-    _processAmbientSoundOnOff(resp) {
-        if (!this._modelData.ambientSoundOnOff)
+    _processAmbientMode(byte) {
+        if (!this._features.ambientSound || this._features.noiseControl)
             return;
-        const id = resp.id;
-        const p = resp.payload;
-        let pos = 0;
-        if (id === GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED)
-            pos = this._modelData.ambientSoundLegacy ? 7 : 8;
 
-        const enabled = booleanFromByte(p[pos]);
+        const enabled = booleanFromByte(byte);
         if (enabled === null)
             return;
 
         this._callbacks?.updateAmbientSoundOnOff?.(enabled);
     }
 
-    setAmbientSoundOnOff(enabled) {
-        const payload = [enabled ? 1 : 0];
-        this._sendPacket(GalaxyBudsMsgIds.SET_AMBIENT_MODE, payload);
-    }
-
-    _processFocusOnVoice(resp) {
-        if (!this._modelData.ambientVoiceFocus)
+    _processAmbientVoiceFocusDecoder(byte) {
+        if (!this._features.ambientVoiceFocus)
             return;
-        const id = resp.id;
-        const p = resp.payload;
-        const pos = id === GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED ? 8 : 0;
-        const enabled = booleanFromByte(p[pos]);
+
+        const enabled = booleanFromByte(byte);
         if (enabled === null)
             return;
 
         this._callbacks?.updateFocusOnVoice?.(enabled);
+    }
+
+    _processAmbientVolume(byte) {
+        if (!this._features.ambientSoundVolume)
+            return;
+
+        this._callbacks?.updateAmbientVolume?.(byte);
+    }
+
+    _processNCOnOff(byte) {
+        if (!this._features.noiseCancellation || this._features.noiseControl)
+            return;
+
+        const enabled = booleanFromByte(byte);
+        if (enabled === null)
+            return;
+
+        this._callbacks?.updateNCOnOff?.(enabled);
+    }
+
+    _processNCModes(byte) {
+        if (!this._features.noiseControl)
+            return;
+
+        if (!isValidByte(byte, GalaxyBudsAnc))
+            return;
+
+        this._callbacks?.updateNCModes?.(byte);
+    }
+
+    _processEqPresets(byte, enabled) {
+        let preset;
+        if (this._modelId === GalaxyBudsModel.GalaxyBuds) {
+            if (!enabled)
+                preset = EqPresets.Off;
+            else if (byte <= 9)
+                preset = byte;
+            else
+                return;
+        } else if (!isValidByte(byte, EqPresets)) {
+            return;
+        } else {
+            preset = byte === 0 ? EqPresets.Off : byte - 1;
+        }
+        this._callbacks?.updateEqPresets?.(preset);
+    }
+
+    _recvTouchpadLock(enable) {
+        this._callbacks?.updateTouchpadLock?.(enable);
+    }
+
+    _recvTouchpadOptionL(enable) {
+        this._callbacks?.updateTouchpadOptionL?.(enable);
+    }
+
+    _recvTouchpadOptionR(enable) {
+        this._callbacks?.updateTouchpadOptionR?.(enable);
+    }
+
+    _recvAdvanceTouchpadLock(touchProps) {
+        this._callbacks?.updateAdvanceTouchpadLock?.(touchProps);
+    }
+
+    _recvSideToneEnabled(enable) {
+        this._callbacks?.updateSideToneEnabled?.(enable);
+    }
+
+    _recvStereoBal(bal) {
+        this._callbacks?.updateStereoBal?.(bal);
+    }
+
+    _recvNoiseControlCycle(props) {
+        this._callbacks?.updateNoiseControlCycle?.(props);
+    }
+
+    _recvNoiseReductionLevel(level) {
+        this._callbacks?.updateNoiseReductionLevel?.(level);
+    }
+
+    _recvDetectConversations(enable) {
+        this._callbacks?.updateDetectConversations?.(enable);
+    }
+
+    _recvDetectConversationsDuration(duration) {
+        duration = duration > 2 ? 1 : duration;
+        this._callbacks?.updateDetectConversationsDuration?.(duration);
+    }
+
+    _recvNoiseControlsWithOneEarbud(enable) {
+        this._callbacks?.updateNoiseControlsWithOneEarbud?.(enable);
+    }
+
+    _recvOutsideDoubleTap(enable) {
+        this._callbacks?.updateOutsideDoubleTap?.(enable);
+    }
+
+    _recvLightingMode(mode) {
+        this._callbacks?.updateLightingMode?.(mode);
+    }
+
+    _recvAmbientCustomization(volumeON, volumeLevels, soundtone) {
+        const customAmbientProps = {};
+        customAmbientProps.enable = volumeON === 1;
+        customAmbientProps.leftVolume = (volumeLevels & 0xF0) >> 4;
+        customAmbientProps.rightVolume = volumeLevels & 0x0F;
+        customAmbientProps.soundtone = soundtone;
+        this._callbacks?.updateAmbientCustomization?.(customAmbientProps);
+    }
+
+    _processAdvanceTouch(payload) {
+        const touchProps = {};
+
+        touchProps.touchpadLock(Boolean(payload[0]));
+        if (payload.length > 4) {
+            touchProps.singleTapOn(Boolean(payload[1]));
+            touchProps.doubleTapOn(Boolean(payload[2]));
+            touchProps.tripleTapOn(Boolean(payload[3]));
+            touchProps.touchHoldOn(Boolean(payload[4]));
+        }
+
+        if (payload.length > 6 && this._features.advancedTouchLockForCalls) {
+            touchProps.touchHoldOnForCallOn(Boolean(payload[5]));
+            touchProps.touchHoldOnForCallOn(Boolean(payload[6]));
+        }
+
+        this._recvAdvanceTouchpadLock(touchProps);
+    }
+
+    _parseStatusUpdate(payload) {
+        const battery = {left: null, right: null, case: null, mask: null};
+        const inearStatus = payload[5];
+
+        if (this._modelId === GalaxyBudsModel.GalaxyBuds) {
+            battery.left = payload[1];
+            battery.right = payload[2];
+        } else {
+            battery.left = payload[1];
+            battery.right = payload[2];
+            battery.case = payload[6];
+
+            if (this._features.chargingState)
+                battery.mask = payload[7];
+        }
+
+        this._processBattery(battery);
+        this._processEar(inearStatus);
+    }
+
+    _parseExtendedStatusUpdate(payload) {
+        this._log.info(`Parse ExtendedStatusUpdate Payload length: ${payload.length}`);
+        const battery = {left: null, right: null, case: null, mask: null};
+        const EarlyExit = {};
+        const readByte = i => {
+            if (i >= payload.length)
+                throw EarlyExit;
+            return payload[i];
+        };
+
+        try {
+            const rev = readByte(0);
+            battery.left = readByte(2);
+            battery.right = readByte(3);
+            this._processEar(readByte(6));
+
+            if (this._modelId === GalaxyBudsModel.GalaxyBuds) {
+                this._processAmbientMode(readByte(7));
+                this._processAmbientVoiceFocusDecoder(readByte(8));
+                this._processAmbientVolume(readByte(9));
+                this._processEqPresets(readByte(11), readByte(10));
+
+                const hasTouchpadExtra = payload.length > 13;
+                if (hasTouchpadExtra) {
+                    this._recvTouchpadLock(Boolean(readByte(12)));
+                    const byte13 = readByte(13);
+                    this._recvTouchpadOptionL((byte13 & 0xF0) >> 4);
+                    this._recvTouchpadOptionR(byte13 & 0x0F);
+                } else {
+                    const byte12 = readByte(12);
+                    this._recvTouchpadLock(Boolean((byte12 & 0xF0) >> 4));
+                    this._recvTouchpadOptionL(byte12 & 0x0F);
+                    this._recvTouchpadOptionR(byte12 & 0x0F);
+                }
+                this._processBattery(battery);
+                return;
+            } // GalaxyBuds
+
+            battery.case = readByte(7);
+
+            if (this._modelId === GalaxyBudsModel.GalaxyBudsPlus) {
+                this._processAmbientMode(readByte(8));
+                this._processAmbientVolume(readByte(9));
+                this._processEqPresets(readByte(11));
+                this._recvTouchpadLock(Boolean(readByte(12)));
+                this._recvTouchpadOptionL((readByte(13) & 240) >> 4);
+                this._recvTouchpadOptionR(readByte(13) & 15);
+                this._recvOutsideDoubleTap(readByte(14) === 1);
+
+                if (rev >= 8)
+                    this._recvSideToneEnabled(readByte(19) === 1);
+
+                this._processBattery(battery);
+                return;
+            } // GalaxyBudsPlus
+
+            this._processEqPresets(readByte(9));
+
+            if (this._features.advancedTouchLock) {
+                const touchProps = {};
+                touchProps.touchpadLock = (readByte(10) & 1 << 7) !== 128;
+                touchProps.touchHoldOn = (readByte(10) & 1 << 0) === 1;
+                touchProps.tripleTapOn = (readByte(10) & 1 << 1) === 2;
+                touchProps.doubleTapOn = (readByte(10) & 1 << 2) === 4;
+                touchProps.singleTapOn = (readByte(10) & 1 << 3) === 8;
+
+                if (this._features.advancedTouchLockForCalls) {
+                    touchProps.touchHoldOnForCallOn = (readByte(10) & 1 << 5) === 32;
+                    touchProps.doubleTapForCallOn = (readByte(10) & 1 << 4) === 16;
+                }
+
+                if (this._features.AdvancedTouchLockSwipe)
+                    touchProps.swipeOn = (readByte(10) & 1 << 6) === 64;
+
+
+                this._recvAdvanceTouchpadLock(touchProps);
+            } else {
+                this._recvTouchpadLock(readByte(10) === 1);
+            }
+
+            this._recvTouchpadOptionL((readByte(11) & 0xF0) >> 4);
+            this._recvTouchpadOptionR(readByte(11) & 0x0F);
+
+            if (this._modelId === GalaxyBudsModel.GalaxyBudsLive) {
+                this._processNCOnOff(readByte(12));
+                if (rev >= 7)
+                    this._recvStereoBal(readByte(22));
+
+                this._processBattery(battery);
+                return;
+            }
+
+            this._processNCModes(readByte(12));
+
+            const ncCycleProps = {};
+            const b = readByte(21);
+            if (this._features.adaptiveNoiseControl) {
+                ncCycleProps.ambient = (b & 1 << 0) !== 0;
+                ncCycleProps.adaptive = (b & 1 << 1) !== 0;
+                ncCycleProps.off = (b & 1 << 2) !== 0;
+                ncCycleProps.anc = (b & 1 << 3) !== 0;
+                ncCycleProps.leftAmbient = (b & 1 << 4) !== 0;
+                ncCycleProps.leftAdaptive = (b & 1 << 5) !== 0;
+                ncCycleProps.leftOff = (b & 1 << 6) !== 0;
+                ncCycleProps.leftAnc = (b & 1 << 7) !== 0;
+            } else {
+                ncCycleProps.off = (b & 1 << 0) !== 0;
+                ncCycleProps.ambient = (b & 1 << 1) !== 0;
+                ncCycleProps.anc = (b & 1 << 2) !== 0;
+
+                if (this._features.noiseControlModeDualSide) {
+                    ncCycleProps.leftOff = (b & 1 << 4) !== 0;
+                    ncCycleProps.leftAmbient = (b & 1 << 5) !== 0;
+                    ncCycleProps.leftAnc = (b & 1 << 6) !== 0;
+                }
+            }
+            this._recvNoiseControlCycle(ncCycleProps);
+
+
+            this._processAmbientVolume(readByte(23));
+            this._recvNoiseReductionLevel(readByte(24));
+
+            if (this._modelId !== GalaxyBudsModel.GalaxyBuds2) {
+                this._recvDetectConversations(readByte(26) === 1);
+                this._recvDetectConversationsDuration(readByte(27));
+            }
+
+            if (this._modelId === GalaxyBudsModel.GalaxyBudsPro) {
+                if (rev >= 5)
+                    this._recvStereoBal(readByte(29));
+
+                if (rev >= 7)
+                    this._recvOutsideDoubleTap(readByte(31) === 1);
+
+                if (rev >= 8) {
+                    this._recvNoiseControlsWithOneEarbud(readByte(32) === 1);
+                    this._recvAmbientCustomization(readByte(33), readByte(34), readByte(35));
+                }
+
+                if (rev >= 9)
+                    this._recvSideToneEnabled(readByte(36) === 1);
+
+                this._processBattery(battery);
+            } else if (this._modelId === GalaxyBudsModel.GalaxyBuds2) {
+                this._recvStereoBal(readByte(25));
+
+                if (rev >= 3)
+                    this._recvNoiseControlsWithOneEarbud(readByte(28) === 1);
+
+                if (rev >= 5) {
+                    this._recvAmbientCustomization(readByte(29), readByte(30), readByte(31));
+                    this._recvOutsideDoubleTap(readByte(32) === 1);
+                }
+
+                if (rev >= 6)
+                    this._recvSideToneEnabled(readByte(33) === 1);
+
+                if (rev >= 10)
+                    battery.mask = readByte(36);
+
+                this._processBattery(battery);
+            } else if (this._modelId === GalaxyBudsModel.GalaxyBuds2Pro) {
+                this._recvStereoBal(readByte(25));
+                this._recvNoiseControlsWithOneEarbud(readByte(28) === 1);
+                this._recvAmbientCustomization(readByte(29), readByte(30), readByte(31));
+                this._recvOutsideDoubleTap(readByte(32) === 1);
+                this._recvSideToneEnabled(readByte(33) === 1);
+
+                if (rev >= 11)
+                    battery.mask = readByte(43);
+
+                this._processBattery(battery);
+            } else {
+                this._recvStereoBal(readByte(25));
+                this._recvNoiseControlsWithOneEarbud(readByte(28) === 1);
+                this._recvAmbientCustomization(readByte(29), readByte(30), readByte(31));
+                this._recvOutsideDoubleTap(readByte(32) === 1);
+                this._recvSideToneEnabled(readByte(33) === 1);
+
+                if (this._modelId === GalaxyBudsModel.GalaxyBudsFe)
+                    battery.mask = readByte(43);
+                else
+                    battery.mask = readByte(42);
+
+                if (this._modelId === GalaxyBudsModel.GalaxyBuds3Pro)
+                    this._recvLightingMode(readByte(50));
+
+
+                this._processBattery(battery);
+            }
+        } catch (e) {
+            if (e === EarlyExit)
+                this._processBattery(battery);
+            else
+                throw e;
+        }
+    }// _parseExtendedStatusUpdate
+
+    setAmbientSoundOnOff(enabled) {
+        const payload = [enabled ? 1 : 0];
+        this._sendPacket(GalaxyBudsMsgIds.SET_AMBIENT_MODE, payload);
     }
 
     setFocusOnVoice(enabled) {
@@ -270,35 +640,9 @@ class GalaxyBudsSocket extends SocketHandler {
         this._sendPacket(LegacyMsgIds.AMBIENT_VOICE_FOCUS, payload);
     }
 
-    _processAmbientVolume(resp) {
-        if (!this._modelData.ambientSoundVolume)
-            return;
-        const id = resp.id;
-        const p = resp.payload;
-        let pos = 0;
-        if (id === GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED)
-            pos = this._modelData.ambientSoundVolume.pos;
-
-        const vol = p[pos];
-        this._callbacks?.updateAmbientVolume?.(vol);
-    }
-
     setAmbientVolume(level) {
         const payload = [level];
         this._sendPacket(GalaxyBudsMsgIds.AMBIENT_VOLUME, payload);
-    }
-
-    _processNCOnOff(resp) {
-        if (!this._modelData.noiseCancellationOnOff)
-            return;
-        const id = resp.id;
-        const p = resp.payload;
-        const pos = id === GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED ? 12 : 0;
-        const enabled = booleanFromByte(p[pos]);
-        if (enabled === null)
-            return;
-
-        this._callbacks?.updateNCOnOff?.(enabled);
     }
 
     setNCOnOff(enabled) {
@@ -306,77 +650,186 @@ class GalaxyBudsSocket extends SocketHandler {
         this._sendPacket(GalaxyBudsMsgIds.SET_NOISE_REDUCTION, payload);
     }
 
-    _processNCModes(resp) {
-        if (!this._modelData.noiseControl)
-            return;
-        const id = resp.id;
-        const p = resp.payload;
-        const pos = id === GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED ? 12 : 0;
-        const mode = p[pos];
-        if (!isValidByte(mode, GalaxyBudsAnc))
-            return;
-
-        this._callbacks?.updateNCModes?.(mode);
-    }
-
     setNCModes(mode) {
         const payload = [mode];
         this._sendPacket(GalaxyBudsMsgIds.NOISE_CONTROLS, payload);
     }
 
-    postConnectInitialization() {
-        this.sendMessage(this.encode(GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED));
+    setNoiseCancellationLevel(level) {
+        const payload = [level];
+        this._sendPacket(GalaxyBudsMsgIds.NOISE_REDUCTION_LEVEL, payload);
     }
 
-    processData(bytes) {
-        const resp = this.extract(bytes);
-        if (!resp)
-            return;
+    setEqPresets(preset) {
+        let payload;
+        const enabled = preset !== EqPresets.Off;
 
-        const {id} = resp;
+        if (this._modelId === GalaxyBudsModel.GalaxyBuds)
+            payload = [enabled ? 1 : 0, preset];
+        else
+            payload = [!enabled ? 0 : preset + 1];
+        this._sendPacket(GalaxyBudsMsgIds.EQUALIZER, payload);
+    }
 
-        switch (id) {
-            case GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED:
-                this._processBattery(resp);
-                this._processEar(resp);
-                this._processAmbientSoundOnOff(resp);
-                this._processFocusOnVoice(resp);
-                this._processAmbientVolume(resp);
-                this._processNCOnOff(resp);
-                this._processNCModes(resp);
-                break;
+    setStereoBalance(bal) {
+        const payload = [bal];
+        this._sendPacket(GalaxyBudsMsgIds.SET_HEARING_ENHANCEMENTS, payload);
+    }
 
-            case GalaxyBudsMsgIds.STATUS_UPDATED:
-                this._processBattery(resp);
-                this._processEar(resp);
-                break;
+    setTouchPadLock(enabled) {
+        const payload = [enabled ? 1 : 0];
+        this._sendPacket(GalaxyBudsMsgIds.LOCK_TOUCHPAD, payload);
+    }
 
-            case GalaxyBudsMsgIds.AMBIENT_MODE_UPDATED:
-                this._processAmbientSoundOnOff(resp);
-                break;
-
-            case LegacyMsgIds.AMBIENT_VOICE_FOCUS:
-                if (this._modelData.ambientSoundLegacy)
-                    this._processFocusOnVoice(resp);
-                break;
-
-            case GalaxyBudsMsgIds.AMBIENT_VOLUME:
-                this._processAmbientVolume(resp);
-                break;
-
-            case GalaxyBudsMsgIds.NOISE_REDUCTION_MODE_UPDATE:
-                this._processNCOnOff(resp);
-                break;
-
-            case GalaxyBudsMsgIds.NOISE_CONTROLS_UPDATE:
-                this._processNCModes(resp);
-                break;
-
-
-            default:
-                break;
+    setTouchPadAdvance(touchProps) {
+        const payload = [touchProps.touchpadLock ? 1 : 0];
+        payload.push(touchProps.singleTapOn ? 1 : 0);
+        payload.push(touchProps.doubleTapOn ? 1 : 0);
+        payload.push(touchProps.tripleTapOn ? 1 : 0);
+        payload.push(touchProps.touchHoldOn ? 1 : 0);
+        if (this._features.advancedTouchLockForCalls) {
+            payload.push(touchProps.doubleTapForCallOn ? 1 : 0);
+            payload.push(touchProps.touchHoldOnForCallOn ? 1 : 0);
         }
+        if (this._features.advancedTouchIsPinch)
+            payload.push(touchProps.swipeStem ? 1 : 0);
+
+        if (this._features.lightingControl)
+            payload.push(touchProps.lightingMode);
+
+        if (this._features.quickLaunchAdvance)
+            payload.push(0x00);
+
+        this._sendPacket(GalaxyBudsMsgIds.LOCK_TOUCHPAD, payload);
     }
+
+    setTouchAndHoldLRModes(touchAndHoldProps) {
+        const payload = [touchAndHoldProps.left, touchAndHoldProps.right];
+        this._sendPacket(GalaxyBudsMsgIds.SET_TOUCHPAD_OPTION, payload);
+    }
+
+    setNcCycleLegacy(props) {
+        const payload = [];
+
+        const encodeOldSide = isLeft => {
+            let off;
+            let ambient;
+            let anc;
+
+            if (isLeft) {
+                off = props.leftOff;
+                ambient = props.leftAmbient;
+                anc = props.leftAnc;
+            } else {
+                off = props.off;
+                ambient = props.ambient;
+                anc = props.anc;
+            }
+
+            if (!off && ambient && !anc)
+                return [0x0, 0x1, 0x1];
+            else if (off && !ambient && !anc)
+                return [0x1, 0x0, 0x0];
+            else if (!off && !ambient && anc)
+                return [0x1, 0x0, 0x1];
+            else if (!off && !ambient && !anc)
+                return [0x0, 0x0, 0x0];
+            else
+                return [off ? 1 : 0, ambient ? 1 : 0, anc ? 1 : 0];
+        };
+
+        if (this._features.noiseControlModeDualSide) {
+            payload.push(...encodeOldSide(true));
+            payload.push(...encodeOldSide(false));
+        } else {
+            payload.push(...encodeOldSide(false));
+        }
+
+        this._sendPacket(GalaxyBudsMsgIds.SET_TOUCH_AND_HOLD_NOISE_CONTROLS, payload);
+    }
+
+
+    setNcCycle(props) {
+        const payload = [];
+
+        const encodeByte = isLeft => {
+            let b = 0x00;
+
+            if (isLeft) {
+                if (props.leftAnc)
+                    b |= 0x08;
+
+                if (props.leftOff)
+                    b |= 0x04;
+
+                if (this._features.adaptiveNoiseControl) {
+                    if (props.leftAdaptive)
+                        b |= 0x02;
+                }
+                if (props.leftAmbient)
+                    b |= 0x01;
+            } else {
+                if (props.anc)
+                    b |= 0x08;
+
+                if (props.off)
+                    b |= 0x04;
+
+                if (this._features.adaptiveNoiseControl) {
+                    if (props.adaptive)
+                        b |= 0x02;
+                }
+                if (props.ambient)
+                    b |= 0x01;
+            }
+
+            if (b === 0x00)
+                b = 0x09;
+
+
+            return b;
+        };
+
+        payload.push(encodeByte(true));
+        payload.push(encodeByte(false));
+
+        this._sendPacket(GalaxyBudsMsgIds.SET_TOUCH_AND_HOLD_NOISE_CONTROLS, payload);
+    }
+
+    setDetectConversations(enabled) {
+        const payload = [enabled ? 1 : 0];
+        this._sendPacket(GalaxyBudsMsgIds.SET_DETECT_CONVERSATIONS, payload);
+    }
+
+    setDetectConversationsDuration(duration) {
+        const payload = [duration];
+        this._sendPacket(GalaxyBudsMsgIds.SET_DETECT_CONVERSATIONS_DURATION, payload);
+    }
+
+    setSideTone(enabled) {
+        const payload = [enabled ? 1 : 0];
+        this._sendPacket(GalaxyBudsMsgIds.SET_SIDETONE, payload);
+    }
+
+    setNoiseControlsWithOneEarbud(enabled) {
+        const payload = [enabled ? 1 : 0];
+        this._sendPacket(GalaxyBudsMsgIds.SET_ANC_WITH_ONE_EARBUD, payload);
+    }
+
+    setOutsideDoubleTap(enabled) {
+        const payload = [enabled ? 1 : 0];
+        this._sendPacket(GalaxyBudsMsgIds.OUTSIDE_DOUBLE_TAP, payload);
+    }
+
+    setCustomizeAmbientSound(props) {
+        const payload = [props.enable ? 1 : 0];
+        payload.push(props.leftVolume);
+        payload.push(props.rightVolume);
+        payload.push(props.soundtone);
+        this._sendPacket(GalaxyBudsMsgIds.CUSTOMIZE_AMBIENT_SOUND, payload);
+    }
+
+// /end
 }
 );
 

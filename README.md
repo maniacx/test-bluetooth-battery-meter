@@ -22,3 +22,6 @@ It allows socket-level experimentation and debugging in avoiding GNOME Shell res
 gjs-console -m /path/to/main.js
 ```
 
+### GUI
+![Screenshot](./readme.png)
+
