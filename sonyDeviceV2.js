@@ -45,6 +45,7 @@ export const SonyDevice = GObject.registerClass({
         this._bgmProps = {active: false, distance: 0, mode: ListeningMode.STANDARD};
 
         this._callbacks = {
+            updateCapabilities: this.updateCapabilities.bind(this),
             deviceInitialized: this.deviceInitialized.bind(this),
             updateBatteryProps: this.updateBatteryProps.bind(this),
             updateAmbientSoundControl: this.updateAmbientSoundControl.bind(this),
@@ -137,7 +138,6 @@ export const SonyDevice = GObject.registerClass({
         this._automaticPowerOffWhenTakenOffSupported =
             modelData.automaticPowerOffWhenTakenOff ?? false;
 
-
         if (this._batteryDualSupported || this._batteryDual2Supported) {
             this._ui.bat1.setIcon(`bbm-${modelData.budsIcon}-left-symbolic`);
             this._ui.bat2.setIcon(`bbm-${modelData.budsIcon}-right-symbolic`);
@@ -171,8 +171,6 @@ export const SonyDevice = GObject.registerClass({
 
             this._ui.ancToggle.updateConfig(btns);
         }
-
-
 
         if (this._speakToChatEnabledSupported) {
             this._ui.s2cGroup.visible = true;
@@ -306,6 +304,10 @@ export const SonyDevice = GObject.registerClass({
         this._buttonModesLeftRightMonitor();
     }
 
+    updateCapabilities() {
+        //dummy
+    }
+
     updateBatteryProps(props) {
         this._props = {...this._props, ...props};
         const bat1level = props.battery1Level  ?? 0;
@@ -415,7 +417,6 @@ export const SonyDevice = GObject.registerClass({
     }
 
     updateSpeakToChatEnable(enabled) {
-        log(`SpeakToChatEnable enabled: ${enabled}`);
         this._uiGuards.s2cenable = true;
         this._ui.s2cToggle.toggled = enabled ? 2 : 1;
         this._uiGuards.s2cenable = false;
@@ -431,8 +432,6 @@ export const SonyDevice = GObject.registerClass({
     }
 
     updateSpeakToChatConfig(speak2ChatSensitivity, speak2ChatTimeout) {
-        log(`SpeakToChatConfig speak2ChatSensitivity: ${speak2ChatSensitivity},  ` +
-                `speak2ChatTimeout: ${speak2ChatTimeout}`);
         this._uiGuards.s2cConfig = true;
         this._ui.s2cSensitivityDd.selected_item = speak2ChatSensitivity;
         this._ui.s2cDurationDd.selected_item = speak2ChatTimeout;
@@ -645,7 +644,6 @@ export const SonyDevice = GObject.registerClass({
     }
 
     updatePauseWhenTakenOff(enabled) {
-        log(`PauseWhenTakenOff enabled: ${enabled}`);
         this._uiGuards.pauseWhenTakenOff = true;
         this._ui.pauseWhenTakeOffSwitch.active = enabled;
         this._uiGuards.pauseWhenTakenOff = false;
@@ -661,7 +659,6 @@ export const SonyDevice = GObject.registerClass({
     }
 
     updateAutomaticPowerOff(enabled, mode) {
-        log(`AutomaticPowerOff enabled: ${enabled}, mode: ${mode}`);
         this._uiGuards.automaticPowerOff = true;
         this._ui.autoPowerOffSwitch.active = enabled;
         this._ui.autoPowerOffDd.selected_item = mode;

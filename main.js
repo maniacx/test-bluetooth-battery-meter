@@ -18,7 +18,7 @@ import {
     EqualizerPreset, AutoPowerOffTime, AutoAsmSensitivity, ListeningMode, BgmDistance
 } from './sonyConfig.js';
 
-globalThis.TESTDEVICE = 'WH-1000XM6';
+// globalThis.TESTDEVICE = 'WH-1000XM6';
 // globalThis.TESTDEVICE = 'WF-1000XM5';
 // globalThis.TESTDEVICE = 'WH-1000XM5';
 // globalThis.TESTDEVICE = '';

@@ -22,11 +22,6 @@ export const SonySocketBase = GObject.registerClass({
         this._pendingRequestRetries = 4;
         this._seq = 0;
         this._frameBuf = new Uint8Array(0);
-
-        if (globalThis.TESTDEVICE)
-            this.startTestSocket();
-        else
-            this.startSocket(fd);
     }
 
     addMessageQueue(type, payload, ackType = 'unknown') {
@@ -53,6 +48,7 @@ export const SonySocketBase = GObject.registerClass({
 
         const {type, payload} = this._currentMessage;
         if (this._currentMessage.ackType === 'EndOfGetMessage') {
+            log('END OF MESSAGE');
             this._currentMessage = null;
             this._checkForPendingRequest();
             this._processNextQueuedMessage();
@@ -269,21 +265,17 @@ export const SonySocketBase = GObject.registerClass({
         });
     }
 
-
     _encodeAck(seq) {
         this._encodeSonyMessage(MessageType.ACK, [], 1 - seq);
     }
 
     tagEndOfGetMessage() {
         this._log.info('TAG EndOfGetMessage:');
+        log('TAG EndOfGetMessage:');
 
         const payload = [0x00];
         const ackType = 'EndOfGetMessage';
-        this._addMessageQueue(MessageType.COMMAND_1, payload, ackType);
-    }
-
-    supports(funcType) {
-        return this._supportedFunction?.includes(funcType);
+        this.addMessageQueue(MessageType.COMMAND_1, payload, ackType);
     }
 
     processData(chunk) {

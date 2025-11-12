@@ -3,9 +3,7 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
-import {Checksum, MessageType} from './sonyConfig.js';
-
-import {PayloadType} from './sonyDefsV2.js';
+import {PayloadTypeV2T1 as PayloadType, Checksum, MessageType} from '../sonyConfig.js';
 
 class SonyProtocol {
     constructor() {

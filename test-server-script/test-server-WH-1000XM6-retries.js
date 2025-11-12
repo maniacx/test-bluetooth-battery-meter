@@ -3,7 +3,7 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
-import {PayloadTypeV2T1 as PayloadType, Checksum, MessageType} from './sonyConfig.js';
+import {PayloadTypeV2T1 as PayloadType, Checksum, MessageType} from '../sonyConfig.js';
 
 class SonyProtocol {
     constructor() {
@@ -117,6 +117,7 @@ class SonySocketServer {
         this._protocol = new SonyProtocol();
         print(`SonySimulator listening on ${host}:${port}`);
         this._listener.accept_async(this._cancellable, (l, r) => this._onAccept(l, r));
+        this._retries= 5;
     }
 
     _onAccept(listener, res) {
@@ -193,8 +194,16 @@ class SonySocketServer {
                     /* eslint-disable no-await-in-loop */
                     if (msg.messageType === MessageType.COMMAND_1 ||
                                  msg.messageType === MessageType.COMMAND_2) {
-                        const ackFrame = this._protocol.encodeAckFor(msg.sequence);
-                        await this._write(output, ackFrame, 'ACK');
+                        if(msg.payload.length > 0) {
+                            if(msg.payload[0] === 0x56) {
+                                if(this._retries > 0)
+                                    this._retries--;
+                            }
+                            if(msg.payload[0] !== 0x56 || (msg.payload[0] === 0x56 && this._retries <= 0)) {
+                                const ackFrame = this._protocol.encodeAckFor(msg.sequence);
+                                await this._write(output, ackFrame, 'ACK');
+                            }
+                        }
                     }
                     if (msg.messageType === MessageType.COMMAND_1 &&
                                     msg.payload && msg.payload.length > 0)
@@ -299,6 +308,7 @@ class SonySocketServer {
     }
 
     async _sendMultipleBattery(output) {
+        return;
         const devPayload = [PayloadType.POWER_NTFY_STATUS, 2, 39, 1];
         await this._write(output, this._protocol.encodeMessage(MessageType.COMMAND_1,
             devPayload), 'BATT');

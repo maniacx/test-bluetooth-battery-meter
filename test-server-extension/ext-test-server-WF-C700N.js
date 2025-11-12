@@ -3,9 +3,7 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
-import {Checksum, MessageType} from './sonyConfig.js';
-
-import {PayloadType} from './sonyDefsV2.js';
+import {PayloadTypeV2T1 as PayloadType, Checksum, MessageType} from '../sonyConfig.js';
 
 class SonyProtocol {
     constructor() {
@@ -349,37 +347,6 @@ class SonySocketServer {
             '3e0c00000000076917010101000aa03c',
             '3e0c000000000769170101010014aa3c',
 
-            // SYSTEM_RET_PARAM: Speak2Chat Enable
-            '3e0c0100000004f70c0001153c',
-            '3e0c0100000004f70c0101163c',
-            '3e0c0100000004f90c0001173c',
-            '3e0c0100000004f90c0101183c',
-
-            // SYSTEM_RET_EXT_PARAM: Speak 2 Chat Config
-            '3e0c0100000004fb0c0000183c',
-            '3e0c0100000004fb0c0100193c',
-            '3e0c0100000004fb0c02001a3c',
-
-            '3e0c0100000004fd0c00001a3c',
-            '3e0c0100000004fd0c00011b3c',
-            '3e0c0100000004fd0c00021c3c',
-            '3e0c0000000004fd0c00031c3c',
-
-            // SYSTEM_RET_PARAM: Button mode left right
-            '3e0c0000000005f703023535773c',
-            '3e0c0000000005f703022035623c',
-            '3e0c0000000005f90302ff35433c',
-            '3e0c0000000005f703023535773c',
-            '3e0c0000000005f703023520623c',
-            '3e0c0000000005f9030235ff433c',
-            '3e0c0000000005f703023535773c',
-
-            // VOICE_GUIDANCE_RET_PARAM: Voice Notification
-            '3e0e0000000004470100015b3c',
-            '3e0e0000000004470101015c3c',
-            '3e0e0000000004470100015b3c',
-            '3e0e0000000004470101015c3c',
-
             // EQEBB_RET_PARAM: Equalizer
             // Preset
             '3e0c010000000a59000006140a0b0c0d0fc73c',
@@ -416,11 +383,14 @@ class SonySocketServer {
             '3e0c0100000003e90101fb3c',
             '3e0c0100000003e90100fa3c',
 
-            // SYSTEM_RET_PARAM: Pause When Take Off
-            '3e0c0000000003f70100073c',
-            '3e0c0100000003f901010b3c',
-            '3e0c0000000003f90100093c',
-            '3e0c0100000003f901010b3c',
+            // SYSTEM_RET_PARAM: Button mode left right
+            '3e0c0000000005f703023535773c',
+            '3e0c0000000005f703022035623c',
+            '3e0c0000000005f90302ff35433c',
+            '3e0c0000000005f703023535773c',
+            '3e0c0000000005f703023520623c',
+            '3e0c0000000005f9030235ff433c',
+            '3e0c0000000005f703023535773c',
 
             // POWER_RET_STATUS: Auto Power Off
             '3e0c0000000004270510004c3c',
@@ -432,7 +402,6 @@ class SonySocketServer {
             '3e0c010000000427051003503c',
             '3e0c010000000429051100503c',
             '3e0c0000000004290510004e3c',
-
         ];
         /* eslint-disable no-await-in-loop */
         for (let i = 0; i < rawPackets.length; i++) {

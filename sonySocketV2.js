@@ -67,6 +67,15 @@ export const SonySocketV2 = GObject.registerClass({
         this._noiseAdaptiveOn = false;
         this._noiseAdaptiveSensitivity = AutoAsmSensitivity.STANDARD;
         this._bgmProps = {active: false, distance: 0, mode: ListeningMode.STANDARD};
+
+        if (globalThis.TESTDEVICE)
+            this.startTestSocket();
+        else
+            this.startSocket(fd);
+    }
+
+    _supports(funcType) {
+        return this._supportedFunction?.includes(funcType);
     }
 
     _getProtocolInfo() {
@@ -1034,12 +1043,12 @@ export const SonySocketV2 = GObject.registerClass({
         }
     }
 
-    _resendPendingRequest() {
-        if (!this._pendingRequestQueue?.length)
+    resendPendingRequest() {
+        if (!this.pendingRequestQueue?.length)
             return;
 
-        const pending = [...this._pendingRequestQueue];
-        this._pendingRequestQueue.length = 0;
+        const pending = [...this.pendingRequestQueue];
+        this.pendingRequestQueue.length = 0;
 
         for (const item of pending) {
             switch (item) {
@@ -1120,31 +1129,34 @@ export const SonySocketV2 = GObject.registerClass({
         if (this._supportedFunction.length === 0)
             return;
 
-        if (this.supports(FunctionTypeV2T1.CODEC_INDICATOR))
+        const supportsCodecIndicator = this._supports(FunctionTypeV2T1.CODEC_INDICATOR);
+        const supportsUpscalingIndicator = this._supports(FunctionTypeV2T1.UPSCALING_INDICATOR);
+        this._callbacks?.updateCapabilities?.(supportsCodecIndicator, supportsUpscalingIndicator);
+
+        if (supportsCodecIndicator)
             this._getCodecIndicator();
 
-        if (this.supports(FunctionTypeV2T1.UPSCALING_INDICATOR))
+        if (supportsUpscalingIndicator)
             this._getUpscalingIndicator();
 
-
-        if (this.supports(FunctionTypeV2T1.BATTERY_LEVEL_WITH_THRESHOLD)) {
+        if (this._supports(FunctionTypeV2T1.BATTERY_LEVEL_WITH_THRESHOLD)) {
             this._getSingleThdBatteryRequest(BatteryType.SINGLE_THD);
             this._getSingleBatteryRequest(BatteryType.SINGLE);
-        } else if (this.supports(FunctionTypeV2T1.BATTERY_LEVEL_INDICATOR)) {
+        } else if (this._supports(FunctionTypeV2T1.BATTERY_LEVEL_INDICATOR)) {
             this._getSingleBatteryRequest(BatteryType.SINGLE);
         }
 
-        if (this.supports(FunctionTypeV2T1.LR_BATTERY_LEVEL_WITH_THRESHOLD)) {
+        if (this._supports(FunctionTypeV2T1.LR_BATTERY_LEVEL_WITH_THRESHOLD)) {
             this._getDualThdBatteryRequest(BatteryType.DUAL_THD);
             this._getDualBatteryRequest(BatteryType.DUAL);
-        } else if (this.supports(FunctionTypeV2T1.LEFT_RIGHT_BATTERY_LEVEL_INDICATOR)) {
+        } else if (this._supports(FunctionTypeV2T1.LEFT_RIGHT_BATTERY_LEVEL_INDICATOR)) {
             this._getDualBatteryRequest(BatteryType.DUAL);
         } else
 
-            if (this.supports(FunctionTypeV2T1.CRADLE_BATTERY_LEVEL_WITH_THRESHOLD)) {
+            if (this._supports(FunctionTypeV2T1.CRADLE_BATTERY_LEVEL_WITH_THRESHOLD)) {
                 this._getCaseThdBatteryRequest(BatteryType.CASE_THD);
                 this._getCaseBatteryRequest(BatteryType.CASE);
-            } else if (this.supports(FunctionTypeV2T1.CRADLE_BATTERY_LEVEL_INDICATOR)) {
+            } else if (this._supports(FunctionTypeV2T1.CRADLE_BATTERY_LEVEL_INDICATOR)) {
                 this._getCaseBatteryRequest(BatteryType.CASE);
             }
 
@@ -1158,13 +1170,13 @@ export const SonySocketV2 = GObject.registerClass({
             this._getAudioUpsampling();
 
         /* eslint-disable max-len */
-        if (this.supports(FunctionTypeV2T1.MODE_NC_ASM_NOISE_CANCELLING_DUAL_AMBIENT_SOUND_MODE_LEVEL_ADJUSTMENT_NOISE_ADAPTATION))
+        if (this._supports(FunctionTypeV2T1.MODE_NC_ASM_NOISE_CANCELLING_DUAL_AMBIENT_SOUND_MODE_LEVEL_ADJUSTMENT_NOISE_ADAPTATION))
             this._asmType = AsmType.MODE_NC_ASM_DUAL_NC_MODE_SWITCH_AND_ASM_SEAMLESS_NA;
-        else if (this.supports(FunctionTypeV2T1.MODE_NC_ASM_NOISE_CANCELLING_DUAL_AMBIENT_SOUND_MODE_LEVEL_ADJUSTMENT))
+        else if (this._supports(FunctionTypeV2T1.MODE_NC_ASM_NOISE_CANCELLING_DUAL_AMBIENT_SOUND_MODE_LEVEL_ADJUSTMENT))
             this._asmType = AsmType.MODE_NC_ASM_DUAL_NC_MODE_SWITCH_AND_ASM_SEAMLESS;
-        else if (this.supports(FunctionTypeV2T1.MODE_NC_ASM_NOISE_CANCELLING_DUAL_AUTO_AMBIENT_SOUND_MODE_LEVEL_ADJUSTMENT))
+        else if (this._supports(FunctionTypeV2T1.MODE_NC_ASM_NOISE_CANCELLING_DUAL_AUTO_AMBIENT_SOUND_MODE_LEVEL_ADJUSTMENT))
             this._asmType = AsmType.MODE_NC_ASM_AUTO_NC_MODE_SWITCH_AND_ASM_SEAMLESS;
-        else if (this.supports(FunctionTypeV2T1.AMBIENT_SOUND_MODE_LEVEL_ADJUSTMENT))
+        else if (this._supports(FunctionTypeV2T1.AMBIENT_SOUND_MODE_LEVEL_ADJUSTMENT))
             this._asmType = AsmType.ASM_SEAMLESS;
         /* eslint-enable max-len */
 
@@ -1193,6 +1205,8 @@ export const SonySocketV2 = GObject.registerClass({
             this._getVoiceNotificationsVolume();
 
         this.tagEndOfGetMessage();
+
+        this._supportedFunction = null;
 
         this._callbacks?.deviceInitialized?.();
     }
