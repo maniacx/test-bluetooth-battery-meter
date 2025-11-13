@@ -17,7 +17,9 @@ import {EqPresets} from './galaxyBudsConfig.js';
 
 // globalThis.TESTDEVICE = 'Galaxy Buds3 Pro';
 // globalThis.TESTDEVICE = 'Galaxy Buds3';
+// globalThis.TESTDEVICE = 'Galaxy Buds FE';
 // globalThis.TESTDEVICE = 'Galaxy Buds2 Pro';
+// globalThis.TESTDEVICE = 'Galaxy Buds2';
 // globalThis.TESTDEVICE = 'Galaxy Buds Pro';
 // globalThis.TESTDEVICE = 'Galaxy Buds Live';
 // globalThis.TESTDEVICE = 'Galaxy Buds+';

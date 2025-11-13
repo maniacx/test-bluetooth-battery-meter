@@ -128,7 +128,8 @@ export const GalaxyBudsModel = {
     GalaxyBudsFe: 7,
     GalaxyBuds3: 8,
     GalaxyBuds3Pro: 9,
-    GalaxyBudsCore: 10,
+    GalaxyBuds3Fe: 10,
+    GalaxyBudsCore: 11,
 };
 
 export const GalaxyBudsModelList = [
@@ -140,6 +141,7 @@ export const GalaxyBudsModelList = [
         features: {
             ambientSound: true,
             ambientSoundVolume: true,
+            ambientVolumeMax: 4,
             ambientVoiceFocus: true,
             batteryType: true,
             buildInfo: true,
@@ -159,12 +161,9 @@ export const GalaxyBudsModelList = [
             otherR: 6,
         },
 
-        iconResourceKey: 'Pro',
-        ambientVolumeMax: 4, // GBC spec
-
         albumArtIcon: 'earbuds',
-        budsIcon: 'earbuds-stem3',
-        case: 'case-normal',
+        budsIcon: 'earbuds',
+        case: 'case-oval',
     },
 
     // 2) Galaxy Buds+
@@ -198,11 +197,9 @@ export const GalaxyBudsModelList = [
             otherR: 6,
         },
 
-        iconResourceKey: 'Pro',
-
         albumArtIcon: 'earbuds',
-        budsIcon: 'earbuds-stem3',
-        case: 'case-normal',
+        budsIcon: 'earbuds',
+        case: 'case-oval',
     },
 
     // 3) Galaxy Buds Live
@@ -238,7 +235,7 @@ export const GalaxyBudsModelList = [
         iconResourceKey: 'Bean',
 
         albumArtIcon: 'earbuds',
-        budsIcon: 'earbuds-stem3',
+        budsIcon: 'earbuds',
         case: 'case-normal',
     },
 
@@ -284,17 +281,15 @@ export const GalaxyBudsModelList = [
             otherR: 6,
         },
 
-        iconResourceKey: 'Pro',
-
         albumArtIcon: 'earbuds',
-        budsIcon: 'earbuds-stem3',
+        budsIcon: 'earbuds',
         case: 'case-normal',
     },
 
     // 5) Galaxy Buds 2
     {
         modelId: GalaxyBudsModel.GalaxyBuds2,
-        name: 'Galaxy Buds 2',
+        name: 'Galaxy Buds2',
 
         features: {
             advancedTouchLock: true,
@@ -335,17 +330,15 @@ export const GalaxyBudsModelList = [
             otherR: 6,
         },
 
-        iconResourceKey: 'Pro',
-
         albumArtIcon: 'earbuds',
-        budsIcon: 'earbuds-stem3',
+        budsIcon: 'earbuds',
         case: 'case-normal',
     },
 
     // 6) Galaxy Buds 2 Pro
     {
         modelId: GalaxyBudsModel.GalaxyBuds2Pro,
-        name: 'Galaxy Buds 2 Pro',
+        name: 'Galaxy Buds2 Pro',
 
         features: {
             advancedTouchLock: true,
@@ -386,10 +379,8 @@ export const GalaxyBudsModelList = [
             otherR: 6,
         },
 
-        iconResourceKey: 'Pro',
-
         albumArtIcon: 'earbuds',
-        budsIcon: 'earbuds-stem3',
+        budsIcon: 'earbuds',
         case: 'case-normal',
     },
 
@@ -431,17 +422,15 @@ export const GalaxyBudsModelList = [
             otherR: 6,
         },
 
-        iconResourceKey: 'Pro',
-
         albumArtIcon: 'earbuds',
-        budsIcon: 'earbuds-stem3',
+        budsIcon: 'earbuds',
         case: 'case-normal',
     },
 
     // 8) Galaxy Buds 3
     {
         modelId: GalaxyBudsModel.GalaxyBuds3,
-        name: 'Galaxy Buds 3',
+        name: 'Galaxy Buds3',
 
         features: {
             advancedTouchLock: true,
@@ -476,17 +465,15 @@ export const GalaxyBudsModelList = [
             otherR: 6,
         },
 
-        iconResourceKey: 'Pro',
-
-        albumArtIcon: 'earbuds',
-        budsIcon: 'earbuds-stem3',
+        albumArtIcon: 'earbuds-stem2',
+        budsIcon: 'earbuds-stem2',
         case: 'case-normal',
     },
 
     // 9) Galaxy Buds 3 Pro
     {
         modelId: GalaxyBudsModel.GalaxyBuds3Pro,
-        name: 'Galaxy Buds 3 Pro',
+        name: 'Galaxy Buds3 Pro',
 
         features: {
             adaptiveNoiseControl: true,
@@ -535,10 +522,105 @@ export const GalaxyBudsModelList = [
             otherR: 6,
         },
 
-        iconResourceKey: 'Pro',
+        albumArtIcon: 'earbuds-stem3',
+        budsIcon: 'earbuds-stem3',
+        case: 'case-normal',
+    },
+    // 10) Galaxy Buds 3 FE
+    {
+        modelId: GalaxyBudsModel.GalaxyBuds3Fe,
+        name: 'Galaxy Buds3 FE',
+
+        features: {
+            adaptiveNoiseControl: true,
+            advancedTouchLock: true,
+            advancedTouchLockForCalls: true,
+            advancedTouchIsPinch: true,
+            //  ambientCustomize: true,
+            ambientExtraLoud: true,
+            ambientSidetone: true,
+            ambientSound: true,
+            ambientSoundVolume: true,
+            ambientVolumeMax: 4,
+            autoAdjustSound: true,
+            bixbyWakeup: true,
+            callPathControl: true,
+            caseBattery: true,
+            chargingState: true,
+            detectConversations: true,
+            doubleTapVolume: true,
+            extraClearCallSound: true,
+            fmgRingWhileWearing: true,
+            gamingMode: true,
+            gearFitTest: true,
+            headTracking: true,
+            noiseCancellation: true,
+            noiseControl: true,
+            noiseControlModeDualSide: true,
+            noiseControlsWithOneEarbud: true,
+            noiseReductionAdjustments: true,
+            noiseReductionLevels: 4,
+            noiseTouchAndHoldNewVersion: true,
+            quickLaunchAdvance: true,
+            rename: true,
+            seamlessConnection: true,
+            smartThingsFind: true,
+            spatialSensor: true,
+            stereoPan: true,
+        },
+        touchOptions: {
+            voiceAssistant: 1,
+            noiseControl: 2,
+            volume: 3,
+            spotifySpotOn: 4,
+            otherL: 5,
+            otherR: 6,
+        },
+
+        albumArtIcon: 'earbuds-stem3',
+        budsIcon: 'earbuds-stem3',
+        case: 'case-normal',
+    },
+    // 11) Galaxy Buds FE
+    {
+        modelId: GalaxyBudsModel.GalaxyBudsCore,
+        name: 'Galaxy Buds Core',
+
+        features: {
+            advancedTouchLock: true,
+            advancedTouchLockForCalls: true,
+            ambientCustomize: true,
+            ambientSidetone: true,
+            ambientSound: true,
+            ambientVolumeMax: 2,
+            bixbyWakeup: true,
+            callPathControl: true,
+            caseBattery: true,
+            chargingState: true,
+            doubleTapVolume: true,
+            fmgRingWhileWearing: true,
+            gamingMode: true,
+            gearFitTest: true,
+            noiseCancellation: true,
+            noiseControl: true,
+            noiseControlModeDualSide: true,
+            noiseControlsWithOneEarbud: true,
+            rename: true,
+            seamlessConnection: true,
+            smartThingsFind: true,
+            stereoPan: true,
+        },
+        touchOptions: {
+            voiceAssistant: 1,
+            noiseControl: 2,
+            volume: 3,
+            spotifySpotOn: 4,
+            otherL: 5,
+            otherR: 6,
+        },
 
         albumArtIcon: 'earbuds',
-        budsIcon: 'earbuds-stem3',
+        budsIcon: 'earbuds',
         case: 'case-normal',
     },
 ];

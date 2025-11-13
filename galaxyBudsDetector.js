@@ -77,8 +77,12 @@ export function checkForSamsungBuds(uuids, modalias, name) {
             return GalaxyBudsModel.GalaxyBuds2;
         if (lower.includes('buds fe'))
             return GalaxyBudsModel.GalaxyBudsFe;
+        if (lower.includes('buds core'))
+            return GalaxyBudsModel.GalaxyBudsCore;
         if (lower.includes('buds3 pro'))
             return GalaxyBudsModel.GalaxyBuds3Pro;
+        if (lower.includes('buds3 fe'))
+            return GalaxyBudsModel.GalaxyBuds3Fe;
         if (lower.includes('buds3'))
             return GalaxyBudsModel.GalaxyBuds3;
         if (lower.includes('galaxy buds+'))
