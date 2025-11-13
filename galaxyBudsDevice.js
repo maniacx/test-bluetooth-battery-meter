@@ -193,7 +193,7 @@ export const GalaxyBudsDevice = GObject.registerClass({
 
         this._ui.voiceFocusSwitch.visible = this._features.ambientVoiceFocus ?? false;
 
-        if (this._features.ambientSoundVolume) {
+        if (this._features.ambientSoundVolume && this._features.ambientVolumeMax) {
             const adjustment = new Gtk.Adjustment({
                 value: 0,
                 lower: 0,
@@ -206,7 +206,7 @@ export const GalaxyBudsDevice = GObject.registerClass({
             this._ui.ambientLevelSlider._slider.set_adjustment(adjustment);
         }
 
-        if (this._features.noiseReductionAdjustments) {
+        if (this._features.noiseReductionAdjustments && this._features.noiseReductionLevels) {
             const adjustment = new Gtk.Adjustment({
                 value: 0,
                 lower: 0,
@@ -328,6 +328,10 @@ export const GalaxyBudsDevice = GObject.registerClass({
     }
 
     _ambientToggleMonitor() {
+        if (!this._features.noiseControl && !this._features.ambientSound &&
+                !this._features.noiseCancellation)
+            return;
+
         this._ui.ancToggle.connect('notify::toggled', () => {
             if (this._uiGuards.ambientmode)
                 return;
@@ -365,6 +369,9 @@ export const GalaxyBudsDevice = GObject.registerClass({
     }
 
     _voiceFocusSwitchMonitor() {
+        if (!this._features.ambientVoiceFocus)
+            return;
+
         this._ui.voiceFocusSwitch.connect('notify::active', () => {
             if (this._uiGuards.fov)
                 return;
@@ -381,6 +388,9 @@ export const GalaxyBudsDevice = GObject.registerClass({
     }
 
     _ambientLevelSliderMonitor() {
+        if (!this._features.ambientSoundVolume || !this._features.ambientVolumeMax)
+            return;
+
         this._ui.ambientLevelSlider.connect('notify::value', () => {
             if (this._uiGuards.ambientlevel)
                 return;
@@ -401,6 +411,9 @@ export const GalaxyBudsDevice = GObject.registerClass({
     }
 
     _noiseCancellationLevelSliderMonitor() {
+        if (!this._features.noiseReductionAdjustments || !this._features.noiseReductionLevels)
+            return;
+
         this._ui.noiseCancellationLevelSlider.connect('notify::value', () => {
             if (this._uiGuards.noiseCancellationLevel)
                 return;
@@ -428,6 +441,7 @@ export const GalaxyBudsDevice = GObject.registerClass({
     _s2cToggleMonitor() {
         if (!this._features.detectConversations)
             return;
+
         this._ui.s2cGroup.visible = true;
         this._ui.s2cToggle.visible = true;
         this._ui.s2cDurationDd.visible = true;
@@ -459,6 +473,7 @@ export const GalaxyBudsDevice = GObject.registerClass({
         this._ui.eqPresetDd.connect('notify::selected-item', () => {
             if (this._uiGuards.equalizer)
                 return;
+
             const presetCode = this._ui.eqPresetDd.selected_item;
             this._galaxyBudsSocket.setEqPresets(presetCode);
         });
@@ -474,6 +489,7 @@ export const GalaxyBudsDevice = GObject.registerClass({
     _stereoBalSliderMonitor() {
         if (!this._features.stereoPan)
             return;
+
         this._ui.stereoBalSlider.visible = true;
         this._ui.stereoBalSlider.connect('notify::value', () => {
             if (this._uiGuards.stereoBal)
@@ -513,12 +529,7 @@ export const GalaxyBudsDevice = GObject.registerClass({
                     return;
 
                 const enabled = !this._ui.touchControlLockSwitch.active;
-                if (this._features.advancedTouchLock) {
-                    this._touchProps.touchpadLock = enabled;
-                    this._setAdvanceTouchLock();
-                } else {
-                    this._galaxyBudsSocket.setTouchPadLock(enabled);
-                }
+                this._galaxyBudsSocket.setTouchPadLock(enabled);
             });
         }
     }
@@ -936,20 +947,20 @@ export const GalaxyBudsDevice = GObject.registerClass({
 
         this._ui.customAmbientSwitch.active = customAmbientProps.enable;
         const {ambientLLevel, ambientRLevel, ambientToneLevel} = this._customAmbientWidgets;
-        if(ambientLLevel)
+        if (ambientLLevel)
             ambientLLevel.value = customAmbientProps.leftVolume;
-            
-        if(ambientRLevel)
+
+        if (ambientRLevel)
             ambientRLevel.value = customAmbientProps.rightVolume;
 
-        if(ambientToneLevel)
+        if (ambientToneLevel)
             ambientToneLevel.value = customAmbientProps.soundtone;
 
         this._uiGuards.customAmbient = false;
     }
 
     _ambientCustomizationMonitor() {
-        if (!this._features.ambientCustomize)
+        if (!this._features.ambientCustomize || !this._features.ambientVolumeMax)
             return;
 
         const upperRange = this._features.ambientCustomizeVolume
