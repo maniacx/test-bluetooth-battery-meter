@@ -15,6 +15,8 @@ import {CheckBoxesGroupWidget} from './widgets/checkBoxesGroupWidget.js';
 
 import {EqPresets} from './galaxyBudsConfig.js';
 
+// globalThis.TESTDEVICE = 'Galaxy Buds Core';
+// globalThis.TESTDEVICE = 'Galaxy Buds3 FE';
 // globalThis.TESTDEVICE = 'Galaxy Buds3 Pro';
 // globalThis.TESTDEVICE = 'Galaxy Buds3';
 // globalThis.TESTDEVICE = 'Galaxy Buds FE';

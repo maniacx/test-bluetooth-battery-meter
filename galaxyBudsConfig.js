@@ -235,7 +235,7 @@ export const GalaxyBudsModelList = [
         iconResourceKey: 'Bean',
 
         albumArtIcon: 'earbuds',
-        budsIcon: 'earbuds',
+        budsIcon: 'earbuds-bean',
         case: 'case-normal',
     },
 
@@ -522,8 +522,8 @@ export const GalaxyBudsModelList = [
             otherR: 6,
         },
 
-        albumArtIcon: 'earbuds-stem3',
-        budsIcon: 'earbuds-stem3',
+        albumArtIcon: 'earbuds-stem',
+        budsIcon: 'earbuds-stem',
         case: 'case-normal',
     },
     // 10) Galaxy Buds 3 FE
@@ -577,8 +577,8 @@ export const GalaxyBudsModelList = [
             otherR: 6,
         },
 
-        albumArtIcon: 'earbuds-stem3',
-        budsIcon: 'earbuds-stem3',
+        albumArtIcon: 'earbuds-stem',
+        budsIcon: 'earbuds-stem',
         case: 'case-normal',
     },
     // 11) Galaxy Buds FE
