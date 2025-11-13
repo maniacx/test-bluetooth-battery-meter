@@ -449,7 +449,6 @@ export const GalaxyBudsModelList = [
             noiseControl: true,
             noiseControlModeDualSide: true,
             noiseControlsWithOneEarbud: true,
-            noiseReductionAdjustments: true,
             rename: true,
             seamlessConnection: true,
             smartThingsFind: true,
