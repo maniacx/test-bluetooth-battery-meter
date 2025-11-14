@@ -645,6 +645,16 @@ export const SonySocketV2 = GObject.registerClass({
             this._getUpscalingIndicator();
     }
 
+    _getButtonModesLeftRightCapability() {
+        this._log.info('GET ButtonModesLeftRightCapability');
+
+        const payload = [PTV2T1.SYSTEM_GET_CAPABILITY];
+        payload.push(0x03);
+        const ackType = 'ButtonModesLeftRightCapability';
+        this.pendingRequestQueue?.push(ackType);
+        this.addMessageQueue(MessageType.COMMAND_2, payload, ackType);
+    }
+
     _getButtonModesLeftRight() {
         this._log.info('GET ButtonModesLeftRight');
 
@@ -1192,8 +1202,10 @@ export const SonySocketV2 = GObject.registerClass({
         if (this._pauseWhenTakenOffSupported)
             this._getPauseWhenTakenOff();
 
-        if (this._buttonModesLeftRight)
+        if (this._buttonModesLeftRight) {
+            this._getButtonModesLeftRightCapability(); // Test
             this._getButtonModesLeftRight();
+        }
 
         if (this._speakToChatEnabledSupported)
             this._getSpeakToChatEnabled();
