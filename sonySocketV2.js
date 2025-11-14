@@ -1138,30 +1138,23 @@ export const SonySocketV2 = GObject.registerClass({
         if (supportsUpscalingIndicator)
             this._getUpscalingIndicator();
 
-        if (this._supports(FunctionTypeV2T1.BATTERY_LEVEL_WITH_THRESHOLD)) {
+        if (this._supports(FunctionTypeV2T1.BATTERY_LEVEL_WITH_THRESHOLD))
             this._getSingleThdBatteryRequest(BatteryType.SINGLE_THD);
+        else if (this._supports(FunctionTypeV2T1.BATTERY_LEVEL_INDICATOR))
             this._getSingleBatteryRequest(BatteryType.SINGLE);
-        } else if (this._supports(FunctionTypeV2T1.BATTERY_LEVEL_INDICATOR)) {
-            this._getSingleBatteryRequest(BatteryType.SINGLE);
-        }
 
-        if (this._supports(FunctionTypeV2T1.LR_BATTERY_LEVEL_WITH_THRESHOLD)) {
+        if (this._supports(FunctionTypeV2T1.LR_BATTERY_LEVEL_WITH_THRESHOLD))
             this._getDualThdBatteryRequest(BatteryType.DUAL_THD);
+        else if (this._supports(FunctionTypeV2T1.LEFT_RIGHT_BATTERY_LEVEL_INDICATOR))
             this._getDualBatteryRequest(BatteryType.DUAL);
-        } else if (this._supports(FunctionTypeV2T1.LEFT_RIGHT_BATTERY_LEVEL_INDICATOR)) {
-            this._getDualBatteryRequest(BatteryType.DUAL);
-        }
 
-        if (this._supports(FunctionTypeV2T1.CRADLE_BATTERY_LEVEL_WITH_THRESHOLD)) {
+        if (this._supports(FunctionTypeV2T1.CRADLE_BATTERY_LEVEL_WITH_THRESHOLD))
             this._getCaseThdBatteryRequest(BatteryType.CASE_THD);
+        else if (this._supports(FunctionTypeV2T1.CRADLE_BATTERY_LEVEL_INDICATOR))
             this._getCaseBatteryRequest(BatteryType.CASE);
-        } else if (this._supports(FunctionTypeV2T1.CRADLE_BATTERY_LEVEL_INDICATOR)) {
-            this._getCaseBatteryRequest(BatteryType.CASE);
-        }
 
         if (this._automaticPowerOffWhenTakenOff)
             this._getAutomaticPowerOff();
-
 
         if (this._supports(FunctionTypeV2T1.PRESET_EQ))
             this._eqInquiryType = EqInquiryType.PRESET_EQ;
