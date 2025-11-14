@@ -197,6 +197,7 @@ export const SonyDevice = GObject.registerClass({
                 ambqa: ['Ambient Sound Control / Quick Access',
                     ButtonModes.AMBIENT_SOUND_CONTROL_QA],
                 pb: ['Playback Control', ButtonModes.PLAYBACK_CONTROL],
+                pbwl: ['Playback Control', ButtonModes.PLAYBACK_CONTROL_W_LIMITATION],
                 vol: ['Volume Control', ButtonModes.VOLUME_CONTROL],
                 na: ['Not Assigned', ButtonModes.NO_FUNCTION],
             };

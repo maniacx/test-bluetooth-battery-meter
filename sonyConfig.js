@@ -120,7 +120,7 @@ export const SonyConfiguration = [
         noNoiseCancelling: true,
         equalizerSixBands: true,
         audioUpsampling: true,
-        buttonModesLeftRight: ['ambqa', 'pb', 'na'],
+        buttonModesLeftRight: ['ambqa', 'pbwl', 'na'],
         powerOffFromPhone: true,
         albumArtIcon: 'earbuds',
         budsIcon: 'earbuds',
@@ -474,6 +474,7 @@ export const ButtonModes = {
     AMBIENT_SOUND_CONTROL: 0x00,
     VOLUME_CONTROL: 0x10,
     PLAYBACK_CONTROL: 0x20,
+    PLAYBACK_CONTROL_W_LIMITATION: 0x22,
     AMBIENT_SOUND_CONTROL_QA: 0x35,
     NO_FUNCTION: 0xFF,
 };
