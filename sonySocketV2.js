@@ -1145,6 +1145,13 @@ export const SonySocketV2 = GObject.registerClass({
             this._getSingleBatteryRequest(BatteryType.SINGLE);
         }
 
+        if (this._supports(FunctionTypeV2T1.LR_BATTERY_LEVEL_WITH_THRESHOLD)) {
+            this._getDualThdBatteryRequest(BatteryType.DUAL_THD);
+            this._getDualBatteryRequest(BatteryType.DUAL);
+        } else if (this._supports(FunctionTypeV2T1.LEFT_RIGHT_BATTERY_LEVEL_INDICATOR)) {
+            this._getDualBatteryRequest(BatteryType.DUAL);
+        }
+
         if (this._supports(FunctionTypeV2T1.CRADLE_BATTERY_LEVEL_WITH_THRESHOLD)) {
             this._getCaseThdBatteryRequest(BatteryType.CASE_THD);
             this._getCaseBatteryRequest(BatteryType.CASE);
