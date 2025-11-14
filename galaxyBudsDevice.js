@@ -504,12 +504,14 @@ export const GalaxyBudsDevice = GObject.registerClass({
     }
 
     _updateTouchSensitivity(sensitive) {
+/*
         this._ui.touchControlSingleTapSwitch.sensitive = sensitive;
         this._ui.touchControlDoubleTapSwitch.sensitive = sensitive;
         this._ui.touchControlTripleTapSwitch.sensitive = sensitive;
         this._ui.touchControlTouchHoldSwitch.sensitive = sensitive;
         this._ui.touchControlAnswerCallSwitch.sensitive = sensitive;
         this._ui.touchControlDeclineCallSwitch.sensitive = sensitive;
+*/ 
     }
 
     updateTouchpadLock(enable) {
