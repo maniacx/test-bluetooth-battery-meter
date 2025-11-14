@@ -21,7 +21,7 @@ import {
 // globalThis.TESTDEVICE = 'WH-1000XM6';
 // globalThis.TESTDEVICE = 'WF-1000XM5';
 // globalThis.TESTDEVICE = 'WH-1000XM5';
-// globalThis.TESTDEVICE = '';
+globalThis.TESTDEVICE = '';
 
 Gio._promisify(Gio.DBusProxy, 'new');
 Gio._promisify(Gio.DBusProxy, 'new_for_bus');
