@@ -589,8 +589,7 @@ export const SonyDevice = GObject.registerClass({
             if (this._uiGuards.equalizer)
                 return;
             const presetCode = this._ui.eqPresetDd.selected_item;
-            const customBand = this._eq.values;
-            this._scheduleEqUpdate(presetCode, customBand);
+            this._sonySocket.setEqualizerPreset(presetCode);
         });
     }
 

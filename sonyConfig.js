@@ -455,6 +455,17 @@ export const BgmDistance = {
     CAFE: 0x02,
 };
 
+export const EqInquiryType = {
+    PRESET_EQ: 0x00,
+    EBB: 0x01,
+    PRESET_EQ_NONCUSTOMIZABLE: 0x02,
+    //    PRESET_EQ_AND_ULT_MODE: 0x03, Model and UI to be presented unknown.
+    PRESET_EQ_AND_ERRORCODE: 0x04,
+    //    SOUND_EFFECT: 0x30, Model and UI to be presented unknown.
+    CUSTOM_EQ: 0x31,
+//    TURN_KEY_EQ: 0x32, Model and UI to be presented unknown.
+};
+
 export const EqualizerPreset = {
     OFF: 0x00,
     BRIGHT: 0x10,
