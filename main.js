@@ -642,7 +642,7 @@ class BatteryApp {
             const uuids = this._bluezDeviceProxy.UUIDs;
 
             if (!uuids) {
-                this._log.info(`Device ${hideMacAdddress(this._devicePath)} not paired`);
+                this._log.info('Incorrect MAC address or Device not paired');
                 return;
             }
 
@@ -654,8 +654,7 @@ class BatteryApp {
             const connected = this._bluezDeviceProxy.Connected;
             this._deviceConnected = connected;
             this._log.info(
-                `Device connection status: ${connected} ` +
-                `Path: ${hideMacAdddress(this._devicePath)}`);
+                `Device connection status: ${connected}`);
 
             if (!connected) {
                 this._log.info('Device not connected. Waiting for device');
@@ -672,9 +671,7 @@ class BatteryApp {
         if (this._deviceConnected !== connected) {
             this._deviceConnected = connected;
 
-            this._log.info(
-                'Device connection Changed' +
-            `status: ${connected} Path: ${hideMacAdddress(this._devicePath)}`);
+            this._log.info(`Device connection changed. status: ${connected}`);
 
             if (connected) {
                 this._startDevice();
