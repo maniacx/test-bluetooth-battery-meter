@@ -652,7 +652,7 @@ export const SonySocketV2 = GObject.registerClass({
         payload.push(0x03);
         const ackType = 'ButtonModesLeftRightCapability';
         this.pendingRequestQueue?.push(ackType);
-        this.addMessageQueue(MessageType.COMMAND_2, payload, ackType);
+        this.addMessageQueue(MessageType.COMMAND_1, payload, ackType);
     }
 
     _getButtonModesLeftRight() {
@@ -662,7 +662,7 @@ export const SonySocketV2 = GObject.registerClass({
         payload.push(0x03);
         const ackType = 'GetButtonModesLeftRight';
         this.pendingRequestQueue?.push(ackType);
-        this.addMessageQueue(MessageType.COMMAND_2, payload, ackType);
+        this.addMessageQueue(MessageType.COMMAND_1, payload, ackType);
     }
 
     _parseButtonModesLeftRight(payload) {
@@ -686,7 +686,7 @@ export const SonySocketV2 = GObject.registerClass({
         payload.push(0x02);
         payload.push(leftMode);
         payload.push(rightMode);
-        this.addMessageQueue(MessageType.COMMAND_2, payload, 'SetButtonModesLeftRight');
+        this.addMessageQueue(MessageType.COMMAND_1, payload, 'SetButtonModesLeftRight');
     }
 
     _getAmbientSoundButton() {
