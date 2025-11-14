@@ -343,7 +343,7 @@ class BatteryApp {
 
         // Touch Control Enable
         this._touchControlLockSwitch = new Adw.SwitchRow({
-            title: 'Touch Controls',
+            title: 'Lock Touch Controls ',
             visible: false,
         });
 
