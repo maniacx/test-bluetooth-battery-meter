@@ -421,6 +421,8 @@ class BatteryApp {
             snapOnStep: true,
         });
 
+        this._voiceNotificationsVolume.visible = false;
+
         this._voiceNotificationsVolume.connect('notify::value', () => {
             this._log.info(`Voice Notification Volume : ${this._voiceNotificationsVolume.value}`);
         });

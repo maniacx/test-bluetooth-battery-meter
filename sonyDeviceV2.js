@@ -131,6 +131,7 @@ export const SonyDevice = GObject.registerClass({
         this._buttonModesLeftRight = modelData.buttonModesLeftRight ?? false;
 
         this._voiceNotificationsSupported = modelData.voiceNotifications ?? false;
+        this._voiceNotificationsVolumeSupported = modelData.voiceNotificationsVolume ?? false;
         this._equalizerSixBandsSupported = modelData.equalizerSixBands ?? false;
         this._equalizerTenBandsSupported = modelData.equalizerTenBands ?? false;
         this._audioUpsamplingSupported = modelData.audioUpsampling ?? false;
@@ -227,6 +228,7 @@ export const SonyDevice = GObject.registerClass({
             this._automaticPowerOffWhenTakenOffSupported;
 
         this._ui.voiceNotificationSwitch.visible = this._voiceNotificationsSupported;
+        this._ui.voiceNotificationsVolume.visible = this._voiceNotificationsVolumeSupported;
         if (this._equalizerSixBandsSupported || this._equalizerTenBandsSupported) {
             this._ui.eqPresetDd.visible = true;
             this._ui.eqCustomRow.visible =  true;
