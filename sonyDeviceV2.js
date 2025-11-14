@@ -305,7 +305,7 @@ export const SonyDevice = GObject.registerClass({
     }
 
     updateCapabilities() {
-        //dummy
+        // dummy
     }
 
     updateBatteryProps(props) {

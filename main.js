@@ -7,7 +7,7 @@ import {createLogger} from './logger.js';
 import {getBluezDeviceProxy} from './bluezDeviceProxy.js';
 import {SonyDevice, SonyUUIDv2} from './sonyDeviceV2.js';
 import {ProfileManager} from './profileManager.js';
-import {setLiveLogSink, hideMacAdddress} from './logger.js';
+import {setLiveLogSink} from './logger.js';
 import {ToggleButtonRow} from './widgets/toggleButtonRow.js';
 import {DropDownRowWidget} from './widgets/dropDownRow.js';
 import {SliderRowWidget} from './widgets/sliderRowWidget.js';
