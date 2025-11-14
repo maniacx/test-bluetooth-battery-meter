@@ -12,8 +12,7 @@ class SocketHandler extends GObject.Object {
     _init(devicePath) {
         super._init();
         const subclassName = this.constructor.name;
-        const identifier = devicePath.split('_').slice(-3).join('');
-        const tag = `SocketHandler-${subclassName}-${identifier}`;
+        const tag = `SocketHandler-${subclassName}`;
         this._socketLog = createLogger(tag);
         this._devicePath = devicePath;
         this.running = false;

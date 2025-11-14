@@ -7,7 +7,7 @@ import {createLogger} from './logger.js';
 import {getBluezDeviceProxy} from './bluezDeviceProxy.js';
 import {GalaxyBudsDevice} from './galaxyBudsDevice.js';
 import {ProfileManager} from './profileManager.js';
-import {setLiveLogSink, hideMacAdddress} from './logger.js';
+import {setLiveLogSink} from './logger.js';
 import {ToggleButtonRow} from './widgets/toggleButtonRow.js';
 import {DropDownRowWidget} from './widgets/dropDownRowWidget.js';
 import {SliderRowWidget} from './widgets/sliderRowWidget.js';
@@ -620,8 +620,7 @@ class BatteryApp {
         } else {
             this._bluezDeviceProxy = getBluezDeviceProxy(this._devicePath);
             const connected = this._bluezDeviceProxy.Connected;
-            this._log.info(`Device connection status: ${connected}` +
-                `Path: ${hideMacAdddress(this._devicePath)}`);
+            this._log.info(`Device connection status: ${connected}`);
             if (!connected) {
                 this._log.info('Device not connected. Waiting for device');
                 this._bluezSignalId = this._bluezDeviceProxy.connect(
