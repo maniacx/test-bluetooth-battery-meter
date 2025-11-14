@@ -400,7 +400,6 @@ export const GalaxyBudsModelList = [
             callPathControl: true,
             caseBattery: true,
             chargingState: true,
-            doubleTapVolume: true,
             fmgRingWhileWearing: true,
             gamingMode: true,
             gearFitTest: true,
