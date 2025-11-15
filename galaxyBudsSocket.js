@@ -16,6 +16,9 @@ import {
     isValidByte
 } from './galaxyBudsConfig.js';
 
+const AndroidSdkVersion = 34;
+const ClientSamsungDevice = 1;
+
 export const GalaxyBudsSocket = GObject.registerClass(
 class GalaxyBudsSocket extends SocketHandler {
     _init(devicePath, fd, modelData, callbacks) {
@@ -24,8 +27,8 @@ class GalaxyBudsSocket extends SocketHandler {
         this._log.info('GalaxyBudsSocket init');
 
         this._modelId = modelData.modelId;
-        log(`this._modelId = ${this._modelId}`);
         this._features = modelData.features;
+        this._firstExtendedStatusRecieved = false;
 
         const SOM_BUDS = 0xFE;
         const EOM_BUDS = 0xEE;
@@ -146,6 +149,10 @@ class GalaxyBudsSocket extends SocketHandler {
         switch (id) {
             case GalaxyBudsMsgIds.EXTENDED_STATUS_UPDATED:
                 this._parseExtendedStatusUpdate(payload);
+                if (!this._firstExtendedStatusRecieved) {
+                    this._sendManagerInfo();
+                    this._firstExtendedStatusRecieved = true;
+                }
                 break;
 
             case GalaxyBudsMsgIds.STATUS_UPDATED:
@@ -629,6 +636,11 @@ class GalaxyBudsSocket extends SocketHandler {
                 throw e;
         }
     }// _parseExtendedStatusUpdate
+
+    _sendManagerInfo() {
+        const payload = [1, ClientSamsungDevice,  AndroidSdkVersion];
+        this._sendPacket(GalaxyBudsMsgIds.MANAGER_INFO, payload);
+    }
 
     setAmbientSoundOnOff(enabled) {
         const payload = [enabled ? 1 : 0];
