@@ -122,6 +122,7 @@ export const SonyConfiguration = [
         audioUpsampling: true,
         buttonModesLeftRight: ['ambqa', 'pbwl', 'na'],
         voiceNotifications: true,
+        voiceNotificationsVolume: true,
         powerOffFromPhone: true,
         albumArtIcon: 'earbuds',
         budsIcon: 'earbuds',
