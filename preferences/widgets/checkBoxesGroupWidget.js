@@ -24,7 +24,6 @@ export const CheckBoxesGroupWidget = GObject.registerClass({
             initialValue = 0,
             resetOnApply = false,
             minRequired = 2,
-            maxRequired = null,
         } = params;
 
         super({title: groupTitle ?? ''});
@@ -37,7 +36,6 @@ export const CheckBoxesGroupWidget = GObject.registerClass({
         this._suspendToggleHandlers = false;
         this._resetOnApply = !!resetOnApply;
         this._minRequired = minRequired;
-        this._maxRequired = maxRequired ?? items.length;
 
         const headerRow = new Adw.ActionRow({title: rowTitle, subtitle: rowSubtitle});
 

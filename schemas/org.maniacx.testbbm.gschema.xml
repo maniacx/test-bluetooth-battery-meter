@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.maniacx.testbbm" path="/org/maniacx/testbbm/">
+    <key name="galaxy-buds-list" type="as">
+      <default>[]</default>
+      <summary>Galaxy Buds List</summary>
+      <description>
+        Stores a string array of Galaxy Buds device IDs or addresses.
+      </description>
+    </key>
+  </schema>
+</schemalist>
+
