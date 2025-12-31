@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="16"
+   height="16"
+   viewBox="0 0 16 16"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
+   sodipodi:docname="bbm-earbuds-bean-left-symbolic.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="true"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     inkscape:zoom="72.5"
+     inkscape:cx="7.9931034"
+     inkscape:cy="8"
+     inkscape:window-width="2560"
+     inkscape:window-height="1371"
+     inkscape:window-x="0"
+     inkscape:window-y="32"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <defs
+     id="defs1" />
+  <g
+     id="g9"
+     transform="matrix(-1.2975161,0,0,1.2975161,21.2618,-0.46806841)">
+    <path
+       id="path8"
+       style="display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-opacity:0.896907"
+       d="m 79.925405,20.466836 0.08387,0.629034 a 80.407272,28.667609 76.621931 0 0 -1.300002,78.335634 80.407272,28.667609 76.621931 0 0 16.459709,45.122666 80.407272,28.667609 76.621931 0 0 0.02097,0.021 c -0.05368,-0.005 -0.113314,-0.0156 -0.167743,-0.021 -19.842176,-1.92497 -33.904903,-32.29038 -33.904903,-32.29038 0,0 -12.7445,-25.613958 -13.188735,-55.229142 -0.443452,-29.56295 31.882804,-36.543281 31.996835,-36.567812 z m 40.635565,3.732265 A 12.669538,22.805166 0 0 1 133.22551,46.99108 12.669538,22.805166 0 0 1 120.56097,69.804027 12.669538,22.805166 0 0 1 107.87546,46.99108 12.669538,22.805166 0 0 1 120.56097,24.199101 Z"
+       transform="matrix(-0.09314886,0,0,0.09314886,18.657851,-1.1603687)" />
+    <path
+       id="path9"
+       style="fill:#000000;fill-opacity:0.456306;stroke:none;stroke-opacity:0.896907"
+       d="m 10.275983,0.84043637 c 0,0 -0.0197,0.0238855 -0.05664,0.0683594 -0.206375,-7.361e-4 -1.0848097,0.0255101 -1.2929685,0.52929693 a 1.3219185,2.379453 0 0 1 0.5039062,1.8691406 1.3219185,2.379453 0 0 1 -1.2539062,2.375 c 0.4363866,1.5658183 -0.990234,3.4902349 -0.990234,3.4902339 0,0 -0.9939521,1.9995558 0.095703,2.7167968 1.0896552,0.717241 1.8359375,-0.220703 1.8359375,-0.220703 0,0 0.6743535,-0.48257 1.28125,-2.9101558 0.606897,-2.4275867 0.634766,-2.8554553 0.634766,-4.6347656 0,-1.7793104 -0.757813,-3.28320323 -0.757814,-3.28320323 z" />
+  </g>
+</svg>
