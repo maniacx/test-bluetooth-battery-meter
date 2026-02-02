@@ -7,29 +7,33 @@ permalink: /preferences/airpods
 ---
 
 
-## AirPods / Beats
-<br>
-<br>
+# AirPods / Beats
 
-**AirPods / Beats Device**
+{: .note }
+>
+> AirPods Bluetooth sockets can be accessed by only one application at a time.  
+> Do not run other AirPods companion or monitoring apps while using BudsLink, such as:
+>
+> * **MagicPods**
+> * **LibrePods**
+> * **Bluetooth Battery Meter** GNOME Extension  (disable the AirPods feature in the extension preferences)
+
 <br>
 <img src="{{ 'assets/images/preferences/airpods/airpods-popup.png' | relative_url }}" width="45%">
 
+
 * Displays a circular battery widget, supporting either a single battery (headset) or three separate levels for Left, Right, and Case.
 * The case battery is shown only when the AirPods report it, usually when the case is charging or when at least one AirPod is inside.
-
-**AirPods / Beats ANC and Conversation Awareness**
-
 * Only certain AirPods models support ANC mode.
 * Some models also support Conversation Mode.
 
-### Button Visibility
+## Button Visibility
 
 * The ANC option (if supported) is only shown when one or both earbuds are in the ears.
 * The Conversation Mode (if supported) option is only shown when both earbuds are in the ears.
 
 
-### Icons:
+## Icons:
 
 Anti-Noise Cancellation (ANC)
 
@@ -47,7 +51,7 @@ Conversation Awareness
 | <img src="{{ 'assets/images/preferences/airpods/ca-off.png' | relative_url }}" width="15%"> | Conversation Awareness Off |
 
 
-### Features
+## Features
 
 * App can detect AirPods and Beats devices among connected Bluetooth devices.
 * It communicates over L2CAP sockets to support features such as:

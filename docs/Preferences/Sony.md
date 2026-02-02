@@ -7,25 +7,28 @@ permalink: /preferences/sony
 ---
 
 
-## Sony Bluetooth Audio
-<br>
-<br>
+# Sony Bluetooth Audio
 
-**Sony Bluetooth Audio Popup**
+{: .note }
+>
+> Sony Bluetooth sockets can be accessed by only one application at a time.  
+> Do not run other Sony's companion or monitoring apps while using BudsLink, such as:
+>
+> * **SonyHeadphonesClient**
+> * **Bluetooth Battery Meter** GNOME Extension  (disable the Sony feature in the extension preferences)
+
+
 <br>
 <img src="{{ 'assets/images/preferences/sony/sony-popup.png' | relative_url }}" width="45%">
 
 * Displays a circular battery widget, supporting either a single battery (headset) or three separate levels for Left, Right, and Case.
 * The case battery is shown only when the Sony report it, usually when the case is charging or when at least one bud is inside.
 * **Conversation Awareness** in Sony term is **Speak to Chat**.
-
-**Sony ANC and Conversation Awareness**
-
 * Only certain Sony models support ANC mode.
 * Some models support ANC but not Ambient mode.
 * Some models also support Conversation Mode.
 
-### Icons:
+## Icons:
 
 Anti-Noise Cancellation (ANC)
 
@@ -43,7 +46,7 @@ Conversation Awareness (Speak to Chat)
 | <img src="{{ 'assets/images/preferences/airpods/ca-off.png' | relative_url }}" width="15%"> | Conversation Awareness Off |
 
 
-### Features
+## Features
 
 * App can detect Sony Headset/Earbuds among connected Bluetooth devices.
 * It communicates over RFCOMM sockets to support features such as:
