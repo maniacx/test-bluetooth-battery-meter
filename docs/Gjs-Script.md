@@ -30,7 +30,7 @@ sudo apt install gjs
 
 ### libadwaita (and GTK 4)
 
-* Minimum version: **libadwaita 1.5** or newer
+* Minimum version: **libadwaita 1.7** or newer
 
 {: .note }
 >
@@ -47,7 +47,7 @@ gjs -c 'try { const Adw = imports.gi.Adw; const v = `${Adw.MAJOR_VERSION}.${Adw.
 sudo dnf install libadwaita
 
 # Ubuntu
-sudo apt install libadwaita-1-0 gir1.2-adw-1
+sudo apt install libadwaita-1-0
 ```
 
 ### BlueZ (Bluetooth Stack)
