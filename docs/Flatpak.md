@@ -16,7 +16,7 @@ BudsLink Flatpak builds are provided for:
 * x86_64 – standard 64-bit Intel/AMD CPUs
 * aarch64 – 64-bit ARM CPUs, commonly used in modern ARM laptops and single-board computers
 
-## Installing BudsLink Flatpak from Githib Release
+## Installing BudsLink Flatpak from Github Release
 
 Download the appropriate .flatpak file from the GitHub release page corresponding to your CPU architecture. These Flatpak bundles are automatically built for each release using the GitHub workflow. Before installing BudsLink, make sure Flatpak is installed and the Flathub remote is added.
 

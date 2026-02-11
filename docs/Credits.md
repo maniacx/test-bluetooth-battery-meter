@@ -100,8 +100,29 @@ permalink: /credits
 > * kilisei
 > * G-dH
 
+## Samsung Galaxy Buds
 
+> Gadgetbridge
+>
+> <https://codeberg.org/Freeyourgadget/Gadgetbridge>
 
+> timschneeb
+>
+> <https://github.com/timschneeb/GalaxyBudsClient>
+
+## Nothing / CMF Buds
+
+> Gadgetbridge
+>
+> <https://codeberg.org/Freeyourgadget/Gadgetbridge>
+
+> radiance-project
+>
+> <https://github.com/radiance-project/ear-web>
+
+> DaanHessen
+>
+> <https://github.com/DaanHessen/earctl>
 
 
 
