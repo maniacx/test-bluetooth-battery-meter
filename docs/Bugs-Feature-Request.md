@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Bugs / Feature Request
-nav_order: 6
+nav_order: 97
 permalink: /bugs-feature-request
 ---
 
@@ -33,19 +33,6 @@ Please describe the problem in detail and attach the log file.
 ```
 flatpak run io.github.maniacx.BudsLink
 ```
-
-
-### Gjs script
-1. Verify that all required dependencies are installed.
-See the dependency list [here](./gjs-script)
-
-2. Check the log file located in the local data log directory inside the script folder.
-
-3. Run the script from the terminal/console using `gjs-console` command and observe any output or error messages:
-```
-gjs-console -m /path/to/BudsLink/script.js
-```
-Any logs displayed
 
 4. If the problem persists, open an issue on GitHub and attach the relevant logs.
 

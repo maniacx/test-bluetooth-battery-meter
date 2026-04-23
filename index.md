@@ -22,9 +22,8 @@ permalink: /
 # Features:
 
 * Available as a prebuilt Flatpak package compiled via GitHub Actions and distributed through GitHub Releases
-* Can be used as a plain GJS script for testing
 * Communicates with devices using L2CAP / RFCOMM sockets
-* Monitors earbud battery levels
+* Monitors earbuds battery levels
 * Monitors charging case battery level when reported by the device
 * Controls Active Noise Cancellation (ANC) and Ambient Sound modes when supported
 * Supports Conversation Awareness when supported
@@ -35,7 +34,3 @@ permalink: /
 * Ability to override system dark mode
 * Ability to override system accent colors
 
-
-
-
-   
