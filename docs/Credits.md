@@ -99,6 +99,7 @@ permalink: /credits
 > * Int-Circuit
 > * kilisei
 > * G-dH
+> * guiand888
 
 ## Samsung Galaxy Buds
 
@@ -106,15 +107,24 @@ permalink: /credits
 >
 > <https://codeberg.org/Freeyourgadget/Gadgetbridge>
 
+
 > timschneeb
 >
 > <https://github.com/timschneeb/GalaxyBudsClient>
+
+> Testing
+>
+> * NormalHuman-Anything
+> * kacpero1530
+> * adlr
+> * kerembayulgen
 
 ## Nothing / CMF Buds
 
 > Gadgetbridge
 >
 > <https://codeberg.org/Freeyourgadget/Gadgetbridge>
+
 
 > radiance-project
 >
@@ -123,6 +133,12 @@ permalink: /credits
 > DaanHessen
 >
 > <https://github.com/DaanHessen/earctl>
+
+> Testing
+>
+> * ArcticDev78
+> * Lascar_s@matrix
+
 
 
 

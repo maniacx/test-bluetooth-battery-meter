@@ -101,6 +101,8 @@ Other settings are self explanatory similar to settings available in iPhone / iP
 
 Currently tested and confirmed working:
 
+* **Galaxy Buds 4 Pro** ✅ — Credits: NormalHuman-Anything
+* **Galaxy Buds Pro** ✅ — Credits: NormalHuman-Anything
 * **Galaxy Buds 3 Pro** ✅ — Credits: kacpero1530
 * **Galaxy Buds 3** ✅ — Credits: kacpero1530
 * **Galaxy Buds 2 Pro** ✅ — Credits: kacpero1530
@@ -127,6 +129,7 @@ table th:nth-of-type(3) {
 | Battery Level | ✅ | ❌ |
 | Ambient sound | ✅ | ❌ |
 | In Ear Detection | ✅ | ❌ |
+| Equalizer Preset | ✅ | ❌ |
 
 ---
 
@@ -136,8 +139,9 @@ table th:nth-of-type(3) {
 |:--|:--:|:--:|
 | Battery Level | ✅ | ❌ |
 | Ambient sound | ✅ | ❌ |
-| In Ear Detection | ✅ | ❌ |
 | Ambient Sound During Calls | ✅ | ❌ |
+| In Ear Detection | ✅ | ❌ |
+| Equalizer Preset | ✅ | ❌ |
 
 ---
 
@@ -148,7 +152,7 @@ table th:nth-of-type(3) {
 | Battery Level | ✅ | ❌ |
 | Noise Cancellation | ✅ | ❌ |
 | In Ear Detection | ✅ | ❌ |
-| Low Latency Mode | ✅ | ❌ |
+| Equalizer Preset | ✅ | ❌ |
 | Stereo Balance | ✅ | ❌ |
 
 ---
@@ -157,14 +161,15 @@ table th:nth-of-type(3) {
 
 | Feature | Supported | Tested |
 |:--|:--:|:--:|
-| Battery Level | ✅ | ❌ |
-| Noise Cancellation | ✅ | ❌ |
-| Ambient sound | ✅ | ❌ |
-| In Ear Detection | ✅ | ❌ |
-| Low Latency Mode | ✅ | ❌ |
-| doubleTapVolume | ✅ | ❌ |
-| Stereo Balance | ✅ | ❌ |
+| Battery Level | ✅ | ✅ |
+| Noise Cancellation | ✅ | ✅ |
+| Ambient sound | ✅ | ✅ |
 | Ambient Sound During Calls | ✅ | ❌ |
+| Noise Controls With One Earbud | ✅ | ❌ |
+| In Ear Detection | ✅ | ✅ |
+| Double Tap Volume | ✅ | ✅ |
+| Equalizer Preset | ✅ | ❌ |
+| Stereo Balance | ✅ | ❌ |
 
 ---
 
@@ -175,12 +180,15 @@ table th:nth-of-type(3) {
 | Battery Level | ✅ | ❌ |
 | Noise Cancellation | ✅ | ❌ |
 | Ambient sound | ✅ | ❌ |
-| In Ear Detection | ✅ | ❌ |
-| Low Latency Mode | ✅ | ❌ |
-| doubleTapVolume | ✅ | ❌ |
-| Find My Buds | ✅ | ❌ |
-| Stereo Balance | ✅ | ❌ |
 | Ambient Sound During Calls | ✅ | ❌ |
+| Noise Controls With One Earbud | ✅ | ❌ |
+| In Ear Detection | ✅ | ❌ |
+| Touch Lock Settings | ✅ | ❌ |
+| Touch Configuration | ✅ | ❌ |
+| Double Tap Volume Settings | ✅ | ❌ |
+| Find My Buds | ✅ | ❌ |
+| Equalizer Preset | ✅ | ❌ |
+| Stereo Balance | ✅ | ❌ |
 
 ---
 
@@ -191,12 +199,15 @@ table th:nth-of-type(3) {
 | Battery Level | ✅ | ✅ |
 | Noise Cancellation | ✅ | ✅ |
 | Ambient sound | ✅ | ✅ |
+| Ambient Sound During Calls | ✅ | ❌ |
+| Noise Controls With One Earbud | ✅ | ❌ |
 | In Ear Detection | ✅ | ✅ |
-| Low Latency Mode | ✅ | ✅ |
+| Touch Lock Settings | ✅ | ✅ |
+| Touch Configuration | ✅ | ✅ |
+| Double Tap Volume Settings | ✅ | ✅ |
 | Find My Buds | ✅ | ✅ |
-| doubleTapVolume | ✅ | ✅ |
+| Equalizer Preset | ✅ | ✅ |
 | Stereo Balance | ✅ | ✅ |
-| Ambient Sound During Calls | ✅ | ✅ |
 
 ---
 
@@ -207,11 +218,14 @@ table th:nth-of-type(3) {
 | Battery Level | ✅ | ❌ |
 | Noise Cancellation | ✅ | ❌ |
 | Ambient sound | ✅ | ❌ |
-| In Ear Detection | ✅ | ❌ |
-| Low Latency Mode | ✅ | ❌ |
-| Find My Buds | ✅ | ❌ |
-| Stereo Balance | ✅ | ❌ |
 | Ambient Sound During Calls | ✅ | ❌ |
+| Noise Controls With One Earbud | ✅ | ❌ |
+| In Ear Detection | ✅ | ❌ |
+| Touch Lock Settings | ✅ | ❌ |
+| Touch Configuration | ✅ | ❌ |
+| Find My Buds | ✅ | ❌ |
+| Equalizer Preset | ✅ | ❌ |
+| Stereo Balance | ✅ | ❌ |
 
 ---
 
@@ -222,9 +236,9 @@ table th:nth-of-type(3) {
 | Battery Level | ✅ | ✅ |
 | Noise Cancellation | ✅ | ✅ |
 | In Ear Detection | ✅ | ✅ |
-| Low Latency Mode | ✅ | ✅ |
+| Gesture Configuration | ✅ | ✅ |
 | Find My Buds | ✅ | ✅ |
-| doubleTapVolume | ✅ | ✅ |
+| Equalizer Preset | ✅ | ✅ |
 | Stereo Balance | ✅ | ✅ |
 
 ---
@@ -236,14 +250,14 @@ table th:nth-of-type(3) {
 | Battery Level | ✅ | ✅ |
 | Noise Cancellation | ✅ | ✅ |
 | Ambient sound | ✅ | ✅ |
+| Ambient Sound During Calls | ✅ | ❌ |
+| Noise Controls With One Earbud | ✅ | ❌ |
 | In Ear Detection | ✅ | ✅ |
-| Low Latency Mode | ✅ | ✅ |
-| Find My Buds | ✅ | ✅ |
-| doubleTapVolume | ✅ | ✅ |
-| Gesture | ✅ | ✅ |
+| Gesture Configuration | ✅ | ✅ |
 | Lighting Control | ✅ | ✅ |
+| Find My Buds | ✅ | ✅ |
+| Equalizer Preset | ✅ | ✅ |
 | Stereo Balance | ✅ | ✅ |
-| Ambient Sound During Calls | ✅ | ✅ |
 
 ---
 
@@ -254,13 +268,13 @@ table th:nth-of-type(3) {
 | Battery Level | ✅ | ❌ |
 | Noise Cancellation | ✅ | ❌ |
 | Ambient sound | ✅ | ❌ |
-| In Ear Detection | ✅ | ❌ |
-| Low Latency Mode | ✅ | ❌ |
-| Find My Buds | ✅ | ❌ |
-| doubleTapVolume | ✅ | ❌ |
-| Gesture | ✅ | ❌ |
-| Stereo Balance | ✅ | ❌ |
 | Ambient Sound During Calls | ✅ | ❌ |
+| Noise Controls With One Earbud | ✅ | ❌ |
+| In Ear Detection | ✅ | ❌ |
+| Gesture Configuration | ✅ | ✅ |
+| Find My Buds | ✅ | ❌ |
+| Equalizer Preset | ✅ | ❌ |
+| Stereo Balance | ✅ | ❌ |
 
 ---
 
@@ -271,12 +285,14 @@ table th:nth-of-type(3) {
 | Battery Level | ✅ | ❌ |
 | Noise Cancellation | ✅ | ❌ |
 | Ambient sound | ✅ | ❌ |
-| In Ear Detection | ✅ | ❌ |
-| Low Latency Mode | ✅ | ❌ |
-| Find My Buds | ✅ | ❌ |
-| doubleTapVolume | ✅ | ❌ |
-| Stereo Balance | ✅ | ❌ |
 | Ambient Sound During Calls | ✅ | ❌ |
+| Noise Controls With One Earbud | ✅ | ❌ |
+| In Ear Detection | ✅ | ❌ |
+| Find My Buds | ✅ | ❌ |
+| Touch Lock Settings | ✅ | ❌ |
+| Touch Configuration | ✅ | ❌ |
+| Equalizer Preset | ✅ | ❌ |
+| Stereo Balance | ✅ | ❌ |
 
 ---
 
@@ -287,13 +303,13 @@ table th:nth-of-type(3) {
 | Battery Level | ✅ | ❌ |
 | Noise Cancellation | ✅ | ❌ |
 | Ambient sound | ✅ | ❌ |
-| In Ear Detection | ✅ | ❌ |
-| Low Latency Mode | ✅ | ❌ |
-| Find My Buds | ✅ | ❌ |
-| doubleTapVolume | ✅ | ❌ |
-| Gesture | ✅ | ❌ |
-| Stereo Balance | ✅ | ❌ |
 | Ambient Sound During Calls | ✅ | ❌ |
+| Noise Controls With One Earbud | ✅ | ❌ |
+| In Ear Detection | ✅ | ❌ |
+| Find My Buds | ✅ | ❌ |
+| Gesture Configuration | ✅ | ❌ |
+| Equalizer Preset | ✅ | ❌ |
+| Stereo Balance | ✅ | ❌ |
 
 ---
 
@@ -301,13 +317,14 @@ table th:nth-of-type(3) {
 
 | Feature | Supported | Tested |
 |:--|:--:|:--:|
-| Battery Level | ✅ | ❌ |
-| Noise Cancellation | ✅ | ❌ |
-| Ambient sound | ✅ | ❌ |
-| In Ear Detection | ✅ | ❌ |
-| Low Latency Mode | ✅ | ❌ |
-| Find My Buds | ✅ | ❌ |
-| doubleTapVolume | ✅ | ❌ |
-| Gesture | ✅ | ❌ |
-| Stereo Balance | ✅ | ❌ |
+| Battery Level | ✅ | ✅ |
+| Noise Cancellation | ✅ | ✅ |
+| Ambient sound | ✅ | ✅ |
 | Ambient Sound During Calls | ✅ | ❌ |
+| Noise Controls With One Earbud | ✅ | ❌ |
+| In Ear Detection | ✅ | ✅ |
+| Gesture Configuration | ✅ | ❌ |
+| Find My Buds | ✅ | ❌ |
+| Equalizer Preset | ✅ | ❌ |
+| Stereo Balance | ✅ | ❌ |
+
