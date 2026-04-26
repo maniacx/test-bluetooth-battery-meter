@@ -1,11 +1,15 @@
 ---
 layout: default
 title: Changelogs
-nav_order: 98
+nav_order: 97
 permalink: /changelogs
 ---
 
 # Changelogs
+
+{: .important-title }
+> Version 0.1.3 &emsp;&emsp; Apr 24, 2026
+> * Added License to Repo. A requirement of Flathub submission
 
 {: .important-title }
 > Version 0.1.2 &emsp;&emsp; Apr 19, 2026
