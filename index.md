@@ -22,6 +22,11 @@ permalink: /
 **This project is an independent effort and is not affiliated with, endorsed by, or sponsored by Apple, Sony, Samsung, or Nothing. All product and company names are trademarks™ or registered® trademarks of their respective holders and are used for identification purposes only.**
 
 
+# Supported Bluetooth audio wearables
+* Airpods / Beats
+* Sony
+* Samsung Galaxy Buds
+* Nothing / CMF
 
 # Features:
 
