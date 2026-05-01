@@ -5,9 +5,41 @@ nav_order: 2
 permalink: /flatpak
 ---
 
-# Running BudsLink as a Flatpak Application
+#Install from Flathub (Recommended)
 
-BudsLink can be packaged and run as a Flatpak application. This mode is intended for distribution, testing on multiple architectures, and simplified installation. Currently, BudsLink is not submitted to Flathub and is still in a testing phase.
+## Using Desktop Software Centers
+Using Desktop Software Centers
+BudsLink can be installed using graphical software managers such as GNOME Software or KDE Discover.
+* Open your system’s software center
+* Search for “BudsLink”
+* Click Install
+
+## Using the Command Line
+Ensure Flatpak is installed and Flathub is configured:
+
+```
+#Fedora
+sudo dnf install flatpak
+
+# Ubuntu
+sudo apt install flatpak
+```
+Add Flathub (if not already configured):
+```
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+```
+
+Install BudsLink:
+```
+flatpak install flathub io.github.maniacx.BudsLink
+```
+
+Run the application:
+```
+flatpak run io.github.maniacx.BudsLink
+```
+
+# Installing from a Local Flatpak Bundle
 
 ## Supported Architectures
 
@@ -54,7 +86,7 @@ Run BudsLink:
 flatpak run io.github.maniacx.BudsLink
 ```
 
-## Building BudsLink from Source using Flatpak Builder
+# Building BudsLink from Source using Flatpak Builder
 
 If you want to build BudsLink from source, you can use Flatpak Builder. The GitHub workflow uses a manifest file io.github.maniacx.BudsLink.yml for this purpose.
 

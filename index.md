@@ -6,7 +6,7 @@ description: "BudsLink"
 permalink: /
 ---
 # BudsLink
-[<img src="{{ 'assets/images/home/get-it-on-flathub.png' | relative_url }}" width="45%">](https://github.com/maniacx/BudsLink/)
+[<img src="{{ 'assets/images/home/get-it-on-flathub.png' | relative_url }}" width="45%">](https://flathub.org/apps/io.github.maniacx.BudsLink)
 [<img src="{{ 'assets/images/home/view-sources-on-github.png' | relative_url }}" width="45%" class="float-right">](https://github.com/maniacx/BudsLink)
 
 
