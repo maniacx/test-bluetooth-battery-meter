@@ -390,7 +390,7 @@ export const  ConfigureWindow = GObject.registerClass({
             page.add(pressHoldGroup);
         }
 
-        this._settingSignalId = settings.connect('changed::airpods-list', () => {
+        let settingSignalId = settings.connect('changed::airpods-list', () => {
             const updatedList = settings.get_strv('airpods-list').map(JSON.parse);
             this._settingsItems = updatedList.find(info => info.path === devicePath);
             if (!this._settingsItems)
@@ -432,8 +432,14 @@ export const  ConfigureWindow = GObject.registerClass({
         this.connect('close-request', () => {
             this._toneWidget?.destroy();
             this._toneWidget = null;
-            settings.disconnect(this._settingSignalId);
+
+            if (settingSignalId && settings)
+                settings.disconnect(settingSignalId);
+
             settings = null;
+            settingSignalId = null;
+
+            return false;
         });
     }
 

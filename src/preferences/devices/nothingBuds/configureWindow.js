@@ -133,7 +133,7 @@ export const ConfigureWindow = GObject.registerClass({
         this._addMiscSetting();
         this._addGestureControls();
 
-        this._settingSignalId = settings.connect('changed::nothing-buds-list', () => {
+        let settingSignalId = settings.connect('changed::nothing-buds-list', () => {
             const updatedList = settings.get_strv('nothing-buds-list').map(JSON.parse);
             this._settingsItems = updatedList.find(info => info.path === devicePath);
             if (!this._settingsItems)
@@ -165,17 +165,16 @@ export const ConfigureWindow = GObject.registerClass({
         });
 
         this.connect('close-request', () => {
-            if (!this._modelData?.ring)
-                return;
+            if (this._modelData?.ring) {
+                const ringState = this._settingsItems?.['ring-state'];
+                if (ringState === 'playing')
+                    this._updateGsettings('ring-state', 'stopped');
 
-            const ringState = this._settingsItems?.['ring-state'];
-            if (ringState === 'playing')
-                this._updateGsettings('ring-state', 'stopped');
-
-            if (!this._modelData.ringLegacy && !this._modelData.batterySingle) {
-                const ringStateLeft = this._settingsItems?.['ring-state-left'];
-                if (ringStateLeft === 'playing')
-                    this._updateGsettings('ring-state-left', 'stopped');
+                if (!this._modelData.ringLegacy && !this._modelData.batterySingle) {
+                    const ringStateLeft = this._settingsItems?.['ring-state-left'];
+                    if (ringStateLeft === 'playing')
+                        this._updateGsettings('ring-state-left', 'stopped');
+                }
             }
 
             this._eq?.destroy();
@@ -183,8 +182,13 @@ export const ConfigureWindow = GObject.registerClass({
             this._baseLevel?.destroy();
             this._baseLevel = null;
 
-            settings.disconnect(this._settingSignalId);
+            if (settingSignalId && settings)
+                settings.disconnect(settingSignalId);
+
+            settingSignalId = null;
             settings = null;
+
+            return false;
         });
     }
 
