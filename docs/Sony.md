@@ -79,6 +79,7 @@ Currently tested and confirmed working:
 * **Sony WF-1000XM5**  ✅ — Credits: kilisei
 * **Sony WH-1000XM5**  ✅ — Credits: pesader
 * **Sony WH-1000XM5**  ✅ — Credits: guiand888
+* **Sony WH-XB900N**  ✅ — Credits: BerenLuth
 
 
 <style>
@@ -152,7 +153,7 @@ table th:nth-of-type(3) {
 | Anc Mode                      | ✅             | ❌     |
 | Voice Notifications           | ✅             | ❌     |
 | Auto Power Off When Taken Off | ✅             | ❌     |
-| Auto Power Off When Taken Time| Yes            | ❌     |
+| Auto Power Off When Taken Time| ✅            | ❌     |
 | Equalizer Six Bands           | ✅             | ❌     |
 | DSEE                          | ✅             | ❌     |
 
@@ -336,6 +337,21 @@ table th:nth-of-type(3) {
 | Pause When Taken Off          | ✅        | ❌     |
 | Auto Power Off When Taken Off | ✅        | ❌     |
 | Equalizer Six Bands           | ✅        | ❌     |
+
+<br>
+
+### Sony WH-XB900N
+
+| Feature                       | Supported | Tested |
+|:-----------------------------:|:---------:|:------:|
+| Battery Level                 | Single    | ✅     |
+| Ambient Mode                  | ✅        | ✅     |
+| Anc Mode                      | ✅        | ✅     |
+| Voice Notifications           | ✅        | ✅     |
+| Pause When Taken Off          | ✅        | ✅     |
+| Auto Power Off When Taken Off | ✅        | ✅     |
+| Auto Power Off When Taken Time| ✅        | ✅     |
+| Equalizer Six Bands           | ✅        | ✅     |
 
 <br>
 
