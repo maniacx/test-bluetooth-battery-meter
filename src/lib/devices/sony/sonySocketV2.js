@@ -386,7 +386,7 @@ export const SonySocketV2 = GObject.registerClass({
             payload.push(mode === AmbientSoundMode.WIND ? 0x03 : 0x02);
 
         payload.push(focusOnVoice ? 0x01 : 0x00);
-        payload.push(level);
+        payload.push(Math.max(1, level));
 
         if (autoAmbientType) {
             payload.push(autoAmbient ? 0x01 : 0x00);

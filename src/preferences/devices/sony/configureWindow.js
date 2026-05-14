@@ -465,7 +465,6 @@ export const ConfigureWindow = GObject.registerClass({
             if (modelData.automaticPowerOffByTime) {
                 this._autoPowerOffLabels = [
                     _('After 5 minutes'),
-                    _('After 15 minutes'),
                     _('After 30 minutes'),
                     _('After 1 hour'),
                     _('After 3 hours'),
@@ -473,7 +472,6 @@ export const ConfigureWindow = GObject.registerClass({
 
                 this._autoPowerOffValues = [
                     AutoPowerOffTime.AFTER_5_MIN,
-                    AutoPowerOffTime.AFTER_15_MIN,
                     AutoPowerOffTime.AFTER_30_MIN,
                     AutoPowerOffTime.AFTER_1_HOUR,
                     AutoPowerOffTime.AFTER_3_HOUR,
