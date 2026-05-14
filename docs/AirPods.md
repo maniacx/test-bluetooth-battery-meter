@@ -9,7 +9,7 @@ permalink: /airpods
 
 {: .note }
 >
-> AirPods Bluetooth sockets can be accessed by only one application at a time.  
+> AirPods Bluetooth sockets can be accessed by only one application at a time.
 > Do not run other AirPods companion or monitoring apps while using BudsLink, such as:
 >
 > * **MagicPods**

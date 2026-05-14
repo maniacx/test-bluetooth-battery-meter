@@ -8,6 +8,13 @@ permalink: /changelogs
 # Changelogs
 
 {: .important-title }
+> Version 0.1.4 &emsp;&emsp; May 16, 2026
+> * Added supported Sony WH-XB900N credits: BerenLuth@github.com
+> * Sony V1 Autopower off time and ANC fixes
+> * Added Italian translation. credits: albanobattistella@github.com
+> * Added Brazilian Portuguese translation. credits:  luc-salles@github.com
+
+{: .important-title }
 > Version 0.1.3 &emsp;&emsp; Apr 24, 2026
 > * Added License to Repo. A requirement of Flathub submission
 

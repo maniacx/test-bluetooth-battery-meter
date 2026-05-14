@@ -111,7 +111,6 @@ table th:nth-of-type(3) {
 | Listening Mode                | ✅             | ❌     |
 | DSEE                          | ✅             | ❌     |
 
-
 <br>
 ### Sony WH-1000XM5
 
@@ -183,7 +182,7 @@ table th:nth-of-type(3) {
 | Equalizer Six Bands           | ✅             | ❌     |
 | DSEE                          | ✅             | ❌     |
 
-### WF-1000XM6
+### Sony WF-1000XM6
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
@@ -197,7 +196,7 @@ table th:nth-of-type(3) {
 | Upscaling (DSEE)              | ✅        | ❌     |
 
 
-### WF-1000XM5
+### Sony WF-1000XM5
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
@@ -212,7 +211,7 @@ table th:nth-of-type(3) {
 
 <br>
 
-### WF-1000XM4
+### Sony WF-1000XM4
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
@@ -226,7 +225,7 @@ table th:nth-of-type(3) {
 
 <br>
 
-### WF-1000XM3
+### Sony WF-1000XM3
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
@@ -242,7 +241,7 @@ table th:nth-of-type(3) {
 
 <br>
 
-### WF-C710N
+### Sony WF-C710N
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
@@ -254,7 +253,7 @@ table th:nth-of-type(3) {
 
 <br>
 
-### WF-C700N
+### Sony WF-C700N
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
@@ -267,7 +266,7 @@ table th:nth-of-type(3) {
 
 <br>
 
-### WF-C510
+### Sony WF-C510
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
@@ -279,7 +278,7 @@ table th:nth-of-type(3) {
 
 <br>
 
-### WF-C500
+### Sony WF-C500
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
@@ -290,7 +289,7 @@ table th:nth-of-type(3) {
 
 <br>
 
-### WI-C100
+### Sony WI-C100
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
@@ -301,7 +300,7 @@ table th:nth-of-type(3) {
 
 <br>
 
-### WF-SP800N
+### Sony WF-SP800N
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
@@ -326,7 +325,7 @@ table th:nth-of-type(3) {
 
 <br>
 
-### WH-XB910N
+### Sony WH-XB910N
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
@@ -340,7 +339,7 @@ table th:nth-of-type(3) {
 
 <br>
 
-### WI-SP600N
+### Sony WI-SP600N
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
@@ -350,7 +349,7 @@ table th:nth-of-type(3) {
 | Voice Notifications           | ✅        | ❌     |
 | Equalizer Six Bands           | ✅        | ❌     |
 
-### LinkBuds
+### Sony LinkBuds
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
@@ -364,7 +363,7 @@ table th:nth-of-type(3) {
 
 <br>
 
-### LinkBuds S
+### Sony LinkBuds S
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|

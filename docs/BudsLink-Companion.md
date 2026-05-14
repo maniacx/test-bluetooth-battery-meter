@@ -19,6 +19,11 @@ BudsLink Application can run in a D-Bus service mode, exposing device informatio
 
 See the respective branches for the implementation.
 
+{: .note }
+>
+> **GNOME Shell Extension**
+> If you prefer an all-in-one solution, the `Bluetooth Battery Meter` extension offers the same features as BudsLink and BudsLink Companion combined, including battery monitoring and ANC control. Using it eliminates the need to install both applications separately.
+
 ## [GNOME Shell Extension](https://github.com/maniacx/BudsLink-Companion/tree/Gnome-Extension)
 
 [<img src="{{ 'assets/images/companion/gnome-extension.png' | relative_url }}" width="40%">](https://github.com/maniacx/BudsLink-Companion/tree/Gnome-Extension)

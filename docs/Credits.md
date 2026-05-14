@@ -53,6 +53,8 @@ permalink: /credits
 > * Svilen88
 > * Genteure
 > * alewicki95
+> * BerenLuth
+> * luc-salles
 
 
 ## AirPods

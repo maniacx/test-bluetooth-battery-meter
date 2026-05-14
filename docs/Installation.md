@@ -100,6 +100,20 @@ sudo dnf install flatpak-builder
 sudo apt install flatpak-builder
 ```
 
+**Add Flathub Remote (if not already added):**
+
+```bash
+flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+```
+
+**Install GNOME SDK and Platform (if not already installed):**
+
+If you already use GNOME Flatpak applications, these may already be installed.
+
+```
+flatpak install --user org.gnome.Platform//50 org.gnome.Sdk//50 -y
+```
+
 **Download / Clone BudsLink repository:**
 
 Download and Extract the Budslinks repo using download link on Github OR use Git clone
