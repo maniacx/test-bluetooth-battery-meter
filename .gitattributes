@@ -1,0 +1,7 @@
+.github export-ignore
+build-aux export-ignore
+io.github.maniacx.BudsLink.yml export-ignore
+update-translation.sh export-ignore
+.gitignore export-ignore
+.gitattributes export-ignore
+
