@@ -136,7 +136,11 @@ export const MediaController = GObject.registerClass({
             if (!noSymbolName.includes(this._noSymbolMac))
                 continue;
             const device = this._control.lookup_device_from_stream(sink);
-            if (device?.get_active_profile() === 'a2dp-sink')
+            // PipeWire names the A2DP sink profile per negotiated codec, e.g.
+            // 'a2dp-sink' (AAC), 'a2dp-sink-sbc', 'a2dp-sink-sbc_xq',
+            // 'a2dp-sink-aptx', 'a2dp-sink-ldac'. Match the family prefix so
+            // playback control works regardless of the active codec.
+            if (device?.get_active_profile()?.startsWith('a2dp-sink'))
                 return sink;
         }
         return null;
