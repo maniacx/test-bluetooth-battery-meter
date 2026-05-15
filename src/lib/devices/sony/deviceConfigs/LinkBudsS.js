@@ -10,7 +10,7 @@ export default {
     ambientSoundControlButtonMode: true,
     quickAccess: true,
     audioUpsampling: true,
-    buttonModesLeftRight: ['amb', 'vol', 'pb', 'na'], // alx, ggle
+    buttonModesLeftRight: ['ambqa', 'vol', 'pb', 'na'], // alx, ggle
     pauseWhenTakenOff: true,
     automaticPowerOffWhenTakenOff: true,
     powerOffFromPhone: true,
