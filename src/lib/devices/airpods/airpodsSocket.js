@@ -168,11 +168,19 @@ export const AirpodsSocket = GObject.registerClass({
 
         for (let i = 0; i < count; i++) {
             const type = data[start];
-            const level = Math.max(0, Math.min(data[start + 2], 100));
-            const statusByte = data[start + 3];
+            const levelVal = data[start + 2];
+            let level, statusStr;
 
-            const charging = (statusByte & BatteryChargingStatus.CHARGING) !== 0;
-            const statusStr = charging ? 'charging' : 'discharging';
+            if (levelVal === 0xFF) {
+                level = 0;
+                statusStr = 'disconnected';
+            } else {
+                level = Math.max(0, Math.min(levelVal, 100));
+                const statusByte = data[start + 3];
+
+                const charging = (statusByte & BatteryChargingStatus.CHARGING) !== 0;
+                statusStr = charging ? 'charging' : 'discharging';
+            }
 
             let batteryIndex = null;
             if (type === BatteryType.SINGLE || type === BatteryType.LEFT)
