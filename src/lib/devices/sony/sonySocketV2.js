@@ -59,6 +59,7 @@ export const SonySocketV2 = GObject.registerClass({
         this._speakToChatConfigSupported = modelData.speakToChatConfig ?? false;
         this._speakToChatFocusOnVoiceSupported = modelData.speakToChatFocusOnVoice ?? false;
         this._pauseWhenTakenOffSupported = modelData.pauseWhenTakenOff ?? false;
+        this._listeningModeSupported = modelData.listeningMode ?? false;
         this._equalizerSixBands = modelData.equalizerSixBands ?? false;
         this._equalizerTenBands = modelData.equalizerTenBands ?? false;
         this._voiceNotifications = modelData.voiceNotifications ?? false;
@@ -540,7 +541,7 @@ export const SonySocketV2 = GObject.registerClass({
 
     _parseEqualizer(payload) {
         if (this._equalizerTenBands && payload.length < 14 ||
-        this._equalizerSixBands && payload.length < 10)
+                this._equalizerSixBands && payload.length < 10)
             return;
 
         this._log.info('PARSE Equalizer');
@@ -1190,6 +1191,9 @@ export const SonySocketV2 = GObject.registerClass({
 
         if (this._asmType)
             this._getAmbientSoundControl();
+
+        if (this._listeningModeSupported)
+            this._getListeningMode();
 
         if (this._pauseWhenTakenOffSupported)
             this._getPauseWhenTakenOff();
