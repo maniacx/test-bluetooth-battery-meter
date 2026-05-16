@@ -269,7 +269,7 @@ export const SonyDevice = GObject.registerClass({
             },
 
             ...this._listeningModeSupported && {
-                'bgm-mode': 0,
+                'bgm-mode': 1,
                 'bgm-distance': 0,
             },
 
