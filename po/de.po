@@ -1,16 +1,16 @@
 # German translations for BudsLink package.
 # Copyright (C) 2026 maniacx@github.com
 # This file is distributed under the same license as the BudsLink package.
-# Automatically generated, 2026.
+# Samuel Rüegger <claude.ai@rueegger.dev>, 2026.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: BudsLink\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-04-08 21:44-0600\n"
-"PO-Revision-Date: 2026-01-28 21:26-0700\n"
-"Last-Translator: Automatically generated\n"
-"Language-Team: none\n"
+"PO-Revision-Date: 2026-05-16 12:00+0200\n"
+"Last-Translator: Samuel Rüegger <samuel@rueegger.me>\n"
+"Language-Team: German\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -19,99 +19,99 @@ msgstr ""
 
 #: src/app.js:180 src/appLibs/widgets/deviceRow.js:59
 msgid "BudsLink"
-msgstr ""
+msgstr "BudsLink"
 
 #: src/app.js:190
 msgid "Devices"
-msgstr ""
+msgstr "Geräte"
 
 #: src/app.js:192
 msgid "No compatible device found"
-msgstr ""
+msgstr "Kein kompatibles Gerät gefunden"
 
 #: src/appLibs/widgets/settingsButton.js:22
 msgid "Application Settings"
-msgstr ""
+msgstr "Anwendungseinstellungen"
 
 #: src/appLibs/widgets/settingsButton.js:31
 #: src/appLibs/widgets/settingsButton.js:178
 msgid "System Default"
-msgstr ""
+msgstr "Systemstandard"
 
 #: src/appLibs/widgets/settingsButton.js:32
 msgid "Blue"
-msgstr ""
+msgstr "Blau"
 
 #: src/appLibs/widgets/settingsButton.js:33
 msgid "Teal"
-msgstr ""
+msgstr "Türkis"
 
 #: src/appLibs/widgets/settingsButton.js:34
 msgid "Green"
-msgstr ""
+msgstr "Grün"
 
 #: src/appLibs/widgets/settingsButton.js:35
 msgid "Yellow"
-msgstr ""
+msgstr "Gelb"
 
 #: src/appLibs/widgets/settingsButton.js:36
 msgid "Orange"
-msgstr ""
+msgstr "Orange"
 
 #: src/appLibs/widgets/settingsButton.js:37
 msgid "Red"
-msgstr ""
+msgstr "Rot"
 
 #: src/appLibs/widgets/settingsButton.js:38
 msgid "Pink"
-msgstr ""
+msgstr "Rosa"
 
 #: src/appLibs/widgets/settingsButton.js:39
 msgid "Purple"
-msgstr ""
+msgstr "Violett"
 
 #: src/appLibs/widgets/settingsButton.js:40
 msgid "Slate"
-msgstr ""
+msgstr "Schiefer"
 
 #: src/appLibs/widgets/settingsButton.js:61
 msgid "Dark Mode"
-msgstr ""
+msgstr "Dunkler Modus"
 
 #: src/appLibs/widgets/settingsButton.js:68
 msgid "Accent Color"
-msgstr ""
+msgstr "Akzentfarbe"
 
 #: src/appLibs/widgets/settingsButton.js:75
 msgid "About BudsLink"
-msgstr ""
+msgstr "Über BudsLink"
 
 #: src/appLibs/widgets/settingsButton.js:86
 msgid "Copyright © 2026 maniacx@github.com"
-msgstr ""
+msgstr "Copyright © 2026 maniacx@github.com"
 
 #: src/appLibs/widgets/settingsButton.js:90
 msgid "Translation"
-msgstr ""
+msgstr "Übersetzung"
 
 #: src/appLibs/widgets/settingsButton.js:101
 msgid "Packet Logging"
-msgstr ""
+msgstr "Paket-Protokollierung"
 
 #: src/appLibs/widgets/settingsButton.js:179
 msgid "Light"
-msgstr ""
+msgstr "Hell"
 
 #: src/appLibs/widgets/settingsButton.js:180
 msgid "Dark"
-msgstr ""
+msgstr "Dunkel"
 
 #: src/appLibs/widgets/settingsButton.js:296
 #: src/lib/devices/galaxyBuds/galaxyBudsDevice.js:678
 #: src/lib/devices/sony/sonyDevice.js:197
 #: src/lib/devices/airpods/airpodsDevice.js:240
 msgid "On"
-msgstr ""
+msgstr "An"
 
 #: src/appLibs/widgets/settingsButton.js:297
 #: src/preferences/devices/nothingBuds/configureWindow.js:411
@@ -130,163 +130,163 @@ msgstr ""
 #: src/lib/devices/airpods/airpodsDevice.js:200
 #: src/lib/devices/airpods/airpodsDevice.js:242
 msgid "Off"
-msgstr ""
+msgstr "Aus"
 
 #: src/appLibs/widgets/deviceRow.js:101
 msgid "Configure"
-msgstr ""
+msgstr "Einrichten"
 
 #: src/appLibs/widgets/deviceRow.js:113
 msgid "Battery Level"
-msgstr ""
+msgstr "Akkustand"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:110
 #: src/preferences/devices/galaxyBuds/configureWindow.js:91
 #: src/preferences/devices/sony/configureWindow.js:89
 #: src/preferences/devices/airpods/configureWindow.js:86
 msgid "Icon"
-msgstr ""
+msgstr "Symbol"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:111
 #: src/preferences/devices/galaxyBuds/configureWindow.js:92
 #: src/preferences/devices/sony/configureWindow.js:90
 #: src/preferences/devices/airpods/configureWindow.js:87
 msgid "Select Icon"
-msgstr ""
+msgstr "Symbol auswählen"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:112
 #: src/preferences/devices/galaxyBuds/configureWindow.js:93
 #: src/preferences/devices/sony/configureWindow.js:91
 #: src/preferences/devices/airpods/configureWindow.js:88
 msgid "Select the icon used for the indicator and quick menu"
-msgstr ""
+msgstr "Symbol für Anzeige und Schnellmenü auswählen"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:212
 #: src/preferences/devices/galaxyBuds/configureWindow.js:267
 #: src/preferences/devices/sony/configureWindow.js:212
 msgid "Equalizer"
-msgstr ""
+msgstr "Equalizer"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:218
 msgid "Balanced"
-msgstr ""
+msgstr "Ausgewogen"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:219
 msgid "Voice"
-msgstr ""
+msgstr "Stimme"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:220
 msgid "More Treble"
-msgstr ""
+msgstr "Mehr Höhen"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:221
 msgid "More Bass"
-msgstr ""
+msgstr "Mehr Bass"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:222
 msgid "Dirac"
-msgstr ""
+msgstr "Dirac"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:223
 msgid "Rock"
-msgstr ""
+msgstr "Rock"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:224
 msgid "Electronic"
-msgstr ""
+msgstr "Elektronisch"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:225
 msgid "Pop"
-msgstr ""
+msgstr "Pop"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:226
 msgid "Enhance Vocals"
-msgstr ""
+msgstr "Stimmen verstärken"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:227
 msgid "Classical"
-msgstr ""
+msgstr "Klassik"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:228
 msgid "Custom"
-msgstr ""
+msgstr "Benutzerdefiniert"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:238
 #: src/preferences/devices/nothingBuds/configureWindow.js:670
 #: src/preferences/devices/galaxyBuds/configureWindow.js:290
 #: src/preferences/devices/sony/configureWindow.js:245
 msgid "Equalizer Preset"
-msgstr ""
+msgstr "Equalizer-Voreinstellung"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:255
 #: src/preferences/devices/sony/configureWindow.js:258
 msgid "Custom Equalizer"
-msgstr ""
+msgstr "Benutzerdefinierter Equalizer"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:258
 #: src/preferences/devices/nothingBuds/configureWindow.js:676
 #: src/preferences/devices/sony/configureWindow.js:260
 msgid "Bass"
-msgstr ""
+msgstr "Bass"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:258
 #: src/lib/devices/nothingBuds/nothingBudsDevice.js:395
 msgid "Mid"
-msgstr ""
+msgstr "Mitten"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:258
 #: src/preferences/devices/nothingBuds/configureWindow.js:679
 msgid "Treble"
-msgstr ""
+msgstr "Höhen"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:288
 msgid "Bass Enhance"
-msgstr ""
+msgstr "Bass-Verstärkung"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:291
 msgid "Enable Bass Enhance"
-msgstr ""
+msgstr "Bass-Verstärkung aktivieren"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:303
 msgid "Bass Enhance Level"
-msgstr ""
+msgstr "Stufe der Bass-Verstärkung"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:306
 msgid "-"
-msgstr ""
+msgstr "-"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:310
 msgid "+"
-msgstr ""
+msgstr "+"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:338
 #: src/preferences/devices/nothingBuds/configureWindow.js:664
 msgid "Spatial Audio"
-msgstr ""
+msgstr "Räumliches Audio"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:341
 msgid "Enable Spatial Audio"
-msgstr ""
+msgstr "Räumliches Audio aktivieren"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:358
 #: src/preferences/devices/galaxyBuds/configureWindow.js:613
 msgid "Additional Settings"
-msgstr ""
+msgstr "Zusätzliche Einstellungen"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:363
 msgid "Enable low latency mode"
-msgstr ""
+msgstr "Modus mit niedriger Latenz aktivieren"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:376
 msgid "Enable in ear detection"
-msgstr ""
+msgstr "Trageerkennung aktivieren"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:412
 #: src/preferences/devices/galaxyBuds/configureWindow.js:524
 #: src/preferences/devices/sony/configureWindow.js:361
 #: src/lib/devices/sony/sonyDevice.js:168
 msgid "Ambient"
-msgstr ""
+msgstr "Umgebung"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:413
 #: src/preferences/devices/galaxyBuds/configureWindow.js:525
@@ -297,11 +297,11 @@ msgstr ""
 #: src/lib/devices/sony/sonyDevice.js:171
 #: src/lib/devices/airpods/airpodsDevice.js:203
 msgid "Noise Cancellation"
-msgstr ""
+msgstr "Geräuschunterdrückung"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:422
 msgid "Noise Control Cycle: "
-msgstr ""
+msgstr "Geräuschsteuerungs-Zyklus: "
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:424
 #: src/preferences/devices/galaxyBuds/configureWindow.js:573
@@ -309,145 +309,145 @@ msgstr ""
 #: src/preferences/devices/sony/configureWindow.js:369
 #: src/preferences/devices/airpods/configureWindow.js:261
 msgid "Apply"
-msgstr ""
+msgstr "Anwenden"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:444
 #: src/preferences/devices/galaxyBuds/configureWindow.js:353
 msgid "Single Tap"
-msgstr ""
+msgstr "Einfaches Tippen"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:445
 #: src/preferences/devices/galaxyBuds/configureWindow.js:366
 msgid "Double Tap"
-msgstr ""
+msgstr "Doppeltippen"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:446
 #: src/preferences/devices/galaxyBuds/configureWindow.js:379
 msgid "Triple Tap"
-msgstr ""
+msgstr "Dreifachtippen"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:447
 msgid "Tap and Hold"
-msgstr ""
+msgstr "Tippen und Halten"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:448
 msgid "Double Tap and Hold"
-msgstr ""
+msgstr "Doppeltippen und Halten"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:450
 #: src/preferences/devices/nothingBuds/configureWindow.js:465
 msgid "Single Press"
-msgstr ""
+msgstr "Einfacher Tastendruck"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:451
 #: src/preferences/devices/nothingBuds/configureWindow.js:466
 msgid "Double Press"
-msgstr ""
+msgstr "Doppelter Tastendruck"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:452
 #: src/preferences/devices/nothingBuds/configureWindow.js:467
 msgid "Triple Press"
-msgstr ""
+msgstr "Dreifacher Tastendruck"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:453
 #: src/preferences/devices/nothingBuds/configureWindow.js:462
 #: src/preferences/devices/nothingBuds/configureWindow.js:468
 msgid "Press and Hold"
-msgstr ""
+msgstr "Drücken und Halten"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:454
 #: src/preferences/devices/nothingBuds/configureWindow.js:469
 msgid "Double Press and Hold"
-msgstr ""
+msgstr "Doppelt drücken und Halten"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:456
 msgid "Single Pinch"
-msgstr ""
+msgstr "Einfaches Drücken"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:457
 msgid "Double Pinch"
-msgstr ""
+msgstr "Doppeltes Drücken"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:458
 msgid "Triple Pinch"
-msgstr ""
+msgstr "Dreifaches Drücken"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:459
 msgid "Pinch and Hold"
-msgstr ""
+msgstr "Drücken und Halten (Stiel)"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:460
 msgid "Double Pinch and Hold"
-msgstr ""
+msgstr "Doppeltes Drücken und Halten (Stiel)"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:463
 msgid "Slide to Adjust"
-msgstr ""
+msgstr "Wischen zum Anpassen"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:470
 msgid "Rotate"
-msgstr ""
+msgstr "Drehen"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:493
 msgid "Unknown Gesture"
-msgstr ""
+msgstr "Unbekannte Geste"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:600
 #: src/preferences/devices/nothingBuds/configureWindow.js:618
 msgid "Gesture Controls"
-msgstr ""
+msgstr "Gestensteuerung"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:603
 msgid "Left Buds Gesture Control"
-msgstr ""
+msgstr "Gestensteuerung linker Ohrhörer"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:606
 msgid "Right Buds Gesture Control"
-msgstr ""
+msgstr "Gestensteuerung rechter Ohrhörer"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:609
 msgid "Roller Gesture Control"
-msgstr ""
+msgstr "Gestensteuerung Roller"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:612
 msgid "Case Gesture Control"
-msgstr ""
+msgstr "Gestensteuerung Ladecase"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:615
 msgid "Slider Gesture Control"
-msgstr ""
+msgstr "Gestensteuerung Slider"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:625
 msgid "Play / Pause"
-msgstr ""
+msgstr "Wiedergabe / Pause"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:628
 msgid "Previous Track"
-msgstr ""
+msgstr "Vorheriger Titel"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:631
 msgid "Next Track"
-msgstr ""
+msgstr "Nächster Titel"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:634
 #: src/preferences/devices/galaxyBuds/configureWindow.js:462
 msgid "Voice Assistant"
-msgstr ""
+msgstr "Sprachassistent"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:637
 msgid "Volume Up"
-msgstr ""
+msgstr "Lautstärke erhöhen"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:640
 msgid "Volume Down"
-msgstr ""
+msgstr "Lautstärke verringern"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:643
 #: src/preferences/devices/galaxyBuds/configureWindow.js:464
 #: src/preferences/devices/sony/configureWindow.js:307
 #: src/preferences/devices/airpods/configureWindow.js:312
 msgid "Volume Control"
-msgstr ""
+msgstr "Lautstärkeregelung"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:646
 #: src/preferences/devices/galaxyBuds/configureWindow.js:467
@@ -456,197 +456,197 @@ msgstr ""
 #: src/lib/devices/sony/sonyDevice.js:164
 #: src/lib/devices/airpods/airpodsDevice.js:173
 msgid "Noise Control"
-msgstr ""
+msgstr "Geräuschsteuerung"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:649
 msgid "ANC Type"
-msgstr ""
+msgstr "ANC-Typ"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:652
 msgid "No Action"
-msgstr ""
+msgstr "Keine Aktion"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:655
 msgid "Change Volume"
-msgstr ""
+msgstr "Lautstärke ändern"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:658
 msgid "Channel Hop"
-msgstr ""
+msgstr "Kanalwechsel"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:661
 msgid "New Reporter"
-msgstr ""
+msgstr "News-Reporter"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:667
 msgid "Mic On/Off"
-msgstr ""
+msgstr "Mikrofon ein/aus"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:673
 msgid "Walkie Takie"
-msgstr ""
+msgstr "Walkie-Talkie"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:682
 msgid "Toggle Low Latency"
-msgstr ""
+msgstr "Niedrige Latenz umschalten"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:685
 msgid "Essential Space"
-msgstr ""
+msgstr "Essential Space"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:115
 #: src/preferences/devices/airpods/configureWindow.js:109
 msgid "Playback Behavior"
-msgstr ""
+msgstr "Wiedergabeverhalten"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:119
 #: src/preferences/devices/airpods/configureWindow.js:113
 #: src/preferences/devices/airpods/configureWindow.js:116
 msgid "Default behavior"
-msgstr ""
+msgstr "Standardverhalten"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:120
 #: src/preferences/devices/airpods/configureWindow.js:117
 msgid "Resume with both earbuds, Pause if any removed"
-msgstr ""
+msgstr "Fortsetzen mit beiden Ohrhörern, pausieren bei Herausnehmen eines Ohrhörers"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:121
 #: src/preferences/devices/airpods/configureWindow.js:118
 msgid "Resume with any earbud, Pause if both removed"
-msgstr ""
+msgstr "Fortsetzen mit beliebigem Ohrhörer, pausieren bei Herausnehmen beider Ohrhörer"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:125
 #: src/preferences/devices/airpods/configureWindow.js:122
 msgid "Choose playback behaviour for Ear detection"
-msgstr ""
+msgstr "Wiedergabeverhalten für Trageerkennung wählen"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:126
 #: src/preferences/devices/airpods/configureWindow.js:123
 msgid "Automatically pause or resume playback based on wearing detection."
-msgstr ""
+msgstr "Wiedergabe automatisch anhalten oder fortsetzen basierend auf der Trageerkennung."
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:246
 msgid "Voice detection"
-msgstr ""
+msgstr "Stimmerkennung"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:249
 msgid "5 seconds"
-msgstr ""
+msgstr "5 Sekunden"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:249
 msgid "10 seconds"
-msgstr ""
+msgstr "10 Sekunden"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:249
 msgid "15 seconds"
-msgstr ""
+msgstr "15 Sekunden"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:252
 #: src/preferences/devices/sony/configureWindow.js:134
 msgid "Duration"
-msgstr ""
+msgstr "Dauer"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:272
 #: src/preferences/devices/sony/configureWindow.js:222
 msgid "Bass Boost"
-msgstr ""
+msgstr "Bass-Verstärkung"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:273
 msgid "Soft"
-msgstr ""
+msgstr "Weich"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:274
 msgid "Dynamic"
-msgstr ""
+msgstr "Dynamisch"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:275
 msgid "Clear"
-msgstr ""
+msgstr "Klar"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:276
 #: src/preferences/devices/sony/configureWindow.js:221
 msgid "Treble Boost"
-msgstr ""
+msgstr "Höhen-Verstärkung"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:306
 msgid "Balance"
-msgstr ""
+msgstr "Balance"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:310
 msgid "Left"
-msgstr ""
+msgstr "Links"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:311
 msgid "Center"
-msgstr ""
+msgstr "Mitte"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:312
 msgid "Right"
-msgstr ""
+msgstr "Rechts"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:330
 msgid "Earbuds Controls"
-msgstr ""
+msgstr "Ohrhörer-Steuerung"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:336
 msgid "Media Controls (Pinch And Swipe)"
-msgstr ""
+msgstr "Mediensteuerung (Drücken und Wischen)"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:336
 msgid "Enable Touch Controls "
-msgstr ""
+msgstr "Berührungssteuerung aktivieren "
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:392
 msgid "Touch and Hold"
-msgstr ""
+msgstr "Berühren und Halten"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:411
 msgid "Pinch to Answer Call or End Call"
-msgstr ""
+msgstr "Drücken zum Annehmen oder Beenden eines Anrufs"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:412
 msgid "Double Tap to Answer Call or End Call"
-msgstr ""
+msgstr "Doppeltippen zum Annehmen oder Beenden eines Anrufs"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:426
 msgid "Pinch and Hold to Decline Call"
-msgstr ""
+msgstr "Drücken und Halten zum Ablehnen eines Anrufs"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:427
 msgid "Touch and Hold to Decline Call"
-msgstr ""
+msgstr "Berühren und Halten zum Ablehnen eines Anrufs"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:463
 msgid "Quick Ambient Sound"
-msgstr ""
+msgstr "Schneller Umgebungston"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:465
 msgid "Ambient Sound"
-msgstr ""
+msgstr "Umgebungston"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:466
 msgid "Spotify Spot On"
-msgstr ""
+msgstr "Spotify Spot On"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:468
 msgid "ANC"
-msgstr ""
+msgstr "ANC"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:484
 msgid "Left Earbud Pinch and Hold Function"
-msgstr ""
+msgstr "Funktion „Drücken und Halten“ – linker Ohrhörer"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:485
 msgid "Left Earbud Touch and Hold Function"
-msgstr ""
+msgstr "Funktion „Berühren und Halten“ – linker Ohrhörer"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:488
 msgid "Right Earbud Pinch and Hold Function"
-msgstr ""
+msgstr "Funktion „Drücken und Halten“ – rechter Ohrhörer"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:489
 msgid "Right Earbud Touch and Hold Function"
-msgstr ""
+msgstr "Funktion „Berühren und Halten“ – rechter Ohrhörer"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:529
 #: src/preferences/devices/airpods/configureWindow.js:246
@@ -654,403 +654,405 @@ msgstr ""
 #: src/lib/devices/galaxyBuds/galaxyBudsDevice.js:616
 #: src/lib/devices/airpods/airpodsDevice.js:202
 msgid "Adaptive"
-msgstr ""
+msgstr "Adaptiv"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:542
 msgid "Select any two toggles"
-msgstr ""
+msgstr "Zwei beliebige Optionen auswählen"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:548
 msgid "Pinch and Hold Cycle for Left Earbud"
-msgstr ""
+msgstr "Drücken-und-Halten-Zyklus für linken Ohrhörer"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:549
 msgid "Pinch and hold cycles between modes (Left)"
-msgstr ""
+msgstr "Drücken und Halten wechselt zwischen Modi (Links)"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:550
 msgid "Pinch and Hold Cycle for Right Earbud"
-msgstr ""
+msgstr "Drücken-und-Halten-Zyklus für rechten Ohrhörer"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:551
 msgid "Pinch and hold cycles between modes (Right)"
-msgstr ""
+msgstr "Drücken und Halten wechselt zwischen Modi (Rechts)"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:553
 msgid "Touch and Hold Cycle for Left Earbud"
-msgstr ""
+msgstr "Berühren-und-Halten-Zyklus für linken Ohrhörer"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:554
 msgid "Touch and hold cycles between modes (Left)"
-msgstr ""
+msgstr "Berühren und Halten wechselt zwischen Modi (Links)"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:555
 msgid "Touch and Hold Cycle for Right Earbud"
-msgstr ""
+msgstr "Berühren-und-Halten-Zyklus für rechten Ohrhörer"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:556
 msgid "Touch and hold cycles between modes (Right)"
-msgstr ""
+msgstr "Berühren und Halten wechselt zwischen Modi (Rechts)"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:559
 msgid "Pinch and Hold Cycle"
-msgstr ""
+msgstr "Drücken-und-Halten-Zyklus"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:560
 msgid "Pinch and hold cycles between modes"
-msgstr ""
+msgstr "Drücken und Halten wechselt zwischen Modi"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:562
 msgid "Touch and Hold Cycle"
-msgstr ""
+msgstr "Berühren-und-Halten-Zyklus"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:563
 msgid "Touch and hold cycles between modes"
-msgstr ""
+msgstr "Berühren und Halten wechselt zwischen Modi"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:619
 msgid "Ambient Sound During Calls"
-msgstr ""
+msgstr "Umgebungston während Anrufen"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:633
 msgid "Noise Controls With One Earbud"
-msgstr ""
+msgstr "Geräuschsteuerung mit einem Ohrhörer"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:647
 msgid "Double Tap Outside Edge For Volume Controls"
-msgstr ""
+msgstr "Doppeltippen auf die Außenkante für Lautstärkeregelung"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:690
 msgid "Left Ambient Sound Volume"
-msgstr ""
+msgstr "Lautstärke Umgebungston links"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:711
 msgid "Right Ambient Sound Volume"
-msgstr ""
+msgstr "Lautstärke Umgebungston rechts"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:732
 msgid "Ambient Sound Tone"
-msgstr ""
+msgstr "Klang des Umgebungstons"
 
 #: src/preferences/devices/sony/configureWindow.js:113
 #: src/lib/devices/galaxyBuds/galaxyBudsDevice.js:676
 #: src/lib/devices/sony/sonyDevice.js:195
 #: src/lib/devices/airpods/airpodsDevice.js:238
 msgid "Conversation Awareness"
-msgstr ""
+msgstr "Konversationserkennung"
 
 #: src/preferences/devices/sony/configureWindow.js:115
 #: src/preferences/devices/sony/configureWindow.js:285
 msgid "Auto"
-msgstr ""
+msgstr "Automatisch"
 
 #: src/preferences/devices/sony/configureWindow.js:115
 #: src/lib/devices/nothingBuds/nothingBudsDevice.js:394
 #: src/lib/devices/sony/sonyDevice.js:181
 msgid "High"
-msgstr ""
+msgstr "Hoch"
 
 #: src/preferences/devices/sony/configureWindow.js:115
 #: src/lib/devices/nothingBuds/nothingBudsDevice.js:396
 #: src/lib/devices/sony/sonyDevice.js:181
 msgid "Low"
-msgstr ""
+msgstr "Niedrig"
 
 #: src/preferences/devices/sony/configureWindow.js:118
 msgid "Voice Detection Sensitivity"
-msgstr ""
+msgstr "Empfindlichkeit der Stimmerkennung"
 
 #: src/preferences/devices/sony/configureWindow.js:131
 msgid "Short"
-msgstr ""
+msgstr "Kurz"
 
 #: src/preferences/devices/sony/configureWindow.js:131
 #: src/preferences/devices/sony/configureWindow.js:155
 #: src/lib/devices/sony/sonyDevice.js:181
 msgid "Standard"
-msgstr ""
+msgstr "Standard"
 
 #: src/preferences/devices/sony/configureWindow.js:131
 msgid "Long"
-msgstr ""
+msgstr "Lang"
 
 #: src/preferences/devices/sony/configureWindow.js:151
 #: src/preferences/devices/sony/configureWindow.js:167
 msgid "Listening Mode"
-msgstr ""
+msgstr "Hörmodus"
 
 #: src/preferences/devices/sony/configureWindow.js:156
 msgid "Background Music"
-msgstr ""
+msgstr "Hintergrundmusik"
 
 #: src/preferences/devices/sony/configureWindow.js:157
 msgid "Cinema"
-msgstr ""
+msgstr "Kino"
 
 #: src/preferences/devices/sony/configureWindow.js:182
 msgid "My Room"
-msgstr ""
+msgstr "Mein Zimmer"
 
 #: src/preferences/devices/sony/configureWindow.js:183
 msgid "Living Room"
-msgstr ""
+msgstr "Wohnzimmer"
 
 #: src/preferences/devices/sony/configureWindow.js:184
 msgid "Cafe"
-msgstr ""
+msgstr "Café"
 
 #: src/preferences/devices/sony/configureWindow.js:194
 msgid "Background Music Effects"
-msgstr ""
+msgstr "Hintergrundmusik-Effekte"
 
 #: src/preferences/devices/sony/configureWindow.js:216
 msgid "Bright"
-msgstr ""
+msgstr "Hell"
 
 #: src/preferences/devices/sony/configureWindow.js:217
 msgid "Excited"
-msgstr ""
+msgstr "Lebhaft"
 
 #: src/preferences/devices/sony/configureWindow.js:218
 msgid "Mellow"
-msgstr ""
+msgstr "Sanft"
 
 #: src/preferences/devices/sony/configureWindow.js:219
 msgid "Relaxed"
-msgstr ""
+msgstr "Entspannt"
 
 #: src/preferences/devices/sony/configureWindow.js:220
 msgid "Vocal"
-msgstr ""
+msgstr "Gesang"
 
 #: src/preferences/devices/sony/configureWindow.js:223
 msgid "Speech"
-msgstr ""
+msgstr "Sprache"
 
 #: src/preferences/devices/sony/configureWindow.js:224
 msgid "Manual"
-msgstr ""
+msgstr "Manuell"
 
 #: src/preferences/devices/sony/configureWindow.js:225
 msgid "Custom 1"
-msgstr ""
+msgstr "Benutzerdefiniert 1"
 
 #: src/preferences/devices/sony/configureWindow.js:226
 msgid "Custom 2"
-msgstr ""
+msgstr "Benutzerdefiniert 2"
 
 #: src/preferences/devices/sony/configureWindow.js:260
 msgid "400"
-msgstr ""
+msgstr "400"
 
 #: src/preferences/devices/sony/configureWindow.js:260
 #: src/preferences/devices/sony/configureWindow.js:262
 msgid "1k"
-msgstr ""
+msgstr "1k"
 
 #: src/preferences/devices/sony/configureWindow.js:260
 msgid "2.5k"
-msgstr ""
+msgstr "2.5k"
 
 #: src/preferences/devices/sony/configureWindow.js:260
 msgid "6.3k"
-msgstr ""
+msgstr "6.3k"
 
 #: src/preferences/devices/sony/configureWindow.js:260
 #: src/preferences/devices/sony/configureWindow.js:262
 msgid "16k"
-msgstr ""
+msgstr "16k"
 
 #: src/preferences/devices/sony/configureWindow.js:261
 msgid "31"
-msgstr ""
+msgstr "31"
 
 #: src/preferences/devices/sony/configureWindow.js:261
 msgid "63"
-msgstr ""
+msgstr "63"
 
 #: src/preferences/devices/sony/configureWindow.js:261
 msgid "125"
-msgstr ""
+msgstr "125"
 
 #: src/preferences/devices/sony/configureWindow.js:261
 msgid "250"
-msgstr ""
+msgstr "250"
 
 #: src/preferences/devices/sony/configureWindow.js:261
 msgid "500"
-msgstr ""
+msgstr "500"
 
 #: src/preferences/devices/sony/configureWindow.js:262
 msgid "2k"
-msgstr ""
+msgstr "2k"
 
 #: src/preferences/devices/sony/configureWindow.js:262
 msgid "4k"
-msgstr ""
+msgstr "4k"
 
 #: src/preferences/devices/sony/configureWindow.js:262
 msgid "8k"
-msgstr ""
+msgstr "8k"
 
 #: src/preferences/devices/sony/configureWindow.js:280
 msgid "DSEE"
-msgstr ""
+msgstr "DSEE"
 
 #: src/preferences/devices/sony/configureWindow.js:284
 msgid "Enable DSEE enhancement"
-msgstr ""
+msgstr "DSEE-Verbesserung aktivieren"
 
 #: src/preferences/devices/sony/configureWindow.js:298
 msgid "Button/Touch Settings"
-msgstr ""
+msgstr "Tasten-/Berührungseinstellungen"
 
 #: src/preferences/devices/sony/configureWindow.js:302
 msgid "Ambient Sound Control"
-msgstr ""
+msgstr "Umgebungston-Steuerung"
 
 #: src/preferences/devices/sony/configureWindow.js:303
 msgid "Ambient Sound Control / Quick Access"
-msgstr ""
+msgstr "Umgebungston-Steuerung / Schnellzugriff"
 
 #: src/preferences/devices/sony/configureWindow.js:305
 #: src/preferences/devices/sony/configureWindow.js:306
 msgid "Playback Control"
-msgstr ""
+msgstr "Wiedergabesteuerung"
 
 #: src/preferences/devices/sony/configureWindow.js:308
 msgid "Not Assigned"
-msgstr ""
+msgstr "Nicht zugewiesen"
 
 #: src/preferences/devices/sony/configureWindow.js:324
 msgid "Left Bud"
-msgstr ""
+msgstr "Linker Ohrhörer"
 
 #: src/preferences/devices/sony/configureWindow.js:338
 msgid "Right Bud"
-msgstr ""
+msgstr "Rechter Ohrhörer"
 
 #: src/preferences/devices/sony/configureWindow.js:355
 msgid "ANC Button Configuration"
-msgstr ""
+msgstr "ANC-Tastenkonfiguration"
 
 #: src/preferences/devices/sony/configureWindow.js:366
 msgid "[NC/AMB] Button Settings"
-msgstr ""
+msgstr "[NC/AMB]-Tasteneinstellungen"
 
 #: src/preferences/devices/sony/configureWindow.js:367
 msgid "Select the modes to toggle when the button is pressed"
-msgstr ""
+msgstr "Modi auswählen, zwischen denen beim Tastendruck gewechselt werden soll"
 
 #: src/preferences/devices/sony/configureWindow.js:385
 msgid "Notification"
-msgstr ""
+msgstr "Benachrichtigung"
 
 #: src/preferences/devices/sony/configureWindow.js:389
 msgid "Voice Notification"
-msgstr ""
+msgstr "Sprachbenachrichtigung"
 
 #: src/preferences/devices/sony/configureWindow.js:390
 msgid "Enable voice notification"
-msgstr ""
+msgstr "Sprachbenachrichtigung aktivieren"
 
 #: src/preferences/devices/sony/configureWindow.js:408
 msgid "Voice Notification Volume"
-msgstr ""
+msgstr "Lautstärke der Sprachbenachrichtigung"
 
 #: src/preferences/devices/sony/configureWindow.js:410
 msgid "-2"
-msgstr ""
+msgstr "-2"
 
 #: src/preferences/devices/sony/configureWindow.js:411
 msgid "-1"
-msgstr ""
+msgstr "-1"
 
 #: src/preferences/devices/sony/configureWindow.js:412
 msgid "0"
-msgstr ""
+msgstr "0"
 
 #: src/preferences/devices/sony/configureWindow.js:413
 msgid "+1"
-msgstr ""
+msgstr "+1"
 
 #: src/preferences/devices/sony/configureWindow.js:414
 msgid "+2"
-msgstr ""
+msgstr "+2"
 
 #: src/preferences/devices/sony/configureWindow.js:433
 msgid "Headset Take off"
-msgstr ""
+msgstr "Headset abnehmen"
 
 #: src/preferences/devices/sony/configureWindow.js:440
 msgid "Pause when taken off"
-msgstr ""
+msgstr "Pausieren beim Abnehmen"
 
 #: src/preferences/devices/sony/configureWindow.js:454
 msgid "Automatically Power Off"
-msgstr ""
+msgstr "Automatisches Ausschalten"
 
 #: src/preferences/devices/sony/configureWindow.js:455
 msgid "Automatically power off when not worn."
-msgstr ""
+msgstr "Automatisch ausschalten, wenn nicht getragen."
 
 #: src/preferences/devices/sony/configureWindow.js:470
 msgid "After 5 minutes"
-msgstr ""
+msgstr "Nach 5 Minuten"
 
 #: src/preferences/devices/sony/configureWindow.js:471
 msgid "After 15 minutes"
-msgstr ""
+msgstr "Nach 15 Minuten"
 
 #: src/preferences/devices/sony/configureWindow.js:472
 msgid "After 30 minutes"
-msgstr ""
+msgstr "Nach 30 Minuten"
 
 #: src/preferences/devices/sony/configureWindow.js:473
 msgid "After 1 hour"
-msgstr ""
+msgstr "Nach 1 Stunde"
 
 #: src/preferences/devices/sony/configureWindow.js:474
 msgid "After 3 hours"
-msgstr ""
+msgstr "Nach 3 Stunden"
 
 #: src/preferences/devices/sony/configureWindow.js:486
 msgid "Auto Power Off"
-msgstr ""
+msgstr "Automatisches Ausschalten"
 
 #: src/preferences/devices/airpods/configureWindow.js:114
 msgid "Resume when worn"
-msgstr ""
+msgstr "Fortsetzen beim Tragen"
 
 #: src/preferences/devices/airpods/configureWindow.js:139
 msgid "Volume Level"
-msgstr ""
+msgstr "Lautstärke"
 
 #: src/preferences/devices/airpods/configureWindow.js:143
 msgid "Pause when device is not worn"
-msgstr ""
+msgstr "Pausieren, wenn das Gerät nicht getragen wird"
 
 #: src/preferences/devices/airpods/configureWindow.js:144
 msgid "Pause playback when the device is removed,resume when it is put back on"
-msgstr ""
+msgstr "Wiedergabe pausieren, wenn das Gerät abgenommen wird, und fortsetzen, wenn es wieder aufgesetzt wird"
 
 #: src/preferences/devices/airpods/configureWindow.js:163
 msgid "Conversation awareness volume limit"
-msgstr ""
+msgstr "Lautstärkebegrenzung der Konversationserkennung"
 
 #: src/preferences/devices/airpods/configureWindow.js:164
 msgid ""
 "Limits media volume to this percentage during conversation. Note: No change "
 "if current volume is below this level."
 msgstr ""
+"Begrenzt die Medienlautstärke während eines Gesprächs auf diesen Prozentsatz. "
+"Hinweis: Keine Änderung, wenn die aktuelle Lautstärke unter diesem Wert liegt."
 
 #: src/preferences/devices/airpods/configureWindow.js:187
 msgid "Turn off listening modes"
-msgstr ""
+msgstr "Hörmodi deaktivieren"
 
 #: src/preferences/devices/airpods/configureWindow.js:191
 msgid "Allows to turn off all listening mode technology"
-msgstr ""
+msgstr "Ermöglicht das Deaktivieren aller Hörmodus-Technologien"
 
 #: src/preferences/devices/airpods/configureWindow.js:192
 msgid ""
@@ -1058,132 +1060,139 @@ msgid ""
 "disabled. Disabling listening modes also turns off Hearing Aid features and "
 "reduces power usage."
 msgstr ""
+"Ermöglicht das vollständige Deaktivieren von Geräuschunterdrückung, "
+"Transparenz und adaptivem Modus. Das Deaktivieren der Hörmodi schaltet auch "
+"Hörgerätefunktionen ab und reduziert den Energieverbrauch."
 
 #: src/preferences/devices/airpods/configureWindow.js:233
 #: src/lib/devices/nothingBuds/nothingBudsDevice.js:375
 #: src/lib/devices/galaxyBuds/galaxyBudsDevice.js:615
 #: src/lib/devices/airpods/airpodsDevice.js:201
 msgid "Transparency"
-msgstr ""
+msgstr "Transparenz"
 
 #: src/preferences/devices/airpods/configureWindow.js:255
 msgid "Press and Hold Cycle"
-msgstr ""
+msgstr "Drücken-und-Halten-Zyklus"
 
 #: src/preferences/devices/airpods/configureWindow.js:258
 msgid "Press and hold cycles between"
-msgstr ""
+msgstr "Drücken und Halten wechselt zwischen"
 
 #: src/preferences/devices/airpods/configureWindow.js:259
 msgid "Settings don’t reflect current state"
-msgstr ""
+msgstr "Einstellungen spiegeln den aktuellen Zustand nicht wider"
 
 #: src/preferences/devices/airpods/configureWindow.js:286
 msgid "Notification Volume"
-msgstr ""
+msgstr "Benachrichtigungslautstärke"
 
 #: src/preferences/devices/airpods/configureWindow.js:290
 msgid "Tone Volume"
-msgstr ""
+msgstr "Klanglautstärke"
 
 #: src/preferences/devices/airpods/configureWindow.js:291
 msgid "Adjust the tone volume of sound effects played by AirPods"
-msgstr ""
+msgstr "Lautstärke der von den AirPods abgespielten Soundeffekte anpassen"
 
 #: src/preferences/devices/airpods/configureWindow.js:293
 msgid "15%"
-msgstr ""
+msgstr "15 %"
 
 #: src/preferences/devices/airpods/configureWindow.js:294
 msgid "100%"
-msgstr ""
+msgstr "100 %"
 
 #: src/preferences/devices/airpods/configureWindow.js:295
 msgid "125%"
-msgstr ""
+msgstr "125 %"
 
 #: src/preferences/devices/airpods/configureWindow.js:316
 msgid "Volume Swipe"
-msgstr ""
+msgstr "Lautstärke-Wischen"
 
 #: src/preferences/devices/airpods/configureWindow.js:317
 msgid "Enable or disable volume adjustment by swiping on earbud stems"
-msgstr ""
+msgstr "Lautstärkeanpassung durch Wischen auf den Stielen der Ohrhörer aktivieren oder deaktivieren"
 
 #: src/preferences/devices/airpods/configureWindow.js:326
 #: src/preferences/devices/airpods/configureWindow.js:359
 #: src/preferences/devices/airpods/configureWindow.js:377
 msgid "Default"
-msgstr ""
+msgstr "Standard"
 
 #: src/preferences/devices/airpods/configureWindow.js:326
 #: src/preferences/devices/airpods/configureWindow.js:359
 msgid "Longer"
-msgstr ""
+msgstr "Länger"
 
 #: src/preferences/devices/airpods/configureWindow.js:326
 #: src/preferences/devices/airpods/configureWindow.js:359
 msgid "Longest"
-msgstr ""
+msgstr "Am längsten"
 
 #: src/preferences/devices/airpods/configureWindow.js:330
 msgid "Swipe Duration"
-msgstr ""
+msgstr "Wisch-Dauer"
 
 #: src/preferences/devices/airpods/configureWindow.js:331
 msgid ""
 "To prevent unintended adjustments,select the preferred wait time between "
 "swipes"
 msgstr ""
+"Um ungewollte Anpassungen zu vermeiden, wählen Sie die bevorzugte Wartezeit "
+"zwischen Wischbewegungen"
 
 #: src/preferences/devices/airpods/configureWindow.js:356
 msgid "Stem and Crown Response"
-msgstr ""
+msgstr "Reaktion von Stiel und Digital Crown"
 
 #: src/preferences/devices/airpods/configureWindow.js:363
 msgid "Press Speed"
-msgstr ""
+msgstr "Druckgeschwindigkeit"
 
 #: src/preferences/devices/airpods/configureWindow.js:364
 msgid ""
 "Adjust how quickly you must double or triple-press the stem or Digital Crown "
 "before an action occurs"
 msgstr ""
+"Legt fest, wie schnell der Stiel oder die Digital Crown doppelt oder "
+"dreifach gedrückt werden muss, bevor eine Aktion ausgelöst wird"
 
 #: src/preferences/devices/airpods/configureWindow.js:377
 msgid "Shorter"
-msgstr ""
+msgstr "Kürzer"
 
 #: src/preferences/devices/airpods/configureWindow.js:377
 msgid "Shortest"
-msgstr ""
+msgstr "Am kürzesten"
 
 #: src/preferences/devices/airpods/configureWindow.js:380
 msgid "Press and Hold Duration"
-msgstr ""
+msgstr "Dauer von Drücken und Halten"
 
 #: src/preferences/devices/airpods/configureWindow.js:381
 msgid "Set how long you need to press and hold before an action occurs"
-msgstr ""
+msgstr "Legt fest, wie lange gedrückt und gehalten werden muss, bevor eine Aktion ausgelöst wird"
 
 #: src/preferences/widgets/ringMyBudsRow.js:21
 msgid "Find my earbuds"
-msgstr ""
+msgstr "Meine Ohrhörer finden"
 
 #: src/preferences/widgets/ringMyBudsRow.js:32
 #: src/preferences/widgets/ringMyBudsRow.js:53
 #: src/preferences/widgets/ringMyBudsRow.js:97
 #: src/preferences/widgets/ringMyBudsRow.js:142
 msgid "Play"
-msgstr ""
+msgstr "Abspielen"
 
 #: src/preferences/widgets/ringMyBudsRow.js:94
 msgid "Stop"
-msgstr ""
+msgstr "Stopp"
 
 #: src/preferences/widgets/ringMyBudsRow.js:133
 msgid "Continue?"
-msgstr ""
+msgstr "Fortfahren?"
 
 #: src/preferences/widgets/ringMyBudsRow.js:135
 msgid ""
@@ -1191,77 +1200,80 @@ msgid ""
 "before you continue. A loud sound will be played which could be "
 "uncomfortable for anyone wearing them."
 msgstr ""
+"Ihre Ohrhörer/Ihr Headset werden möglicherweise gerade benutzt. Stellen Sie "
+"sicher, dass Sie sie aus den Ohren nehmen, bevor Sie fortfahren. Es wird ein "
+"lauter Ton abgespielt, der für Träger unangenehm sein kann."
 
 #: src/preferences/widgets/ringMyBudsRow.js:141
 msgid "Cancel"
-msgstr ""
+msgstr "Abbrechen"
 
 #: src/preferences/widgets/iconSelectorWidget.js:47
 #: src/preferences/widgets/iconSelectorWidget.js:65
 msgid "Device information"
-msgstr ""
+msgstr "Geräteinformationen"
 
 #: src/preferences/widgets/iconSelectorWidget.js:78
 msgid "Mac Address"
-msgstr ""
+msgstr "MAC-Adresse"
 
 #: src/preferences/widgets/iconSelectorWidget.js:100
 msgid "Firmware Version"
-msgstr ""
+msgstr "Firmware-Version"
 
 #: src/lib/devices/nothingBuds/nothingBudsDevice.js:391
 #: src/lib/devices/galaxyBuds/galaxyBudsDevice.js:654
 #: src/lib/devices/galaxyBuds/galaxyBudsDevice.js:665
 msgid "Noise Cancellation Level"
-msgstr ""
+msgstr "Stufe der Geräuschunterdrückung"
 
 #: src/lib/devices/nothingBuds/nothingBudsDevice.js:427
 msgid "Personalised ANC"
-msgstr ""
+msgstr "Personalisiertes ANC"
 
 #: src/lib/devices/galaxyBuds/galaxyBudsDevice.js:652
 #: src/lib/devices/galaxyBuds/galaxyBudsDevice.js:662
 #: src/lib/devices/sony/sonyDevice.js:174
 #: src/lib/devices/airpods/airpodsDevice.js:232
 msgid "Ambient Level"
-msgstr ""
+msgstr "Umgebungston-Stufe"
 
 #: src/lib/devices/galaxyBuds/galaxyBudsDevice.js:658
 #: src/lib/devices/sony/sonyDevice.js:177
 #: src/lib/devices/sony/sonyDevice.js:179
 #: src/lib/devices/sony/sonyDevice.js:183
 msgid "Focus on Voice"
-msgstr ""
+msgstr "Stimmfokus"
 
 #: src/lib/devices/sony/sonyDevice.js:177
 #: src/lib/devices/sony/sonyDevice.js:179
 msgid "Auto Ambient"
-msgstr ""
+msgstr "Automatische Umgebung"
 
 #: src/lib/devices/sony/sonyDevice.js:180
 msgid "Auto Ambient Sensitivity"
-msgstr ""
+msgstr "Empfindlichkeit der automatischen Umgebung"
 
 #: src/lib/devices/notifier.js:19
 msgid "AirPods / Beats"
-msgstr ""
+msgstr "AirPods / Beats"
 
 #: src/lib/devices/notifier.js:21
 msgid "Sony audio devices"
-msgstr ""
+msgstr "Sony-Audiogeräte"
 
 #: src/lib/devices/notifier.js:23
 msgid "Samsung Galaxy Buds"
-msgstr ""
+msgstr "Samsung Galaxy Buds"
 
 #: src/lib/devices/notifier.js:25
 msgid "Nothing / CMF Buds"
-msgstr ""
+msgstr "Nothing / CMF Buds"
 
 #: src/lib/devices/notifier.js:31
 #, javascript-format
 msgid "Could not access advanced features for %s."
-msgstr ""
+msgstr "Auf erweiterte Funktionen für %s konnte nicht zugegriffen werden."
 
 #: src/lib/devices/notifier.js:34
 #, javascript-format
@@ -1269,3 +1281,6 @@ msgid ""
 "Another app or session is already using the Bluetooth socket/profile on %s. "
 "Close any other apps using this device, then restart this app."
 msgstr ""
+"Eine andere Anwendung oder Sitzung verwendet bereits den Bluetooth-Socket "
+"bzw. das Profil von %s. Beenden Sie andere Anwendungen, die dieses Gerät "
+"nutzen, und starten Sie diese Anwendung neu."
