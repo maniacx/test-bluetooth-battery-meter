@@ -194,8 +194,6 @@ export const ConfigureWindow = GObject.registerClass({
                 initialValue: this._settingsItems['bgm-distance'],
             });
 
-            this._updateMenuSensitivity();
-
             this._bgmDistanceDropdown.connect('notify::selected-item', () => {
                 const val = this._bgmDistanceDropdown.selected_item;
                 this._updateGsettings('bgm-distance', val);
@@ -271,6 +269,9 @@ export const ConfigureWindow = GObject.registerClass({
             this._updateEqCustomRowVisibility();
             equalizerGroup.add(this._equalizerCustomRow);
             page.add(equalizerGroup);
+
+            if (modelData.listeningMode)
+                this._updateMenuSensitivity();
         }
 
         if (modelData.audioUpsampling) {
