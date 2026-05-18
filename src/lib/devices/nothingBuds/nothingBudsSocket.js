@@ -80,22 +80,21 @@ export const NothingBudsSocket = GObject.registerClass({
 
             const crcExpected = frame[totalLen - 2] | frame[totalLen - 1] << 8;
 
-            const crcActual =
-            crc16Ansi(frame.slice(0, totalLen - CRC_LEN));
+            let crcActual = crc16Ansi(frame.slice(0, totalLen - CRC_LEN));
+            const payload = frame.slice(HEADER_LEN, HEADER_LEN + payloadLen);
+
+            if (crcActual !== crcExpected)
+                crcActual = crc16Ansi(payload);
 
             if (crcActual !== crcExpected) {
+                this._log.info('CRC mismatch, dropping frame');
                 offset += 1;
                 continue;
             }
 
             const payloadType = frame[3] | frame[4] << 8;
 
-            const resp = {
-                payloadType,
-                operationId: frame[7],
-                payload: frame.slice(HEADER_LEN, HEADER_LEN + payloadLen),
-                bytes: frame,
-            };
+            const resp = {payloadType, payload};
 
             this._parseData(resp);
 
