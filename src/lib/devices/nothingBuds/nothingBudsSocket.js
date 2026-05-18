@@ -37,69 +37,29 @@ export const NothingBudsSocket = GObject.registerClass({
         this._seq = 0;
         this._modelInitialized = false;
 
-        this._halfPacket = null;
-
         this._callbacks = callbacks;
 
         this.startSocket();
     }
 
     _decode(buffer) {
-        if (this._halfPacket && this._halfPacket.length > 0) {
-            const merged = new Uint8Array(this._halfPacket.length + buffer.length);
-            merged.set(this._halfPacket, 0);
-            merged.set(buffer, this._halfPacket.length);
-            buffer = merged;
-            this._halfPacket = null;
-        }
+        if (buffer[0] !== HEADER_MAGIC[0])
+            return;
 
-        let offset = 0;
         const MIN_PACKET = HEADER_LEN + CRC_LEN;
+        if (buffer.length  < MIN_PACKET)
+            return;
 
-        while (buffer.length - offset >= 1) {
-            const start = buffer.indexOf(0x55, offset);
-            if (start === -1)
-                return;
+        const payloadLen = buffer[5];
+        const totalLen = HEADER_LEN + payloadLen + CRC_LEN;
 
-            offset = start;
+        if (buffer.length !== totalLen)
+            return;
 
-            if (buffer.length - offset < MIN_PACKET) {
-                this._halfPacket = buffer.slice(offset);
-                return;
-            }
-
-            const payloadLen = buffer[offset + 5];
-            const totalLen = HEADER_LEN + payloadLen + CRC_LEN;
-
-            if (buffer.length - offset < totalLen) {
-                this._halfPacket = buffer.slice(offset);
-                return;
-            }
-
-            const frame = buffer.slice(offset, offset + totalLen);
-
-            const crcExpected = frame[totalLen - 2] | frame[totalLen - 1] << 8;
-
-            let crcActual = crc16Ansi(frame.slice(0, totalLen - CRC_LEN));
-            const payload = frame.slice(HEADER_LEN, HEADER_LEN + payloadLen);
-
-            if (crcActual !== crcExpected)
-                crcActual = crc16Ansi(payload);
-
-            if (crcActual !== crcExpected) {
-                this._log.info('CRC mismatch, dropping frame');
-                offset += 1;
-                continue;
-            }
-
-            const payloadType = frame[3] | frame[4] << 8;
-
-            const resp = {payloadType, payload};
-
-            this._parseData(resp);
-
-            offset += totalLen;
-        }
+        const payload = buffer.slice(HEADER_LEN, HEADER_LEN + payloadLen);
+        const payloadType = buffer[3] | buffer[4] << 8;
+        const resp = {payloadType, payload};
+        this._parseData(resp);
     }
 
     _encode(payloadType, payload) {
