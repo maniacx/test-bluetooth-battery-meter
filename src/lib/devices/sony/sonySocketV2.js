@@ -630,8 +630,7 @@ export const SonySocketV2 = GObject.registerClass({
         payload.push(0x01);
         payload.push(enabled ? 0x01 : 0x00);
         this.addMessageQueue(MessageType.COMMAND_1, payload, 'SetAudioUpsampling');
-        if (enabled)
-            this._getUpscalingIndicator();
+        this._getUpscalingIndicator();
     }
 
     _getButtonModesLeftRight() {
