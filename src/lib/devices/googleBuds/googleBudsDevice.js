@@ -10,26 +10,16 @@ import {
 import {createConfig, createProperties, DataHandler} from '../../dataHandler.js';
 import {GoogleBudsSocket} from './googleBudsSocket.js';
 import {
-    AncState, DeviceTypeGoogleBuds, EqPreset, MaestroUUID, PixelBudsClass, PixelBuds2Class,
-    eqPresetForBands
+    AncState, DeviceTypeGoogleBuds, EqPreset, MaestroUUID, eqPresetForBands
 } from './googleBudsConfig.js';
 
 export {DeviceTypeGoogleBuds};
 
 export function isGoogleBuds(bluezDeviceProxy, uuids) {
-    const bluezProps = ['Class'];
+    const bluezProps = [];
     let supported = 'no';
 
-    if (!uuids.includes(MaestroUUID))
-        return {supported, bluezProps};
-
-    const deviceClass = bluezDeviceProxy.Class;
-    if (deviceClass === null || deviceClass === undefined) {
-        supported = 'pending';
-        return {supported, bluezProps};
-    }
-
-    if (deviceClass === PixelBudsClass || deviceClass === PixelBuds2Class)
+    if (uuids.includes(MaestroUUID))
         supported = 'yes';
 
     return {supported, bluezProps};
