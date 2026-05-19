@@ -197,6 +197,7 @@ export const GoogleBudsDevice = GObject.registerClass({
     }
 
     _updateAncConfig(enabledModes = {off: true, aware: true, active: true, adaptive: false}) {
+        this._ancEnabledModes = {...enabledModes};
         this._config.toggle1Title = _('Noise Control');
 
         for (let i = 1; i <= 4; i++) {
@@ -262,7 +263,7 @@ export const GoogleBudsDevice = GObject.registerClass({
             off: true,
             aware: true,
             active: true,
-            adaptive: gestureLoop.adaptive,
+            adaptive: gestureLoop.adaptive || this._ancState === AncState.ADAPTIVE,
         };
         this._updateAncConfig(enabledModes);
     }
@@ -301,6 +302,10 @@ export const GoogleBudsDevice = GObject.registerClass({
     }
 
     updateAncState(ancState) {
+        this._ancState = ancState;
+        if (ancState === AncState.ADAPTIVE && !this._ancStateToToggle1Button?.[ancState])
+            this._updateAncConfig({...this._ancEnabledModes, adaptive: true});
+
         const toggleState = this._ancStateToToggle1Button?.[ancState] ?? 0;
         this._props.toggle1State = toggleState;
         this.dataHandler?.setProps(this._props);
