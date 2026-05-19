@@ -5,6 +5,7 @@ const BluezDeviceInterface = `
   <interface name="org.bluez.Device1">
     <property name="Alias" type="s" access="read"/>
     <property name="Connected" type="b" access="read"/>
+    <property name="Class" type="u" access="read"/>
     <property name="Paired" type="b" access="read"/>
     <property name="Modalias" type="s" access="read"/>
     <property name="Icon" type="s" access="read"/>

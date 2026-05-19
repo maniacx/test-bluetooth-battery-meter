@@ -4,8 +4,8 @@
   <name>BudsLink</name>
   <summary>Monitor and control Bluetooth earbuds</summary>
   <description>
-    <p>BudsLink provides comprehensive battery monitoring and feature control for supported Bluetooth wearable audio devices, including popular models from Apple, Beats, and Sony. The application communicates directly with supported devices to expose battery levels, noise control modes, and advanced interaction features when available, offering a consistent and configurable interface across different vendors.</p>
-    <p>This application is an independent project and is not affiliated with, endorsed by, or sponsored by Apple, Sony, Samsung, or Nothing.</p>
+    <p>BudsLink provides comprehensive battery monitoring and feature control for supported Bluetooth wearable audio devices, including popular models from Apple, Beats, Sony, Samsung, Google, and Nothing. The application communicates directly with supported devices to expose battery levels, noise control modes, and advanced interaction features when available, offering a consistent and configurable interface across different vendors.</p>
+    <p>This application is an independent project and is not affiliated with, endorsed by, or sponsored by Apple, Sony, Samsung, Google, or Nothing.</p>
     <ul>
       <li>Monitor earbud and charging case battery levels</li>
       <li>Control Active Noise Cancellation and ambient sound modes</li>
@@ -21,6 +21,7 @@
       <li>Airpods / Beats</li>
       <li>Sony</li>
       <li>Samsung Galaxy Buds</li>
+      <li>Google Pixel Buds</li>
       <li>Nothing / CMF</li>
     </ul>
   </description>
@@ -39,6 +40,8 @@
     <keyword>Buds</keyword>
     <keyword>Nothing</keyword>
     <keyword>CMF</keyword>
+    <keyword>Google</keyword>
+    <keyword>Pixel</keyword>
   </keywords>
   <metadata_license>CC-BY-SA-4.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>

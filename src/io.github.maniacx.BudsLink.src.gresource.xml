@@ -84,6 +84,11 @@
         <file>lib/devices/nothingBuds/nothingBudsDevice.js</file>
         <file>lib/devices/nothingBuds/nothingBudsSocket.js</file>
 
+        <file>lib/devices/googleBuds/googleBudsConfig.js</file>
+        <file>lib/devices/googleBuds/googleBudsDevice.js</file>
+        <file>lib/devices/googleBuds/googleBudsProtocol.js</file>
+        <file>lib/devices/googleBuds/googleBudsSocket.js</file>
+
         <file>lib/devices/nothingBuds/deviceConfigs/BudsPro.js</file>
         <file>lib/devices/nothingBuds/deviceConfigs/CMFBuds.js</file>
         <file>lib/devices/nothingBuds/deviceConfigs/CMFBuds2.js</file>
@@ -143,6 +148,7 @@
 
         <file>preferences/devices/airpods/configureWindow.js</file>
         <file>preferences/devices/galaxyBuds/configureWindow.js</file>
+        <file>preferences/devices/googleBuds/configureWindow.js</file>
         <file>preferences/devices/nothingBuds/configureWindow.js</file>
         <file>preferences/devices/sony/configureWindow.js</file>
         <file>preferences/widgets/checkBoxesRowWidget.js</file>
