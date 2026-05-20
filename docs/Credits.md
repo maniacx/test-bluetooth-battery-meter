@@ -102,6 +102,7 @@ permalink: /credits
 > * kilisei
 > * G-dH
 > * guiand888
+> * pesader
 
 ## Samsung Galaxy Buds
 
