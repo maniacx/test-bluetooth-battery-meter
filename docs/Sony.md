@@ -81,6 +81,7 @@ Currently tested and confirmed working:
 * **Sony WH-1000XM5**  ✅ — Credits: guiand888
 * **Sony WH-XB900N**  ✅ — Credits: BerenLuth
 * **Sony WF-1000XM4**  ✅ — Credits: Raycx86
+* **Sony WH-1000XM6**  ✅ — Credits: AquaCobalt
 
 
 <style>
@@ -99,19 +100,19 @@ table th:nth-of-type(3) {
 
 | Feature                       | Supported      | Tested |
 |:-----------------------------:|:--------------:|:------:|
-| Battery Level                 | Single         | ❌     |
-| Ambient Mode                  | ✅             | ❌     |
-| Anc Mode                      | ✅             | ❌     |
-| Auto Ambient Sound Control    | ✅             | ❌     |
-| Noise Control Button Mode     | ✅             | ❌     |
-| Speak To Chat Config          | ✅             | ❌     |
-| Voice Notifications           | ✅             | ❌     |
-| Voice Notifications Volume    | ✅             | ❌     |
-| Auto Power Off When Taken Off | ✅             | ❌     |
-| Pause When Taken Off          | ✅             | ❌     |
-| Equalizer Ten Bands           | ✅             | ❌     |
-| Listening Mode                | ✅             | ❌     |
-| DSEE                          | ✅             | ❌     |
+| Battery Level                 | Single         | ✅     |
+| Ambient Mode                  | ✅             | ✅     |
+| Anc Mode                      | ✅             | ✅     |
+| Auto Ambient Sound Control    | ✅             | ✅     |
+| Noise Control Button Mode     | ✅             | ✅     |
+| Speak To Chat Config          | ✅             | Untested |
+| Voice Notifications           | ✅             | Untested |
+| Voice Notifications Volume    | ✅             | Untested |
+| Auto Power Off When Taken Off | ✅             | ✅     |
+| Pause When Taken Off          | ✅             | ✅     |
+| Equalizer Ten Bands           | ✅             | ✅     |
+| Listening Mode                | ✅             | ✅     |
+| DSEE                          | ✅             | ✅     |
 
 <br>
 ### Sony WH-1000XM5

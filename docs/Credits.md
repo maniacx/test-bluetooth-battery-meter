@@ -104,6 +104,7 @@ permalink: /credits
 > * guiand888
 > * pesader
 > * Raycx86
+> * AquaCobalt
 
 ## Samsung Galaxy Buds
 
