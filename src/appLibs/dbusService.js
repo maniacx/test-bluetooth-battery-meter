@@ -293,7 +293,7 @@ class DbusService extends GObject.Object {
             GLib.Variant.new('(o)', [objectPath])
         );
 
-        this._log.info(`Device added: ${objectPath}`);
+        this._log.info(`Device added: ${this._safeDevicePath(objectPath)}`);
     }
 
     removeDevice(devicePath) {
@@ -312,7 +312,14 @@ class DbusService extends GObject.Object {
             GLib.Variant.new('(o)', [objectPath])
         );
 
-        this._log.info(`Device removed: ${objectPath}`);
+        this._log.info(`Device removed: ${this._safeDevicePath(objectPath)}`);
+    }
+
+    _safeDevicePath(path) {
+        return path.replace(
+            /dev_([0-9A-Fa-f]{2}_){5}[0-9A-Fa-f]{2}/,
+            'dev_XX_XX_XX_XX_XX_XX'
+        );
     }
 
     destroy() {
