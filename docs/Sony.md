@@ -102,7 +102,7 @@ table th:nth-of-type(3) {
 |:-----------------------------:|:--------------:|:------:|
 | Battery Level                 | Single         | ✅     |
 | Ambient Mode                  | ✅             | ✅     |
-| Anc Mode                      | ✅             | ✅     |
+| ANC Mode                      | ✅             | ✅     |
 | Auto Ambient Sound Control    | ✅             | ✅     |
 | Noise Control Button Mode     | ✅             | ✅     |
 | Speak To Chat Config          | ✅             | Untested |
@@ -121,7 +121,7 @@ table th:nth-of-type(3) {
 |:-----------------------------:|:--------------:|:------:|
 | Battery Level                 | Single         | ✅     |
 | Ambient Mode                  | ✅             | ✅     |
-| Anc Mode                      | ✅             | ✅     |
+| ANC Mode                      | ✅             | ✅     |
 | Noise Control Button Mode     | ✅             | ✅     |
 | Speak To Chat Config          | ✅             | ✅     |
 | Voice Notifications           | ✅             | ✅     |
@@ -137,7 +137,7 @@ table th:nth-of-type(3) {
 |:-----------------------------:|:--------------:|:------:|
 | Battery Level                 | Single         | ✅     |
 | Ambient Mode                  | ✅             | ✅     |
-| Anc Mode                      | ✅             | ✅     |
+| ANC Mode                      | ✅             | ✅     |
 | Speak To Chat Config          | ✅             | ✅     |
 | Voice Notifications           | ✅             | ✅     |
 | Auto Power Off When Taken Off | ✅             | ✅     |
@@ -152,7 +152,7 @@ table th:nth-of-type(3) {
 |:-----------------------------:|:--------------:|:------:|
 | Battery Level                 | Single         | ❌     |
 | Ambient Mode                  | ✅             | ❌     |
-| Anc Mode                      | ✅             | ❌     |
+| ANC Mode                      | ✅             | ❌     |
 | Voice Notifications           | ✅             | ❌     |
 | Auto Power Off When Taken Off | ✅             | ❌     |
 | Auto Power Off When Taken Time| ✅            | ❌     |
@@ -166,7 +166,7 @@ table th:nth-of-type(3) {
 |:-----------------------------:|:--------------:|:------:|
 | Battery Level                 | Single         | ❌     |
 | Ambient Mode                  | ✅             | ❌     |
-| Anc Mode                      | ✅             | ❌     |
+| ANC Mode                      | ✅             | ❌     |
 | Voice Notifications           | ✅             | ❌     |
 | Equalizer Six Bands           | ✅             | ❌     |
 | DSEE                          | ✅             | ❌     |
@@ -178,7 +178,7 @@ table th:nth-of-type(3) {
 |:-----------------------------:|:--------------:|:------:|
 | Battery Level                 | Single         | ❌     |
 | Ambient Mode                  | ✅             | ❌     |
-| Anc Mode                      | ✅             | ❌     |
+| ANC Mode                      | ✅             | ❌     |
 | Noise Control Button Mode     | ✅             | ❌     |
 | Auto Power Off When Taken Off | ✅             | ❌     |
 | Voice Notifications           | ✅             | ❌     |
@@ -220,7 +220,7 @@ table th:nth-of-type(3) {
 |:-----------------------------:|:---------:|:------:|
 | Battery Level                 | L, R, Case| ✅     |
 | Ambient Mode                  | ✅        | ✅     |
-| Anc Mode                      | ✅        | ✅     |
+| ANC Mode                      | ✅        | ✅     |
 | Pause When Taken Off          | ✅        | ✅     |
 | Auto Power Off When Taken Off | ✅        | ✅     |
 | Equalizer Six Bands           | ✅        | ✅     |
@@ -234,7 +234,7 @@ table th:nth-of-type(3) {
 |:-----------------------------:|:---------:|:------:|
 | Battery Level                 | L, R, Case| ✅     |
 | Ambient Mode                  | ✅        | ✅     |
-| Anc Mode                      | ✅        | ✅     |
+| ANC Mode                      | ✅        | ✅     |
 | Voice Notifications           | ✅        | ❌     |
 | Pause When Taken Off          | ✅        | ✅     |
 | Auto Power Off When Taken Off | ✅        | ✅     |
@@ -250,7 +250,7 @@ table th:nth-of-type(3) {
 |:-----------------------------:|:---------:|:------:|
 | Battery Level                 | Dual2+Case | No    |
 | Ambient Mode                  | ✅        | ❌     |
-| Anc Mode                      | ✅        | ❌     |
+| ANC Mode                      | ✅        | ❌     |
 | Equalizer Six Bands           | ✅        | ❌     |
 | Upscaling (DSEE)              | ✅        | ❌     |
 
@@ -262,7 +262,7 @@ table th:nth-of-type(3) {
 |:-----------------------------:|:---------:|:------:|
 | Battery Level                 | Dual2+Case | No    |
 | Ambient Mode                  | ✅        | ❌     |
-| Anc Mode                      | ✅        | ❌     |
+| ANC Mode                      | ✅        | ❌     |
 | Auto Power Off When Taken Off | ✅        | ❌     |
 | Equalizer Six Bands           | ✅        | ❌     |
 | Upscaling (DSEE)              | ✅        | ❌     |
@@ -309,7 +309,7 @@ table th:nth-of-type(3) {
 |:-----------------------------:|:---------:|:------:|
 | Battery Level                 | L, R, Case| ❌     |
 | Ambient Mode                  | ✅        | ❌     |
-| Anc Mode                      | ✅        | ❌     |
+| ANC Mode                      | ✅        | ❌     |
 | Voice Notifications           | ✅        | ❌     |
 | Pause When Taken Off          | ✅        | ❌     |
 | Auto Power Off When Taken Off | ✅        | ❌     |
@@ -334,7 +334,7 @@ table th:nth-of-type(3) {
 |:-----------------------------:|:---------:|:------:|
 | Battery Level                 | Single    | ❌     |
 | Ambient Mode                  | ✅        | ❌     |
-| Anc Mode                      | ✅        | ❌     |
+| ANC Mode                      | ✅        | ❌     |
 | Voice Notifications           | ✅        | ❌     |
 | Pause When Taken Off          | ✅        | ❌     |
 | Auto Power Off When Taken Off | ✅        | ❌     |
@@ -348,7 +348,7 @@ table th:nth-of-type(3) {
 |:-----------------------------:|:---------:|:------:|
 | Battery Level                 | Single    | ✅     |
 | Ambient Mode                  | ✅        | ✅     |
-| Anc Mode                      | ✅        | ✅     |
+| ANC Mode                      | ✅        | ✅     |
 | Voice Notifications           | ✅        | ✅     |
 | Pause When Taken Off          | ✅        | ✅     |
 | Auto Power Off When Taken Off | ✅        | ✅     |
@@ -363,7 +363,7 @@ table th:nth-of-type(3) {
 |:-----------------------------:|:---------:|:------:|
 | Battery Level                 | Single    | ❌     |
 | Ambient Mode                  | ✅        | ❌     |
-| Anc Mode                      | ✅        | ❌     |
+| ANC Mode                      | ✅        | ❌     |
 | Voice Notifications           | ✅        | ❌     |
 | Equalizer Six Bands           | ✅        | ❌     |
 
