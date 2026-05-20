@@ -2,6 +2,7 @@
 import GObject from 'gi://GObject';
 
 import {getBluezDeviceProxy} from './bluezDeviceProxy.js';
+import {createLogger} from './devices/logger.js';
 import {Notifier} from './devices/notifier.js';
 import {ProfileManager} from './devices/profileManager.js';
 import {AirpodsDevice, isAirpods, DeviceTypeAirpods} from './devices/airpods/airpodsDevice.js';
@@ -27,6 +28,7 @@ export const EnhancedDeviceSupportManager = GObject.registerClass({
         this._settings = toggle.settings;
         this._extPath = toggle.extPath;
         this._deviceMap = new Map();
+        this._log = createLogger('EnhancedDeviceSupportManager');
         this._notifier = new Notifier(toggle);
         this._profileManager = new ProfileManager(this._notifyCb.bind(this));
     }
@@ -63,7 +65,23 @@ export const EnhancedDeviceSupportManager = GObject.registerClass({
 
         if (deviceProps.pendingDetection) {
             const bluezDeviceProxy = getBluezDeviceProxy(path);
-            const uuids = bluezDeviceProxy.UUIDs;
+            const uuids = bluezDeviceProxy.UUIDs ?? [];
+            const safePath = this._safeBluezPath(path);
+            this._log.info(
+                `Detecting device path=${safePath} connected=${connected} ` +
+                `icon=${icon ?? ''} uuidCount=${uuids?.length ?? 0}`
+            );
+            this._log.info(`Device UUIDs path=${safePath}: ${uuids?.join(', ') ?? ''}`);
+
+            if (uuids.length === 0) {
+                this._log.info(`Detection pending path=${safePath} waitingFor=UUIDs`);
+                deviceProps.pendingDetection = true;
+                this._waitForBluezProps(path, bluezDeviceProxy, ['UUIDs'], deviceProps);
+                return {
+                    type: deviceProps.type, dataHandler: deviceProps.dataHandler,
+                    pendingDetection: deviceProps.pendingDetection,
+                };
+            }
 
             /* ----- Add device variant here _______ */
             const deviceModes = [
@@ -111,12 +129,17 @@ export const EnhancedDeviceSupportManager = GObject.registerClass({
                 const {supported, bluezProps} = mode.check(bluezDeviceProxy, uuids);
 
                 if (supported === 'pending') {
+                    this._log.info(
+                        `Detection pending path=${safePath} type=${mode.type} ` +
+                        `waitingFor=${bluezProps.join(',')}`
+                    );
                     deviceProps.pendingDetection = true;
                     this._waitForBluezProps(path, bluezDeviceProxy, bluezProps, deviceProps);
                     break;
                 }
 
                 if (supported === 'yes') {
+                    this._log.info(`Detected device path=${safePath} type=${mode.type}`);
                     deviceProps.type = mode.type;
                     deviceProps.pendingDetection = false;
                     break;
@@ -131,9 +154,15 @@ export const EnhancedDeviceSupportManager = GObject.registerClass({
     }
 
     _waitForBluezProps(path, bluezDeviceProxy, bluezProps, deviceProps) {
+        if (deviceProps.bluezId && deviceProps.bluezDeviceProxy)
+            return;
+
         const allPropsReady = () => {
             return bluezProps.every(prop => {
                 const value = bluezDeviceProxy[prop];
+                if (Array.isArray(value))
+                    return value.length > 0;
+
                 return value !== null && value !== undefined;
             });
         };
@@ -143,6 +172,10 @@ export const EnhancedDeviceSupportManager = GObject.registerClass({
                 return;
 
             if (allPropsReady()) {
+                this._log.info(
+                    `Pending detection properties ready path=${this._safeBluezPath(path)} ` +
+                    `props=${bluezProps.join(',')}`
+                );
                 if (this._deviceMap.has(path)) {
                     const props = this._deviceMap.get(path);
                     props.bluezDeviceProxy.disconnect(deviceProps.bluezId);
@@ -165,6 +198,10 @@ export const EnhancedDeviceSupportManager = GObject.registerClass({
     updateEnhancedDevicesInstance() {
         for (const [path, deviceProps] of this._deviceMap.entries()) {
             if (deviceProps.type && deviceProps.connected && !deviceProps.enhancedDevice) {
+                this._log.info(
+                    `Creating enhanced device path=${this._safeBluezPath(path)} ` +
+                    `type=${deviceProps.type}`
+                );
                 /* ----- Add device variant here _______ */
                 if (deviceProps.type === DeviceTypeAirpods) {
                     deviceProps.enhancedDevice =
@@ -197,6 +234,13 @@ export const EnhancedDeviceSupportManager = GObject.registerClass({
                 this._destroyEnhancedDevice(path);
             }
         }
+    }
+
+    _safeBluezPath(path) {
+        return path.replace(
+            /dev_([0-9A-Fa-f]{2}_){5}[0-9A-Fa-f]{2}/,
+            'dev_XX_XX_XX_XX_XX_XX'
+        );
     }
 
     _destroyEnhancedDevice(path) {
