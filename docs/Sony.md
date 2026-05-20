@@ -80,6 +80,7 @@ Currently tested and confirmed working:
 * **Sony WH-1000XM5**  ✅ — Credits: pesader
 * **Sony WH-1000XM5**  ✅ — Credits: guiand888
 * **Sony WH-XB900N**  ✅ — Credits: BerenLuth
+* **Sony WF-1000XM4**  ✅ — Credits: Raycx86
 
 
 <style>
@@ -216,13 +217,13 @@ table th:nth-of-type(3) {
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
-| Battery Level                 | L, R, Case| ❌     |
-| Ambient Mode                  | ✅        | ❌     |
-| Anc Mode                      | ✅        | ❌     |
-| Pause When Taken Off          | ✅        | ❌     |
-| Auto Power Off When Taken Off | ✅        | ❌     |
-| Equalizer Six Bands           | ✅        | ❌     |
-| Upscaling (DSEE)              | ✅        | ❌     |
+| Battery Level                 | L, R, Case| ✅     |
+| Ambient Mode                  | ✅        | ✅     |
+| Anc Mode                      | ✅        | ✅     |
+| Pause When Taken Off          | ✅        | ✅     |
+| Auto Power Off When Taken Off | ✅        | ✅     |
+| Equalizer Six Bands           | ✅        | ✅     |
+| Upscaling (DSEE)              | ✅        | ✅     |
 
 <br>
 

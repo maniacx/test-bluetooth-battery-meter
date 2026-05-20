@@ -103,6 +103,7 @@ permalink: /credits
 > * G-dH
 > * guiand888
 > * pesader
+> * Raycx86
 
 ## Samsung Galaxy Buds
 
