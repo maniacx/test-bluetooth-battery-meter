@@ -63,8 +63,9 @@ Other settings are self explanatory similar to settings available in iPhone / iP
 Some devices have not yet been tested and may show incorrect features in the configuration. Others may be missing entirely. If you notice missing devices or incorrect feature mappings, please open an issue on GitHub so we can add or correct them.
 
 Currently tested and confirmed working:
-* **CMF Buds 2 Plus**  ✅ — Credits: ArcticDev78
-* **Nothing Headphone (1)**  ✅ — Credits: Lascar_s@matrix
+* **CMF Buds 2 Plus [B184]**  ✅ — Credits: ArcticDev78
+* **Nothing Headphone (1) [B170]**  ✅ — Credits: Lascar_s@matrix
+* **CMF Buds Pro 2 [B172]**  ✅ — Credits: khaledkhamis26
 
 <style>
 table th:first-of-type {
@@ -222,18 +223,18 @@ table th:nth-of-type(3) {
 
 | Feature | Supported | Tested |
 |:--|:--:|:--:|
-| Battery Level | Left+Right+Case | ❌ |
-| Noise Control | ✅ | ❌ |
-| Noise Control Level | Low, Mid, High | ❌ |
-| Noise Control Adaptive | ✅ | ❌ |
-| Eq Preset | ✅ | ❌ |
+| Battery Level | Left+Right+Case | ✅ |
+| Noise Control | ✅ | ✅ |
+| Noise Control Level | Low, Mid, High | ✅ |
+| Noise Control Adaptive | ✅ | ✅ |
+| Eq Preset | ✅ | ✅ |
 | Eq Custom | Not Implemented | ❌ |
-| Enhanced Bass | ✅ | ❌ |
-| Spatial Audio | ✅ | ❌ |
-| In Ear Detection | ✅ | ❌ |
-| Low Latency Mode | ✅ | ❌ |
-| Find My Buds | ✅ | ❌ |
-| Gesture | ✅ | ❌ |
+| Enhanced Bass | ✅ | ✅ |
+| Spatial Audio | ✅ | ✅ |
+| In Ear Detection | ✅ | ✅ |
+| Low Latency Mode | ✅ | ✅ |
+| Find My Buds | ✅ | ✅ |
+| Gesture | ✅ | ✅ |
 
 ---
 
