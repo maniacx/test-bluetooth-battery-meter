@@ -105,6 +105,7 @@ permalink: /credits
 > * pesader
 > * Raycx86
 > * AquaCobalt
+> * Neikon
 
 ## Samsung Galaxy Buds
 

@@ -82,7 +82,7 @@ Currently tested and confirmed working:
 * **Sony WH-XB900N**  ✅ — Credits: BerenLuth
 * **Sony WF-1000XM4**  ✅ — Credits: Raycx86
 * **Sony WH-1000XM6**  ✅ — Credits: AquaCobalt
-
+* **Sony LinkBuds S**  ✅ — Credits: Neikon
 
 <style>
 table th:first-of-type {
@@ -385,14 +385,16 @@ table th:nth-of-type(3) {
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
-| Battery Level                 | L, R, Case| ❌     |
-| Ambient Mode                  | ✅        | ❌     |
-| Speak To Chat Config          | ✅        | ❌     |
+| Battery Level                 | L, R, Case| ✅     |
+| Ambient Mode                  | ✅        | ✅     |
+| ANC Mode                      | ✅        | ✅     |
+| Speak To Chat Config          | ✅        | ✅     |
+| Button Modes Left / Right     | ✅        | ❌     |
 | Voice Notifications           | ✅        | ❌     |
-| Pause When Taken Off          | ✅        | ❌     |
-| Auto Power Off When Taken Off | ✅        | ❌     |
-| Equalizer Six Bands           | ✅        | ❌     |
-| Upscaling (DSEE)              | ✅        | ❌     |
+| Pause When Taken Off          | ✅        | ✅     |
+| Auto Power Off When Taken Off | ✅        | ✅     |
+| Equalizer Six Bands           | ✅        | ✅     |
+| Upscaling (DSEE)              | ✅        | ✅     |
 
 <br>
 
