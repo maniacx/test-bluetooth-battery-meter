@@ -1,4 +1,5 @@
 'use strict';
+import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 
 import {createLogger} from '../logger.js';
@@ -22,6 +23,8 @@ const READ_VOLUME_EQ_CALL_ID = 5;
 const READ_EQ_CALL_ID = 6;
 const READ_LAST_SAVED_EQ_CALL_ID = 7;
 const WRITE_SETTING_CALL_ID_BASE = 100;
+const WRITE_RESPONSE_TIMEOUT_MS = 3000;
+const WRITE_REFRESH_TIMEOUT_MS = 3000;
 
 export const GoogleBudsSocket = GObject.registerClass({
     GTypeName: 'BudsLink_GoogleBudsSocket',
@@ -42,6 +45,9 @@ export const GoogleBudsSocket = GObject.registerClass({
         this._writeQueue = [];
         this._writeInFlight = false;
         this._resumeWritesAfterReadCallId = null;
+        this._resumeWritesAfterReadSetting = null;
+        this._writeResponseTimeoutId = 0;
+        this._writeRefreshTimeoutId = 0;
 
         this.startSocket();
     }
@@ -88,6 +94,15 @@ export const GoogleBudsSocket = GObject.registerClass({
                 packet.channelId === this._channel &&
                 packet.serviceId === MaestroService &&
                 packet.methodId === MaestroMethod.READ_SETTING &&
+                packet.callId === this._resumeWritesAfterReadCallId) {
+            this._processWriteRefreshResponse(packet);
+            return;
+        }
+
+        if (this._channel !== null && packet.type === PacketType.RESPONSE &&
+                packet.channelId === this._channel &&
+                packet.serviceId === MaestroService &&
+                packet.methodId === MaestroMethod.READ_SETTING &&
                 packet.callId === READ_ANC_STATE_CALL_ID) {
             if (packet.status === Status.OK) {
                 const ancState = decodeAncStateSettingsResponse(packet.payload);
@@ -95,8 +110,7 @@ export const GoogleBudsSocket = GObject.registerClass({
                     this._callbacks?.updateAncState?.(ancState);
             }
             if (this._resumeWritesAfterReadCallId === READ_ANC_STATE_CALL_ID) {
-                this._resumeWritesAfterReadCallId = null;
-                this._sendNextWriteSetting();
+                this._completeWriteRefresh();
                 return;
             }
             this.readVolumeEqEnable();
@@ -128,8 +142,7 @@ export const GoogleBudsSocket = GObject.registerClass({
                     this._callbacks?.updateVolumeEqEnable?.(enabled);
             }
             if (this._resumeWritesAfterReadCallId === READ_VOLUME_EQ_CALL_ID) {
-                this._resumeWritesAfterReadCallId = null;
-                this._sendNextWriteSetting();
+                this._completeWriteRefresh();
                 return;
             }
             this.readEq();
@@ -147,8 +160,7 @@ export const GoogleBudsSocket = GObject.registerClass({
                     this._callbacks?.updateEq?.(eq);
             }
             if (this._resumeWritesAfterReadCallId === READ_EQ_CALL_ID) {
-                this._resumeWritesAfterReadCallId = null;
-                this._sendNextWriteSetting();
+                this._completeWriteRefresh();
                 return;
             }
             this.readLastSavedEq();
@@ -291,14 +303,18 @@ export const GoogleBudsSocket = GObject.registerClass({
         if (this._channel === null)
             return;
 
+        this._readSetting(SettingId.LAST_SAVED_USER_EQ, READ_LAST_SAVED_EQ_CALL_ID);
+    }
+
+    _readSetting(settingId, callId) {
         this._sendRpcPacket({
             type: PacketType.REQUEST,
             channelId: this._channel,
             serviceId: MaestroService,
             methodId: MaestroMethod.READ_SETTING,
-            payload: encodeReadSettingPayload(SettingId.LAST_SAVED_USER_EQ),
+            payload: encodeReadSettingPayload(settingId),
             status: Status.OK,
-            callId: READ_LAST_SAVED_EQ_CALL_ID,
+            callId,
         });
     }
 
@@ -329,13 +345,16 @@ export const GoogleBudsSocket = GObject.registerClass({
     }
 
     _sendNextWriteSetting() {
-        if (this._writeInFlight || this._writeQueue.length === 0 || this._channel === null)
+        if (this._writeInFlight || this._resumeWritesAfterReadCallId !== null ||
+                this._writeQueue.length === 0 || this._channel === null) {
             return;
+        }
 
         const {setting, payload} = this._writeQueue.shift();
         this._writeCallId++;
         this._pendingWriteSettings.set(this._writeCallId, setting);
         this._writeInFlight = true;
+        this._startWriteResponseTimeout(this._writeCallId, setting);
         this._sendRpcPacket({
             type: PacketType.REQUEST,
             channelId: this._channel,
@@ -348,25 +367,115 @@ export const GoogleBudsSocket = GObject.registerClass({
     }
 
     _refreshWrittenSetting(callId) {
+        if (!this._pendingWriteSettings.has(callId)) {
+            this._log.info(`Ignoring stale Maestro setting write response callId=${callId}`);
+            return;
+        }
+
+        this._clearWriteResponseTimeout();
         const setting = this._pendingWriteSettings.get(callId);
         this._pendingWriteSettings.delete(callId);
         this._writeInFlight = false;
 
-        if (setting === 'anc')
-            this._resumeWritesAfterReadCallId = READ_ANC_STATE_CALL_ID;
-        else if (setting === 'volumeEq')
-            this._resumeWritesAfterReadCallId = READ_VOLUME_EQ_CALL_ID;
-        else if (setting === 'eq')
-            this._resumeWritesAfterReadCallId = READ_EQ_CALL_ID;
+        this._resumeWritesAfterReadCallId = ++this._writeCallId;
+        this._resumeWritesAfterReadSetting = setting;
 
-        if (setting === 'anc')
-            this.readAncState();
-        else if (setting === 'volumeEq')
-            this.readVolumeEqEnable();
-        else if (setting === 'eq')
-            this.readEq();
-        else
+        if (setting === 'anc') {
+            this._startWriteRefreshTimeout(this._resumeWritesAfterReadCallId, setting);
+            this._readSetting(SettingId.CURRENT_ANCR_STATE, this._resumeWritesAfterReadCallId);
+        } else if (setting === 'volumeEq') {
+            this._startWriteRefreshTimeout(this._resumeWritesAfterReadCallId, setting);
+            this._readSetting(SettingId.VOLUME_EQ_ENABLE, this._resumeWritesAfterReadCallId);
+        } else if (setting === 'eq') {
+            this._startWriteRefreshTimeout(this._resumeWritesAfterReadCallId, setting);
+            this._readSetting(SettingId.CURRENT_USER_EQ, this._resumeWritesAfterReadCallId);
+        } else {
+            this._resumeWritesAfterReadCallId = null;
+            this._resumeWritesAfterReadSetting = null;
             this._sendNextWriteSetting();
+        }
+    }
+
+    _startWriteResponseTimeout(callId, setting) {
+        this._clearWriteResponseTimeout();
+        this._writeResponseTimeoutId = GLib.timeout_add(
+            GLib.PRIORITY_DEFAULT,
+            WRITE_RESPONSE_TIMEOUT_MS,
+            () => {
+                this._writeResponseTimeoutId = 0;
+                if (!this._pendingWriteSettings.has(callId))
+                    return GLib.SOURCE_REMOVE;
+
+                this._pendingWriteSettings.delete(callId);
+                this._writeInFlight = false;
+                this._log.info(
+                    `Maestro setting write timed out setting=${setting} callId=${callId}`
+                );
+                this._sendNextWriteSetting();
+                return GLib.SOURCE_REMOVE;
+            }
+        );
+    }
+
+    _clearWriteResponseTimeout() {
+        if (this._writeResponseTimeoutId) {
+            GLib.Source.remove(this._writeResponseTimeoutId);
+            this._writeResponseTimeoutId = 0;
+        }
+    }
+
+    _startWriteRefreshTimeout(readCallId, setting) {
+        this._clearWriteRefreshTimeout();
+        this._writeRefreshTimeoutId = GLib.timeout_add(
+            GLib.PRIORITY_DEFAULT,
+            WRITE_REFRESH_TIMEOUT_MS,
+            () => {
+                this._writeRefreshTimeoutId = 0;
+                if (this._resumeWritesAfterReadCallId !== readCallId)
+                    return GLib.SOURCE_REMOVE;
+
+                this._resumeWritesAfterReadCallId = null;
+                this._resumeWritesAfterReadSetting = null;
+                this._log.info(
+                    `Maestro setting refresh timed out setting=${setting} callId=${readCallId}`
+                );
+                this._sendNextWriteSetting();
+                return GLib.SOURCE_REMOVE;
+            }
+        );
+    }
+
+    _clearWriteRefreshTimeout() {
+        if (this._writeRefreshTimeoutId) {
+            GLib.Source.remove(this._writeRefreshTimeoutId);
+            this._writeRefreshTimeoutId = 0;
+        }
+    }
+
+    _completeWriteRefresh() {
+        this._clearWriteRefreshTimeout();
+        this._resumeWritesAfterReadCallId = null;
+        this._resumeWritesAfterReadSetting = null;
+        this._sendNextWriteSetting();
+    }
+
+    _processWriteRefreshResponse(packet) {
+        if (packet.status === Status.OK) {
+            if (this._resumeWritesAfterReadSetting === 'anc') {
+                const ancState = decodeAncStateSettingsResponse(packet.payload);
+                if (ancState !== null)
+                    this._callbacks?.updateAncState?.(ancState);
+            } else if (this._resumeWritesAfterReadSetting === 'volumeEq') {
+                const enabled = decodeVolumeEqEnableSettingsResponse(packet.payload);
+                if (enabled !== null)
+                    this._callbacks?.updateVolumeEqEnable?.(enabled);
+            } else if (this._resumeWritesAfterReadSetting === 'eq') {
+                const eq = decodeEqSettingsResponse(packet.payload);
+                if (eq !== null)
+                    this._callbacks?.updateEq?.(eq);
+            }
+        }
+        this._completeWriteRefresh();
     }
 
     _processSettingsPayload(payload) {
@@ -400,5 +509,13 @@ export const GoogleBudsSocket = GObject.registerClass({
         const frame = this._codec.encode(packet.channelId, bytes);
         if (frame)
             this.sendMessage(frame);
+    }
+
+    destroy() {
+        this._clearWriteResponseTimeout();
+        this._clearWriteRefreshTimeout();
+        this._writeQueue = [];
+        this._pendingWriteSettings.clear();
+        super.destroy();
     }
 });
