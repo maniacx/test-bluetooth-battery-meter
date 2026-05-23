@@ -1,7 +1,7 @@
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 
-import {createLogger} from '../logger.js';
+import {createLogger, getDeviceIdentifier} from '../logger.js';
 import {SocketHandler} from '../socketByProfile.js';
 import {booleanFromByte, isValidByte} from '../deviceUtils.js';
 import {getBluezDeviceProxy} from '../../bluezDeviceProxy.js';
@@ -30,7 +30,9 @@ export const NothingBudsSocket = GObject.registerClass({
 }, class NothingBudsSocket extends SocketHandler {
     _init(devicePath, profileManager, profile, callbacks) {
         super._init(devicePath, profileManager, profile);
-        this._log = createLogger('NothingEarSocket');
+        const identifier = getDeviceIdentifier(devicePath);
+        const tag = `NothingEarSocket-${identifier}`;
+        this._log = createLogger(tag);
         this._log.info('NothingEarSocket init');
 
         this._devicePath = devicePath;

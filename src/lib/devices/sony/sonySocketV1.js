@@ -1,7 +1,7 @@
 'use strict';
 import GObject from 'gi://GObject';
 
-import {createLogger} from '../logger.js';
+import {createLogger, getDeviceIdentifier} from '../logger.js';
 import {SonySocketBase} from './sonySocketBase.js';
 import {isValidByte, booleanFromByte} from '../deviceUtils.js';
 
@@ -29,7 +29,7 @@ export const SonySocketV1 = GObject.registerClass({
 }, class SonySocketV1 extends SonySocketBase {
     _init(devicePath, profileManager, profile, modelData, callbacks) {
         super._init(devicePath, profileManager, profile);
-        const identifier = devicePath.slice(-2);
+        const identifier = getDeviceIdentifier(devicePath);
         const tag = `SonySocketV1-${identifier}`;
         this._log = createLogger(tag);
         this._supportedFunction = [];

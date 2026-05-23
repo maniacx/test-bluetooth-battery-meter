@@ -3,7 +3,7 @@ import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 import {gettext as _} from 'gettext';
 
-import {createLogger} from '../logger.js';
+import {createLogger, getDeviceIdentifier} from '../logger.js';
 import {getBluezDeviceProxy} from '../../bluezDeviceProxy.js';
 import {buds2to1BatteryLevel, validateProperties, launchConfigureWindow} from '../deviceUtils.js';
 import {createConfig, createProperties, DataHandler} from '../../dataHandler.js';
@@ -57,7 +57,7 @@ export const SonyDevice = GObject.registerClass({
 }, class SonyDevice extends GObject.Object {
     _init(settings, devicePath, alias, extPath, profileManager, updateDeviceMapCb) {
         super._init();
-        const identifier = devicePath.slice(-2);
+        const identifier = getDeviceIdentifier(devicePath);
         const tag = `SonyDevice-${identifier}`;
         this._log = createLogger(tag);
         this._log.info('------------------- SonyDevice init -------------------');

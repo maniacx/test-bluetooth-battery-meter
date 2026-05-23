@@ -2,7 +2,7 @@
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 
-import {createLogger} from '../logger.js';
+import {createLogger, getDeviceIdentifier} from '../logger.js';
 import {SocketHandler} from '../socketByProfile.js';
 import {
     CandidateChannels, MaestroMethod, MaestroService, PacketType, SettingId, Status
@@ -31,7 +31,7 @@ export const GoogleBudsSocket = GObject.registerClass({
 }, class GoogleBudsSocket extends SocketHandler {
     _init(devicePath, profileManager, profile, callbacks) {
         super._init(devicePath, profileManager, profile);
-        const identifier = devicePath.slice(-2);
+        const identifier = getDeviceIdentifier(devicePath);
         const tag = `GoogleBudsSocket-${identifier}`;
         this._log = createLogger(tag);
         this._log.info('GoogleBudsSocket init');
@@ -346,9 +346,9 @@ export const GoogleBudsSocket = GObject.registerClass({
 
     _sendNextWriteSetting() {
         if (this._writeInFlight || this._resumeWritesAfterReadCallId !== null ||
-                this._writeQueue.length === 0 || this._channel === null) {
+                this._writeQueue.length === 0 || this._channel === null)
             return;
-        }
+
 
         const {setting, payload} = this._writeQueue.shift();
         this._writeCallId++;
@@ -517,5 +517,6 @@ export const GoogleBudsSocket = GObject.registerClass({
         this._writeQueue = [];
         this._pendingWriteSettings.clear();
         super.destroy();
+        this._codec = null;
     }
 });

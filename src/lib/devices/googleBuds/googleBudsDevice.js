@@ -3,7 +3,7 @@ import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 import {gettext as _} from 'gettext';
 
-import {createLogger} from '../logger.js';
+import {createLogger, getDeviceIdentifier} from '../logger.js';
 import {
     buds2to1BatteryLevel, launchConfigureWindow, validateProperties
 } from '../deviceUtils.js';
@@ -30,7 +30,7 @@ export const GoogleBudsDevice = GObject.registerClass({
 }, class GoogleBudsDevice extends GObject.Object {
     _init(settings, devicePath, alias, extPath, profileManager, updateDeviceMapCb) {
         super._init();
-        const identifier = devicePath.slice(-2);
+        const identifier = getDeviceIdentifier(devicePath);
         const tag = `GoogleBudsDevice-${identifier}`;
         this._log = createLogger(tag);
         this._log.info('------------------- GoogleBudsDevice init -------------------');
@@ -251,9 +251,9 @@ export const GoogleBudsDevice = GObject.registerClass({
         );
 
         if (this._props.toggle1State &&
-                !this._toggle1ButtonToAncState[this._props.toggle1State]) {
+                !this._toggle1ButtonToAncState[this._props.toggle1State])
             this._props.toggle1State = 0;
-        }
+
 
         this.dataHandler?.setConfig(this._config);
     }

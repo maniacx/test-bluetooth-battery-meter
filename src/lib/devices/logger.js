@@ -4,6 +4,7 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
 const MAX_LOG_BYTES = 1024 * 1024;
+const FULL_SANITIZE_LOG = true;
 
 let _settings = null;
 let LOG_ENABLED = true;
@@ -40,26 +41,10 @@ function enforceLogSizeLimit(logFile, historyFile) {
     }
 }
 
-function sanitizeLogMessage(msg) {
-    return msg
-        .replace(
-            /(\[[^\]]*(?:Device|Socket)[^\]]*-)[0-9A-Fa-f]{2}(\])/g,
-            '$1XX$2'
-        )
-        .replace(
-            /dev_([0-9A-Fa-f]{2}_){5}[0-9A-Fa-f]{2}/g,
-            'dev_XX_XX_XX_XX_XX_XX'
-        )
-        .replace(
-            /([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}/g,
-            'XX:XX:XX:XX:XX:XX'
-        );
-}
-
 function WriteLogLine(prefix, msg) {
     const {logFile, historyFile} = getLogFiles();
     enforceLogSizeLimit(logFile, historyFile);
-    const line = `[${new Date().toISOString()}] ${prefix}: ${sanitizeLogMessage(msg)}\n\n`;
+    const line = `[${new Date().toISOString()}] ${prefix}: ${msg}\n\n`;
 
     const stream = logFile.append_to(Gio.FileCreateFlags.NONE, null);
     const bytes = new GLib.Bytes(line);
@@ -97,3 +82,15 @@ export function initLogger(settings) {
         LOG_ENABLED = _settings.get_boolean('logging-enabled');
     });
 }
+
+export function sanitizeDevPath(path) {
+    return path.replace(
+        /dev_(?:[0-9A-Fa-f]{2}_){5}([0-9A-Fa-f]{2})/,
+        FULL_SANITIZE_LOG ? 'dev_XX_XX_XX_XX_XX_XX' : 'dev_XX_XX_XX_XX_XX_$1'
+    );
+}
+
+export function getDeviceIdentifier(devicePath) {
+    return FULL_SANITIZE_LOG ? 'XX' : devicePath.slice(-2);
+}
+

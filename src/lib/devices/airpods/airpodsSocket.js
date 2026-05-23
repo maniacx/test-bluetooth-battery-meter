@@ -2,7 +2,7 @@
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 
-import {createLogger} from '../logger.js';
+import {createLogger, getDeviceIdentifier} from '../logger.js';
 import {SocketHandler} from '../socketByProfile.js';
 import {isValidByte} from '../deviceUtils.js';
 import {
@@ -27,7 +27,7 @@ export const AirpodsSocket = GObject.registerClass({
 }, class AirpodsSocket extends SocketHandler {
     _init(devicePath, profileManager, profile, modelData, callbacks) {
         super._init(devicePath, profileManager, profile);
-        const identifier = devicePath.slice(-2);
+        const identifier = getDeviceIdentifier(devicePath);
         const tag = `AirpodsSocket-${identifier}`;
         this._log = createLogger(tag);
         this._log.info('AirpodsSocket init');

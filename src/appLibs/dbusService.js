@@ -3,7 +3,7 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 
-import {createLogger} from '../lib/devices/logger.js';
+import {createLogger, sanitizeDevPath} from '../lib/devices/logger.js';
 import {getBluezDeviceProxy} from '../lib/bluezDeviceProxy.js';
 
 const DEVICE_INTERFACE_NAME = 'io.github.maniacx.BudsLink.Device';
@@ -29,7 +29,6 @@ class Device extends GObject.Object {
     _init(connection, devicePath, objectPath, dataHandler) {
         super._init();
 
-        this._log = createLogger(`Device-${devicePath.split('/').slice(-1)}`);
         this._objectPath = objectPath;
         this._dataHandler = dataHandler;
 
@@ -293,7 +292,7 @@ class DbusService extends GObject.Object {
             GLib.Variant.new('(o)', [objectPath])
         );
 
-        this._log.info(`Device added: ${this._safeDevicePath(objectPath)}`);
+        this._log.info(`Device added: ${sanitizeDevPath(objectPath)}`);
     }
 
     removeDevice(devicePath) {
@@ -312,14 +311,7 @@ class DbusService extends GObject.Object {
             GLib.Variant.new('(o)', [objectPath])
         );
 
-        this._log.info(`Device removed: ${this._safeDevicePath(objectPath)}`);
-    }
-
-    _safeDevicePath(path) {
-        return path.replace(
-            /dev_([0-9A-Fa-f]{2}_){5}[0-9A-Fa-f]{2}/,
-            'dev_XX_XX_XX_XX_XX_XX'
-        );
+        this._log.info(`Device removed: ${sanitizeDevPath(objectPath)}`);
     }
 
     destroy() {

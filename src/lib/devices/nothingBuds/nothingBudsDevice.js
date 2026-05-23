@@ -3,7 +3,7 @@ import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 import {gettext as _} from 'gettext';
 
-import {createLogger} from '../logger.js';
+import {createLogger, getDeviceIdentifier} from '../logger.js';
 import {buds2to1BatteryLevel, validateProperties, launchConfigureWindow} from '../deviceUtils.js';
 import {createConfig, createProperties, DataHandler} from '../../dataHandler.js';
 import {NothingBudsSocket} from './nothingBudsSocket.js';
@@ -22,7 +22,7 @@ export const NothingBudsDevice = GObject.registerClass({
 }, class NothingBudsDevice extends GObject.Object {
     _init(settings, devicePath, alias, extPath, profileManager, updateDeviceMapCb) {
         super._init();
-        const identifier = devicePath.slice(-2);
+        const identifier = getDeviceIdentifier(devicePath);
         const tag = `NothingBudsDevice-${identifier}`;
         this._log = createLogger(tag);
         this._log.info('------------------- NothingBudsDevice init -------------------');

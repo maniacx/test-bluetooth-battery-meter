@@ -3,7 +3,7 @@ import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 import {gettext as _} from 'gettext';
 
-import {createLogger} from '../logger.js';
+import {createLogger, getDeviceIdentifier} from '../logger.js';
 import {getBluezDeviceProxy} from '../../bluezDeviceProxy.js';
 import {buds2to1BatteryLevel, validateProperties, launchConfigureWindow} from '../deviceUtils.js';
 import {createConfig, createProperties, DataHandler} from '../../dataHandler.js';
@@ -47,7 +47,7 @@ export const AirpodsDevice = GObject.registerClass({
 }, class AirpodsDevice extends GObject.Object {
     _init(settings, devicePath, alias, extPath, profileManager, updateDeviceMapCb) {
         super._init();
-        const identifier = devicePath.slice(-2);
+        const identifier = getDeviceIdentifier(devicePath);
         const tag = `AirpodsDevice-${identifier}`;
         this._log = createLogger(tag);
         this._log.info('------------------- AirpodsDevice init -------------------');
