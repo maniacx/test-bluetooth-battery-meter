@@ -25,5 +25,8 @@
         <key name="nothing-buds-list" type="as">
             <default>[]</default>
         </key>
+        <key name="google-buds-list" type="as">
+            <default>[]</default>
+        </key>
 	</schema>
 </schemalist>

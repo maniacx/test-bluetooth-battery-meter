@@ -40,10 +40,26 @@ function enforceLogSizeLimit(logFile, historyFile) {
     }
 }
 
+function sanitizeLogMessage(msg) {
+    return msg
+        .replace(
+            /(\[[^\]]*(?:Device|Socket)[^\]]*-)[0-9A-Fa-f]{2}(\])/g,
+            '$1XX$2'
+        )
+        .replace(
+            /dev_([0-9A-Fa-f]{2}_){5}[0-9A-Fa-f]{2}/g,
+            'dev_XX_XX_XX_XX_XX_XX'
+        )
+        .replace(
+            /([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}/g,
+            'XX:XX:XX:XX:XX:XX'
+        );
+}
+
 function WriteLogLine(prefix, msg) {
     const {logFile, historyFile} = getLogFiles();
     enforceLogSizeLimit(logFile, historyFile);
-    const line = `[${new Date().toISOString()}] ${prefix}: ${msg}\n\n`;
+    const line = `[${new Date().toISOString()}] ${prefix}: ${sanitizeLogMessage(msg)}\n\n`;
 
     const stream = logFile.append_to(Gio.FileCreateFlags.NONE, null);
     const bytes = new GLib.Bytes(line);
@@ -81,4 +97,3 @@ export function initLogger(settings) {
         LOG_ENABLED = _settings.get_boolean('logging-enabled');
     });
 }
-
