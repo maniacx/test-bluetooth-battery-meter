@@ -9,7 +9,7 @@ import {
 } from './googleBudsConfig.js';
 import {
     HdlcCodec, decodeAncGestureLoopSettingsResponse, decodeAncStateSettingsResponse,
-    decodeEqSettingsResponse, decodeRpcPacket, decodeRuntimeInfo,
+    decodeEqSettingsResponse, decodeRpcPacket, decodeRuntimeInfo, decodeFwVersion,
     decodeVolumeEqEnableSettingsResponse, encodeReadSettingPayload, encodeRpcPacket,
     encodeWriteAncStatePayload, encodeWriteEqPayload, encodeWriteVolumeEqEnablePayload
 } from './googleBudsProtocol.js';
@@ -70,6 +70,10 @@ export const GoogleBudsSocket = GObject.registerClass({
         if (this._channel === null && this._isSoftwareInfoResponse(packet)) {
             this._channel = packet.channelId;
             this._log.info(`Resolved Maestro channel ${this._channel}`);
+
+            const fwVersions = decodeFwVersion(packet.payload);
+            this._callbacks?.updateFirmwareInfo?.(fwVersions);
+
             this._subscribeRuntimeInfo();
             this._subscribeSettingsChanges();
             return;
@@ -348,7 +352,6 @@ export const GoogleBudsSocket = GObject.registerClass({
         if (this._writeInFlight || this._resumeWritesAfterReadCallId !== null ||
                 this._writeQueue.length === 0 || this._channel === null)
             return;
-
 
         const {setting, payload} = this._writeQueue.shift();
         this._writeCallId++;

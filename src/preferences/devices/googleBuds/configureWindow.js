@@ -2,6 +2,10 @@
 import Adw from 'gi://Adw';
 import GObject from 'gi://GObject';
 
+import {
+    supportedAudioDualIcons, supportedCaseIcons
+} from '../../../lib/widgets/iconGroups.js';
+import {IconSelectorWidget} from './../../widgets/iconSelectorWidget.js';
 import {EqualizerWidget} from './../../widgets/equalizerWidget.js';
 import {DropDownRowWidget} from './../../widgets/dropDownRowWidget.js';
 import {
@@ -38,6 +42,29 @@ export const ConfigureWindow = GObject.registerClass({
         toolViewBar.add_top_bar(headerBar);
         toolViewBar.set_content(page);
         this.set_content(toolViewBar);
+
+        const iconSelector = new IconSelectorWidget({
+            gtxt: _,
+            grpTitle: _('Icon'),
+            rowTitle: _('Select Icon'),
+            rowSubtitle: _('Select the icon used for the indicator and quick menu'),
+            iconList: supportedAudioDualIcons,
+            initialIcon: this._settingsItems['icon'] || 'earbuds',
+            caseIconList: supportedCaseIcons,
+            initialCaseIcon: this._settingsItems['case'] || 'case-oval',
+            mac,
+            fw: this._settingsItems['fw-version'] || '',
+        });
+
+        iconSelector.connect('notify::selected-icon', () => {
+            this._updateGsettings('icon', iconSelector.selected_icon);
+        });
+
+        iconSelector.connect('notify::selected-case-icon', () => {
+            this._updateGsettings('case', iconSelector.selected_case_icon);
+        });
+
+        page.add(iconSelector);
 
         const eqGroup = new Adw.PreferencesGroup({title: _('Equalizer')});
         page.add(eqGroup);

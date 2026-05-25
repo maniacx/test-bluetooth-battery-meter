@@ -45,6 +45,7 @@ export const GoogleBudsDevice = GObject.registerClass({
         this._props = createProperties();
 
         this._callbacks = {
+            updateFirmwareInfo: this.updateFirmwareInfo.bind(this),
             updateBatteryProps: this.updateBatteryProps.bind(this),
             updateAncState: this.updateAncState.bind(this),
             updateAncGestureLoop: this.updateAncGestureLoop.bind(this),
@@ -90,6 +91,7 @@ export const GoogleBudsDevice = GObject.registerClass({
             name: 'Pixel Buds',
             alias: this._alias,
             icon: this._commonIcon,
+            'fw-version': '',
             'volume-eq': false,
             'eq-preset': EqPreset.CUSTOM,
             'eq-custom': [0, 0, 0, 0, 0],
@@ -254,7 +256,6 @@ export const GoogleBudsDevice = GObject.registerClass({
                 !this._toggle1ButtonToAncState[this._props.toggle1State])
             this._props.toggle1State = 0;
 
-
         this.dataHandler?.setConfig(this._config);
     }
 
@@ -289,6 +290,38 @@ export const GoogleBudsDevice = GObject.registerClass({
                     this._settingsButtonClicked();
             }
         );
+    }
+
+    updateFirmwareInfo(fwVersions) {
+        const arr = fwVersions ?? [];
+
+        if (arr.length === 0) {
+            this._settingsItems['fw-version'] = '';
+            this._updateGsettings();
+            return;
+        }
+
+        let best = arr[0];
+        let bestCount = 0;
+
+        for (const v of arr) {
+            const count = arr.filter(x => x === v).length;
+
+            if (count > bestCount) {
+                best = v;
+                bestCount = count;
+            }
+        }
+
+        const allSame = arr.every(v => v === arr[0]);
+
+        this._settingsItems['fw-version'] = best;
+        this._updateGsettings();
+
+        if (allSame)
+            this._log.info(`Firmware: ${best}`);
+        else
+            this._log.info(`Firmware mismatch: ${arr.join(', ')} -> using ${best}`);
     }
 
     updateBatteryProps(props) {
