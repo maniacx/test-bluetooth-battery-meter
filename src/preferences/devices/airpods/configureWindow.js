@@ -52,7 +52,7 @@ export const  ConfigureWindow = GObject.registerClass({
         this._settings = settings;
         this._devicePath = devicePath;
 
-        const pathsString = settings.get_strv('airpods-list').map(JSON.parse);
+        const pathsString = this._settings.get_strv('airpods-list').map(JSON.parse);
         this._settingsItems = pathsString.find(info => info.path === devicePath);
         this.title = this._settingsItems.alias;
 
@@ -390,8 +390,8 @@ export const  ConfigureWindow = GObject.registerClass({
             page.add(pressHoldGroup);
         }
 
-        let settingSignalId = settings.connect('changed::airpods-list', () => {
-            const updatedList = settings.get_strv('airpods-list').map(JSON.parse);
+        const settingSignalId = this._settings.connect('changed::airpods-list', () => {
+            const updatedList = this._settings.get_strv('airpods-list').map(JSON.parse);
             this._settingsItems = updatedList.find(info => info.path === devicePath);
             if (!this._settingsItems)
                 return;
@@ -433,12 +433,10 @@ export const  ConfigureWindow = GObject.registerClass({
             this._toneWidget?.destroy();
             this._toneWidget = null;
 
-            if (settingSignalId && settings)
-                settings.disconnect(settingSignalId);
+            if (settingSignalId && this._settings)
+                this._settings.disconnect(settingSignalId);
 
-            settings = null;
-            settingSignalId = null;
-
+            this._settings = null;
             return false;
         });
     }

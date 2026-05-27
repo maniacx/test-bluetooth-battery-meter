@@ -28,7 +28,7 @@ export const ConfigureWindow = GObject.registerClass({
         this._settings = settings;
         this._devicePath = devicePath;
 
-        const pathsString = settings.get_strv('google-buds-list').map(JSON.parse);
+        const pathsString = this._settings.get_strv('google-buds-list').map(JSON.parse);
         this._settingsItems = pathsString.find(info => info.path === devicePath);
         if (!this._settingsItems)
             return;
@@ -145,8 +145,8 @@ export const ConfigureWindow = GObject.registerClass({
         this._equalizerCustomRow.set_child(this._eq);
         eqGroup.add(this._equalizerCustomRow);
 
-        const settingSignalId = settings.connect('changed::google-buds-list', () => {
-            const updatedList = settings.get_strv('google-buds-list').map(JSON.parse);
+        const settingSignalId = this._settings.connect('changed::google-buds-list', () => {
+            const updatedList = this._settings.get_strv('google-buds-list').map(JSON.parse);
             this._settingsItems = updatedList.find(info => info.path === devicePath);
             if (!this._settingsItems)
                 return;
@@ -162,10 +162,10 @@ export const ConfigureWindow = GObject.registerClass({
             this._eq?.destroy();
             this._eq = null;
 
-            if (settingSignalId && settings)
-                settings.disconnect(settingSignalId);
+            if (settingSignalId && this._settings)
+                this._settings.disconnect(settingSignalId);
 
-            settings = null;
+            this._settings = null;
 
             return false;
         });

@@ -53,7 +53,7 @@ export const ConfigureWindow = GObject.registerClass({
         this._settings = settings;
         this._devicePath = devicePath;
 
-        const pathsString = settings.get_strv('galaxy-buds-list').map(JSON.parse);
+        const pathsString = this._settings.get_strv('galaxy-buds-list').map(JSON.parse);
         this._settingsItems = pathsString.find(info => info.path === devicePath);
 
         if (!this._settingsItems)
@@ -145,8 +145,8 @@ export const ConfigureWindow = GObject.registerClass({
         this._addNCCycleCheckBox(_);
         this._addTouchAndHoldFnChange(_);
 
-        let settingSignalId = settings.connect('changed::galaxy-buds-list', () => {
-            const updatedList = settings.get_strv('galaxy-buds-list').map(JSON.parse);
+        const settingSignalId = this._settings.connect('changed::galaxy-buds-list', () => {
+            const updatedList = this._settings.get_strv('galaxy-buds-list').map(JSON.parse);
             this._settingsItems = updatedList.find(info => info.path === devicePath);
             if (!this._settingsItems)
                 return;
@@ -219,12 +219,10 @@ export const ConfigureWindow = GObject.registerClass({
             this._ambCustomTone?.destroy();
             this._ambCustomTone = null;
 
-            if (settingSignalId && settings)
-                settings.disconnect(settingSignalId);
+            if (settingSignalId && this._settings)
+                this._settings.disconnect(settingSignalId);
 
-            settingSignalId = null;
-            settings = null;
-
+            this._settings = null;
             return false;
         });
     }

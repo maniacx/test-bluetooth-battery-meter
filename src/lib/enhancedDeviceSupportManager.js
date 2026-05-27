@@ -166,7 +166,7 @@ export const EnhancedDeviceSupportManager = GObject.registerClass({
 
             if (allPropsReady()) {
                 this._log.info(
-                    `Pending detection properties ready path=${sanitizeDevPath(path)}} ` +
+                    `Pending detection properties ready path=${sanitizeDevPath(path)} ` +
                     `props=${bluezProps.join(',')}`
                 );
                 if (this._deviceMap.has(path)) {
