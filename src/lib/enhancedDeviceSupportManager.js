@@ -18,6 +18,7 @@ import {
 import {
     GoogleBudsDevice, isGoogleBuds, DeviceTypeGoogleBuds
 } from './devices/googleBuds/googleBudsDevice.js';
+import {GfpsDevice, isGfps, DeviceTypeGfps} from './devices/gfps/gfpsDevice.js';
 
 export const EnhancedDeviceSupportManager = GObject.registerClass({
     GTypeName: 'BudsLink_EnhancedDeviceSupportManager',
@@ -113,6 +114,11 @@ export const EnhancedDeviceSupportManager = GObject.registerClass({
                     enabled: this._toggle.googleBudsEnabled,
                     check: isGoogleBuds,
                     type: DeviceTypeGoogleBuds,
+                },
+                {
+                    enabled: this._toggle.gfpsEnabled,
+                    check: isGfps,
+                    type: DeviceTypeGfps,
                 },
             ];
             /* ------------------------------------- */
@@ -219,6 +225,11 @@ export const EnhancedDeviceSupportManager = GObject.registerClass({
                 } else if (deviceProps.type === DeviceTypeGoogleBuds) {
                     deviceProps.enhancedDevice =
                         new GoogleBudsDevice(this._settings, path, deviceProps.alias,
+                            this._extPath, this._profileManager,
+                            this.updateDeviceMapCb.bind(this));
+                } else if (deviceProps.type === DeviceTypeGfps) {
+                    deviceProps.enhancedDevice =
+                        new GfpsDevice(this._settings, path, deviceProps.alias,
                             this._extPath, this._profileManager,
                             this.updateDeviceMapCb.bind(this));
                 }

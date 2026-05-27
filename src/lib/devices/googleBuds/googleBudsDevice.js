@@ -424,6 +424,9 @@ export const GoogleBudsDevice = GObject.registerClass({
         if (this._dataHandlerId && this.dataHandler)
             this.dataHandler.disconnect(this._dataHandlerId);
         this._dataHandlerId = null;
+        if (this._settingsHandlerId)
+            this._settings?.disconnect(this._settingsHandlerId);
+        this._settingsHandlerId = null;
         this._googleBudsSocket?.destroy();
         this._googleBudsSocket = null;
         this.dataHandler = null;

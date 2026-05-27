@@ -146,6 +146,8 @@ export const BudsLinkApplication = GObject.registerClass({
         this.galaxyBudsEnabled = true;
         this.nothingBudsEnabled = true;
         this.googleBudsEnabled = true;
+        this.gfpsEnabled = true;
+
         this._client = new BluetoothClient();
         this._deviceManager = new EnhancedDeviceSupportManager(this);
         this._initialize();

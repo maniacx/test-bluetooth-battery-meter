@@ -6,6 +6,8 @@ import {DeviceTypeAirpods} from './airpods/airpodsDevice.js';
 import {DeviceTypeSonyV1, DeviceTypeSonyV2} from './sony/sonyDevice.js';
 import {DeviceTypeGalaxyLegacy, DeviceTypeGalaxyBuds} from './galaxyBuds/galaxyBudsDevice.js';
 import {DeviceTypeNothingBuds} from './nothingBuds/nothingBudsDevice.js';
+import {DeviceTypeGoogleBuds} from './googleBuds/googleBudsDevice.js';
+import {DeviceTypeGfps} from './gfps/gfpsDevice.js';
 
 export class Notifier {
     constructor(toggle) {
@@ -23,6 +25,10 @@ export class Notifier {
             label = _('Samsung Galaxy Buds');
         else if (type === DeviceTypeNothingBuds)
             label = _('Nothing / CMF Buds');
+        else if (type === DeviceTypeGoogleBuds)
+            label = _('Google Pixel Buds');
+        else if (type === DeviceTypeGfps)
+            label = _('Google Fast Pair');
         else
             label = type;
 

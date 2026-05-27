@@ -3,6 +3,7 @@ import * as Sony from '../preferences/devices/sony/configureWindow.js';
 import * as GalaxyBuds from '../preferences/devices/galaxyBuds/configureWindow.js';
 import * as NothingBuds from '../preferences/devices/nothingBuds/configureWindow.js';
 import * as GoogleBuds from '../preferences/devices/googleBuds/configureWindow.js';
+import * as Gfps from '../preferences/devices/gfps/configureWindow.js';
 
 let _settings = null;
 let _gettext = null;
@@ -49,6 +50,10 @@ export function createConfigureWindow({
         case 'googleBuds':
             Prefs = GoogleBuds;
             schemaKey = 'google-buds-list';
+            break;
+        case 'gfps':
+            Prefs = Gfps;
+            schemaKey = 'gfps-list';
             break;
         default:
             return null;
