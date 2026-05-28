@@ -90,6 +90,22 @@
     <value key="Purism::form_factor">mobile</value>
   </custom>
   <releases>
+    <release version="0.1.5" date="2026-05-29">
+      <description>
+        <ul>
+          <li>Add support for Pixel Buds. credits: bhack@github.com</li>
+          <li>Add support for Google Fast Pair Devices. credits: IGS-GIT@github.com</li>
+          <li>Sony: BugFix: DSEE indicator not turning off</li>
+          <li>Sony 1000XM6, Fix EqPreset inaccessable / greyout</li>
+          <li>NothingBuds: BugFix: Some model goes undetected.</li>
+          <li>AirPods: BugFix Battery level display invalid level as 100%</li>
+          <li>mediaController: match all a2dp-sink profiles, not just AAC  credits: yleshchuk@github.com</li>
+          <li>Added Korean translation. credits: Iranto@github.com</li>
+          <li>Added German translation. credits: srueegger@github.com</li>
+          <li>Added Swiss German translation. credits: srueegger@github.com</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.4" date="2026-05-16">
       <description>
         <ul>
