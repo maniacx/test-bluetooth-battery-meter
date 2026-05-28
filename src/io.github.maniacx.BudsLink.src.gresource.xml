@@ -77,17 +77,21 @@
         <file>lib/devices/galaxyBuds/deviceConfigs/GalaxyBudsPlus.js</file>
         <file>lib/devices/galaxyBuds/deviceConfigs/GalaxyBudsPro.js</file>
 
+        <file>lib/devices/googleBuds/googleBudsConfig.js</file>
+        <file>lib/devices/googleBuds/googleBudsDevice.js</file>
+        <file>lib/devices/googleBuds/googleBudsProtocol.js</file>
+        <file>lib/devices/googleBuds/googleBudsSocket.js</file>
+
+        <file>lib/devices/gfps/gfpsConfig.js</file>
+        <file>lib/devices/gfps/gfpsDevice.js</file>
+        <file>lib/devices/gfps/gfpsSocket.js</file>
+
         <file>lib/devices/logger.js</file>
         <file>lib/devices/mediaController.js</file>
 
         <file>lib/devices/nothingBuds/nothingBudsConfig.js</file>
         <file>lib/devices/nothingBuds/nothingBudsDevice.js</file>
         <file>lib/devices/nothingBuds/nothingBudsSocket.js</file>
-
-        <file>lib/devices/googleBuds/googleBudsConfig.js</file>
-        <file>lib/devices/googleBuds/googleBudsDevice.js</file>
-        <file>lib/devices/googleBuds/googleBudsProtocol.js</file>
-        <file>lib/devices/googleBuds/googleBudsSocket.js</file>
 
         <file>lib/devices/nothingBuds/deviceConfigs/BudsPro.js</file>
         <file>lib/devices/nothingBuds/deviceConfigs/CMFBuds.js</file>
@@ -148,6 +152,7 @@
 
         <file>preferences/devices/airpods/configureWindow.js</file>
         <file>preferences/devices/galaxyBuds/configureWindow.js</file>
+        <file>preferences/devices/gfps/configureWindow.js</file>
         <file>preferences/devices/googleBuds/configureWindow.js</file>
         <file>preferences/devices/nothingBuds/configureWindow.js</file>
         <file>preferences/devices/sony/configureWindow.js</file>
