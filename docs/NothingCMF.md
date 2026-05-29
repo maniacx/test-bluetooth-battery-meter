@@ -66,6 +66,9 @@ Currently tested and confirmed working:
 * **CMF Buds 2 Plus [B184]**  ✅ — Credits: ArcticDev78
 * **Nothing Headphone (1) [B170]**  ✅ — Credits: Lascar_s@matrix
 * **CMF Buds Pro 2 [B172]**  ✅ — Credits: khaledkhamis26
+* **CMF Buds 2 [B179]**  ✅ — Credits: duckeydev
+* **CMF Buds 2a [B179]**  ✅ — Credits: shakasan
+
 
 <style>
 table th:first-of-type {
@@ -290,17 +293,17 @@ table th:nth-of-type(3) {
 
 | Feature | Supported | Tested |
 |:--|:--:|:--:|
-| Battery Level | Left+Right+Case | ❌ |
-| Noise Control | ✅ | ❌ |
-| Noise Control Level | Low, Mid, High | ❌ |
-| Noise Control Adaptive | ✅ | ❌ |
-| Eq Preset | ✅ | ❌ |
+| Battery Level | Left+Right+Case | ✅ |
+| Noise Control | ✅ | ✅ |
+| Noise Control Level | Low, Mid, High | ✅ |
+| Noise Control Adaptive | ✅ | ✅ |
+| Eq Preset | ✅ | ✅ |
 | Eq Custom | Not Implemented | ❌ |
-| Enhanced Bass | ✅ | ❌ |
-| Spatial Audio | ✅ | ❌ |
-| Low Latency Mode | ✅ | ❌ |
-| Find My Buds | ✅ | ❌ |
-| Gesture | ✅ | ❌ |
+| Enhanced Bass | ✅ | ✅ |
+| Spatial Audio | ✅ | ✅ |
+| Low Latency Mode | ✅ | ✅ |
+| Find My Buds | ✅ | ✅ |
+| Gesture | ✅ | ✅ |
 
 ---
 
@@ -343,7 +346,7 @@ table th:nth-of-type(3) {
 | Noise Control Level | Low, Mid, High | ✅ |
 | Noise Control Adaptive | ✅ | ✅ |
 | Eq Preset | ✅ | ✅ |
-| Eq Custom | Not Implemented | ✅ |
+| Eq Custom | Not Implemented | ❌ |
 | Enhanced Bass | ✅ | ✅ |
 | Spatial Audio | ✅ | ✅ |
 | In Ear Detection | ✅ | ✅ |
@@ -357,14 +360,14 @@ table th:nth-of-type(3) {
 
 | Feature | Supported | Tested |
 |:--|:--:|:--:|
-| Battery Level | Left+Right+Case | ❌ |
-| Noise Control | ✅ | ❌ |
-| Eq Preset | ✅ | ❌ |
+| Battery Level | Left+Right+Case | ✅ |
+| Noise Control | ✅ | ✅ |
+| Eq Preset | ✅ | ✅ |
 | Eq Custom | Not Implemented | ❌ |
-| Enhanced Bass | ✅ | ❌ |
-| Low Latency Mode | ✅ | ❌ |
-| Find My Buds | ✅ | ❌ |
-| Gesture | ✅ | ❌ |
+| Enhanced Bass | ✅ | ✅ |
+| Low Latency Mode | ✅ | ✅ |
+| Find My Buds | ✅ | ✅ |
+| Gesture | ✅ | ✅ |
 
 ---
 

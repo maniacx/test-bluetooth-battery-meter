@@ -146,7 +146,8 @@ permalink: /credits
 > * ArcticDev78
 > * Lascar_s@matrix
 > * khaledkhamis26
-
+> * duckeydev
+> * shakasan
 
 ## Google Pixel Buds
 
