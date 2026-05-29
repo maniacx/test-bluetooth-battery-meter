@@ -8,6 +8,19 @@ permalink: /changelogs
 # Changelogs
 
 {: .important-title }
+> Version 0.1.5 &emsp;&emsp; Upcoming
+> * Added support for Pixel Buds. credits: bhack@github.com
+> * Added support for Google Fast Pair Devices. credits: IGS-GIT@github.com
+> * Sony: BugFix: DSEE indicator not turning off
+> * Sony 1000XM6, Fix EqPreset inaccessable / greyout
+> * NothingBuds: BugFix: Some model goes undetected.
+> * AirPods: BugFix Battery level display invalid level as 100%
+> * mediaController: match all a2dp-sink profiles, not just AAC  credits: yleshchuk@github.com
+> * Added Korean translation. credits: Iranto@github.com 
+> * Added German translation. credits: srueegger@github.com 
+> * Added Swiss German translation. credits: srueegger@github.com 
+
+{: .important-title }
 > Version 0.1.4 &emsp;&emsp; May 16, 2026
 > * Added supported Sony WH-XB900N credits: BerenLuth@github.com
 > * Sony V1 Autopower off time and ANC fixes
