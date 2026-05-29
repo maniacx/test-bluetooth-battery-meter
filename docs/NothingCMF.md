@@ -9,8 +9,8 @@ permalink: /nothingcmf
 
 {: .note }
 >
-> Nothing / CMF Bluetooth sockets can be accessed by only one application at a time.  
-> Do not run other AirPods companion or monitoring apps while using BudsLink, such as:
+> Nothing / CMF Bluetooth sockets can be accessed by only one application at a time. 
+> Do not run other companion or monitoring apps while using BudsLink, such as:
 >
 > * **earctl**
 > * **earweb**
@@ -21,7 +21,7 @@ permalink: /nothingcmf
 
 
 * Displays a circular battery widget, supporting either a single battery (headset) or three separate levels for Left, Right, and Case.
-* The case battery is shown only when the buds report it, usually when the case is charging or when at least one AirPod is inside.
+* The case battery is shown only when the buds report it, usually when the case is charging or when at least one bud is inside.
 * Only certain models support ANC mode.
 
 ## Icons:
@@ -38,7 +38,7 @@ Anti-Noise Cancellation (ANC)
 ## Features
 
 * App can detect Nothing and CMF buds / headsets among connected Bluetooth devices.
-* It communicates over L2CAP sockets to support features such as:
+* It communicates over RFCOMM sockets to support features such as:
 * Battery level reporting
 * Control of ANC (Active Noise Cancellation) mode (if supported)
 * Adaptive noise level customization (if supported)
@@ -57,7 +57,7 @@ Configure per device settings if supported
 * Case icon: For models that report a case battery, an additional case icon can be selected.
 
 ## Other settings:
-Other settings are self explanatory similar to settings available in iPhone / iPads / Macs
+Other settings are self explanatory similar to settings available in OEM Mobile App Nothing X
 
 ## Compatibility
 Some devices have not yet been tested and may show incorrect features in the configuration. Others may be missing entirely. If you notice missing devices or incorrect feature mappings, please open an issue on GitHub so we can add or correct them.

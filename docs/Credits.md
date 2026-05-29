@@ -148,6 +148,15 @@ permalink: /credits
 > * khaledkhamis26
 
 
+## Google Pixel Buds
 
+> Contribution / Testing
+>
+> * bhack
+> * IGS-GIT
 
+## Google Fast Pair Devices
 
+> Contribution / Testing
+>
+> * IGS-GIT

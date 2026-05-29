@@ -11,18 +11,18 @@ permalink: /galaxy
 >
 > Galaxy Buds
  Bluetooth sockets can be accessed by only one application at a time.
-> Do not run other AirPods companion or monitoring apps while using BudsLink, such as:
+> Do not run other Galaxy Buds companion or monitoring apps while using BudsLink, such as:
 >
 > * **Galaxy Buds Client**
-> * **Bluetooth Battery Meter** GNOME Extension  (disable the AirPods feature in the extension preferences)
+> * **Bluetooth Battery Meter** GNOME Extension  (disable the Galaxy Buds feature in the extension preferences)
 
 <br>
 <img src="{{ 'assets/images/galaxy/galaxy-main.png' | relative_url }}" width="45%">
 
 
 * Displays a circular battery widget, supporting either a single battery (headset) or three separate levels for Left, Right, and Case.
-* The case battery is shown only when the AirPods report it, usually when the case is charging or when at least one AirPod is inside.
-* Only certain AirPods models support ANC mode.
+* The case battery is shown only when the Galaxy Buds report it, usually when the case is charging or when at least one Galaxy Bud is inside.
+* Only certain Galaxy Buds models support ANC mode.
 * Some models also support Conversation Mode.
 
 ## Button Visibility
@@ -52,7 +52,7 @@ Conversation Awareness
 ## Features
 
 * App can detect Samsung Galaxy Buds devices among connected Bluetooth devices.
-* It communicates over L2CAP sockets to support features such as:
+* It communicates over RFCOMM sockets to support features such as:
 * Battery level reporting
 * In-ear detection for automatic pause/play of media
 * Control of ANC (Active Noise Cancellation) mode (if supported)
@@ -80,22 +80,8 @@ When enabled, media playback automatically pauses when the earbuds are removed a
 * Resume with both earbuds: Playback resumes only when both earbuds are worn.
 * Resume with any earbud: Playback resumes as soon as at least one earbud is worn.
 
-## Conversation awareness volume Limit
-
-If supported by device, this setting limits media volume during active conversations to enhance awareness of your surroundings and reduce distractions.
-
-* When conversation mode is triggered (based on supported device capabilities), the system automatically reduces media volume to a user-defined percentage of the maximum volume.
-
-* This helps ensure you can still hear important external sounds while music or other media is playing.
-
-Adjustable Range
-
-* You can set the volume limit to any value between 0 and 50.
-* Values are interpreted as a percentage of the device's maximum volume.
-* Note: If the current playback volume is already below the specified limit, no adjustment will be made.
-
 ## Other settings:
-Other settings are self explanatory similar to settings available in iPhone / iPads / Macs
+Other settings are self explanatory similar to settings available in OEM Mobile App Wearables
 
 ## Compatibility
 
