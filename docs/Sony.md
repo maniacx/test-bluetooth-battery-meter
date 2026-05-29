@@ -83,6 +83,7 @@ Currently tested and confirmed working:
 * **Sony WF-1000XM4**  ✅ — Credits: Raycx86
 * **Sony WH-1000XM6**  ✅ — Credits: AquaCobalt
 * **Sony LinkBuds S**  ✅ — Credits: Neikon
+* **Sony WF-C700N**  ✅ — Credits: bertusw
 
 <style>
 table th:first-of-type {
@@ -263,12 +264,12 @@ table th:nth-of-type(3) {
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
 | Battery Level                 | Dual2+Case | No    |
-| Ambient Mode                  | ✅        | ❌     |
-| ANC Mode                      | ✅        | ❌     |
-| Button Modes Left / Right     | ✅        | ❌     |
-| Auto Power Off When Taken Off | ✅        | ❌     |
-| Equalizer Six Bands           | ✅        | ❌     |
-| Upscaling (DSEE)              | ✅        | ❌     |
+| Ambient Mode                  | ✅        | ✅     |
+| ANC Mode                      | ✅        | ✅     |
+| Button Modes Left / Right     | ✅        | ✅     |
+| Auto Power Off When Taken Off | ✅        | ✅     |
+| Equalizer Six Bands           | ✅        | ✅     |
+| Upscaling (DSEE)              | ✅        | ✅     |
 
 <br>
 

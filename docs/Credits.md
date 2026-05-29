@@ -106,6 +106,7 @@ permalink: /credits
 > * Raycx86
 > * AquaCobalt
 > * Neikon
+> * bertusw
 
 ## Samsung Galaxy Buds
 
@@ -145,6 +146,7 @@ permalink: /credits
 > * ArcticDev78
 > * Lascar_s@matrix
 > * khaledkhamis26
+
 
 
 
