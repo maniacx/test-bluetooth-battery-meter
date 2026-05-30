@@ -28,25 +28,53 @@ export const GfpsSocket = GObject.registerClass({
         this.startSocket();
     }
 
+    _isValidPacketStream(bytes) {
+        let offset = 0;
+        while (offset < bytes.length) {
+            if (bytes.length - offset < 4)
+                return false;
+
+            const len = bytes[offset + 2] << 8 | bytes[offset + 3];
+            const packetLength = 4 + len;
+            if (bytes.length - offset < packetLength)
+                return false;
+
+            offset += packetLength;
+        }
+
+        return offset === bytes.length;
+    }
+
     processData(bytes) {
-        if (bytes.length < 4) {
-            this._log.info(`Discarding short GFPS packet: len=${bytes.length}`);
-            return;
+        let packetToProcess = bytes;
+        let isValid = this._isValidPacketStream(bytes);
+        if (!isValid && this._halfPacket.length > 0) {
+            const merged = new Uint8Array(this._halfPacket.length + bytes.length);
+            merged.set(this._halfPacket, 0);
+            merged.set(bytes, this._halfPacket.length);
+            if (this._isValidPacketStream(merged)) {
+                packetToProcess = merged;
+                isValid = true;
+            }
         }
 
-        const group = bytes[0];
-        const code = bytes[1];
-        const len = bytes[2] << 8 | bytes[3];
+        if (isValid) {
+            let offset = 0;
+            while (offset < packetToProcess.length) {
+                const group = packetToProcess[offset];
+                const code = packetToProcess[offset + 1];
+                const len = packetToProcess[offset + 2] << 8 | packetToProcess[offset + 3];
+                const payload = packetToProcess.slice(offset + 4, offset + 4 + len);
+                this._parseData(group, code, payload);
+                offset += 4 + len;
+            }
 
-        if (bytes.length !== 4 + len) {
-            this._log.info(
-                `Discarding malformed GFPS packet: expected=${4 + len} actual=${bytes.length}`
-            );
-            return;
+            this._halfPacket = new Uint8Array(0);
+        } else if (bytes.length <= 100) {
+            this._halfPacket = bytes;
+        } else {
+            this._halfPacket = new Uint8Array(0);
         }
-
-        const payload = bytes.slice(4);
-        this._parseData(group, code, payload);
     }
 
     postConnectInitialization() {
