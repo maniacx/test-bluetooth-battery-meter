@@ -84,6 +84,7 @@ Currently tested and confirmed working:
 * **Sony WH-1000XM6**  ✅ — Credits: AquaCobalt
 * **Sony LinkBuds S**  ✅ — Credits: Neikon
 * **Sony WF-C700N**  ✅ — Credits: bertusw
+* **Sony WF-C500** ✅ — Credits: laughingwater
 
 <style>
 table th:first-of-type {
@@ -290,10 +291,10 @@ table th:nth-of-type(3) {
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
-| Battery Level                 | L, R,     | ❌     |
-| Voice Notifications           | ✅        | ❌     |
-| Equalizer Six Bands           | ✅        | ❌     |
-| Upscaling (DSEE)              | ✅        | ❌     |
+| Battery Level                 | L, R,     | ✅     |
+| Voice Notifications           | ✅        | ✅     |
+| Equalizer Six Bands           | ✅        | ✅     |
+| Upscaling (DSEE)              | ✅        | ✅     |
 
 <br>
 

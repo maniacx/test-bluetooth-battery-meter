@@ -107,6 +107,7 @@ permalink: /credits
 > * AquaCobalt
 > * Neikon
 > * bertusw
+> * laughingwater
 
 ## Samsung Galaxy Buds
 
