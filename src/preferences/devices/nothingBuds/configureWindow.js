@@ -273,6 +273,9 @@ export const ConfigureWindow = GObject.registerClass({
     }
 
     _updateEqCustomRowVisibility() {
+        if (!this._equalizerCustomRow)
+            return;
+
         const selectedPreset = this._eqPresetDropdown.selected_item;
         const customPresetValue = this._modelData.eqPreset.custom;
         this._equalizerCustomRow.visible = selectedPreset === customPresetValue;
