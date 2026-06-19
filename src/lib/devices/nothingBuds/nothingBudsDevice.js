@@ -4,7 +4,9 @@ import GObject from 'gi://GObject';
 import {gettext as _} from 'gettext';
 
 import {createLogger, getDeviceIdentifier} from '../logger.js';
-import {buds2to1BatteryLevel, validateProperties, launchConfigureWindow} from '../deviceUtils.js';
+import {
+    buds2to1BatteryLevel, validateProperties, launchConfigureWindow, isArrayEqual
+} from '../deviceUtils.js';
 import {createConfig, createProperties, DataHandler} from '../../dataHandler.js';
 import {NothingBudsSocket} from './nothingBudsSocket.js';
 
@@ -233,7 +235,7 @@ export const NothingBudsDevice = GObject.registerClass({
         if (this._modelData.eqPreset?.custom !== undefined) {
             const eqCustom = this._settingsItems['eq-custom'];
 
-            if (!this._customEq || eqCustom.some((v, i) => v !== this._customEq[i])) {
+            if (!this._customEq || !isArrayEqual(eqCustom, this._customEq)) {
                 this._customEq = eqCustom;
                 this._setCustomEq(eqCustom);
             }
@@ -593,7 +595,7 @@ export const NothingBudsDevice = GObject.registerClass({
     }
 
     updateCustomEq(eqArray) {
-        if (this._customEq === eqArray)
+        if (isArrayEqual(this._customEq, eqArray))
             return;
 
         this._customEq = eqArray;

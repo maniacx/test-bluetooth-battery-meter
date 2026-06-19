@@ -94,3 +94,18 @@ export function getDeviceIdentifier(devicePath) {
     return FULL_SANITIZE_LOG ? 'XX' : devicePath.slice(-2);
 }
 
+export function hexBytes(value) {
+    if (typeof value === 'number') {
+        let hex = value.toString(16);
+
+        if (hex.length % 2)
+            hex = `0${hex}`;
+
+        return `0x${hex}`;
+    }
+
+    if (Array.isArray(value) || ArrayBuffer.isView(value))
+        return Array.from(value, b => b.toString(16).padStart(2, '0')).join(' ');
+
+    return '';
+}
