@@ -149,6 +149,7 @@ permalink: /credits
 > * khaledkhamis26
 > * duckeydev
 > * shakasan
+> * iamxnfa
 
 ## Google Pixel Buds
 

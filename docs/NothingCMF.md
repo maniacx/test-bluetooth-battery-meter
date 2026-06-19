@@ -68,6 +68,7 @@ Currently tested and confirmed working:
 * **CMF Buds Pro 2 [B172]**  ✅ — Credits: khaledkhamis26
 * **CMF Buds 2 [B179]**  ✅ — Credits: duckeydev
 * **CMF Buds 2a [B179]**  ✅ — Credits: shakasan
+* **Neckband Pro [B164]**  ✅ — Credits: iamxnfa
 
 
 <style>
@@ -155,17 +156,17 @@ table th:nth-of-type(3) {
 
 | Feature | Supported | Tested |
 |:--|:--:|:--:|
-| Battery Level | Single | ❌ |
-| Noise Control | ✅ | ❌ |
-| Noise Control Level | Low, Mid, High | ❌ |
-| Noise Control Adaptive | ✅ | ❌ |
-| Eq Preset | ✅ | ❌ |
+| Battery Level | Single | ✅ |
+| Noise Control | ✅ | ✅ |
+| Noise Control Level | Low, Mid, High | ✅ |
+| Noise Control Adaptive | ✅ | ✅ |
+| Eq Preset | ✅ | ✅ |
 | Eq Custom | Not Implemented | ❌ |
-| Enhanced Bass | ✅ | ❌ |
-| Spatial Audio | ✅ | ❌ |
-| Low Latency Mode | ✅ | ❌ |
-| Find My Buds | ✅ | ❌ |
-| Gesture | ✅ | ❌ |
+| Enhanced Bass | ✅ | ✅ |
+| Spatial Audio | ✅ | ✅ |
+| Low Latency Mode | ✅ | ✅ |
+| Find My Buds | ✅ | ✅ |
+| Gesture | ✅ | ✅ |
 
 ---
 
