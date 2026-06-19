@@ -7,7 +7,6 @@
         <file>appLibs/dbusService.js</file>
         <file>appLibs/gvcProvider.js</file>
         <file>appLibs/themeManager.js</file>
-
         <file>appLibs/widgets/batterySetWidget.js</file>
         <file>appLibs/widgets/checkButtonBin.js</file>
         <file>appLibs/widgets/circleBatteryIconWidget.js</file>
@@ -19,15 +18,28 @@
         <file>appLibs/widgets/settingsButton.js</file>
         <file>appLibs/widgets/sliderBin.js</file>
         <file>appLibs/widgets/toggleButtonsSet.js</file>
-
         <file>lib/bluezDeviceProxy.js</file>
         <file>lib/dataHandler.js</file>
         <file>lib/enhancedDeviceSupportManager.js</file>
+        <file>lib/devices/deviceUtils.js</file>
+        <file>lib/devices/logger.js</file>
+        <file>lib/devices/mediaController.js</file>
+        <file>lib/devices/notifier.js</file>
+        <file>lib/devices/profileManager.js</file>
+        <file>lib/devices/socketByProfile.js</file>
+        <file>lib/widgets/iconGroups.js</file>
+        <file>main.js</file>
+        <file>preferences/widgets/checkBoxesRowWidget.js</file>
+        <file>preferences/widgets/dropDownRowWidget.js</file>
+        <file>preferences/widgets/equalizerWidget.js</file>
+        <file>preferences/widgets/iconSelectorWidget.js</file>
+        <file>preferences/widgets/radioButtonRowWidget.js</file>
+        <file>preferences/widgets/ringMyBudsRow.js</file>
+        <file>preferences/widgets/sliderRowWidget.js</file>
 
         <file>lib/devices/airpods/airpodsConfig.js</file>
         <file>lib/devices/airpods/airpodsDevice.js</file>
         <file>lib/devices/airpods/airpodsSocket.js</file>
-
         <file>lib/devices/airpods/deviceConfigs/AirPods1stGen.js</file>
         <file>lib/devices/airpods/deviceConfigs/AirPods2ndGen.js</file>
         <file>lib/devices/airpods/deviceConfigs/AirPods3rdGen.js</file>
@@ -55,14 +67,12 @@
         <file>lib/devices/airpods/deviceConfigs/Powerbeats4.js</file>
         <file>lib/devices/airpods/deviceConfigs/PowerbeatsPro.js</file>
         <file>lib/devices/airpods/deviceConfigs/PowerbeatsPro2.js</file>
-
-        <file>lib/devices/deviceUtils.js</file>
+        <file>preferences/devices/airpods/configureWindow.js</file>
 
         <file>lib/devices/galaxyBuds/galaxyBudsConfig.js</file>
         <file>lib/devices/galaxyBuds/galaxyBudsDetector.js</file>
         <file>lib/devices/galaxyBuds/galaxyBudsDevice.js</file>
         <file>lib/devices/galaxyBuds/galaxyBudsSocket.js</file>
-
         <file>lib/devices/galaxyBuds/deviceConfigs/GalaxyBuds.js</file>
         <file>lib/devices/galaxyBuds/deviceConfigs/GalaxyBuds2.js</file>
         <file>lib/devices/galaxyBuds/deviceConfigs/GalaxyBuds2Pro.js</file>
@@ -76,23 +86,22 @@
         <file>lib/devices/galaxyBuds/deviceConfigs/GalaxyBudsLive.js</file>
         <file>lib/devices/galaxyBuds/deviceConfigs/GalaxyBudsPlus.js</file>
         <file>lib/devices/galaxyBuds/deviceConfigs/GalaxyBudsPro.js</file>
+        <file>preferences/devices/galaxyBuds/configureWindow.js</file>
 
         <file>lib/devices/googleBuds/googleBudsConfig.js</file>
         <file>lib/devices/googleBuds/googleBudsDevice.js</file>
         <file>lib/devices/googleBuds/googleBudsProtocol.js</file>
         <file>lib/devices/googleBuds/googleBudsSocket.js</file>
+        <file>preferences/devices/googleBuds/configureWindow.js</file>
 
         <file>lib/devices/gfps/gfpsConfig.js</file>
         <file>lib/devices/gfps/gfpsDevice.js</file>
         <file>lib/devices/gfps/gfpsSocket.js</file>
-
-        <file>lib/devices/logger.js</file>
-        <file>lib/devices/mediaController.js</file>
+        <file>preferences/devices/gfps/configureWindow.js</file>
 
         <file>lib/devices/nothingBuds/nothingBudsConfig.js</file>
         <file>lib/devices/nothingBuds/nothingBudsDevice.js</file>
         <file>lib/devices/nothingBuds/nothingBudsSocket.js</file>
-
         <file>lib/devices/nothingBuds/deviceConfigs/BudsPro.js</file>
         <file>lib/devices/nothingBuds/deviceConfigs/CMFBuds.js</file>
         <file>lib/devices/nothingBuds/deviceConfigs/CMFBuds2.js</file>
@@ -113,18 +122,52 @@
         <file>lib/devices/nothingBuds/deviceConfigs/NothingHeadphone1.js</file>
         <file>lib/devices/nothingBuds/deviceConfigs/NothingHeadphonea.js</file>
         <file>lib/devices/nothingBuds/deviceConfigs/NothingHeadphoneA.js</file>
+        <file>preferences/devices/nothingBuds/configureWindow.js</file>
 
-        <file>lib/devices/notifier.js</file>
-
-        <file>lib/devices/profileManager.js</file>
-        <file>lib/devices/socketByProfile.js</file>
+        <file>lib/devices/redmiBuds/redmiBudsAuthenticator.js</file>
+        <file>lib/devices/redmiBuds/redmiBudsConfig.js</file>
+        <file>lib/devices/redmiBuds/redmiBudsDevice.js</file>
+        <file>lib/devices/redmiBuds/redmiBudsSocket.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/FlipBudsPro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiAirDots3Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds3.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds3Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds4.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds4Active.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds4Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds5.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds5Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds6.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds6Active.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds6Lite.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds6Play.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds6Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds6s.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds7s.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds8.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds8Active.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds8Lite.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds8Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBudsSE.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiTemplate.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiAirSE.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiBuds3.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiBuds3Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiBuds3TPro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiBuds4.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiBuds4Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiBuds5.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiBuds5Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiBuds6.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiOpenWear.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiOpenWearPro.js</file>
+        <file>preferences/devices/redmiBuds/configureWindow.js</file>
 
         <file>lib/devices/sony/sonyConfig.js</file>
         <file>lib/devices/sony/sonyDevice.js</file>
         <file>lib/devices/sony/sonySocketBase.js</file>
         <file>lib/devices/sony/sonySocketV1.js</file>
         <file>lib/devices/sony/sonySocketV2.js</file>
-
         <file>lib/devices/sony/deviceConfigs/LinkBuds.js</file>
         <file>lib/devices/sony/deviceConfigs/LinkBudsS.js</file>
         <file>lib/devices/sony/deviceConfigs/Sony-ULT.js</file>
@@ -147,23 +190,6 @@
         <file>lib/devices/sony/deviceConfigs/WF-SP800N.js</file>
         <file>lib/devices/sony/deviceConfigs/WI-C100.js</file>
         <file>lib/devices/sony/deviceConfigs/WI-SP600N.js</file>
-
-        <file>lib/widgets/iconGroups.js</file>
-
-        <file>main.js</file>
-
-        <file>preferences/devices/airpods/configureWindow.js</file>
-        <file>preferences/devices/galaxyBuds/configureWindow.js</file>
-        <file>preferences/devices/gfps/configureWindow.js</file>
-        <file>preferences/devices/googleBuds/configureWindow.js</file>
-        <file>preferences/devices/nothingBuds/configureWindow.js</file>
         <file>preferences/devices/sony/configureWindow.js</file>
-        <file>preferences/widgets/checkBoxesRowWidget.js</file>
-        <file>preferences/widgets/dropDownRowWidget.js</file>
-        <file>preferences/widgets/equalizerWidget.js</file>
-        <file>preferences/widgets/iconSelectorWidget.js</file>
-        <file>preferences/widgets/radioButtonRowWidget.js</file>
-        <file>preferences/widgets/ringMyBudsRow.js</file>
-        <file>preferences/widgets/sliderRowWidget.js</file>
     </gresource>
 </gresources>
