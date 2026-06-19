@@ -99,7 +99,7 @@ export const NothingBudsDevice = GObject.registerClass({
                 this._settingsItems['ring-state-left'] = this._ringStateLeft;
             }
             this._updateGsettings();
-        };
+        }
     }
 
     _createDefaultSettings() {
@@ -387,9 +387,9 @@ export const NothingBudsDevice = GObject.registerClass({
                 this._config.box1RadioTitle = _('Noise Cancellation Level');
 
                 const levelNames = {
-                    high: _('High'),
-                    mid: _('Mid'),
                     low: _('Low'),
+                    mid: _('Mid'),
+                    high: _('High'),
                     adaptive: _('Adaptive'),
                 };
 
