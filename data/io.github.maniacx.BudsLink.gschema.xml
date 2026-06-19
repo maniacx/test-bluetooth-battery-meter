@@ -28,6 +28,9 @@
         <key name="google-buds-list" type="as">
             <default>[]</default>
         </key>
+        <key name="redmi-buds-list" type="as">
+            <default>[]</default>
+        </key>
         <key name="gfps-list" type="as">
             <default>[]</default>
         </key>
