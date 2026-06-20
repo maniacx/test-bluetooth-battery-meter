@@ -44,7 +44,7 @@ export const RedmiBudsSocket = GObject.registerClass({
     postConnectInitialization() {
         this._challenge = getRandomChallenge();
         const payload = [0x01, ...this._challenge];
-        this._encode(MessageType.PHONE_REQUEST, Opcode.AUTH_CHALLENGE, this._seq, payload);
+        this._encode(MessageType.PHONE_REQUEST, Opcode.AUTH_CHALLENGE, this._nextSeq(), payload);
     }
 
     processData(bytes) {
@@ -89,7 +89,7 @@ export const RedmiBudsSocket = GObject.registerClass({
             this._pendingTimeout = null;
         }
 
-        this._pendingTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 300, () => {
+        this._pendingTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 250, () => {
             this._log.info(`Responst Timeout seq=${item.seq} opcode=${hexBytes(item.opcode)}`);
             this._pendingRequest = null;
             this._processQueue();
@@ -261,12 +261,38 @@ export const RedmiBudsSocket = GObject.registerClass({
                     this._encode(MessageType.RESPONSE, Opcode.AUTH_CONFIRM,
                         msg.seq, Uint8Array.from([0x01]));
 
-                    this._requestDeviceInfo();
-                    this._requestDeviceRunInfo();
+                    this._getInfo();
                 }
                 break;
             }
         }
+    }
+
+    _getInfo() {
+        this._requestDeviceInfo();
+
+        let retries = 0;
+
+        this._infoTimeout = GLib.timeout_add(
+            GLib.PRIORITY_DEFAULT,
+            300,
+            () => {
+                if (this._initialized) {
+                    this._infoTimeout = null;
+                    return GLib.SOURCE_REMOVE;
+                }
+
+                if (retries < 4) {
+                    this._requestDeviceInfo();
+                    retries++;
+                    return GLib.SOURCE_CONTINUE;
+                }
+
+                this._log.info('No DeviceInfo response');
+                this._infoTimeout = null;
+                return GLib.SOURCE_REMOVE;
+            }
+        );
     }
 
     _requestDeviceInfo() {
@@ -282,6 +308,8 @@ export const RedmiBudsSocket = GObject.registerClass({
     }
 
     _sendInitializationRequests() {
+        this._requestDeviceRunInfo();
+
         if (this._modelData.gestureOptions)
             this._getGestures();
 
@@ -892,6 +920,11 @@ export const RedmiBudsSocket = GObject.registerClass({
         if (this._pendingTimeout)
             GLib.source_remove(this._pendingTimeout);
         this._pendingTimeout = null;
+
+        if (this._infoTimeout)
+            GLib.source_remove(this._infoTimeout);
+        this._infoTimeout = null;
+
         super.destroy?.();
     }
 });
