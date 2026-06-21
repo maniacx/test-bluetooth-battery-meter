@@ -18,7 +18,7 @@ export default {
         boostVolume: 0x07,
     },
 
-    inEarDetection: true,
+    inEarDetection: false,
     lowLatencyMode: true,
     ring: true,
 
@@ -43,7 +43,7 @@ export default {
                     'skip-forward': 0x03,
                     'volume-up': 0x04,
                     'volume-down': 0x05,
-                    'take-photo': 0x09,
+                    'voice-assistant': 0x00,
                 },
             },
             'double': {
@@ -55,6 +55,7 @@ export default {
                     'skip-forward': 0x03,
                     'volume-up': 0x04,
                     'volume-down': 0x05,
+                    'voice-assistant': 0x00,
                 },
             },
             'triple': {
@@ -66,13 +67,20 @@ export default {
                     'skip-forward': 0x03,
                     'volume-up': 0x04,
                     'volume-down': 0x05,
+                    'voice-assistant': 0x00,
                 },
             },
             'action-hold': {
                 type: 'press',
                 actions: {
+                    'no-action': 0x00,
                     'voice-assistant': 0x08,
                     'take-photo': 0x09,
+                    'play-pause': 0x01,
+                    'skip-back': 0x02,
+                    'skip-forward': 0x03,
+                    'volume-up': 0x04,
+                    'volume-down': 0x05,
                 },
             },
         },
@@ -80,6 +88,6 @@ export default {
 
     albumArtIcon: 'earbuds',
     budsIcon: 'earbuds',
-    case: 'case-normal',
+    case: 'case-oval-short',
 };
 
