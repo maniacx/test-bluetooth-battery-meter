@@ -1,9 +1,13 @@
 'use strict';
 
 import OnePlusNordBuds3 from './deviceConfigs/OnePlusNordBuds3.js';
+import OnePlusBudsZ2 from './deviceConfigs/OnePlusBudsZ2.js';
+import RealmeAir7 from './deviceConfigs/RealmeAir7.js';
 
 export const OpoBudsModelList = [
     OnePlusNordBuds3,
+    OnePlusBudsZ2,
+    RealmeAir7,
 ];
 
 export const PayloadType = {
