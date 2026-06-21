@@ -142,6 +142,9 @@ export const ConfigureWindow = GObject.registerClass({
             if (this._modelData.adaptiveSound && this._adaptiveSoundSwitch)
                 this._adaptiveSoundSwitch.active = this._settingsItems['adapt-sound'];
 
+            if (this._modelData.lowLatencyMode && this._lowLatencySwitch)
+                this._lowLatencySwitch.active = this._settingsItems['low-latency'];
+
             if (this._modelData.ring && this._ringBudsRow) {
                 this._ringBudsRow.status = this._settingsItems['ring-state'];
                 this._ringBudsRow.statusLeft = this._settingsItems['ring-state-left'];
@@ -286,7 +289,8 @@ export const ConfigureWindow = GObject.registerClass({
         const _ = this._gettext;
 
         if (this._modelData.ring || this._modelData.dualConnection ||
-                this._modelData.autoAnswer || this._modelData.adaptiveSound) {
+                this._modelData.autoAnswer || this._modelData.adaptiveSound ||
+                this._modelData.lowLatencyMode) {
             miscGroup = new Adw.PreferencesGroup({title: _('Additional Settings')});
             this._page.add(miscGroup);
         }
@@ -331,6 +335,20 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             miscGroup.add(this._adaptiveSoundSwitch);
+        }
+
+        if (this._modelData.lowLatencyMode) {
+            this._lowLatencySwitch = new Adw.SwitchRow({
+                title: _('Enable low latency mode'),
+            });
+
+            this._lowLatencySwitch.active = this._settingsItems['low-latency'];
+
+            this._lowLatencySwitch.connect('notify::active', () => {
+                this._updateGsettings('low-latency', this._lowLatencySwitch.active);
+            });
+
+            miscGroup.add(this._lowLatencySwitch);
         }
 
         if (this._modelData.ring) {

@@ -61,6 +61,7 @@ export const RedmiBudsDevice = GObject.registerClass({
             updateEqPreset: this.updateEqPreset.bind(this),
             updateLongGestures: this.updateLongGestures.bind(this),
             updateAdaptiveSound: this.updateAdaptiveSound.bind(this),
+            updateLowLatency: this.updateLowLatency.bind(this),
             updateCustomEq: this.updateCustomEq.bind(this),
         };
 
@@ -151,6 +152,10 @@ export const RedmiBudsDevice = GObject.registerClass({
                 'auto-answer': false,
             },
 
+            ...this._modelData.lowLatencyMode && {
+                'low-latency': false,
+            },
+
             ...this._modelData.gestureOptions?.gestureTypes?.single !== undefined && {
                 'single-left': getDefaultAction('single'),
                 'single-right': getDefaultAction('single'),
@@ -220,6 +225,9 @@ export const RedmiBudsDevice = GObject.registerClass({
 
         if (this._modelData.autoAnswer)
             this._autoAnswer = this._settingsItems['auto-answer'];
+
+        if (this._modelData.lowLatencyMode)
+            this._lowLatency = this._settingsItems['low-latency'];
 
         const gestureTypes = this._modelData.gestureOptions?.gestureTypes;
 
@@ -303,6 +311,15 @@ export const RedmiBudsDevice = GObject.registerClass({
             if (this._adaptiveSound !== enable) {
                 this._adaptiveSound = enable;
                 this._setAdaptiveSound(enable);
+            }
+        }
+
+        if (this._modelData.lowLatencyMode) {
+            const enable = this._settingsItems['low-latency'];
+
+            if (this._lowLatency !== enable) {
+                this._lowLatency = enable;
+                this._setLowLatency(enable);
             }
         }
 
@@ -948,6 +965,26 @@ export const RedmiBudsDevice = GObject.registerClass({
 
     _setAutoAnswer(enable) {
         this._redmiBudsSocket?.setAutoAnswer(enable);
+    }
+
+    updateLowLatency(enable) {
+        this._log.info(`updateLowLatency : ${enable}`);
+        if (!this._modelData.lowLatencyMode)
+            return;
+
+        if (this._lowLatency === enable)
+            return;
+
+        this._lowLatency = enable;
+
+        if (this._settingsItems) {
+            this._settingsItems['low-latency'] = enable;
+            this._updateGsettings();
+        }
+    }
+
+    _setLowLatency(enable) {
+        this._redmiBudsSocket?.setLowLatency(enable);
     }
 
     updateGestureSingle(left, right) {

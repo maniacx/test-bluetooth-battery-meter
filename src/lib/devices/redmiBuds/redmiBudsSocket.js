@@ -28,6 +28,7 @@ export const RedmiBudsSocket = GObject.registerClass({
         this._pendingRequest = null;
         this._pendingTimeout = null;
         this._allowStatusNotifyConfigRsp = false;
+        this._initialized = false;
 
         this._modelData = null;
         this._challenge = [];
@@ -336,6 +337,9 @@ export const RedmiBudsSocket = GObject.registerClass({
         if (this._modelData.adaptiveSound)
             this._getAdaptiveSound();
 
+        if (this._modelData.lowLatencyMode)
+            this._getLowLatency();
+
         if (this._modelData.eqPreset?.custom)
             this._getCustomEq();
 
@@ -580,6 +584,11 @@ export const RedmiBudsSocket = GObject.registerClass({
                     this._parseAdaptiveNC(data);
                 break;
 
+            case ConfigType.LOW_LATENCY:
+                if (this._modelData.lowLatencyMode)
+                    this._parseLowLatency(data);
+                break;
+
             case ConfigType.ADAPTIVE_SOUND:
                 if (this._modelData.adaptiveSound)
                     this._parseAdaptiveSound(data);
@@ -790,6 +799,24 @@ export const RedmiBudsSocket = GObject.registerClass({
     setAutoAnswer(enabled) {
         const loginfo = `Set AutoAnswer enabled: ${enabled}`;
         this._setConfig(ConfigType.AUTO_ANSWER, [enabled ? 0x01 : 0x00], loginfo);
+    }
+
+    _getLowLatency() {
+        this._getConfig(ConfigType.LOW_LATENCY, 'Get LowLatency');
+    }
+
+    _parseLowLatency(data) {
+        this._log.info('Parse LowLatency');
+        const enable = booleanFromByte(data[0]);
+        if (enable === null)
+            return;
+
+        this._callbacks?.updateLowLatency?.(enable);
+    }
+
+    setLowLatency(enabled) {
+        const loginfo = `Set LowLatency enabled: ${enabled}`;
+        this._setConfig(ConfigType.LOW_LATENCY, [enabled ? 0x01 : 0x00], loginfo);
     }
 
     _getGestures() {
