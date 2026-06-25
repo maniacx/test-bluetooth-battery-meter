@@ -42,7 +42,7 @@ export const BudsLinkApplication = GObject.registerClass({
 
         this._isServiceHeld = false;
 
-        this._log = createLogger('Main');
+        this._log = createLogger('Main OPO Branch');
 
         this.connect('startup', () => {
             try {
@@ -148,7 +148,7 @@ export const BudsLinkApplication = GObject.registerClass({
         this.googleBudsEnabled = true;
         this.redmiBudsEnabled = true;
         this.opoBudsEnabled = true;
-        this.gfpsEnabled = true;
+        this.gfpsEnabled = false;
 
         this._client = new BluetoothClient();
         this._deviceManager = new EnhancedDeviceSupportManager(this);
