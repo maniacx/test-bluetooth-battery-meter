@@ -31,6 +31,9 @@
         <key name="redmi-buds-list" type="as">
             <default>[]</default>
         </key>
+        <key name="senh-buds-list" type="as">
+            <default>[]</default>
+        </key>
         <key name="gfps-list" type="as">
             <default>[]</default>
         </key>

@@ -8,6 +8,7 @@ import {DeviceTypeGalaxyLegacy, DeviceTypeGalaxyBuds} from './galaxyBuds/galaxyB
 import {DeviceTypeNothingBuds} from './nothingBuds/nothingBudsDevice.js';
 import {DeviceTypeGoogleBuds} from './googleBuds/googleBudsDevice.js';
 import {DeviceTypeRedmiBuds} from './redmiBuds/redmiBudsDevice.js';
+import {DeviceTypeSenhBuds} from './senhBuds/senhBudsDevice.js';
 import {DeviceTypeGfps} from './gfps/gfpsDevice.js';
 
 export class Notifier {
@@ -30,6 +31,8 @@ export class Notifier {
             label = _('Google Pixel Buds');
         else if (type === DeviceTypeRedmiBuds)
             label = _('Redmi / Xiaomi Buds');
+        else if (type === DeviceTypeSenhBuds)
+            label = _('Sennheiser');
         else if (type === DeviceTypeGfps)
             label = _('Google Fast Pair');
         else

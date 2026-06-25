@@ -1,0 +1,434 @@
+'use strict';
+import Adw from 'gi://Adw';
+import GObject from 'gi://GObject';
+
+import {
+    supportedAudioSingleIcons, supportedAudioDualIcons, supportedCaseIcons
+} from '../../../lib/widgets/iconGroups.js';
+import {DropDownRowWidget} from './../../widgets/dropDownRowWidget.js';
+import {SliderRowWidget} from './../../widgets/sliderRowWidget.js';
+import {CheckBoxesRowWidget} from './../../widgets/checkBoxesRowWidget.js';
+import {IconSelectorWidget} from './../../widgets/iconSelectorWidget.js';
+import {RingMyBudsRow} from './../../widgets/ringMyBudsRow.js';
+import {EqualizerWidget} from './../../widgets/equalizerWidget.js';
+import {SenhBudsModelList} from '../../../lib/devices/senhBuds/senhBudsConfig.js';
+
+export const ConfigureWindow = GObject.registerClass({
+    GTypeName: 'BudsLink_SenhBudsConfigureWindow',
+}, class ConfigureWindow extends Adw.Window {
+    _init(settings, mac, devicePath, parentWindow, _, modal = false) {
+        super._init({
+            default_width: 650,
+            default_height: 650,
+            width_request: 320,
+            height_request: 100,
+            modal,
+            transient_for: parentWindow ?? null,
+        });
+
+        this._isCompactMode = false;
+
+        this._breakpointCompact = new Adw.Breakpoint({
+            condition: Adw.BreakpointCondition.parse('max-width: 500px'),
+        });
+
+        this._breakpointExpanded = new Adw.Breakpoint({
+            condition: Adw.BreakpointCondition.parse('min-width: 550px'),
+        });
+
+        this.add_breakpoint(this._breakpointCompact);
+        this.add_breakpoint(this._breakpointExpanded);
+
+        this._breakpointCompact.connect('apply', () => {
+            this._isCompactMode = true;
+            this._updateCompactStatus();
+        });
+
+        this._breakpointExpanded.connect('apply', () => {
+            this._isCompactMode = false;
+            this._updateCompactStatus();
+        });
+
+        this._settings = settings;
+        this._devicePath = devicePath;
+        this._gettext = _;
+        this.checkBoxWidgets = [];
+
+        const pathsString = settings.get_strv('senh-buds-list').map(JSON.parse);
+        this._settingsItems = pathsString.find(info => info.path === devicePath);
+
+        if (!this._settingsItems)
+            return;
+
+        this.title = this._settingsItems.alias;
+
+        const modelId = this._settingsItems.modelId;
+
+        this._modelData = SenhBudsModelList.find(model => model.id?.includes(modelId));
+
+        if (!this._modelData)
+            return;
+
+        const toolViewBar = new Adw.ToolbarView();
+        const headerBar = new Adw.HeaderBar();
+        this._page = new Adw.PreferencesPage();
+
+        toolViewBar.add_top_bar(headerBar);
+        toolViewBar.set_content(this._page);
+        this.set_content(toolViewBar);
+
+        const iconList = this._modelData.batteryMultiple ? supportedAudioDualIcons
+            : supportedAudioSingleIcons;
+
+        let caseIconList = [];
+        let initialCaseIcon = '';
+        if (this._modelData.batteryCase) {
+            caseIconList = supportedCaseIcons;
+            initialCaseIcon = this._settingsItems['case'];
+        }
+
+        const iconSelector = new IconSelectorWidget({
+            gtxt: _,
+            grpTitle: _('Icon'),
+            rowTitle: _('Select Icon'),
+            rowSubtitle: _('Select the icon used for the indicator and quick menu'),
+            iconList,
+            initialIcon: this._settingsItems['icon'],
+            caseIconList,
+            initialCaseIcon,
+            mac,
+            fw: this._settingsItems['fw-version'],
+        });
+
+        iconSelector.connect('notify::selected-icon', () => {
+            this._updateGsettings('icon', iconSelector.selected_icon);
+        });
+
+        if (this._modelData.batteryCase) {
+            iconSelector.connect('notify::selected-case-icon', () => {
+                this._updateGsettings('case', iconSelector.selected_case_icon);
+            });
+        }
+
+        this._page.add(iconSelector);
+
+        this._addSoundSettings();
+        this._addCallsSetting();
+        this._addInEarSettings();
+
+        const settingSignalId = this._settings.connect('changed::senh-buds-list', () => {
+            const updatedList = this._settings.get_strv('senh-buds-list').map(JSON.parse);
+            this._settingsItems = updatedList.find(info => info.path === devicePath);
+
+            if (!this._settingsItems)
+                return;
+
+            this.title = this._settingsItems.alias;
+
+            if (this._audioModeDropdown)
+                this._audioModeDropdown.selected_item = this._settingsItems['audio-mode'];
+
+            if (this._bassBoostSwitch)
+                this._bassBoostSwitch.active = this._settingsItems['bass-boost'];
+
+            if (this._crossfeedDropdown)
+                this._crossfeedDropdown.selected_item = this._settingsItems['crossfeed'];
+
+            if (this._inEarDetectionSwitch)
+                this._inEarDetectionSwitch.active = this._settingsItems['in-ear-setting'];
+
+            if (this._smartPauseSwitch)
+                this._smartPauseSwitch.active = this._settingsItems['smart-pause'];
+
+            if (this._autoAnswerSwitch)
+                this._autoAnswerSwitch.active = this._settingsItems['autoanswer'];
+
+            if (this._transPauseSwitch)
+                this._transPauseSwitch.active = this._settingsItems['trans-pause'];
+
+            if (this._autoPowerOffDropdown)
+                this._autoPowerOffDropdown.selected_item = this._settingsItems['auto-power'];
+
+            if (this._sideToneSlider)
+                this._sideToneSlider.value = this._settingsItems['side-tone'];
+
+            if (this._comfortCallsSwitch)
+                this._comfortCallsSwitch.active = this._settingsItems['comfort-call'];
+
+            this._updateInEarSensitivity();
+            this._updateSoundVisibility();
+        });
+
+        this.connect('close-request', () => {
+            if (this._modelData.ring) {
+                const ringState = this._settingsItems?.['ring-state'];
+                if (ringState === 'playing')
+                    this._updateGsettings('ring-state', 'stopped');
+            }
+
+
+            if (settingSignalId && this._settings)
+                this._settings.disconnect(settingSignalId);
+
+            this._settings = null;
+
+            return false;
+        });
+    }
+
+    _updateGsettings(key, value) {
+        const pairedDevice = this._settings.get_strv('senh-buds-list');
+        const existingPathIndex =
+                pairedDevice.findIndex(item => JSON.parse(item).path === this._devicePath);
+        if (existingPathIndex !== -1) {
+            const existingItem = JSON.parse(pairedDevice[existingPathIndex]);
+            existingItem[key] = value;
+            pairedDevice[existingPathIndex] = JSON.stringify(existingItem);
+            this._settings.set_strv('senh-buds-list', pairedDevice);
+        }
+    }
+
+    _addSoundSettings() {
+        if (!this._modelData.audioMode && !this._modelData.eq)
+            return;
+
+        const _ = this._gettext;
+
+        const eqGroup = new Adw.PreferencesGroup({title: _('Sound Settings')});
+        this._page.add(eqGroup);
+
+        if (this._modelData.audioMode) {
+            const audioModeObj = this._modelData.audioMode;
+
+            const audioModeLabels = {
+                off: _('Off'),
+                eq: _('Equalizer'),
+                podcast: _('Podcast'),
+                personalized: _('Sound personalization'),
+                peq: _('Parametric Equalizer'),
+            };
+
+            const audioModeDesc = Object.keys(audioModeObj)
+                .filter(key => audioModeLabels[key] !== undefined)
+                .map(key => ({label: audioModeLabels[key], value: audioModeObj[key]}));
+
+            const audioModeOptions = audioModeDesc.map(d => d.label);
+            const audioModeValues  = audioModeDesc.map(d => d.value);
+
+            this._audioModeDropdown = new DropDownRowWidget({
+                title: _('Audio Mode'),
+                options: audioModeOptions,
+                values: audioModeValues,
+                initialValue: this._settingsItems['audio-mode'],
+            });
+
+            this._audioModeDropdown.connect('notify::selected-item', () => {
+                this._updateGsettings('audio-mode', this._audioModeDropdown.selected_item);
+                this._updateSoundVisibility();
+            });
+
+            eqGroup.add(this._audioModeDropdown);
+        }
+
+        if (this._modelData.eq?.bassBoost) {
+            this._bassBoostSwitch = new Adw.SwitchRow({title: _('Enable Bass Boost')});
+
+            this._bassBoostSwitch.active = this._settingsItems['bass-boost'];
+
+            this._bassBoostSwitch.connect('notify::active', () => {
+                this._updateGsettings('bass-boost', this._bassBoostSwitch.active);
+            });
+
+            eqGroup.add(this._bassBoostSwitch);
+        }
+
+        if (this._modelData.crossfeed) {
+            const crossfeedObj = this._modelData.crossfeed;
+
+            const crossfeedLabels = {
+                off: _('Off'),
+                low: _('Low'),
+                high: _('High'),
+            };
+
+            const crossfeedDesc = Object.keys(crossfeedObj)
+                .filter(key => crossfeedLabels[key] !== undefined)
+                .map(key => ({label: crossfeedLabels[key], value: crossfeedObj[key]}));
+
+            const crossfeedOptions = crossfeedDesc.map(d => d.label);
+            const crossfeedValues = crossfeedDesc.map(d => d.value);
+
+            this._crossfeedDropdown = new DropDownRowWidget({
+                title: _('Crossfeed'),
+                options: crossfeedOptions,
+                values: crossfeedValues,
+                initialValue: this._settingsItems['crossfeed'],
+            });
+
+            this._crossfeedDropdown.connect('notify::selected-item', () => {
+                this._updateGsettings('crossfeed', this._crossfeedDropdown.selected_item);
+            });
+
+            eqGroup.add(this._crossfeedDropdown);
+        }
+        this._updateSoundVisibility();
+    }
+
+    _updateSoundVisibility() {
+        if (!this._audioModeDropdown)
+            return;
+
+        const mode = this._audioModeDropdown.selected_item;
+
+        if (this._modelData.eq?.bassBoost) {
+            const eqMode = this._modelData.audioMode.eq;
+            this._bassBoostSwitch.visible = mode === eqMode;
+        }
+    }
+
+    _addInEarSettings() {
+        const _ = this._gettext;
+
+        if (!this._modelData.inEarDetection && !this._modelData.transPause &&
+                !this._modelData.smartPause && !this._modelData.autoAnswer &&
+                !this._modelData.autoPowerOff)
+            return;
+
+        const groupTitle = this._modelData.earbuds ? _('In Ear Settings') : _('On Head Settings');
+        const inEarGroup = new Adw.PreferencesGroup({title: groupTitle});
+        this._page.add(inEarGroup);
+
+        if (this._modelData.inEarDetection) {
+            const inEarTitle = this._modelData.earbuds ? _('Enable In-Ear Detection')
+                : _('Enable On Head Detection');
+            this._inEarDetectionSwitch = new Adw.SwitchRow({title: inEarTitle});
+            this._inEarDetectionSwitch.active = this._settingsItems['in-ear-setting'];
+            this._inEarDetectionSwitch.connect('notify::active', () => {
+                this._updateGsettings('in-ear-setting', this._inEarDetectionSwitch.active);
+                this._updateInEarSensitivity();
+            });
+
+            inEarGroup.add(this._inEarDetectionSwitch);
+        }
+
+        if (this._modelData.smartPause) {
+            this._smartPauseSwitch = new Adw.SwitchRow({title: _('Pause Media When Not Worn')});
+            this._smartPauseSwitch.active = this._settingsItems['smart-pause'];
+            this._smartPauseSwitch.connect('notify::active', () => {
+                this._updateGsettings('smart-pause', this._smartPauseSwitch.active);
+            });
+
+            inEarGroup.add(this._smartPauseSwitch);
+        }
+
+        if (this._modelData.autoAnswer) {
+            this._autoAnswerSwitch =
+                new Adw.SwitchRow({title: _('Automatically Answer Calls When Worn')});
+
+            this._autoAnswerSwitch.active = this._settingsItems['autoanswer'];
+            this._autoAnswerSwitch.connect('notify::active', () => {
+                this._updateGsettings('autoanswer', this._autoAnswerSwitch.active);
+            });
+
+            inEarGroup.add(this._autoAnswerSwitch);
+        }
+
+        if (this._modelData.transPause) {
+            this._transPauseSwitch =
+                new Adw.SwitchRow({title: _('Pause Media When Transparency Mode Is Enabled')});
+
+            this._transPauseSwitch.active = this._settingsItems['trans-pause'];
+            this._transPauseSwitch.connect('notify::active', () => {
+                this._updateGsettings('trans-pause', this._transPauseSwitch.active);
+            });
+
+            inEarGroup.add(this._transPauseSwitch);
+        }
+
+        if (this._modelData.autoPowerOff) {
+            const options = this._modelData.autoPowerOff.map(v => {
+                switch (v) {
+                    case 0: return _('Never');
+                    case 15: return _('15 Minutes');
+                    case 30: return _('30 Minutes');
+                    case 60: return _('60 Minutes');
+                    default: return String(v);
+                }
+            });
+
+            this._autoPowerOffDropdown = new DropDownRowWidget({
+                title: _('Automatically Power Off When Not Worn'),
+                options,
+                values: this._modelData.autoPowerOff,
+                initialValue: this._settingsItems['auto-power'],
+            });
+
+            this._autoPowerOffDropdown.connect('notify::selected-item', () => {
+                this._updateGsettings('auto-power', this._autoPowerOffDropdown.selected_item);
+            });
+
+            inEarGroup.add(this._autoPowerOffDropdown);
+        }
+        this._updateInEarSensitivity();
+    }
+
+    _updateInEarSensitivity() {
+        const sensitive = this._inEarDetectionSwitch?.active ?? true;
+
+        this._smartPauseSwitch?.set_sensitive(sensitive);
+        this._autoAnswerSwitch?.set_sensitive(sensitive);
+        this._transPauseSwitch?.set_sensitive(sensitive);
+        this._autoPowerOffDropdown?.set_sensitive(sensitive);
+    }
+
+    _addCallsSetting() {
+        const _ = this._gettext;
+
+        if (!this._modelData.sideTone && !this._modelData.comfortCalls)
+            return;
+
+        const callGroup = new Adw.PreferencesGroup({title: _('Calls Settings')});
+        this._page.add(callGroup);
+
+        if (this._modelData.sideTone) {
+            const maxLevel = this._modelData.sideTone - 1;
+
+            const marks = [];
+
+            for (let i = 0; i <= maxLevel; i++)
+                marks.push({mark: i, label: i === 0 ? _('Off') : String(i)});
+
+            this._sideToneSlider = new SliderRowWidget({
+                rowTitle: _('Side Tone'),
+                range: [0, maxLevel, 1],
+                marks,
+                initialValue: this._settingsItems['side-tone'],
+                snapOnStep: true,
+            });
+
+            this._sideToneSlider.compact_mode = this._isCompactMode;
+
+            this._sideToneSlider.connect('notify::value', () => {
+                this._updateGsettings('side-tone', this._sideToneSlider.value);
+            });
+
+            callGroup.add(this._sideToneSlider);
+        }
+
+        if (this._modelData.comfortCalls) {
+            this._comfortCallsSwitch = new Adw.SwitchRow({title: _('Comfort Calls')});
+            this._comfortCallsSwitch.active = this._settingsItems['comfort-call'];
+            this._comfortCallsSwitch.connect('notify::active', () => {
+                this._updateGsettings('comfort-call', this._comfortCallsSwitch.active);
+            });
+            callGroup.add(this._comfortCallsSwitch);
+        }
+    }
+
+    _updateCompactStatus() {
+        for (const widget of this.checkBoxWidgets)
+            widget.set_property('compact-mode', this._isCompactMode);
+
+        this._sideToneSlider?.set_property('compact-mode', this._isCompactMode);
+    }
+});

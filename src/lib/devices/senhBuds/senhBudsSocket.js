@@ -1,0 +1,817 @@
+'use strict';
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
+
+import {createLogger, getDeviceIdentifier, hexBytes} from '../logger.js';
+import {SocketHandler} from '../socketByProfile.js';
+import {booleanFromByte, isValidByte, isArrayEqual} from '../deviceUtils.js';
+import {
+    SenhBudsModelList, VendorType, CommandType
+} from './senhBudsConfig.js';
+
+const HEADER = [0xFF, 0x03];
+
+export const SenhBudsSocket = GObject.registerClass({
+    GTypeName: 'BudsLink_SenhSocket',
+}, class SenhBudsSocket extends SocketHandler {
+    _init(devicePath, profileManager, profile, callbacks) {
+        super._init(devicePath, profileManager, profile);
+        const identifier = getDeviceIdentifier(devicePath);
+        const tag = `SenhSocket-${identifier}`;
+        this._log = createLogger(tag);
+        this._log.info('SenhSocket init');
+        this._callbacks = callbacks;
+        this._rxBuffer = [];
+        this._txQueue = [];
+        this._pendingRequest = null;
+        this._pendingTimeout = null;
+        this._modelData = null;
+        this._battInfo = {
+            battery1Level: 0,
+            battery2Level: 0,
+            battery3Level: 0,
+            battery1Status: 'disconnected',
+            battery2Status: 'disconnected',
+            battery3Status: 'disconnected',
+        };
+
+        this.startSocket();
+    }
+
+    postConnectInitialization() {
+        this._getModelId();
+    }
+
+    _queueRequest(vendor, command, payload, loginfo = '') {
+        this._txQueue.push({vendor, command, payload, loginfo});
+        this._processQueue();
+    }
+
+    _processQueue() {
+        if (this._pendingRequest)
+            return;
+
+        if (this._txQueue.length === 0)
+            return;
+
+        const item = this._txQueue.shift();
+
+        if (item.loginfo)
+            this._log.info(item.loginfo);
+
+        this._encode(item.vendor, item.command, item.payload);
+        this._pendingRequest = item;
+
+        if (this._pendingTimeout) {
+            GLib.source_remove(this._pendingTimeout);
+            this._pendingTimeout = null;
+        }
+
+        this._pendingTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 250, () => {
+            this._log.info(`Response Timeout type: ${hexBytes(item.command)}`);
+            this._pendingRequest = null;
+            this._processQueue();
+            this._pendingTimeout = null;
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+
+    _completePendingRequest(msg) {
+        if (!this._pendingRequest)
+            return;
+
+        const pending = this._pendingRequest;
+
+        if (msg.vendor !== pending.vendor)
+            return;
+
+        const requestCommand = pending.command;
+        const responseCommand = requestCommand | 0x0100;
+        const errorCommand = requestCommand | 0x0180;
+
+        if (msg.command !== responseCommand && msg.command !== errorCommand)
+            return;
+
+        if (msg.command === errorCommand)
+            log(`Command 0x${requestCommand.toString(16)} failed`);
+
+        if (this._pendingTimeout)
+            GLib.source_remove(this._pendingTimeout);
+
+        this._pendingTimeout = null;
+        this._pendingRequest = null;
+        this._processQueue();
+    }
+
+    _encode(vendor, command, payload = []) {
+        const payloadLength = payload.length;
+
+        const out = [
+            ...HEADER,
+            payloadLength >> 8 & 0xFF,
+            payloadLength & 0xFF,
+            vendor >> 8 & 0xFF,
+            vendor & 0xFF,
+            command >> 8 & 0xFF,
+            command & 0xFF,
+            ...payload,
+        ];
+
+        this.sendMessage(out);
+    }
+
+    processData(bytes) {
+        this._rxBuffer.push(...bytes);
+
+        while (true) {
+            const msg = this._extractMessage();
+            if (!msg)
+                break;
+
+            if (msg.vendor === VendorType.QCOM)
+                this._handleMessageQcom(msg);
+            else if (msg.vendor === VendorType.SENH)
+                this._handleMessageSenh(msg);
+            else
+                this._log.info(`Unknown vendor command tpye ${hexBytes(msg.vendor)}`);
+
+            this._completePendingRequest(msg);
+        }
+    }
+
+    _extractMessage() {
+        const buf = this._rxBuffer;
+
+        for (let i = 0; i <= buf.length - 8; i++) {
+            if (buf[i] !== HEADER[0] || buf[i + 1] !== HEADER[1])
+                continue;
+
+            const payloadLength = buf[i + 2] << 8 | buf[i + 3];
+            const totalLength = payloadLength + 8;
+
+            if (i + totalLength > buf.length)
+                return null;
+
+            const raw = buf.slice(i, i + totalLength);
+
+            let nextHeader = -1;
+            for (let j = 8; j < raw.length - 1; j++) {
+                if (raw[j] === HEADER[0] && raw[j + 1] === HEADER[1]) {
+                    nextHeader = j;
+                    break;
+                }
+            }
+
+            if (nextHeader !== -1) {
+                this._rxBuffer.splice(0, i + nextHeader);
+                return this._extractMessage();
+            }
+
+            this._rxBuffer.splice(0, i + totalLength);
+            return this._parseMessage(raw);
+        }
+
+        return null;
+    }
+
+    _parseMessage(raw) {
+        const payloadLength = raw[2] << 8 | raw[3];
+        const vendor = raw[4] << 8 | raw[5];
+        const command = raw[6] << 8 | raw[7];
+        const payload = raw.slice(8, 8 + payloadLength);
+        return {vendor, command, payload};
+    }
+
+    _handleMessageQcom(msg) {
+        this._log.info(`QCOM: CommandType: [${hexBytes(msg.command)}] ` +
+            `payload: [${hexBytes(msg.payload)}]`);
+    }
+
+    _handleMessageSenh(msg) {
+        this._log.info(`SENH: CommandType: [${hexBytes(msg.command)}] ` +
+            `payload: [${hexBytes(msg.payload)}]`);
+
+        if (msg.payload.length < 1)
+            return;
+
+        switch (msg.command) {
+            case CommandType.MODELID_RET: {
+                this._parseModelId(msg.payload);
+                break;
+            }
+
+            case CommandType.FIRMWARE_RET: {
+                this._parseFirmware(msg.payload);
+                break;
+            }
+
+            case CommandType.BATT_LEVEL_RET:
+            case CommandType.BATT_LEVEL_NOTI: {
+                this._parseBatteryLevel(msg.payload);
+                break;
+            }
+
+            case CommandType.BATT_STATUS_RET:
+            case CommandType.BATT_STATUS_NOTI: {
+                this._parseBatteryStatus(msg.payload);
+                break;
+            }
+
+            case CommandType.ANC_STATUS_RET:
+            case CommandType.ANC_STATUS_RET2:
+            case CommandType.ANC_STATUS_NOTI: {
+                if (this._modelData?.noiseControl)
+                    this._parseNoiseControl(msg.payload);
+                break;
+            }
+
+            case CommandType.ANC_MODE_RET:
+            case CommandType.ANC_MODE_RET2:
+            case CommandType.ANC_MODE_NOTI: {
+                if (this._modelData?.ncMode)
+                    this._parseNoiseControlMode(msg.payload);
+                break;
+            }
+
+            case CommandType.TRANSP_STATUS_RET:
+            case CommandType.TRANSP_STATUS_RET2:
+            case CommandType.TRANSP_STATUS_NOTI: {
+                if (this._modelData?.transparencyLevel)
+                    this._parseTransparencyLevel(msg.payload);
+                break;
+            }
+
+            case CommandType.AUDIO_MODE_RET:
+            case CommandType.AUDIO_MODE_RET2:
+            case CommandType.AUDIO_MODE_NOTI: {
+                if (this._modelData?.audioMode)
+                    this._parseAudioMode(msg.payload);
+                break;
+            }
+
+            case CommandType.BASS_BOOST_RET:
+            case CommandType.BASS_BOOST_RET2:
+            case CommandType.BASS_BOOST_NOTI: {
+                if (this._modelData?.eq?.bassBoost)
+                    this._parseBassBoost(msg.payload);
+                break;
+            }
+
+            case CommandType.CROSSFEED_RET:
+            case CommandType.CROSSFEED_NOTI: {
+                if (this._modelData?.sideTone)
+                    this._parseCrossfeed(msg.payload);
+                break;
+            }
+
+            case CommandType.SIDETONE_RET:
+            case CommandType.SIDETONE_RET2: {
+                if (this._modelData?.sideTone)
+                    this._parseSideTone(msg.payload);
+                break;
+            }
+
+            case CommandType.COMFORT_CALL_RET:
+            case CommandType.COMFORT_CALL_RET2: {
+                if (this._modelData?.comfortCalls)
+                    this._parseComfortCall(msg.payload);
+                break;
+            }
+
+            case CommandType.PAUSE_ON_TRANS_RET:
+            case CommandType.PAUSE_ON_TRANS_RET2: {
+                if (this._modelData?.transPause)
+                    this._parseTransPause(msg.payload);
+                break;
+            }
+
+            case CommandType.INEAR_SETTING_RET:
+            case CommandType.INEAR_SETTING_RET2: {
+                if (this._modelData?.inEarDetection)
+                    this._parseInEarSetting(msg.payload);
+                break;
+            }
+
+            case CommandType.SMART_PAUSE_RET:
+            case CommandType.SMART_PAUSE_RET2: {
+                if (this._modelData?.smartPause)
+                    this._parseSmartPause(msg.payload);
+                break;
+            }
+
+            case CommandType.AUTO_CALL_RET:
+            case CommandType.AUTO_CALL_RET2: {
+                if (this._modelData?.autoAnswer)
+                    this._parseAutoAnswer(msg.payload);
+                break;
+            }
+
+            case CommandType.AUTO_POWER_OFF_RET:
+            case CommandType.AUTO_POWER_OFF_RET2: {
+                if (this._modelData?.autoPowerOff)
+                    this._parseAutoPowerOff(msg.payload);
+                break;
+            }
+
+            case CommandType.CODEC_RET:
+            case CommandType.CODEC_NOTI: {
+                if (this._modelData?.reportsCodec)
+                    this._parseCodec(msg.payload);
+                break;
+            }
+
+            default:
+                this._log.info(`Unhandled command ${hexBytes(msg.command)}`);
+        }
+    }
+
+    _encodeQcomm(command, loginfo, payload = []) {
+        this._queueRequest(VendorType.QCOM, command, payload, loginfo);
+    }
+
+    _encodeSenh(command, loginfo, payload = []) {
+        this._queueRequest(VendorType.SENH, command, payload, loginfo);
+    }
+
+    _getModelId() {
+        this._log.info('Get Model ID');
+        this._encode(VendorType.SENH, CommandType.MODELID_GET);
+    }
+
+    _parseModelId(payload) {
+        if (this._initialized)
+            return;
+
+        this._initialized = true;
+        const versionModelId = new TextDecoder().decode(Uint8Array.from(payload));
+        const modelId = versionModelId.split(' ')[0];
+        this._modelData = SenhBudsModelList.find(model => model.id?.includes(modelId));
+
+        if (!this._modelData) {
+            this._log.info(`No model matched for Model ID: ${modelId} ` +
+                `payload: [${hexBytes(payload)}]`);
+            return;
+        }
+
+        this._callbacks?.modelIntialized?.(this._modelData, modelId);
+        this._sendInitializationRequests();
+    }
+
+    _sendInitializationRequests() {
+        this._registerNotifications();
+        this._getConfiguration();
+    }
+
+    _registerNotifications() {
+        const notifications = this._modelData.registerNotification;
+
+        for (const feature of notifications) {
+            const payload = [feature];
+            const loginfo = `Register notification feature: ${hexBytes(feature)}`;
+            this._encodeSenh(CommandType.REGISTER_NOTI_SET, loginfo, payload);
+        }
+    }
+
+    _getConfiguration() {
+        this._getFirmware();
+        this._getBatteryLevel();
+        this._getBatteryStatus();
+
+        if (this._modelData.noiseControl)
+            this._getNoiseControl();
+
+        if (this._modelData.ncMode)
+            this._getNoiseControlMode();
+
+        if (this._modelData.transparencyLevel)
+            this._getTransparencyLevel();
+
+        if (this._modelData.audioMode)
+            this._getAudioMode();
+
+        if (this._modelData.eq?.bassBoost)
+            this._getBassBoost();
+
+        if (this._modelData.crossfeed)
+            this._getCrossfeed();
+
+        if (this._modelData.sideTone)
+            this._getSideTone();
+
+        if (this._modelData.comfortCalls)
+            this._getComfortCall();
+
+        if (this._modelData.transparencyPause)
+            this._getTransPause();
+
+        if (this._modelData.inEarDetection) {
+            this._getInEarSetting();
+
+            if (this._modelData.smartPause)
+                this._getSmartPause();
+
+            if (this._modelData.autoAnswer)
+                this._getAutoAnswer();
+
+            if (this._modelData.autoPowerOff)
+                this._getAutoPowerOff();
+        }
+
+        if (this._modelData.reportsCodec)
+            this._getCodec();
+    }
+
+    _getFirmware() {
+        const loginfo = 'Get Firmware';
+        this._encodeSenh(CommandType.FIRMWARE_GET, loginfo);
+    }
+
+    _parseFirmware(payload) {
+        if (payload.length < 6)
+            return;
+
+        const major = payload[0] << 8 | payload[1];
+        const minor = payload[2] << 8 | payload[3];
+        const patch = payload[4] << 8 | payload[5];
+
+        const fw = `${major}.${minor}.${patch}`;
+
+        this._callbacks?.updateFirmware?.(fw);
+    }
+
+    _getBatteryLevel() {
+        const loginfo = 'Get Battery Level';
+        this._encodeSenh(CommandType.BATT_LEVEL_GET, loginfo);
+    }
+
+    _parseBatteryLevel(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse Battery Level');
+        this._battInfo.battery1Level = payload[0];
+        if (payload.length > 2)
+            this._battInfo.battery2Level = payload[1];
+
+        if (payload.length > 3)
+            this._battInfo.battery3Level = payload[2];
+
+        this._callbacks?.updateBatteryProps?.(this._battInfo);
+    }
+
+    _getBatteryStatus() {
+        const loginfo = 'Get Battery Status';
+        this._encodeSenh(CommandType.BATT_STATUS_GET, loginfo);
+    }
+
+    _parseBatteryStatus(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse Battery Status');
+        const getBatteryState = byte => {
+            if (byte === 0)
+                return 'disconnected';
+
+            if (byte === 1 || byte === 2)
+                return 'charging';
+
+            return 'discharging';
+        };
+
+        this._battInfo.battery1Status = getBatteryState(payload[0]);
+        if (payload.length > 2)
+            this._battInfo.battery2Status = getBatteryState(payload[1]);
+
+        if (payload.length > 3)
+            this._battInfo.battery3Status = getBatteryState(payload[2]);
+
+        this._callbacks?.updateBatteryProps?.(this._battInfo);
+    }
+
+    _getNoiseControl() {
+        const loginfo = 'Get NoiseControl';
+        this._encodeSenh(CommandType.ANC_STATUS_GET, loginfo);
+    }
+
+    _parseNoiseControl(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse NoiseControl');
+        const enable = booleanFromByte(payload[0]);
+        if (enable === null)
+            return;
+        this._callbacks?.updateNoiseControl?.(enable);
+    }
+
+    setNoiseControl(enable) {
+        const loginfo = 'Set NoiseControl';
+        const payload = [enable ? 0x01 : 0x00];
+        this._encodeSenh(CommandType.ANC_STATUS_SET, loginfo, payload);
+    }
+
+    _getNoiseControlMode() {
+        const loginfo = 'Get NoiseControl Mode';
+        this._encodeSenh(CommandType.ANC_MODE_GET, loginfo);
+    }
+
+    _parseNoiseControlMode(payload) {
+        if (payload.length < 2)
+            return;
+
+        this._log.info('Parse NoiseControl Mode');
+        const windMode = payload[1];
+        const comfortState = payload[3] === 0x01;
+        const adaptiveState = payload[5] === 0x01;
+        this._callbacks?.updateNoiseControlMode?.(windMode, comfortState, adaptiveState);
+    }
+
+    setNoiseControlMode(mode, value) {
+        const loginfo = 'Set NoiseControl Mode';
+        let state;
+        if (mode !== 1)
+            state =  value ? 0x01 : 0x00;
+        else
+            state = value;
+        const payload = [mode, state];
+        this._encodeSenh(CommandType.ANC_MODE_SET, loginfo, payload);
+    }
+
+    _getTransparencyLevel() {
+        const loginfo = 'Get TransparencyLevel';
+        this._encodeSenh(CommandType.TRANSP_STATUS_GET, loginfo);
+    }
+
+    _parseTransparencyLevel(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse TransparencyLevel');
+        const level = payload[1];
+        this._callbacks?.updateTransparencyLevel?.(level);
+    }
+
+    setTransparencyLevel(level) {
+        const loginfo = 'Set TransparencyLevel';
+        const payload = [level];
+        this._encodeSenh(CommandType.TRANSP_STATUS_SET, loginfo, payload);
+    }
+
+    _getAudioMode() {
+        const loginfo = 'Get AudioMode';
+        this._encodeSenh(CommandType.AUDIO_MODE_GET, loginfo);
+    }
+
+    _parseAudioMode(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse AudioMode');
+        const mode = payload[0];
+        if (!isValidByte(mode)) {
+            this._log.info(`Received invalid audio Mode level: ${mode} Supported?`);
+            return;
+        }
+        this._callbacks?.updateAudioMode?.(mode);
+    }
+
+    setAudioMode(mode) {
+        const loginfo = 'Set Crossfeed';
+        const payload = [mode];
+        this._encodeSenh(CommandType.AUDIO_MODE_SET, loginfo, payload);
+    }
+
+    _getBassBoost() {
+        const loginfo = 'Get BassBoost';
+        this._encodeSenh(CommandType.BASS_BOOST_GET, loginfo);
+    }
+
+    _parseBassBoost(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse BassBoost');
+        const enable = booleanFromByte(payload[0]);
+        if (enable === null)
+            return;
+        this._callbacks?.updateBassBoost?.(enable);
+    }
+
+    setBassBoost(enable) {
+        const loginfo = 'Set BassBoost';
+        const payload = [enable ? 0x01 : 0x00];
+        this._encodeSenh(CommandType.BASS_BOOST_SET, loginfo, payload);
+    }
+
+    _getCrossfeed() {
+        const loginfo = 'Get Crossfeed';
+        this._encodeSenh(CommandType.CROSSFEED_GET, loginfo);
+    }
+
+    _parseCrossfeed(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse Crossfeed');
+        const level = payload[0];
+        if (!isValidByte(level)) {
+            this._log.info(`Received invalid CrossFeed level: ${level} Supported?`);
+            return;
+        }
+        this._callbacks?.updateCrossfeed?.(level);
+    }
+
+    setCrossfeed(level) {
+        const loginfo = 'Set Crossfeed';
+        const payload = [level];
+        this._encodeSenh(CommandType.CROSSFEED_SET, loginfo, payload);
+    }
+
+    _getSideTone() {
+        const loginfo = 'Get SideTone';
+        this._encodeSenh(CommandType.SIDETONE_GET, loginfo);
+    }
+
+    _parseSideTone(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse SideTone');
+        const level = payload[0];
+        if (level > this._modelData.sideTone - 1) {
+            this._log.info(`Received invalid side tone level: ${level} Supported?`);
+            return;
+        }
+        this._callbacks?.updateSideTone?.(level);
+    }
+
+    setSideTone(level) {
+        const loginfo = 'Set SideTone';
+        const payload = [level];
+        this._encodeSenh(CommandType.SIDETONE_SET, loginfo, payload);
+    }
+
+    _getComfortCall() {
+        const loginfo = 'Get ComfortCall';
+        this._encodeSenh(CommandType.COMFORT_CALL_GET, loginfo);
+    }
+
+    _parseComfortCall(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse ComfortCall');
+        const enable = booleanFromByte(payload[0]);
+        if (enable === null)
+            return;
+
+        this._callbacks?.updateComfortCall?.(enable);
+    }
+
+    setComfortCall(enable) {
+        const loginfo = 'Set ComfortCall';
+        const payload = [enable ? 0x01 : 0x00];
+        this._encodeSenh(CommandType.COMFORT_CALL_SET, loginfo, payload);
+    }
+
+    _getTransPause() {
+        const loginfo = 'Get Transperancy Pause';
+        this._encodeSenh(CommandType.PAUSE_ON_TRANS_GET, loginfo);
+    }
+
+    _parseTransPause(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse Transperancy Pause');
+        const enable = booleanFromByte(payload[0]);
+        if (enable === null)
+            return;
+
+        this._callbacks?.updateTransPause?.(enable);
+    }
+
+    setTransPause(enable) {
+        const loginfo = 'Set Transperancy Pause';
+        const payload = [enable ? 0x01 : 0x00];
+        this._encodeSenh(CommandType.PAUSE_ON_TRANS_SET, loginfo, payload);
+    }
+
+    _getInEarSetting() {
+        const loginfo = 'Get InEarSetting';
+        this._encodeSenh(CommandType.INEAR_SETTING_GET, loginfo);
+    }
+
+    _parseInEarSetting(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse InEarSetting');
+        const enable = booleanFromByte(payload[0]);
+        if (enable === null)
+            return;
+
+        this._callbacks?.updateInEarSetting?.(enable);
+    }
+
+    setInEarSetting(enable) {
+        const loginfo = 'Set InEarSetting';
+        const payload = [enable ? 0x01 : 0x00];
+        this._encodeSenh(CommandType.INEAR_SETTING_SET, loginfo, payload);
+    }
+
+    _getSmartPause() {
+        const loginfo = 'Get SmartPause';
+        this._encodeSenh(CommandType.SMART_PAUSE_GET, loginfo);
+    }
+
+    _parseSmartPause(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse SmartPause');
+        const enable = booleanFromByte(payload[0]);
+        if (enable === null)
+            return;
+
+        this._callbacks?.updateSmartPause?.(enable);
+    }
+
+    setSmartPause(enable) {
+        const loginfo = 'Set SmartPause';
+        const payload = [enable ? 0x01 : 0x00];
+        this._encodeSenh(CommandType.SMART_PAUSE_SET, loginfo, payload);
+    }
+
+    _getAutoAnswer() {
+        const loginfo = 'Get AutoAnswer';
+        this._encodeSenh(CommandType.AUTO_CALL_GET, loginfo);
+    }
+
+    _parseAutoAnswer(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse AutoAnswer');
+        const enable = booleanFromByte(payload[0]);
+        if (enable === null)
+            return;
+
+        this._callbacks?.updateAutoAnswer?.(enable);
+    }
+
+    setAutoAnswer(enable) {
+        const loginfo = 'Set AutoAnswer';
+        const payload = [enable ? 0x01 : 0x00];
+        this._encodeSenh(CommandType.AUTO_CALL_SET, loginfo, payload);
+    }
+
+    _getAutoPowerOff() {
+        const loginfo = 'Get AutoPowerOff';
+        const payload = [0x00];
+        this._encodeSenh(CommandType.AUTO_POWER_OFF_GET, loginfo, payload);
+    }
+
+    _parseAutoPowerOff(payload) {
+        if (payload.length < 3)
+            return;
+
+        this._log.info('Parse AutoPowerOff');
+
+        const seconds = payload[1] << 8 | payload[2];
+        const minutes = Math.floor(seconds / 60);
+
+        if (!this._modelData.autoPowerOff.includes(minutes)) {
+            this._log.warning(`Invalid AutoPowerOff value: ${minutes} minutes`);
+            return;
+        }
+
+        this._callbacks?.updateAutoPowerOff?.(minutes);
+    }
+
+    setAutoPowerOff(minutes) {
+        const loginfo = 'Set AutoPowerOff';
+        const seconds = minutes * 60;
+        const payload = [0x00, seconds >> 8 & 0xFF, seconds & 0xFF];
+        this._encodeSenh(CommandType.AUTO_POWER_OFF_SET, loginfo, payload);
+    }
+
+    _getCodec() {
+        const loginfo = 'Get Codec';
+        this._encodeSenh(CommandType.CODEC_GET, loginfo);
+    }
+
+    _parseCodec(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse Codec');
+        const codec = payload[0];
+        this._callbacks?.updateCodec?.(codec);
+    }
+
+    destroy() {
+        super.destroy?.();
+    }
+});

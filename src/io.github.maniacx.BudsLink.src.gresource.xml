@@ -163,6 +163,19 @@
         <file>lib/devices/redmiBuds/deviceConfigs/XiaomiOpenWearPro.js</file>
         <file>preferences/devices/redmiBuds/configureWindow.js</file>
 
+        <file>lib/devices/senhBuds/senhBudsConfig.js</file>
+        <file>lib/devices/senhBuds/senhBudsDevice.js</file>
+        <file>lib/devices/senhBuds/senhBudsSocket.js</file>
+        <file>lib/devices/senhBuds/deviceConfigs/AccentumPlusWireless.js</file>
+        <file>lib/devices/senhBuds/deviceConfigs/AccentumTrueWireless.js</file>
+        <file>lib/devices/senhBuds/deviceConfigs/AccentumWireless.js</file>
+        <file>lib/devices/senhBuds/deviceConfigs/HDB630.js</file>
+        <file>lib/devices/senhBuds/deviceConfigs/MomentumTrueWireless3.js</file>
+        <file>lib/devices/senhBuds/deviceConfigs/MomentumTrueWireless4.js</file>
+        <file>lib/devices/senhBuds/deviceConfigs/MomentumWireless4.js</file>
+        <file>lib/devices/senhBuds/deviceConfigs/MomentumWireless5.js</file>
+        <file>preferences/devices/senhBuds/configureWindow.js</file>
+
         <file>lib/devices/sony/sonyConfig.js</file>
         <file>lib/devices/sony/sonyDevice.js</file>
         <file>lib/devices/sony/sonySocketBase.js</file>
