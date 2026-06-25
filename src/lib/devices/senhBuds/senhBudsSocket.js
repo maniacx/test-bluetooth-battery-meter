@@ -564,12 +564,12 @@ export const SenhBudsSocket = GObject.registerClass({
     }
 
     _parseAudioMode(payload) {
-        if (payload.length < 1)
+        if (payload.length < 2)
             return;
 
         this._log.info('Parse AudioMode');
-        const mode = payload[0];
-        if (!isValidByte(mode)) {
+        const mode = payload[1];
+        if (!isValidByte(mode, this._modelData.audioMode)) {
             this._log.info(`Received invalid audio Mode level: ${mode} Supported?`);
             return;
         }
@@ -577,8 +577,8 @@ export const SenhBudsSocket = GObject.registerClass({
     }
 
     setAudioMode(mode) {
-        const loginfo = 'Set Crossfeed';
-        const payload = [mode];
+        const loginfo = 'Set AudioMode';
+        const payload = [0x00, mode];
         this._encodeSenh(CommandType.AUDIO_MODE_SET, loginfo, payload);
     }
 
@@ -615,7 +615,7 @@ export const SenhBudsSocket = GObject.registerClass({
 
         this._log.info('Parse Crossfeed');
         const level = payload[0];
-        if (!isValidByte(level)) {
+        if (!isValidByte(level, this._modelData.crossfeed)) {
             this._log.info(`Received invalid CrossFeed level: ${level} Supported?`);
             return;
         }
