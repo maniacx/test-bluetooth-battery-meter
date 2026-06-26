@@ -217,6 +217,12 @@ export const SenhBudsSocket = GObject.registerClass({
                 break;
             }
 
+            case CommandType.INEAR_STATE_RET:
+            case CommandType.INEAR_STATE_NOTI: {
+                this._parseInEarState(msg.payload);
+                break;
+            }
+
             case CommandType.ANC_STATUS_RET:
             case CommandType.ANC_STATUS_RET2:
             case CommandType.ANC_STATUS_NOTI: {
@@ -403,6 +409,7 @@ export const SenhBudsSocket = GObject.registerClass({
         this._getFirmware();
         this._getBatteryLevel();
         this._getBatteryStatus();
+        this._getInEarState();
 
         if (this._modelData.noiseControl)
             this._getNoiseControl();
@@ -516,6 +523,42 @@ export const SenhBudsSocket = GObject.registerClass({
             this._battInfo.battery3Status = getBatteryState(payload[2]);
 
         this._callbacks?.updateBatteryProps?.(this._battInfo);
+    }
+
+    _getInEarState() {
+        const loginfo = 'Get InEarState';
+        this._encodeSenh(CommandType.INEAR_STATE_GET, loginfo);
+    }
+
+    _parseInEarState(payload) {
+        if (payload.length < 1)
+            return;
+
+        const stateToString = state => {
+            switch (state) {
+                case 0:
+                    return 'UNKNOWN';
+                case 1:
+                    return 'IN_CASE';
+                case 2:
+                    return 'NOT_ON_HEAD';
+                case 3:
+                    return 'ON_HEAD';
+                default:
+                    return `INVALID(${state})`;
+            }
+        };
+
+        if (payload.length >= 2) {
+            this._log.info(
+                `Parse InEar left: ${stateToString(payload[0])} ` +
+            `right: ${stateToString(payload[1])}`
+            );
+        } else {
+            this._log.info(
+                `Parse InEar headset: ${stateToString(payload[0])}`
+            );
+        }
     }
 
     _getNoiseControl() {
