@@ -263,6 +263,19 @@ export const SenhBudsSocket = GObject.registerClass({
                 break;
             }
 
+            case CommandType.EQ_CONFIG_RET: {
+                if (this._modelData?.eq)
+                    this._parseEqConfig(msg.payload);
+                break;
+            }
+
+            case CommandType.EQ_BAND_RET:
+            case CommandType.EQ_BAND_RET2:
+            case CommandType.EQ_BAND_NOTI: {
+                this._log.info('Equalizer Band Recieved');
+                break;
+            }
+
             case CommandType.BASS_BOOST_RET:
             case CommandType.BASS_BOOST_RET2:
             case CommandType.BASS_BOOST_NOTI: {
@@ -402,6 +415,11 @@ export const SenhBudsSocket = GObject.registerClass({
 
         if (this._modelData.audioMode)
             this._getAudioMode();
+
+        if (this._modelData.eq) {
+            this._getEqAllBands();
+            this._getEqConfig();
+        }
 
         if (this._modelData.eq?.bassBoost)
             this._getBassBoost();
@@ -597,6 +615,37 @@ export const SenhBudsSocket = GObject.registerClass({
         const loginfo = 'Set AudioMode';
         const payload = [0x00, mode];
         this._encodeSenh(CommandType.AUDIO_MODE_SET, loginfo, payload);
+    }
+
+    _getEqConfig() {
+        const loginfo = 'Get EqConfig';
+        this._encodeSenh(CommandType.EQ_CONFIG_GET, loginfo);
+    }
+
+    _parseEqConfig(payload) {
+        if (payload.length < 5)
+            return;
+
+        const bandCount = payload[0];
+        const minGain = payload[1];
+        const maxGain = payload[2];
+        const selPresets = payload[3];
+        const userPresets = payload[4];
+
+        this._log.info(`Parse EqConfig bandCount: ${bandCount} minGain: ${minGain} ` +
+                `maxGain: ${maxGain} selPresets: ${selPresets} userPresets: ${userPresets} `);
+    }
+
+    _getEqAllBands() {
+        const bands = this._modelData?.displayedBand;
+        if (!bands || bands.length === 0)
+            return;
+
+        for (let index = 0; index < bands.length; index++) {
+            const loginfo = `Get EqAllBands ${index}`;
+            const payload = [index];
+            this._encodeSenh(CommandType.EQ_BAND_GET, loginfo, payload);
+        }
     }
 
     _getBassBoost() {

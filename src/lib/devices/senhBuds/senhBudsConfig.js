@@ -130,12 +130,14 @@ export const CommandType = {
     FIND_BUD_RING_SET: 0x2C02,
     FIND_BUD_STOP_SET: 0x2C01,
 
-    EQ_BAND_SET: 0x1001,
-    EQ_BAND_RET: 0x1101,
+    EQ_CONFIG_GET: 0x1000,
+    EQ_CONFIG_RET: 0x1100,
 
-    EQ_GET: 0x1002,
-    EQ_RET: 0x1102,
-    EQ_NOTI: 0x1082,
+    EQ_BAND_GET: 0x1002,
+    EQ_BAND_SET: 0x1001,
+    EQ_BAND_RET: 0x1102,
+    EQ_BAND_RET2: 0x1101,
+    EQ_BAND_NOTI: 0x1082,
 };
 
 export const CodecMap = {
