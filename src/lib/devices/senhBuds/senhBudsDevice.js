@@ -74,7 +74,7 @@ export const SenhBudsDevice = GObject.registerClass({
             updateBatteryProps: this.updateBatteryProps.bind(this),
             updateNoiseControl: this.updateNoiseControl.bind(this),
             updateNoiseControlMode: this.updateNoiseControlMode.bind(this),
-            updateTransparencyLevel: this.updateTransparencyLevel.bind(this),
+            updateAncTransparencyLevel: this.updateAncTransparencyLevel.bind(this),
             updateAudioMode: this.updateAudioMode.bind(this),
             updateBassBoost: this.updateBassBoost.bind(this),
             updateCrossfeed: this.updateCrossfeed.bind(this),
@@ -420,6 +420,78 @@ export const SenhBudsDevice = GObject.registerClass({
     }
 
     _setupNoiseControlConfig() {
+        if (this._modelData.noiseControl?.type === 1)
+            this._setupNoiseControlType1Config();
+        else if (this._modelData.noiseControl?.type === 2)
+            this._setupNoiseControlType2Config();
+    }
+
+    _setupNoiseControlType1Config() {
+        this._log.info('Noise Control Type1 Not Implemented');
+    }
+
+    _setupNoiseControlType2Config() {
+        const data = this._modelData.noiseControl;
+        if (!data)
+            return;
+
+        this._config.toggle1Title = _('Noise Control');
+        this._props.toggle1Visible = true;
+
+        const modes = ['off', 'nc'];
+
+        if (data.adaptive)
+            modes.push('adaptive');
+
+        this._toggle1Modes = modes;
+
+        const labels = {
+            off: _('Off'),
+            nc: _('Noise Cancellation'),
+            adaptive: _('Adaptive'),
+        };
+
+        const icons = {
+            off: 'bbm-anc-off-symbolic.svg',
+            nc: 'bbm-anc-on-symbolic.svg',
+            adaptive: 'bbm-adaptive-symbolic.svg',
+        };
+
+        for (let i = 1; i <= 4; i++) {
+            this._config[`toggle1Button${i}Name`] = '';
+            this._config[`toggle1Button${i}Icon`] = null;
+        }
+
+        modes.forEach((mode, index) => {
+            const button = index + 1;
+            this._config[`toggle1Button${button}Name`] = labels[mode];
+            this._config[`toggle1Button${button}Icon`] = icons[mode];
+        });
+
+        this._config.optionsBox1.push('slider');
+        this._config.box1SliderTitle = _('Noise Level');
+
+        if (data.wind) {
+            const labels = [];
+            this._windModes = [];
+
+            const windLabels = {
+                off: _('Off'),
+                max: _('Max'),
+                auto: _('Auto'),
+            };
+
+            Object.keys(data.wind).forEach(mode => {
+                this._windModes.push(mode);
+                labels.push(windLabels[mode] ?? mode);
+            });
+
+            if (labels.length >= 2) {
+                this._config.optionsBox1.push('radio-button');
+                this._config.box1RadioTitle = _('Anti Wind');
+                this._config.box1RadioButton = labels;
+            }
+        }
     }
 
     _startConfiguration(battInfo) {
@@ -438,6 +510,15 @@ export const SenhBudsDevice = GObject.registerClass({
 
         this._dataHandlerId = this.dataHandler.connect(
             'ui-action', (o, command, value) => {
+                if (command === 'toggle1State')
+                    this._toggle1ButtonClicked(value);
+
+                if (command === 'box1SliderValue')
+                    this._box1SliderValueChanged(value);
+
+                if (command === 'box1RadioButtonState')
+                    this._box1RadioButtonStateChanged(value);
+
                 if (command === 'settingsButtonClicked')
                     this._settingsButtonClicked();
             }
@@ -467,15 +548,105 @@ export const SenhBudsDevice = GObject.registerClass({
 
     updateNoiseControl(enable) {
         this._log.info(`updateNoiseControl enable: ${enable}`);
+
+        if (!enable) {
+            this._props.toggle1State = this._toggle1Modes.indexOf('off') + 1; ;
+            this._props.optionsBoxVisible = 0;
+            this._currentNoiseControlMode = 'off';
+        } else {
+            const mode = this._currentNoiseControlMode === 'adaptive' ? 'adaptive' : 'nc';
+            const index = this._toggle1Modes.indexOf(mode) + 1;
+            this._props.toggle1State = index;
+
+            if (mode === 'nc')
+                this._props.optionsBoxVisible = 1;
+            else
+                this._props.optionsBoxVisible = 0;
+        }
+
+        this.dataHandler?.setProps(this._props);
     }
 
     updateNoiseControlMode(windMode, comfortState, adaptiveState) {
         this._log.info(`updateNoiseControlMode windMode: ${hexBytes(windMode)} ` +
-            `comfortState: ${comfortState} adaptiveState: ${adaptiveState}`);
+                `comfortState: ${comfortState} adaptiveState: ${adaptiveState}`);
+
+        const offIndex = this._toggle1Modes.indexOf('off') + 1;
+        if (adaptiveState && this._toggle1Modes.includes('adaptive')) {
+            this._currentNoiseControlMode = 'adaptive';
+            if (this._props.toggle1State !==  offIndex) {
+                this._props.toggle1State =  this._toggle1Modes.indexOf('adaptive') + 1;
+                this._props.optionsBoxVisible = 0;
+            }
+        } else if (this._currentNoiseControlMode !== 'off') {
+            this._currentNoiseControlMode = 'nc';
+            if (this._props.toggle1State !== offIndex) {
+                this._props.toggle1State = this._toggle1Modes.indexOf('nc') + 1;
+                this._props.optionsBoxVisible = 1;
+            }
+        }
+
+        if (this._modelData.noiseControl.wind && this._windModes) {
+            const windData = this._modelData.noiseControl.wind;
+            for (let i = 0; i < this._windModes.length; i++) {
+                const key = this._windModes[i];
+                if (windData[key] === windMode) {
+                    this._props.box1RadioButtonState = i + 1;
+                    break;
+                }
+            }
+        }
+
+        this.dataHandler?.setProps(this._props);
     }
 
-    updateTransparencyLevel(level) {
-        this._log.info(`updateNoiseControl level: ${level}`);
+    updateAncTransparencyLevel(level) {
+        this._log.info(`updateAncTransparencyLevel level: ${level}`);
+
+        if (this._props.box1SliderValue === level)
+            return;
+
+        this._props.box1SliderValue = level;
+        this.dataHandler?.setProps(this._props);
+    }
+
+    _toggle1ButtonClicked(index) {
+        const mode = this._toggle1Modes?.[index - 1];
+        if (!mode)
+            return;
+
+        this._currentNoiseControlMode = mode;
+        this._props.toggle1State = index;
+
+        if (mode === 'off') {
+            this._props.optionsBoxVisible = 0;
+            this.dataHandler?.setProps(this._props);
+            this._senhBudsSocket?.setNoiseControl(false);
+            return;
+        }
+
+        const adaptive = mode === 'adaptive';
+        this._props.optionsBoxVisible = adaptive ? 0 : 1;
+        this.dataHandler?.setProps(this._props);
+        this._senhBudsSocket?.setNoiseControl(true);
+        this._senhBudsSocket?.setNoiseControlMode(3, adaptive);
+    }
+
+    _box1SliderValueChanged(value) {
+        this._props.box1SliderValue = value;
+        this.dataHandler?.setProps(this._props);
+        this._senhBudsSocket?.setAncTransparencyLevel(value);
+    }
+
+    _box1RadioButtonStateChanged(index) {
+        const key = this._windModes?.[index - 1];
+        if (!key)
+            return;
+
+        const value = this._modelData.noiseControl.wind[key];
+        this._props.box1RadioButtonState = index;
+        this.dataHandler?.setProps(this._props);
+        this._senhBudsSocket?.setNoiseControlMode(1, value);
     }
 
     updateAudioMode(mode) {

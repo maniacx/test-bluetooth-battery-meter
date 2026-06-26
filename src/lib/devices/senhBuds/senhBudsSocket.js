@@ -228,16 +228,30 @@ export const SenhBudsSocket = GObject.registerClass({
             case CommandType.ANC_MODE_RET:
             case CommandType.ANC_MODE_RET2:
             case CommandType.ANC_MODE_NOTI: {
-                if (this._modelData?.ncMode)
+                if (this._modelData?.noiseControl)
                     this._parseNoiseControlMode(msg.payload);
                 break;
             }
 
-            case CommandType.TRANSP_STATUS_RET:
-            case CommandType.TRANSP_STATUS_RET2:
-            case CommandType.TRANSP_STATUS_NOTI: {
-                if (this._modelData?.transparencyLevel)
-                    this._parseTransparencyLevel(msg.payload);
+            case CommandType.ANC_TRANSP_LEVEL_RET:
+            case CommandType.ANC_TRANSP_LEVEL_RET2:
+            case CommandType.ANC_TRANSP_LEVEL_NOTI: {
+                if (this._modelData?.noiseControl?.type === 2)
+                    this._parseAncTransparencyLevel(msg.payload);
+                break;
+            }
+
+            case CommandType.TRANSP_STATE_RET:
+            case CommandType.TRANSP_STATE_RET2:
+            case CommandType.TRANSP_STATE_NOTI: {
+                this._log.info('Parse Type1 Transparency State');
+                break;
+            }
+
+            case CommandType.TRANSP_LEVEL_RET:
+            case CommandType.TRANSP_LEVEL_RET2:
+            case CommandType.TRANSP_LEVEL_NOTI: {
+                this._log.info('Parse Type1 Transparency Level');
                 break;
             }
 
@@ -380,11 +394,11 @@ export const SenhBudsSocket = GObject.registerClass({
         if (this._modelData.noiseControl)
             this._getNoiseControl();
 
-        if (this._modelData.ncMode)
+        if (this._modelData.noiseControl)
             this._getNoiseControlMode();
 
-        if (this._modelData.transparencyLevel)
-            this._getTransparencyLevel();
+        if (this._modelData.noiseControl?.type === 2)
+            this._getAncTransparencyLevel();
 
         if (this._modelData.audioMode)
             this._getAudioMode();
@@ -499,7 +513,9 @@ export const SenhBudsSocket = GObject.registerClass({
         const enable = booleanFromByte(payload[0]);
         if (enable === null)
             return;
-        this._callbacks?.updateNoiseControl?.(enable);
+
+        if (this._modelData.noiseControl?.type === 2)
+            this._callbacks?.updateNoiseControl?.(enable);
     }
 
     setNoiseControl(enable) {
@@ -521,7 +537,9 @@ export const SenhBudsSocket = GObject.registerClass({
         const windMode = payload[1];
         const comfortState = payload[3] === 0x01;
         const adaptiveState = payload[5] === 0x01;
-        this._callbacks?.updateNoiseControlMode?.(windMode, comfortState, adaptiveState);
+
+        if (this._modelData.noiseControl?.type === 2)
+            this._callbacks?.updateNoiseControlMode?.(windMode, comfortState, adaptiveState);
     }
 
     setNoiseControlMode(mode, value) {
@@ -535,24 +553,26 @@ export const SenhBudsSocket = GObject.registerClass({
         this._encodeSenh(CommandType.ANC_MODE_SET, loginfo, payload);
     }
 
-    _getTransparencyLevel() {
-        const loginfo = 'Get TransparencyLevel';
-        this._encodeSenh(CommandType.TRANSP_STATUS_GET, loginfo);
+    _getAncTransparencyLevel() {
+        const loginfo = 'Get AncTransparencyLevel';
+        this._encodeSenh(CommandType.ANC_TRANSP_LEVEL_GET, loginfo);
     }
 
-    _parseTransparencyLevel(payload) {
+    _parseAncTransparencyLevel(payload) {
         if (payload.length < 1)
             return;
 
-        this._log.info('Parse TransparencyLevel');
-        const level = payload[1];
-        this._callbacks?.updateTransparencyLevel?.(level);
+        this._log.info('Parse AncTransparencyLevel');
+        const level = payload[0];
+
+        if (this._modelData.noiseControl?.type === 2)
+            this._callbacks?.updateAncTransparencyLevel?.(level);
     }
 
-    setTransparencyLevel(level) {
-        const loginfo = 'Set TransparencyLevel';
+    setAncTransparencyLevel(level) {
+        const loginfo = 'Set AncTransparencyLevel';
         const payload = [level];
-        this._encodeSenh(CommandType.TRANSP_STATUS_SET, loginfo, payload);
+        this._encodeSenh(CommandType.ANC_TRANSP_LEVEL_SET, loginfo, payload);
     }
 
     _getAudioMode() {
@@ -780,7 +800,7 @@ export const SenhBudsSocket = GObject.registerClass({
         const minutes = Math.floor(seconds / 60);
 
         if (!this._modelData.autoPowerOff.includes(minutes)) {
-            this._log.warning(`Invalid AutoPowerOff value: ${minutes} minutes`);
+            this._log.info(`Invalid AutoPowerOff value: ${minutes} minutes`);
             return;
         }
 

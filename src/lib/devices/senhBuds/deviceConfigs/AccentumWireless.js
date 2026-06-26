@@ -25,20 +25,14 @@ export default {
     },
 
     noiseControl: {
-        off: 1,
-        transparency: 2,
-        noiseCancellation: 3,
-    },
-
-    ncMode: {
+        type: 1,
         wind: {
             off: 0x00,
             max: 0x01,
             auto: 0x02,
         },
+        transparencyStep: 1,
     },
-
-    transparencyLevel: 1,
 
     autoPowerOff: [0, 15, 30, 60],
     //    ring: true,

@@ -33,20 +33,14 @@ export default {
     },
 
     noiseControl: {
-        off: 1,
-        adaptive: 2,
-        noiseCancellation: 3,
-    },
-
-    ncMode: {
+        type: 2,
+        adaptive: true,
         wind: {
             off: 0x00,
             max: 0x01,
             auto: 0x02,
         },
     },
-
-    ncTransparencyLevel: 100,
 
     reportsCodec: true,
     inEarDetection: true,
