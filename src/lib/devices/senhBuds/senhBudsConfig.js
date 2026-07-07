@@ -142,6 +142,36 @@ export const CommandType = {
     EQ_BAND_RET: 0x1102,
     EQ_BAND_RET2: 0x1101,
     EQ_BAND_NOTI: 0x1082,
+
+    PEQ_FREQ_GET: 0x100B,
+    PEQ_FREQ_SET: 0x100A,
+    PEQ_FREQ_RET: 0x110B,
+    PEQ_FREQ_RET2: 0x110A,
+    PEQ_FREQ_NOTI: 0x108B,
+
+    PEQ_GAIN_GET: 0x1011,
+    PEQ_GAIN_SET: 0x1010,
+    PEQ_GAIN_RET: 0x1111,
+    PEQ_GAIN_RET2: 0x1110,
+    PEQ_GAIN_NOTI: 0x1091,
+
+    PEQ_Q_GET: 0x100D,
+    PEQ_Q_SET: 0x100C,
+    PEQ_Q_RET: 0x110D,
+    PEQ_Q_RET2: 0x110C,
+    PEQ_Q_NOTI: 0x108D,
+
+    PEQ_FILTER_GET: 0x100F,
+    PEQ_FILTER_SET: 0x100E,
+    PEQ_FILTER_RET: 0x110F,
+    PEQ_FILTER_RET2: 0x110E,
+    PEQ_FILTER_NOTI: 0x108F,
+
+    PEQ_PREGAIN_GET: 0x1013,
+    PEQ_PREGAIN_SET: 0x1012,
+    PEQ_PREGAIN_RET: 0x1113,
+    PEQ_PREGAIN_RET2: 0x1112,
+    PEQ_PREGAIN_NOTI: 0x1093,
 };
 
 export const CodecMap = {
@@ -157,4 +187,13 @@ export const CodecMap = {
     9: 'aptX Lossless',
     10: 'LC3',
     255: '',
+};
+
+export const PeqFilterType = {
+    'bell': 0x0D,
+    'hsf': 0x0A,
+    'lsf': 0x0B,
+    'lpf': 0x07,
+    'hpf': 0x08,
+    'bypass': 0x0E,
 };

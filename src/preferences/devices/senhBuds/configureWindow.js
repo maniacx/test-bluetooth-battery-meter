@@ -9,6 +9,7 @@ import {DropDownRowWidget} from './../../widgets/dropDownRowWidget.js';
 import {SliderRowWidget} from './../../widgets/sliderRowWidget.js';
 import {IconSelectorWidget} from './../../widgets/iconSelectorWidget.js';
 import {EqualizerWidget} from './../../widgets/equalizerWidget.js';
+import {ParametricEqRowWidget} from './../../widgets/peqRowWidget.js';
 import {SenhBudsModelList} from '../../../lib/devices/senhBuds/senhBudsConfig.js';
 
 export const ConfigureWindow = GObject.registerClass({
@@ -134,6 +135,9 @@ export const ConfigureWindow = GObject.registerClass({
             if (this._bassBoostSwitch)
                 this._bassBoostSwitch.active = this._settingsItems['bass-boost'];
 
+            if (this._peqRow?.dialog)
+                this._updatePeqParams();
+
             if (this._crossfeedDropdown)
                 this._crossfeedDropdown.selected_item = this._settingsItems['crossfeed'];
 
@@ -166,12 +170,14 @@ export const ConfigureWindow = GObject.registerClass({
             this._eq?.destroy();
             this._eq = null;
 
+            this._peqRow?.destroy();
+            this._peqRow = null;
+
             if (this._modelData.ring) {
                 const ringState = this._settingsItems?.['ring-state'];
                 if (ringState === 'playing')
                     this._updateGsettings('ring-state', 'stopped');
             }
-
 
             if (settingSignalId && this._settings)
                 this._settings.disconnect(settingSignalId);
@@ -355,6 +361,65 @@ export const ConfigureWindow = GObject.registerClass({
             eqGroup.add(this._bassBoostSwitch);
         }
 
+        if (this._modelData.peq) {
+            const peqCfg = this._modelData.peq;
+            this._peqRow = new ParametricEqRowWidget(this, this._gettext, peqCfg);
+
+            this._updatePeqParams(true);
+
+            this._peqRow.dialog.connect('peq-changed', (_dialog, peqState) => {
+                const peqBands = this._settingsItems['peq-bands'];
+
+                for (let i = 0; i < peqState.bands.length; i++) {
+                    const src = peqState.bands[i];
+
+                    peqBands[i].freq = src.frequency;
+                    peqBands[i].gain = src.gain;
+                    peqBands[i].q = src.q;
+                    peqBands[i].filter = src.filter;
+                    peqBands[i].bypass = src.bypass;
+                }
+
+                this._peqBands = peqBands.map(b => ({...b}));
+
+                this._updateGsettings('peq-bands', peqBands);
+            });
+
+            this._peqRow.dialog.connect('band-removed', (_dialog, index) => {
+                const bands = this._settingsItems['peq-bands'];
+
+                for (let i = index; i < bands.length; i++) {
+                    bands[i].gain = 0;
+                    bands[i].filter = 'bell';
+                    bands[i].bypass = false;
+                }
+
+                this._peqBands = bands.map(b => ({...b}));
+
+                this._updateGsettings('peq-bands', bands);
+            });
+
+            this._peqRow.dialog.connect('band-removed', (_dialog, index) => {
+                const peqBands = this._settingsItems['peq-bands'];
+
+                for (let i = index; i < peqBands.length; i++) {
+                    peqBands[i].gain = 0;
+                    peqBands[i].filter = 'bell';
+                    peqBands[i].bypass = false;
+                }
+
+                this._peqBands = peqBands.map(b => ({...b}));
+
+                this._updateGsettings('peq-bands', peqBands);
+            });
+
+            this._peqRow.dialog.connect('preamp-changed', (_dialog, value) => {
+                this._updateGsettings('pre-gain', value);
+            });
+
+            eqGroup.add(this._peqRow);
+        }
+
         if (this._modelData.crossfeed) {
             const crossfeedObj = this._modelData.crossfeed;
 
@@ -388,6 +453,68 @@ export const ConfigureWindow = GObject.registerClass({
         this._updateSoundVisibility();
     }
 
+    _updatePeqParams(isInit = false) {
+        if (!this._peqRow?.dialog)
+            return;
+
+        const peqBands = this._settingsItems['peq-bands'];
+        if (isInit) {
+            let lastUsed = -1;
+
+            for (let i = peqBands.length - 1; i >= 0; i--) {
+                if (peqBands[i].gain !== 0) {
+                    lastUsed = i;
+                    break;
+                }
+            }
+
+            if (lastUsed < 0)
+                lastUsed = 0;
+
+            for (let i = 0; i <= lastUsed; i++) {
+                this._peqRow.dialog.addBand({
+                    frequency: peqBands[i].freq,
+                    gain: peqBands[i].gain,
+                    q: peqBands[i].q,
+                    filter: peqBands[i].filter,
+                    bypass: peqBands[i].bypass,
+                });
+            }
+            this._peqBands = peqBands.map(b => ({...b}));
+        } else {
+            for (let i = 0; i < peqBands.length; i++) {
+                const oldBand = this._peqBands?.[i];
+                const newBand = peqBands[i];
+
+                if (!oldBand || !newBand)
+                    continue;
+
+                const params = {};
+
+                if (oldBand.freq !== newBand.freq)
+                    params.frequency = newBand.freq;
+
+                if (oldBand.gain !== newBand.gain)
+                    params.gain = newBand.gain;
+
+                if (oldBand.q !== newBand.q)
+                    params.q = newBand.q;
+
+                if (oldBand.filter !== newBand.filter)
+                    params.filter = newBand.filter;
+
+                if (oldBand.bypass !== newBand.bypass)
+                    params.bypass = newBand.bypass;
+
+                if (Object.keys(params).length > 0)
+                    this._peqRow.dialog.updateBand(i, params);
+            }
+
+            this._peqBands = peqBands.map(b => ({...b}));
+        }
+        this._peqRow.dialog.preAmpValue = this._settingsItems['pre-gain'];
+    }
+
     _updateSoundVisibility() {
         if (!this._audioModeDropdown)
             return;
@@ -400,6 +527,11 @@ export const ConfigureWindow = GObject.registerClass({
 
             if (this._modelData.eq?.bassBoost)
                 this._bassBoostSwitch.visible = mode === eqMode;
+        }
+
+        if (this._modelData.peq) {
+            const peqMode = this._modelData.audioMode.peq;
+            this._peqRow.visible = mode === peqMode;
         }
     }
 

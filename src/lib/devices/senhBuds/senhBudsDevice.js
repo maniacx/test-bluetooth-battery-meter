@@ -9,7 +9,7 @@ import {
 } from '../deviceUtils.js';
 import {createConfig, createProperties, DataHandler} from '../../dataHandler.js';
 import {SenhBudsSocket} from './senhBudsSocket.js';
-import {CodecMap} from './senhBudsConfig.js';
+import {CodecMap, PeqFilterType} from './senhBudsConfig.js';
 
 export const DeviceTypeSenhBuds = 'senhBuds';
 
@@ -51,6 +51,11 @@ export const SenhBudsDevice = GObject.registerClass({
             updateAudioMode: this.updateAudioMode.bind(this),
             updateEqBand: this.updateEqBand.bind(this),
             updateBassBoost: this.updateBassBoost.bind(this),
+            updatePeqFreq: this.updatePeqFreq.bind(this),
+            updatePeqGain: this.updatePeqGain.bind(this),
+            updatePeqQ: this.updatePeqQ.bind(this),
+            updatePeqFilter: this.updatePeqFilter.bind(this),
+            updatePeqPreGain: this.updatePeqPreGain.bind(this),
             updateCrossfeed: this.updateCrossfeed.bind(this),
             updateSideTone: this.updateSideTone.bind(this),
             updateComfortCall: this.updateComfortCall.bind(this),
@@ -137,6 +142,17 @@ export const SenhBudsDevice = GObject.registerClass({
                 'bass-boost': false,
             },
 
+            ...this._modelData.peq && {
+                'peq-bands': this._modelData.peq.defaultBands.map(freq => ({
+                    freq,
+                    gain: 0,
+                    q: this._modelData.peq.q.bell.min,
+                    filter: 'bell',
+                    bypass: false,
+                })),
+                'pre-gain': 0,
+            },
+
             ...this._modelData.crossfeed && {
                 'crossfeed': 0,
             },
@@ -204,6 +220,11 @@ export const SenhBudsDevice = GObject.registerClass({
 
         if (this._modelData.crossfeed)
             this._crossfeed = this._settingsItems['crossfeed'];
+
+        if (this._modelData.peq) {
+            this._peqBands = this._settingsItems['peq-bands'];
+            this._preGain = this._settingsItems['pre-gain'];
+        }
 
         if (this._modelData.sideTone)
             this._sideTone = this._settingsItems['side-tone'];
@@ -275,6 +296,24 @@ export const SenhBudsDevice = GObject.registerClass({
             if (this._bassBoost !== bassBoost) {
                 this._bassBoost = bassBoost;
                 this._setBassBoost(bassBoost);
+            }
+        }
+
+        if (this._modelData.peq) {
+            const peqBands = this._settingsItems['peq-bands'];
+
+            if (!isArrayEqual(peqBands, this._peqBands)) {
+                const oldBands = this._peqBands;
+                const newBands = peqBands;
+
+                this._peqBands = peqBands;
+                this._setPeqBands(oldBands, newBands);
+            }
+
+            const preGain = this._settingsItems['pre-gain'];
+            if (this._preGain !== preGain) {
+                this._preGain = preGain;
+                this._setPeqPreGain(preGain);
             }
         }
 
@@ -687,6 +726,150 @@ export const SenhBudsDevice = GObject.registerClass({
 
     _setBassBoost(enable) {
         this._senhBudsSocket?.setBassBoost(enable);
+    }
+
+    updatePeqFreq(arr) {
+        this._log.info(`updatePeqFreq: ${JSON.stringify(arr)}`);
+
+        let changed = false;
+
+        for (const {stage, freq} of arr) {
+            if (this._peqBands[stage]?.freq !== freq) {
+                this._peqBands[stage].freq = freq;
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            this._settingsItems['peq-bands'] = this._peqBands;
+            this._updateGsettings();
+        }
+    }
+
+    updatePeqGain(arr) {
+        this._log.info(`updatePeqGain: ${JSON.stringify(arr)}`);
+
+        let changed = false;
+
+        for (const {stage, gain} of arr) {
+            if (this._peqBands[stage]?.gain !== gain) {
+                this._peqBands[stage].gain = gain;
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            this._settingsItems['peq-bands'] = this._peqBands;
+            this._updateGsettings();
+        }
+    }
+
+    updatePeqQ(arr) {
+        this._log.info(`updatePeqQ: ${JSON.stringify(arr)}`);
+
+        let changed = false;
+
+        for (const {stage, q} of arr) {
+            if (this._peqBands[stage]?.q !== q) {
+                this._peqBands[stage].q = q;
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            this._settingsItems['peq-bands'] = this._peqBands;
+            this._updateGsettings();
+        }
+    }
+
+    updatePeqFilter(arr) {
+        this._log.info(`updatePeqFilter: ${JSON.stringify(arr)}`);
+
+        let changed = false;
+
+        for (const {stage, filter} of arr) {
+            const band = this._peqBands[stage];
+
+            if (!band)
+                continue;
+
+            if (filter === PeqFilterType.bypass) {
+                if (!band.bypass) {
+                    band.bypass = true;
+                    changed = true;
+                }
+
+                continue;
+            }
+
+            const filterName = Object.keys(PeqFilterType)
+                    .find(key => PeqFilterType[key] === filter);
+
+            if (!filterName)
+                continue;
+
+            if (band.bypass) {
+                band.bypass = false;
+                changed = true;
+            }
+
+            if (band.filter !== filterName) {
+                band.filter = filterName;
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            this._settingsItems['peq-bands'] = this._peqBands;
+            this._updateGsettings();
+        }
+    }
+
+    updatePeqPreGain(level) {
+        this._log.info(`updatePeqPreGain level: ${level}`);
+
+        if (this._preGain !== level) {
+            this._preGain = level;
+            this._settingsItems['pre-gain'] = level;
+            this._updateGsettings();
+        }
+    }
+
+    _setPeqBands(oldBands, newBands) {
+        const bandCount = Math.min(oldBands.length, newBands.length);
+
+        for (let i = 0; i < bandCount; i++) {
+            const oldBand = oldBands[i];
+            const newBand = newBands[i];
+
+            if (oldBand.freq !== newBand.freq)
+                this._senhBudsSocket?.setPeqFreq(i, newBand.freq);
+
+            if (oldBand.gain !== newBand.gain)
+                this._senhBudsSocket?.setPeqGain(i, newBand.gain);
+
+            if (oldBand.q !== newBand.q)
+                this._senhBudsSocket?.setPeqQ(i, newBand.q);
+
+            if (oldBand.filter !== newBand.filter || oldBand.bypass !== newBand.bypass) {
+                let filterByte;
+
+                if (newBand.bypass) {
+                    filterByte = PeqFilterType.bypass;
+                } else {
+                    filterByte = PeqFilterType[newBand.filter];
+
+                    if (filterByte === undefined) {
+                        this._log.warning(
+                            `Unknown PEQ filter "${newBand.filter}" for band ${i}`
+                        );
+                        continue;
+                    }
+                }
+
+                this._senhBudsSocket?.setPeqFilter(i, filterByte);
+            }
+        }
     }
 
     updateCrossfeed(level) {

@@ -291,6 +291,46 @@ export const SenhBudsSocket = GObject.registerClass({
                 break;
             }
 
+            case CommandType.PEQ_FREQ_RET:
+            case CommandType.PEQ_FREQ_RET2:
+            case CommandType.PEQ_FREQ_NOTI: {
+                if (this._modelData?.peq)
+                    this._parsePeqFreq(msg.payload);
+                break;
+            }
+
+            case CommandType.PEQ_GAIN_RET:
+            case CommandType.PEQ_GAIN_RET2:
+            case CommandType.PEQ_GAIN_NOTI: {
+                if (this._modelData?.peq)
+                    this._parsePeqGain(msg.payload);
+                break;
+            }
+
+            case CommandType.PEQ_Q_RET:
+            case CommandType.PEQ_Q_RET2:
+            case CommandType.PEQ_Q_NOTI: {
+                if (this._modelData?.peq)
+                    this._parsePeqQ(msg.payload);
+                break;
+            }
+
+            case CommandType.PEQ_FILTER_RET:
+            case CommandType.PEQ_FILTER_RET2:
+            case CommandType.PEQ_FILTER_NOTI: {
+                if (this._modelData?.peq)
+                    this._parsePeqFilter(msg.payload);
+                break;
+            }
+
+            case CommandType.PEQ_PREGAIN_RET:
+            case CommandType.PEQ_PREGAIN_RET2:
+            case CommandType.PEQ_PREGAIN_NOTI: {
+                if (this._modelData?.peq)
+                    this._parsePeqPreGain(msg.payload);
+                break;
+            }
+
             case CommandType.CROSSFEED_RET:
             case CommandType.CROSSFEED_NOTI: {
                 if (this._modelData?.sideTone)
@@ -431,6 +471,14 @@ export const SenhBudsSocket = GObject.registerClass({
 
         if (this._modelData.eq?.bassBoost)
             this._getBassBoost();
+
+        if (this._modelData.peq) {
+            this._getPeqFreq();
+            this._getPeqGain();
+            this._getPeqQ();
+            this._getPeqFilter();
+            this._getPeqPreGain();
+        }
 
         if (this._modelData.crossfeed)
             this._getCrossfeed();
@@ -739,6 +787,150 @@ export const SenhBudsSocket = GObject.registerClass({
         const loginfo = 'Set BassBoost';
         const payload = [enable ? 0x01 : 0x00];
         this._encodeSenh(CommandType.BASS_BOOST_SET, loginfo, payload);
+    }
+
+    _getPeqFreq() {
+        for (let stage = 0; stage < 5; stage++) {
+            const loginfo = `Get PEQ Frequency Stage ${stage}`;
+            this._encodeSenh(CommandType.PEQ_FREQ_GET, [stage], loginfo);
+        }
+    }
+
+    _parsePeqFreq(payload) {
+        if (payload.length < 3)
+            return;
+
+        this._log.info('Parse PEQ Frequency');
+        const arr = [];
+        for (let i = 0; i + 2 < payload.length; i += 3)
+            arr.push({stage: payload[i], freq: payload[i + 1] << 8 | payload[i + 2]});
+
+
+        this._callbacks?.updatePeqFreq?.(arr);
+    }
+
+    setPeqFreq(stage, freq) {
+        const loginfo = `Set PEQ Frequency Stage ${stage}`;
+        const payload = [stage, freq >> 8 & 0xFF, freq & 0xFF];
+        this._encodeSenh(CommandType.PEQ_FREQ_SET, loginfo, payload);
+    }
+
+    _getPeqGain() {
+        for (let stage = 0; stage < 5; stage++) {
+            const loginfo = `Get PEQ Gain Stage ${stage}`;
+            this._encodeSenh(CommandType.PEQ_GAIN_GET, [stage], loginfo);
+        }
+    }
+
+    _parsePeqGain(payload) {
+        if (payload.length < 3)
+            return;
+
+        this._log.info('Parse PEQ Gain');
+        const arr = [];
+        for (let i = 0; i + 2 < payload.length; i += 3) {
+            let raw = payload[i + 1] << 8 | payload[i + 2];
+            if (raw & 0x8000)
+                raw -= 0x10000;
+
+            arr.push({stage: payload[i], gain: raw / 10.0});
+        }
+
+        this._callbacks?.updatePeqGain?.(arr);
+    }
+
+    setPeqGain(stage, gain) {
+        const loginfo = `Set PEQ Gain Stage ${stage}`;
+
+        let raw = Math.round(gain * 10);
+
+        if (raw < 0)
+            raw += 0x10000;
+
+        const payload = [stage, raw >> 8 & 0xFF, raw & 0xFF];
+
+        this._encodeSenh(CommandType.PEQ_GAIN_SET, loginfo, payload);
+    }
+
+    _getPeqQ() {
+        for (let stage = 0; stage < this._modelData.peq; stage++) {
+            const loginfo = `Get PEQ Q Stage ${stage}`;
+            this._encodeSenh(CommandType.PEQ_Q_GET, [stage], loginfo);
+        }
+    }
+
+    _parsePeqQ(payload) {
+        if (payload.length < 3)
+            return;
+
+        this._log.info('Parse PEQ Q');
+        const arr = [];
+        for (let i = 0; i + 2 < payload.length; i += 3) {
+            const raw = payload[i + 1] << 8 | payload[i + 2];
+            arr.push({stage: payload[i], q: raw / 4096.0});
+        }
+
+        this._callbacks?.updatePeqQ?.(arr);
+    }
+
+    setPeqQ(stage, q) {
+        const loginfo = `Set PEQ Q Stage ${stage}`;
+        const raw = Math.round(q * 4096);
+        const payload = [stage, raw >> 8 & 0xFF, raw & 0xFF];
+        this._encodeSenh(CommandType.PEQ_Q_SET, loginfo, payload);
+    }
+
+    _getPeqFilter() {
+        for (let stage = 0; stage < 5; stage++) {
+            const loginfo = `Get PEQ Filter Stage ${stage}`;
+            this._encodeSenh(CommandType.PEQ_FILTER_GET, [stage], loginfo);
+        }
+    }
+
+    _parsePeqFilter(payload) {
+        if (payload.length < 2)
+            return;
+
+        this._log.info('Parse PEQ Filter');
+        const arr = [];
+        for (let i = 0; i + 1 < payload.length; i += 2)
+            arr.push({stage: payload[i], filter: payload[i + 1]});
+
+
+        this._callbacks?.updatePeqFilter?.(arr);
+    }
+
+    setPeqFilter(stage, filterType) {
+        const loginfo = `Set PEQ Filter Stage ${stage}`;
+        const payload = [stage, filterType];
+        this._encodeSenh(CommandType.PEQ_FILTER_SET, loginfo, payload);
+    }
+
+    _getPeqPreGain() {
+        const loginfo = 'Get PEQ PreGain';
+        this._encodeSenh(CommandType.PEQ_PREGAIN_GET, loginfo);
+    }
+
+    _parsePeqPreGain(payload) {
+        if (payload.length < 2)
+            return;
+
+        this._log.info('Parse PEQ PreGain');
+        let raw = payload[0] << 8 | payload[1];
+        if (raw & 0x8000)
+            raw -= 0x10000;
+
+        this._callbacks?.updatePeqPreGain?.(raw / 10.0);
+    }
+
+    setPeqPreGain(gain) {
+        const loginfo = 'Set PEQ PreGain';
+        let raw = Math.round(gain * 10);
+        if (raw < 0)
+            raw += 0x10000;
+
+        const payload = [raw >> 8 & 0xFF, raw & 0xFF];
+        this._encodeSenh(CommandType.PEQ_PREGAIN_SET, loginfo, payload);
     }
 
     _getCrossfeed() {

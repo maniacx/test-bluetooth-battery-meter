@@ -35,15 +35,19 @@ export default {
     },
 
     peq: {
-        fMin: 20,
-        fMax: 20000,
-        range: 6.0,
-        gain_max: 6.0,
-        qMin: 0.25,
-        qMax: 8.0,
-        minMasterGain: -12.0,
-        shelfQmax: 0.71,
-        gainCalculated: true,
+        frequency: {min: 20, max: 20000, step: 1, digit: 0, scale: 'log'},
+        q: {
+            bell: {min: 0.25, max: 8.0, step: 0.01, digit: 2, scale: 'log'},
+            hsf: {min: 0.25, max: 0.71, step: 0.01, digit: 2, scale: 'log'},
+            lsf: {min: 0.25, max: 0.71, step: 0.01, digit: 2, scale: 'log'},
+        },
+        gain: {min: -6, max: 6, step: 0.1, digit: 1, scale: 'linear'},
+        maxBands: 5,
+        defaultBands: [50, 250, 800, 3000, 8000],
+        addRemoveBand: true,
+        filters: ['bell', 'hsf', 'lsf'],
+        bypassSupported: true,
+        preamp: {min: -12, max: 0, step: 0.1, digit: 1, scale: 'linear'},
     },
 
     crossfeed: {
