@@ -9,6 +9,13 @@ import {
     SenhBudsModelList, VendorType, CommandType
 } from './senhBudsConfig.js';
 
+/**
+Reference Material and Credits
+https://github.com/hatemosphere/hdb630-control-macos
+
+https://github.com/nikita36078/sennheiser-desktop-client
+**/
+
 const HEADER = [0xFF, 0x03];
 
 export const SenhBudsSocket = GObject.registerClass({
@@ -603,7 +610,7 @@ export const SenhBudsSocket = GObject.registerClass({
         if (this._modelData.type === 'earbuds' && payload.length >= 2)
             bud2 = stateToString(payload[1]);
 
-        this._log.info(`Parse Buds1State: ${bud1} ` + `Buds2State: ${bud2}`);
+        this._log.info(`Parse Buds1State: ${bud1} Buds2State: ${bud2}`);
         this._callbacks?.updateInEarStatus?.(bud1, bud2);
     }
 
