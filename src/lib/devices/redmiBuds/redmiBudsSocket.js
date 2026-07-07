@@ -1,3 +1,4 @@
+'use strict';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 
@@ -91,7 +92,7 @@ export const RedmiBudsSocket = GObject.registerClass({
         }
 
         this._pendingTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 250, () => {
-            this._log.info(`Responst Timeout seq=${item.seq} opcode=${hexBytes(item.opcode)}`);
+            this._log.info(`Response Timeout seq: ${item.seq} opcode: ${hexBytes(item.opcode)}`);
             this._pendingRequest = null;
             this._processQueue();
             this._pendingTimeout = null;
@@ -108,7 +109,7 @@ export const RedmiBudsSocket = GObject.registerClass({
 
         const pending = this._pendingRequest;
 
-        if (msg.sequenceNumber !== pending.seq)
+        if (msg.seq !== pending.seq)
             return;
 
         if (this._pendingTimeout)
@@ -371,8 +372,7 @@ export const RedmiBudsSocket = GObject.registerClass({
         parse(rightBatByte, 2);
         parse(caseBatByte, 3);
 
-        if (this._callbacks?.updateBatteryProps)
-            this._callbacks.updateBatteryProps(props);
+        this._callbacks?.updateBatteryProps?.(props);
     }
 
     _parseFirmware(fw) {
