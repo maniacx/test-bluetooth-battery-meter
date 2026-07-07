@@ -241,16 +241,18 @@ export const ConfigureWindow = GObject.registerClass({
                 options: eqPresets,
                 values: this._eqPresetValues,
                 initialValue: this._settingsItems['eq-preset'],
+                hasButton: true,
+                buttonIcon: 'bbm-eq-symbolic',
+                buttonTooltip: _('Custom Equalizer'),
+                buttonVisibleFor: [EqualizerPreset.MANUAL, EqualizerPreset.CUSTOM_1,
+                    EqualizerPreset.CUSTOM_2],
             });
 
             this._eqPresetDropdown.connect('notify::selected-item', () => {
                 this._updateGsettings('eq-preset', this._eqPresetDropdown.selected_item);
-                this._updateEqCustomRowVisibility();
             });
 
             equalizerGroup.add(this._eqPresetDropdown);
-
-            this._equalizerCustomRow = new Adw.ActionRow({title: _('Custom Equalizer')});
 
             const sixBandFreqs = [_('Bass'), _('400'), _('1k'), _('2.5k'), _('6.3k'), _('16k')];
             const tenBandFreqs = [_('31'), _('63'), _('125'), _('250'), _('500'),
@@ -259,15 +261,20 @@ export const ConfigureWindow = GObject.registerClass({
             const range = modelData.equalizerTenBands ? 6 : 10;
             const initialValues = this._settingsItems['eq-custom'];
 
-            this._eq = new EqualizerWidget(freqs, initialValues, range);
+            this._eq = new EqualizerWidget({
+                freqs,
+                initialValues,
+                range,
+                topBarTitle: _('Frequency (Hz)'),
+                bottomBarTitle: _('Gain (dB)'),
+            });
 
             this._eq.connect('eq-changed', (_w, arr) => {
                 this._updateGsettings('eq-custom', arr);
             });
 
-            this._equalizerCustomRow.set_child(this._eq);
-            this._updateEqCustomRowVisibility();
-            equalizerGroup.add(this._equalizerCustomRow);
+            this._eqPresetDropdown.connect('button-clicked', () => this._eq.present(this));
+
             page.add(equalizerGroup);
 
             if (modelData.listeningMode)
@@ -516,7 +523,6 @@ export const ConfigureWindow = GObject.registerClass({
             if (modelData.equalizerSixBands || modelData.equalizerTenBands)  {
                 this._eqPresetDropdown.selected_item = this._settingsItems['eq-preset'];
                 this._eq.setValues(this._settingsItems['eq-custom']);
-                this._updateEqCustomRowVisibility();
             }
 
             if (modelData.audioUpsampling)
@@ -585,23 +591,7 @@ export const ConfigureWindow = GObject.registerClass({
 
         if (this._eqPresetDropdown)
             this._eqPresetDropdown.sensitive = isStdMode;
-
-        if (this._equalizerCustomRow)
-            this._equalizerCustomRow.sensitive = isStdMode;
     }
-
-    _updateEqCustomRowVisibility() {
-        if (!this._equalizerCustomRow)
-            return;
-
-        const val = this._eqPresetDropdown.selected_item;
-
-        this._equalizerCustomRow.visible = [
-            EqualizerPreset.MANUAL,
-            EqualizerPreset.CUSTOM_1,
-            EqualizerPreset.CUSTOM_2,
-        ].includes(val);
-    };
 
     _updateCompactStatus() {
         this._ancToggleButtonWidget?.set_property('compact-mode', this._isCompactMode);
