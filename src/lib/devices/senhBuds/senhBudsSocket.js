@@ -598,16 +598,13 @@ export const SenhBudsSocket = GObject.registerClass({
             }
         };
 
-        if (payload.length >= 2) {
-            this._log.info(
-                `Parse InEar left: ${stateToString(payload[0])} ` +
-            `right: ${stateToString(payload[1])}`
-            );
-        } else {
-            this._log.info(
-                `Parse InEar headset: ${stateToString(payload[0])}`
-            );
-        }
+        const bud1 = stateToString(payload[0]);
+        let bud2 = bud1;
+        if (this._modelData.type === 'earbuds' && payload.length >= 2)
+            bud2 = stateToString(payload[1]);
+
+        this._log.info(`Parse Buds1State: ${bud1} ` + `Buds2State: ${bud2}`);
+        this._callbacks?.updateInEarStatus?.(bud1, bud2);
     }
 
     _getNoiseControl() {

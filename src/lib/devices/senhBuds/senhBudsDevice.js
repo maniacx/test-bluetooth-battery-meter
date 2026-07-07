@@ -8,6 +8,7 @@ import {
     buds2to1BatteryLevel, validateProperties, launchConfigureWindow, isArrayEqual
 } from '../deviceUtils.js';
 import {createConfig, createProperties, DataHandler} from '../../dataHandler.js';
+import {MediaController} from '../mediaController.js';
 import {SenhBudsSocket} from './senhBudsSocket.js';
 import {CodecMap, PeqFilterType} from './senhBudsConfig.js';
 
@@ -45,6 +46,7 @@ export const SenhBudsDevice = GObject.registerClass({
             modelIntialized: this.modelIntialized.bind(this),
             updateFirmware: this.updateFirmware.bind(this),
             updateBatteryProps: this.updateBatteryProps.bind(this),
+            updateInEarStatus: this.updateInEarStatus.bind(this),
             updateNoiseControl: this.updateNoiseControl.bind(this),
             updateNoiseControlMode: this.updateNoiseControlMode.bind(this),
             updateAncTransparencyLevel: this.updateAncTransparencyLevel.bind(this),
@@ -171,6 +173,7 @@ export const SenhBudsDevice = GObject.registerClass({
 
             ...this._modelData.inEarDetection && {
                 'in-ear-setting': false,
+                'wear-detection-mode': 1,
             },
 
             ...this._modelData.smartPause && {
@@ -235,8 +238,10 @@ export const SenhBudsDevice = GObject.registerClass({
         if (this._modelData.transPause)
             this._transPause = this._settingsItems['trans-pause'];
 
-        if (this._modelData.inEarDetection)
+        if (this._modelData.inEarDetection) {
             this._inEarSetting = this._settingsItems['in-ear-setting'];
+            this._wearDetectionMode = this._settingsItems['wear-detection-mode'];
+        }
 
         if (this._modelData.smartPause)
             this._smartPause = this._settingsItems['smart-pause'];
@@ -354,6 +359,12 @@ export const SenhBudsDevice = GObject.registerClass({
             if (this._inEarSetting !== inEarSetting) {
                 this._inEarSetting = inEarSetting;
                 this._setInEarSetting(inEarSetting);
+                this._configureMediaController();
+            }
+            const wearDetectionMode = this._settingsItems['wear-detection-mode'];
+            if (this._wearDetectionMode !== wearDetectionMode) {
+                this._wearDetectionMode = wearDetectionMode;
+                this._configureMediaController();
             }
         }
 
@@ -411,6 +422,29 @@ export const SenhBudsDevice = GObject.registerClass({
         }
 
         this._ignoreGsettingsChange = false;
+    }
+
+    _configureMediaController() {
+        const enableMediaController = this._wearDetectionMode !== 0 && this._inEarSetting;
+
+        if (enableMediaController && !this._mediaController) {
+            this._mediaController = new MediaController(this._settings, this._devicePath,
+                this._previousOnDestroyVolume);
+
+            this._mediaHandlerId = this._mediaController.connect(
+                'notify::output-is-a2dp', () => {
+                    this._outputIsA2dp = this._mediaController.output_is_a2dp;
+                }
+            );
+            this._outputIsA2dp = this._mediaController.output_is_a2dp;
+        } else if (!enableMediaController) {
+            if (this._mediaHandlerId) {
+                this._mediaController?.disconnect(this._mediaHandlerId);
+                this._mediaHandlerId = null;
+            }
+            this._mediaController?.destroy();
+            this._mediaController = null;
+        }
     }
 
     _updateIcons() {
@@ -563,6 +597,23 @@ export const SenhBudsDevice = GObject.registerClass({
 
 
         this.dataHandler?.setProps(this._props);
+    }
+
+    updateInEarStatus(bud1Status, bud2Status) {
+        this._bothBudsInEar = bud1Status === 'ON_HEAD' && bud2Status === 'ON_HEAD';
+        this._budInEar = bud1Status === 'ON_HEAD' || bud2Status === 'ON_HEAD';
+
+        if (this._wearDetectionMode !== 0) {
+            let playbackMode = null;
+
+            if (this._wearDetectionMode === 1)
+                playbackMode = this._bothBudsInEar ? 'play' : 'pause';
+            else if (this._wearDetectionMode === 2)
+                playbackMode = this._budInEar ? 'play' : 'pause';
+
+            if (playbackMode)
+                this._mediaController?.changeActivePlayerState(playbackMode);
+        }
     }
 
     updateNoiseControl(enable) {
@@ -1008,6 +1059,11 @@ export const SenhBudsDevice = GObject.registerClass({
         if (this._settingsHandlerId)
             this._settings?.disconnect(this._settingsHandlerId);
         this._settingsHandlerId = null;
+        if (this._mediaHandlerId)
+            this._mediaController?.disconnect(this._mediaHandlerId);
+        this._mediaHandlerId = null;
+        this._mediaController?.destroy();
+        this._mediaController = null;
         this._settings = null;
         this._battInfoRecieved = false;
     }

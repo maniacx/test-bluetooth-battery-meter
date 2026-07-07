@@ -8,6 +8,7 @@ import {
 import {DropDownRowWidget} from './../../widgets/dropDownRowWidget.js';
 import {SliderRowWidget} from './../../widgets/sliderRowWidget.js';
 import {IconSelectorWidget} from './../../widgets/iconSelectorWidget.js';
+import {RadioButtonRowWidget} from './../../widgets/radioButtonRowWidget.js';
 import {EqualizerWidget} from './../../widgets/equalizerWidget.js';
 import {ParametricEqRowWidget} from './../../widgets/peqRowWidget.js';
 import {SenhBudsModelList} from '../../../lib/devices/senhBuds/senhBudsConfig.js';
@@ -561,7 +562,10 @@ export const ConfigureWindow = GObject.registerClass({
         }
 
         if (this._modelData.smartPause) {
-            this._smartPauseSwitch = new Adw.SwitchRow({title: _('Pause Media When Not Worn')});
+            this._smartPauseSwitch = new Adw.SwitchRow({
+                title: _('Pause Media When Not Worn'),
+                subtitle: _('Playback controlled by the OEM app'),
+            });
             this._smartPauseSwitch.active = this._settingsItems['smart-pause'];
             this._smartPauseSwitch.connect('notify::active', () => {
                 this._updateGsettings('smart-pause', this._smartPauseSwitch.active);
@@ -618,6 +622,43 @@ export const ConfigureWindow = GObject.registerClass({
 
             inEarGroup.add(this._autoPowerOffDropdown);
         }
+
+        if (this._modelData.inEarDetection) {
+            const inEarSettingsGroup = new Adw.PreferencesGroup({
+                title: _('Playback Behavior'),
+                description: _('Playback controlled by the BudsLink'),
+            });
+
+            const inEarOptions = this._modelData.type === 'earbuds' ? [
+                _('Default behavior'),
+                _('Resume with both earbuds, Pause if any removed'),
+                _('Resume with any earbud, Pause if both removed'),
+            ] : [
+                _('Default behavior'),
+                _('Resume when worn'),
+            ];
+
+            const inEarTitle = this._modelData.type === 'earbuds'
+                ? _('Choose playback behavior for in-ear detection')
+                : _('Choose playback behavior for on-head detection');
+
+            this._inEarDropdown = new RadioButtonRowWidget({
+                title: inEarTitle,
+                subtitle: _('Automatically pause or resume playback ' +
+                'based on wearing detection.'),
+                options: inEarOptions,
+                initialValue: this._settingsItems['wear-detection-mode'],
+            });
+
+            this._inEarDropdown.connect('notify::toggled-value', () => {
+                this._updateGsettings('wear-detection-mode', this._inEarDropdown.toggled_value);
+            });
+
+            inEarSettingsGroup.add(this._inEarDropdown);
+
+            this._page.add(inEarSettingsGroup);
+        }
+
         this._updateInEarSensitivity();
     }
 
@@ -628,6 +669,7 @@ export const ConfigureWindow = GObject.registerClass({
         this._autoAnswerSwitch?.set_sensitive(sensitive);
         this._transPauseSwitch?.set_sensitive(sensitive);
         this._autoPowerOffDropdown?.set_sensitive(sensitive);
+        this._inEarDropdown?.set_sensitive(sensitive);
     }
 
     _addCallsSetting() {
