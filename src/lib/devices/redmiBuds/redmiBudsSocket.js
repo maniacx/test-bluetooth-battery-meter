@@ -10,6 +10,17 @@ import {
     RedmiBudsModelList, MessageType, Opcode, ConfigType, DeviceInfoRetType
 } from './redmiBudsConfig.js';
 
+/* eslint-disable max-len */
+
+/**
+Reference Material and Credits
+https://codeberg.org/Freeyourgadget/Gadgetbridge/src/branch/master/app/src/main/java/nodomain/freeyourgadget/gadgetbridge/service/devices/redmibuds
+
+https://github.com/web1n/android_packages_apps_XiaomiTWS
+**/
+
+/* eslint-enable max-len */
+
 const HEADER = [0xFE, 0xDC, 0xBA];
 const TRAILER = 0xEF;
 
