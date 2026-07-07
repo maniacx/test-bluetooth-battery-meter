@@ -7,9 +7,7 @@ import {
 } from '../../../lib/widgets/iconGroups.js';
 import {DropDownRowWidget} from './../../widgets/dropDownRowWidget.js';
 import {SliderRowWidget} from './../../widgets/sliderRowWidget.js';
-import {CheckBoxesRowWidget} from './../../widgets/checkBoxesRowWidget.js';
 import {IconSelectorWidget} from './../../widgets/iconSelectorWidget.js';
-import {RingMyBudsRow} from './../../widgets/ringMyBudsRow.js';
 import {EqualizerWidget} from './../../widgets/equalizerWidget.js';
 import {SenhBudsModelList} from '../../../lib/devices/senhBuds/senhBudsConfig.js';
 
@@ -52,7 +50,6 @@ export const ConfigureWindow = GObject.registerClass({
         this._settings = settings;
         this._devicePath = devicePath;
         this._gettext = _;
-        this.checkBoxWidgets = [];
 
         const pathsString = settings.get_strv('senh-buds-list').map(JSON.parse);
         this._settingsItems = pathsString.find(info => info.path === devicePath);
@@ -546,9 +543,6 @@ export const ConfigureWindow = GObject.registerClass({
     }
 
     _updateCompactStatus() {
-        for (const widget of this.checkBoxWidgets)
-            widget.set_property('compact-mode', this._isCompactMode);
-
         this._sideToneSlider?.set_property('compact-mode', this._isCompactMode);
     }
 });
