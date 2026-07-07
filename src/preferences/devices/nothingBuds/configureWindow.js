@@ -281,10 +281,10 @@ export const ConfigureWindow = GObject.registerClass({
 
         const _ = this._gettext;
 
-        const bassEnhanceGroup = new Adw.PreferencesGroup({title: _('Bass Enhance')});
+        const bassEnhanceGroup = new Adw.PreferencesGroup({title: _('Bass Boost')});
         this._page.add(bassEnhanceGroup);
 
-        this._bassEnhanceSwitch = new Adw.SwitchRow({title: _('Enable Bass Enhance')});
+        this._bassEnhanceSwitch = new Adw.SwitchRow({title: _('Enable Bass Boost')});
 
         this._bassEnhanceSwitch.active = this._settingsItems['bass-enable'];
 
@@ -296,7 +296,7 @@ export const ConfigureWindow = GObject.registerClass({
 
 
         this._baseLevel = new SliderRowWidget({
-            rowTitle: _('Bass Enhance Level'),
+            rowTitle: _('Bass Boost Level'),
             range: [1, 5, 1],
             marks: [
                 {mark: 1, label: _('-')},
