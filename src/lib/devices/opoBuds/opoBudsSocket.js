@@ -1,3 +1,4 @@
+'use strict';
 import GObject from 'gi://GObject';
 
 import {createLogger, getDeviceIdentifier, hexBytes} from '../logger.js';
@@ -6,6 +7,21 @@ import {isValidByte, isArrayEqual} from '../deviceUtils.js';
 import {
     OpoBudsModelList, PayloadType
 } from './opoBudsConfig.js';
+
+/* eslint-disable max-len */
+
+/**
+Reference Material and Credits
+https://codeberg.org/Freeyourgadget/Gadgetbridge/src/branch/master/app/src/main/java/nodomain/freeyourgadget/gadgetbridge/service/devices/oppo
+
+https://github.com/funinkina/realme-t310-anc-controls
+
+https://github.com/siudajakub/realme-buds-controller/tree/main
+
+https://github.com/TANICE-GAWD/Poltergeist
+**/
+
+/* eslint-enable max-len */
 
 const HEADER = 0xAA;
 
