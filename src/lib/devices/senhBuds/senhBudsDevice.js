@@ -20,33 +20,6 @@ export function isSenhBuds(bluezDeviceProxy, uuids) {
     return {supported, bluezProps};
 }
 
-function isEqArrayEqual(a, b) {
-    if (a === b)
-        return true;
-
-    if (!a || !b || a.length !== b.length)
-        return false;
-
-    const bMap = new Map(b.map(eq => [eq.eqId, eq]));
-
-    for (const eq of a) {
-        const other = bMap.get(eq.eqId);
-
-        if (!other)
-            return false;
-
-        if (eq.name !== other.name ||
-            eq.sel !== other.sel ||
-            eq.min !== other.min ||
-            eq.max !== other.max ||
-            !isArrayEqual(eq.freq, other.freq) ||
-            !isArrayEqual(eq.gain, other.gain))
-            return false;
-    }
-
-    return true;
-}
-
 export const SenhBudsDevice = GObject.registerClass({
     GTypeName: 'BudsLink_SenhBudsDevice',
 }, class SenhBudsDevice extends GObject.Object {
@@ -76,6 +49,7 @@ export const SenhBudsDevice = GObject.registerClass({
             updateNoiseControlMode: this.updateNoiseControlMode.bind(this),
             updateAncTransparencyLevel: this.updateAncTransparencyLevel.bind(this),
             updateAudioMode: this.updateAudioMode.bind(this),
+            updateEqBand: this.updateEqBand.bind(this),
             updateBassBoost: this.updateBassBoost.bind(this),
             updateCrossfeed: this.updateCrossfeed.bind(this),
             updateSideTone: this.updateSideTone.bind(this),
@@ -149,6 +123,10 @@ export const SenhBudsDevice = GObject.registerClass({
 
             ...this._modelData.audioMode && {
                 'audio-mode': 0,
+            },
+
+            ...this._modelData.eq && {
+                'eq-preset': 'flat',
             },
 
             ...this._modelData.eq?.displayedBand !== undefined && {
@@ -281,15 +259,17 @@ export const SenhBudsDevice = GObject.registerClass({
                 this._setAudioMode(audioMode);
             }
         }
-        /*
+
         if (this._modelData.eq?.displayedBand !== undefined) {
             const eqCustom = this._settingsItems['eq-custom'];
-            if (!this._customEq || !isEqArrayEqual(eqCustom, this._customEq)) {
+            if (!this._customEq || !isArrayEqual(eqCustom, this._customEq)) {
+                const oldGains = this._customEq;
+                const newGains = eqCustom;
                 this._customEq = eqCustom;
-                this._setCustomEq(eqCustom);
+                this._setCustomEq(oldGains, newGains);
             }
         }
-*/
+
         if (this._modelData.eq?.bassBoost) {
             const bassBoost = this._settingsItems['bass-boost'];
             if (this._bassBoost !== bassBoost) {
@@ -660,6 +640,40 @@ export const SenhBudsDevice = GObject.registerClass({
 
     _setAudioMode(mode) {
         this._senhBudsSocket?.setAudioMode(mode);
+    }
+
+    updateEqBand(arr) {
+        let preset = 'custom';
+
+        for (const [name, values] of Object.entries(this._modelData.eq.presets ?? {})) {
+            if (isArrayEqual(arr, values)) {
+                preset = name;
+                break;
+            }
+        }
+
+        let settingsChanged = false;
+
+        if (this._settingsItems['eq-preset'] !== preset) {
+            this._settingsItems['eq-preset'] = preset;
+            settingsChanged = true;
+        }
+
+        if (!isArrayEqual(arr, this._customEq)) {
+            this._customEq = arr;
+            this._settingsItems['eq-custom'] = arr;
+            settingsChanged = true;
+        }
+
+        if (settingsChanged)
+            this._updateGsettings();
+    }
+
+    _setCustomEq(oldGains, newGains) {
+        for (let i = 0; i < oldGains.length; i++) {
+            if (oldGains[i] !== newGains[i])
+                this._senhBudsSocket?.setEqBand(i, newGains[i]);
+        }
     }
 
     updateBassBoost(enable) {

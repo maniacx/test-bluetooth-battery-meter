@@ -22,6 +22,7 @@ export default {
         bassBoost: true,
         custom: true,
         presets: {
+            flat: [0.0, 0.0, 0.0, 0.0, 0.0],
             rock: [0.0, 0.0, 3.0, 3.0, -1.0],
             pop: [0.0, -5.0, 0.0, 5.0, 0.0],
             dance: [2.0, -3.0, -3.0, 1.0, 1.0],

@@ -4,7 +4,7 @@ import GObject from 'gi://GObject';
 
 import {createLogger, getDeviceIdentifier, hexBytes} from '../logger.js';
 import {SocketHandler} from '../socketByProfile.js';
-import {booleanFromByte, isValidByte, isArrayEqual} from '../deviceUtils.js';
+import {booleanFromByte, isValidByte} from '../deviceUtils.js';
 import {
     SenhBudsModelList, VendorType, CommandType
 } from './senhBudsConfig.js';
@@ -278,7 +278,8 @@ export const SenhBudsSocket = GObject.registerClass({
             case CommandType.EQ_BAND_RET:
             case CommandType.EQ_BAND_RET2:
             case CommandType.EQ_BAND_NOTI: {
-                this._log.info('Equalizer Band Recieved');
+                if (this._modelData?.eq)
+                    this._parseEqBand(msg.payload);
                 break;
             }
 
@@ -680,7 +681,7 @@ export const SenhBudsSocket = GObject.registerClass({
     }
 
     _getEqAllBands() {
-        const bands = this._modelData?.displayedBand;
+        const bands = this._modelData?.eq?.displayedBand;
         if (!bands || bands.length === 0)
             return;
 
@@ -689,6 +690,33 @@ export const SenhBudsSocket = GObject.registerClass({
             const payload = [index];
             this._encodeSenh(CommandType.EQ_BAND_GET, loginfo, payload);
         }
+    }
+
+    _decodeSignedBytes(arr) {
+        return arr.map(v => (v > 127 ? v - 256 : v) / 10);
+    }
+
+    _encodeSignedByte(value) {
+        const scaled = value * 10;
+        return scaled < 0 ? scaled + 256 : scaled;
+    }
+
+    _parseEqBand(payload) {
+        const bandCount = this._modelData?.eq?.displayedBand?.length ?? 0;
+        if (payload.length < bandCount)
+            return;
+
+        this._log.info('Parse EqBand');
+
+        const arr = this._decodeSignedBytes(payload);
+        this._callbacks?.updateEqBand?.(arr);
+    }
+
+    setEqBand(bandIndex, gain) {
+        const loginfo = 'Set EqBand';
+        const gainByte = this._encodeSignedByte(gain);
+        const payload = [bandIndex, gainByte];
+        this._encodeSenh(CommandType.EQ_BAND_SET, loginfo, payload);
     }
 
     _getBassBoost() {

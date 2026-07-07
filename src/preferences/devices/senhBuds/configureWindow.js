@@ -128,6 +128,12 @@ export const ConfigureWindow = GObject.registerClass({
             if (this._audioModeDropdown)
                 this._audioModeDropdown.selected_item = this._settingsItems['audio-mode'];
 
+            if (this._eqPresetDropdown)
+                this._eqPresetDropdown.selected_item = this._settingsItems['eq-preset'];
+
+            if (this._modelData.eq?.custom !== undefined)
+                this._eq.setValues(this._settingsItems['eq-custom']);
+
             if (this._bassBoostSwitch)
                 this._bassBoostSwitch.active = this._settingsItems['bass-boost'];
 
@@ -160,6 +166,9 @@ export const ConfigureWindow = GObject.registerClass({
         });
 
         this.connect('close-request', () => {
+            this._eq?.destroy();
+            this._eq = null;
+
             if (this._modelData.ring) {
                 const ringState = this._settingsItems?.['ring-state'];
                 if (ringState === 'playing')
@@ -230,6 +239,113 @@ export const ConfigureWindow = GObject.registerClass({
             eqGroup.add(this._audioModeDropdown);
         }
 
+        if (this._modelData.eq) {
+            const presetOptions = [];
+            const presetValues = [];
+
+            const getPresetLabel = name => {
+                const labels = {
+                    flat: _('Flat'),
+                    rock: _('Rock'),
+                    pop: _('Pop'),
+                    dance: _('Dance'),
+                    hipHop: _('Hip Hop'),
+                    classical: _('Classical'),
+                    movie: _('Movie'),
+                    jazz: _('Jazz'),
+                };
+
+                return labels[name] ?? name;
+            };
+
+            for (const presetName of Object.keys(this._modelData.eq.presets)) {
+                presetOptions.push(getPresetLabel(presetName));
+                presetValues.push(presetName);
+            }
+
+            let customEqButton = {};
+            if (this._modelData.eq?.custom) {
+                presetOptions.push(_('Custom'));
+                presetValues.push('custom');
+
+                customEqButton =  {
+                    hasButton: true,
+                    buttonIcon: 'bbm-eq-symbolic',
+                    buttonTooltip: _('Custom Equalizer'),
+                };
+            }
+
+            this._eqPresetDropdown = new DropDownRowWidget({
+                title: _('Equalizer Preset'),
+                options: presetOptions,
+                values: presetValues,
+                initialValue: this._settingsItems['eq-preset'],
+                ...customEqButton,
+            });
+
+            eqGroup.add(this._eqPresetDropdown);
+
+            const freqLabels = {
+                50: _('50'),
+                63: _('63'),
+                125: _('125'),
+                250: _('250'),
+                400: _('400'),
+                500: _('500'),
+                800: _('800'),
+                1000: _('1k'),
+                2000: _('2k'),
+                2500: _('2.5k'),
+                3000: _('3k'),
+                4000: _('4k'),
+                6300: _('6.3k'),
+                7000: _('7k'),
+                8000: _('8k'),
+                12000: _('12k'),
+                16000: _('16k'),
+            };
+
+            const freqs = this._modelData.eq.displayedBand.map(
+                freq => freqLabels[freq] ?? `${freq}`
+            );
+
+            const range = this._modelData.eq.range;
+
+            const initialValues = this._settingsItems['eq-custom'];
+
+            this._eq = new EqualizerWidget({
+                freqs,
+                initialValues,
+                range,
+                step: 0.1,
+                digits: 1,
+                topBarTitle: _('Frequency (Hz)'),
+                bottomBarTitle: _('Gain (dB)'),
+            });
+
+            this._eq.connect('eq-changed', (_w, arr) => {
+                this._eqPresetDropdown.selected_item = 'custom';
+                this._updateGsettings('eq-custom', arr);
+            });
+
+            this._eqPresetDropdown.connect('notify::selected-item', () => {
+                const preset = this._eqPresetDropdown.selected_item;
+                this._updateGsettings('eq-preset', preset);
+                if (preset === 'custom')
+                    return;
+
+                const eqValues = this._modelData.eq?.presets?.[preset];
+                if (eqValues) {
+                    this._updateGsettings('eq-custom', eqValues);
+                    this._eq.setValues(eqValues);
+                }
+            });
+
+            this._eqPresetDropdown.connect('button-clicked', () => {
+                this._eq.present(this);
+            });
+        }
+
         if (this._modelData.eq?.bassBoost) {
             this._bassBoostSwitch = new Adw.SwitchRow({title: _('Enable Bass Boost')});
 
@@ -271,6 +387,7 @@ export const ConfigureWindow = GObject.registerClass({
 
             eqGroup.add(this._crossfeedDropdown);
         }
+
         this._updateSoundVisibility();
     }
 
@@ -280,9 +397,12 @@ export const ConfigureWindow = GObject.registerClass({
 
         const mode = this._audioModeDropdown.selected_item;
 
-        if (this._modelData.eq?.bassBoost) {
+        if (this._modelData.eq) {
             const eqMode = this._modelData.audioMode.eq;
-            this._bassBoostSwitch.visible = mode === eqMode;
+            this._eqPresetDropdown.visible = mode === eqMode;
+
+            if (this._modelData.eq?.bassBoost)
+                this._bassBoostSwitch.visible = mode === eqMode;
         }
     }
 
