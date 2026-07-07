@@ -125,10 +125,8 @@ export const ConfigureWindow = GObject.registerClass({
 
             this.title = this._settingsItems.alias;
 
-            if (this._modelData.eqPreset) {
+            if (this._modelData.eqPreset)
                 this._eqPresetDropdown.selected_item = this._settingsItems['eq-preset'];
-                this._updateEqCustomRowVisibility();
-            }
 
             if (this._modelData.eqPreset?.custom !== undefined)
                 this._eq.setValues(this._settingsItems['eq-custom']);
@@ -236,16 +234,23 @@ export const ConfigureWindow = GObject.registerClass({
         const options = descriptors.map(d => d.label);
         const presetValues  = descriptors.map(d => d.value);
 
+        const customEqButton = presetObj.custom !== undefined ? {
+            hasButton: true,
+            buttonIcon: 'bbm-eq-symbolic',
+            buttonTooltip: _('Custom Equalizer'),
+            buttonVisibleFor: [presetObj.custom],
+        } : {};
+
         this._eqPresetDropdown = new DropDownRowWidget({
             title: _('Equalizer Preset'),
             options,
             values: presetValues,
             initialValue: this._settingsItems['eq-preset'],
+            ...customEqButton,
         });
 
         this._eqPresetDropdown.connect('notify::selected-item', () => {
             this._updateGsettings('eq-preset', this._eqPresetDropdown.selected_item);
-            this._updateEqCustomRowVisibility();
         });
 
         eqGroup.add(this._eqPresetDropdown);
@@ -253,35 +258,25 @@ export const ConfigureWindow = GObject.registerClass({
         if (this._modelData.eqPreset?.custom === undefined)
             return;
 
-        this._equalizerCustomRow = new Adw.ActionRow({
-            title: _('Custom Equalizer'),
-        });
-
         const eqFreqs = [_('62'), _('125'), _('250'), _('500'), _('1k'), _('2k'), _('4k'),
             _('8k'), _('12k'), _('16k')];
 
         const eqRange = 6;
         const initialValues = this._settingsItems['eq-custom'];
 
-        this._eq = new EqualizerWidget(eqFreqs, initialValues, eqRange);
+        this._eq = new EqualizerWidget({
+            freqs: eqFreqs,
+            initialValues,
+            range: eqRange,
+            topBarTitle: _('Frequency (Hz)'),
+            bottomBarTitle: _('Gain (dB)'),
+        });
 
         this._eq.connect('eq-changed', (_widget, values) => {
             this._updateGsettings('eq-custom', values);
         });
 
-        this._equalizerCustomRow.set_child(this._eq);
-
-        this._updateEqCustomRowVisibility();
-
-        eqGroup.add(this._equalizerCustomRow);
-    }
-
-    _updateEqCustomRowVisibility() {
-        if (!this._equalizerCustomRow)
-            return;
-        const selectedPreset = this._eqPresetDropdown.selected_item;
-        const customPresetValue = this._modelData.eqPreset.custom;
-        this._equalizerCustomRow.visible = selectedPreset === customPresetValue;
+        this._eqPresetDropdown.connect('button-clicked', () => this._eq.present(this));
     }
 
     _addMiscSetting() {
