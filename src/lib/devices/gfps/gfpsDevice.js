@@ -22,7 +22,7 @@ export function isGfps(bluezDeviceProxy, uuids) {
 }
 
 export const GfpsDevice = GObject.registerClass({
-    GTypeName: 'BluetoothBatteryMeter_GfpsDevice',
+    GTypeName: 'BudsLink_GfpsDevice',
 }, class GfpsDevice extends GObject.Object {
     _init(settings, devicePath, alias, extPath, profileManager, updateDeviceMapCb) {
         super._init();

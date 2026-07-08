@@ -7,7 +7,7 @@ import {SocketHandler} from '../socketByProfile.js';
 import {MessageGroup, DeviceInfoMessage, HearableControlMessage} from './gfpsConfig.js';
 
 export const GfpsSocket = GObject.registerClass({
-    GTypeName: 'BluetoothBatteryMeter_GfpsSocket',
+    GTypeName: 'BudsLink_GfpsSocket',
 }, class GfpsSocket extends SocketHandler {
     _init(devicePath, profileManager, profile, callbacks) {
         super._init(devicePath, profileManager, profile);

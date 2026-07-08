@@ -8,7 +8,7 @@ import {
 import {IconSelectorWidget} from './../../widgets/iconSelectorWidget.js';
 
 export const ConfigureWindow = GObject.registerClass({
-    GTypeName: 'BluetoothBatteryMeter_GfpsConfigureWindow',
+    GTypeName: 'BudsLink_GfpsConfigureWindow',
 }, class ConfigureWindow extends Adw.Window {
     _init(settings, mac, devicePath, parentWindow, _, modal = false) {
         super._init({
