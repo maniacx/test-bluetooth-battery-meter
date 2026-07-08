@@ -251,7 +251,8 @@ export const OpoBudsSocket = GObject.registerClass({
 
     _getVendorId() {
         this._log.info('Get Vendor ID');
-        this._encode(PayloadType.VID_GET);
+        const payload = [0x9A, 0x07];
+        this._encode(PayloadType.VID_GET, payload);
     }
 
     _parseVendorId(payload) {
