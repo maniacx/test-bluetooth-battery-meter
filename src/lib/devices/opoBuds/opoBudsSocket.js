@@ -127,8 +127,8 @@ export const OpoBudsSocket = GObject.registerClass({
 
         switch (msg.command) {
             case PayloadType.DEVICE_INFO: {
-                if (this._modelData)
-                    this._parseDeviceInfo(msg.payload);
+                //                if (this._modelData) // Test. Fake VID /PID
+                this._parseDeviceInfo(msg.payload);
                 break;
             }
 
@@ -251,7 +251,8 @@ export const OpoBudsSocket = GObject.registerClass({
 
     _getVendorId() {
         this._log.info('Get Vendor ID');
-        this._encode(PayloadType.VID_GET);
+        const payload = [0x9A, 0x07];
+        this._encode(PayloadType.VID_GET, payload);
     }
 
     _parseVendorId(payload) {
@@ -383,6 +384,24 @@ export const OpoBudsSocket = GObject.registerClass({
     _parseBattery(payload) {
         if (payload.length < 2)
             return;
+
+        // Temporarily force Realme Air 7 with fake VID / PID
+        if (!this._modelData) {
+            this._vendorId = 0x5A4D;
+            this._productId = 0x065018;
+
+            this._modelData = OpoBudsModelList.find(model => model.id.vid.includes(this._vendorId) &&
+                model.id.pid.includes(this._productId));
+
+            if (!this._modelData) {
+                this._log.info(`No model matched for VID: ${hexBytes(this._vendorId)}, ` +
+                        `PID: ${hexBytes(this._productId)}`);
+                return;
+            }
+
+            this._callbacks?.modelIntialized?.(this._modelData, this._vendorId, this._productId);
+        }
+        // Temp hack end
 
         this._log.info('Parse Battery');
         const props = {};

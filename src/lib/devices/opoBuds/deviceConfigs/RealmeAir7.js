@@ -5,7 +5,7 @@ export default {
     type: 'realme',
     id: {
         vid: [0x5A4D],
-        pid: [0xFFF1, 0xFFF2],
+        pid: [0x065018],
     },
 
     batteryMutiple: true,
