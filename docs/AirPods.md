@@ -103,6 +103,7 @@ Currently tested and confirmed working:
 
 * **AirPods 1st Gen** ✅ — Credits: Toxblh
 * **AirPods Pro 1st Gen** ✅ — Credits: Toxblh, hazzac181
+* **AirPods Pro 2nd Gen** ✅ — Credits: MobileAZN
 * **AirPods 4th Gen with ANC** ✅ — Credits: Cameo007
 * **AirPods Pro 2 USB-C** ✅ — Credits: maniacx
 * **AirPods Max  USB-C** ✅ — Credits: GovanifY
@@ -168,7 +169,7 @@ table th:nth-of-type(3) {
 | In‑Ear Play/Pause             | ✅             | ✅     |
 
 <br>
-### AirPods Pro (1st Gen)
+### AirPods Pro 1st Gen
 
 | Feature                       | Supported      | Tested |
 |:-----------------------------:|:--------------:|:------:|
@@ -182,13 +183,13 @@ table th:nth-of-type(3) {
 
 | Feature                       | Supported      | Tested |
 |:-----------------------------:|:--------------:|:------:|
-| Modalias                      | 2014           | ❌     |
-| Battery Level                 | L, R, Case     | ❌     |
-| ANC                           | ✅             | ❌     |
-| Adaptive                      | ✅             | ❌     |
-| Ambient Sound Customization   | ✅             | ❌     |
-| Conversation Awareness        | ✅             | ❌     |
-| In‑Ear Play/Pause             | ✅             | ❌     |
+| Modalias                      | 2014           | ✅     |
+| Battery Level                 | L, R, Case     | ✅     |
+| ANC                           | ✅             | ✅     |
+| Adaptive                      | ✅             | ✅     |
+| Ambient Sound Customization   | ✅             | ✅     |
+| Conversation Awareness        | ✅             | ✅     |
+| In‑Ear Play/Pause             | ✅             | ✅     |
 
 <br>
 ### AirPods Pro 2 USB‑C
