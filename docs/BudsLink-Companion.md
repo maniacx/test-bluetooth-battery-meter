@@ -1,7 +1,7 @@
 ---
 layout: default
 title: BudsLink Companion
-nav_order: 95
+nav_order: 94
 permalink: /companion
 ---
 # BudsLink Companion
