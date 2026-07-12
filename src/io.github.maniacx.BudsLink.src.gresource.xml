@@ -111,6 +111,8 @@
         <file>lib/devices/nothingBuds/deviceConfigs/NothingEarOpen.js</file>
         <file>lib/devices/nothingBuds/deviceConfigs/NothingEara.js</file>
         <file>lib/devices/nothingBuds/deviceConfigs/NothingHeadphone1.js</file>
+        <file>lib/devices/nothingBuds/deviceConfigs/NothingHeadphonea.js</file>
+        <file>lib/devices/nothingBuds/deviceConfigs/NothingHeadphoneA.js</file>
 
         <file>lib/devices/notifier.js</file>
 

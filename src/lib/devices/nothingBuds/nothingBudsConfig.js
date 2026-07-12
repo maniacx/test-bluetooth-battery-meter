@@ -18,6 +18,8 @@ import Ear2 from './deviceConfigs/Ear2.js';
 import NothingEar1 from './deviceConfigs/NothingEar1.js';
 import EarStick from './deviceConfigs/EarStick.js';
 import NothingEar from './deviceConfigs/NothingEar.js';
+import NothingHeadphonea from './deviceConfigs/NothingHeadphonea.js';
+import NothingHeadphoneA from './deviceConfigs/NothingHeadphoneA.js';
 
 export const NothingBudsModelList = [
     CMFBuds2Plus,
@@ -38,6 +40,8 @@ export const NothingBudsModelList = [
     NothingEar1,
     EarStick,
     NothingEar,
+    NothingHeadphonea,
+    NothingHeadphoneA,
 ];
 
 export const PayloadType = {

@@ -680,6 +680,9 @@ export const ConfigureWindow = GObject.registerClass({
             case 'essential-space':
                 return _('Essential Space');
 
+            case 'take-photo':
+                return _('Take Photo');
+
             default:
                 return action;
         }
