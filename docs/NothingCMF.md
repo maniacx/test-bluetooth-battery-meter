@@ -69,6 +69,7 @@ Currently tested and confirmed working:
 * **CMF Buds 2 [B179]**  ✅ — Credits: duckeydev
 * **CMF Buds 2a [B179]**  ✅ — Credits: shakasan
 * **Neckband Pro [B164]**  ✅ — Credits: iamxnfa
+* **Nothing Headphone (a) [B198]**  ✅ — Credits: The-Nyla
 
 
 <style>
@@ -388,3 +389,43 @@ table th:nth-of-type(3) {
 | Low Latency Mode | ✅ | ❌ |
 | Find My Buds | ✅ | ❌ |
 | Gesture | ✅ | ❌ |
+
+---
+
+## Nothing Headphone (a) (B186)
+
+| Feature | Supported | Tested |
+|:--|:--:|:--:|
+| Battery Level | Single | ❌ |
+| Noise Control | ✅ | ❌ |
+| Noise Control Level | Low, Mid, High | ❌ |
+| Noise Control Adaptive | ✅ | ❌ |
+| Eq Preset | ✅ | ❌ |
+| Eq Custom | Not Implemented | ❌ |
+| Enhanced Bass | ✅ | ❌ |
+| Spatial Audio | ✅ | ❌ |
+| In Ear Detection | ✅ | ❌ |
+| Low Latency Mode | ✅ | ❌ |
+| Find My Buds | ✅ | ❌ |
+| Gesture | ✅ | ❌ |
+
+---
+
+## Nothing Headphone (a) (B198)
+
+| Feature | Supported | Tested |
+|:--|:--:|:--:|
+| Battery Level | Single | ✅ |
+| Noise Control | ✅ | ✅ |
+| Noise Control Level | Low, Mid, High | ✅ |
+| Noise Control Adaptive | ✅ | ✅ |
+| Eq Preset | ✅ | ✅ |
+| Eq Custom | Not Implemented | ❌ |
+| Enhanced Bass | ✅ | ✅ |
+| Spatial Audio | ✅ | ✅ |
+| In Ear Detection | ✅ | ❌ |
+| Low Latency Mode | ✅ | ✅ |
+| Find My Buds | ✅ | ✅ |
+| Gesture | ✅ | ✅ |
+
+

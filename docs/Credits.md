@@ -150,6 +150,8 @@ permalink: /credits
 > * duckeydev
 > * shakasan
 > * iamxnfa
+> * The-Nyla
+
 
 ## Google Pixel Buds
 
