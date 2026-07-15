@@ -3,11 +3,13 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
+const FORCE_LOGGING = false;
 const MAX_LOG_BYTES = 1024 * 1024;
 const FULL_SANITIZE_LOG = true;
 
 let _settings = null;
-let LOG_ENABLED = true;
+let LOG_ENABLED = false;
+
 
 const LogDir = GLib.build_filenamev([GLib.get_user_state_dir(), 'log']);
 GLib.mkdir_with_parents(LogDir, 0o755);
@@ -75,6 +77,11 @@ export function createLogger(tag) {
 }
 
 export function initLogger(settings) {
+    if (FORCE_LOGGING) {
+        LOG_ENABLED = true;
+        return;
+    }
+
     _settings = settings;
     LOG_ENABLED = _settings.get_boolean('logging-enabled');
 
