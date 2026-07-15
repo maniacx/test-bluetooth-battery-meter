@@ -3,7 +3,7 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
-const FORCE_LOGGING = false;
+const FORCE_LOGGING = true;
 const MAX_LOG_BYTES = 1024 * 1024;
 const FULL_SANITIZE_LOG = true;
 
