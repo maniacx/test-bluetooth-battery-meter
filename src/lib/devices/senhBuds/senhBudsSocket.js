@@ -754,7 +754,7 @@ export const SenhBudsSocket = GObject.registerClass({
     }
 
     _encodeSignedByte(value) {
-        const scaled = value * 10;
+        const scaled = Math.round(value * 10);
         return scaled < 0 ? scaled + 256 : scaled;
     }
 
