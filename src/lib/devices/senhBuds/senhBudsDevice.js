@@ -923,6 +923,10 @@ export const SenhBudsDevice = GObject.registerClass({
         }
     }
 
+    _setPeqPreGain(gain) {
+        this._senhBudsSocket?.setPeqPreGain(gain);
+    }
+
     updateCrossfeed(level) {
         this._log.info(`updateCrossfeed level: ${level}`);
         if (this._crossfeed !== level) {
