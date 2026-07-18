@@ -550,10 +550,10 @@ export const SenhBudsSocket = GObject.registerClass({
 
         this._log.info('Parse Battery Level');
         this._battInfo.battery1Level = payload[0];
-        if (payload.length > 2)
+        if (payload.length >= 2)
             this._battInfo.battery2Level = payload[1];
 
-        if (payload.length > 3)
+        if (payload.length >= 3)
             this._battInfo.battery3Level = payload[2];
 
         this._callbacks?.updateBatteryProps?.(this._battInfo);
@@ -577,10 +577,10 @@ export const SenhBudsSocket = GObject.registerClass({
         };
 
         this._battInfo.battery1Status = getBatteryState(payload[0]);
-        if (payload.length > 2)
+        if (payload.length >= 2)
             this._battInfo.battery2Status = getBatteryState(payload[1]);
 
-        if (payload.length > 3)
+        if (payload.length >= 3)
             this._battInfo.battery3Status = getBatteryState(payload[2]);
 
         this._callbacks?.updateBatteryProps?.(this._battInfo);
