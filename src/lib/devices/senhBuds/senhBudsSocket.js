@@ -484,13 +484,8 @@ export const SenhBudsSocket = GObject.registerClass({
         if (this._modelData.eq?.bassBoost)
             this._getBassBoost();
 
-        if (this._modelData.peq) {
-            this._getPeqFreq();
-            this._getPeqGain();
-            this._getPeqQ();
-            this._getPeqFilter();
-            this._getPeqPreGain();
-        }
+        if (this._modelData.peq)
+            this._getAllBandParams();
 
         if (this._modelData.crossfeed)
             this._getCrossfeed();
@@ -798,11 +793,9 @@ export const SenhBudsSocket = GObject.registerClass({
         this._encodeSenh(CommandType.BASS_BOOST_SET, loginfo, payload);
     }
 
-    _getPeqFreq() {
-        for (let stage = 0; stage < 5; stage++) {
-            const loginfo = `Get PEQ Frequency Stage ${stage}`;
-            this._encodeSenh(CommandType.PEQ_FREQ_GET, loginfo, [stage]);
-        }
+    _getPeqFreq(stage) {
+        const loginfo = `Get PEQ Frequency Stage ${stage}`;
+        this._encodeSenh(CommandType.PEQ_FREQ_GET, loginfo, [stage]);
     }
 
     _parsePeqFreq(payload) {
@@ -824,11 +817,9 @@ export const SenhBudsSocket = GObject.registerClass({
         this._encodeSenh(CommandType.PEQ_FREQ_SET, loginfo, payload);
     }
 
-    _getPeqGain() {
-        for (let stage = 0; stage < 5; stage++) {
-            const loginfo = `Get PEQ Gain Stage ${stage}`;
-            this._encodeSenh(CommandType.PEQ_GAIN_GET, loginfo, [stage]);
-        }
+    _getPeqGain(stage) {
+        const loginfo = `Get PEQ Gain Stage ${stage}`;
+        this._encodeSenh(CommandType.PEQ_GAIN_GET, loginfo, [stage]);
     }
 
     _parsePeqGain(payload) {
@@ -861,11 +852,9 @@ export const SenhBudsSocket = GObject.registerClass({
         this._encodeSenh(CommandType.PEQ_GAIN_SET, loginfo, payload);
     }
 
-    _getPeqQ() {
-        for (let stage = 0; stage < this._modelData.peq; stage++) {
-            const loginfo = `Get PEQ Q Stage ${stage}`;
-            this._encodeSenh(CommandType.PEQ_Q_GET, loginfo, [stage]);
-        }
+    _getPeqQ(stage) {
+        const loginfo = `Get PEQ Q Stage ${stage}`;
+        this._encodeSenh(CommandType.PEQ_Q_GET, loginfo, [stage]);
     }
 
     _parsePeqQ(payload) {
@@ -889,11 +878,9 @@ export const SenhBudsSocket = GObject.registerClass({
         this._encodeSenh(CommandType.PEQ_Q_SET, loginfo, payload);
     }
 
-    _getPeqFilter() {
-        for (let stage = 0; stage < 5; stage++) {
-            const loginfo = `Get PEQ Filter Stage ${stage}`;
-            this._encodeSenh(CommandType.PEQ_FILTER_GET, loginfo, [stage]);
-        }
+    _getPeqFilter(stage) {
+        const loginfo = `Get PEQ Filter Stage ${stage}`;
+        this._encodeSenh(CommandType.PEQ_FILTER_GET, loginfo, [stage]);
     }
 
     _parsePeqFilter(payload) {
@@ -952,6 +939,16 @@ export const SenhBudsSocket = GObject.registerClass({
 
         const payload = [raw >> 8 & 0xFF, raw & 0xFF];
         this._encodeSenh(CommandType.PEQ_PREGAIN_SET, loginfo, payload);
+    }
+
+    _getAllBandParams() {
+        for (let stage = 0; stage < this._modelData.peq.maxBands; stage++) {
+            this._getPeqFreq(stage);
+            this._getPeqGain(stage);
+            this._getPeqQ(stage);
+            this._getPeqFilter(stage);
+        }
+        this._getPeqPreGain();
     }
 
     _getCrossfeed() {
