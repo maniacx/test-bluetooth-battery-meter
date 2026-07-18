@@ -331,10 +331,15 @@ export const SenhBudsSocket = GObject.registerClass({
             }
 
             case CommandType.PEQ_PREGAIN_RET:
-            case CommandType.PEQ_PREGAIN_RET2:
-            case CommandType.PEQ_PREGAIN_NOTI: {
+            case CommandType.PEQ_PREGAIN_RET2: {
                 if (this._modelData?.peq)
                     this._parsePeqPreGain(msg.payload);
+                break;
+            }
+
+            case CommandType.PEQ_PREGAIN_NOTI: {
+                if (this._modelData?.peq)
+                    this._parsePeqPreGainNoti(msg.payload);
                 break;
             }
 
@@ -921,6 +926,18 @@ export const SenhBudsSocket = GObject.registerClass({
 
         this._log.info('Parse PEQ PreGain');
         let raw = payload[0] << 8 | payload[1];
+        if (raw & 0x8000)
+            raw -= 0x10000;
+
+        this._callbacks?.updatePeqPreGain?.(raw / 10.0);
+    }
+
+    _parsePeqPreGainNoti(payload) {
+        if (payload.length < 2)
+            return;
+
+        this._log.info('Parse PEQ PreGain Notification');
+        let raw = payload[1] << 8 | payload[0];
         if (raw & 0x8000)
             raw -= 0x10000;
 
