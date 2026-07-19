@@ -180,9 +180,14 @@ export const NothingBudsSocket = GObject.registerClass({
         const {payloadType, payload} = resp;
 
         switch (payloadType) {
+            case PayloadType.PROTOCOL_RET:
+                if (!this._modelInitialized)
+                    this._parseModelFromResponse(payload);
+                break;
+
             case PayloadType.DEVICE_MODEL_RET:
                 if (!this._modelInitialized)
-                    this._getModelFromResponse(payload);
+                    this._parseModelFromResponse(payload);
                 break;
             case PayloadType.FIRMWARE_NTFY:
                 this._parseFirmwareInfo(payload);
@@ -242,6 +247,8 @@ export const NothingBudsSocket = GObject.registerClass({
     }
 
     _onPostConnectInitialization() {
+        this._getProtocol();
+        this._setProtocol();
         this._getDeviceModelId();
 
         this._modelFallbackTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => {
@@ -316,7 +323,7 @@ export const NothingBudsSocket = GObject.registerClass({
         this._onModelInitialized(modelData);
     }
 
-    _getModelFromResponse(payload) {
+    _parseModelFromResponse(payload) {
         if (!payload || payload.length < 2) {
             this._log.info('Model response payload invalid');
             return;
@@ -337,19 +344,24 @@ export const NothingBudsSocket = GObject.registerClass({
         this._onModelInitialized(modelData);
     }
 
-    _getSerialInfo() {
-        const loginfo = 'Request SerialInfo';
-        this._sendPacket(PayloadType.SERIAL_GET, loginfo);
+    _getProtocol() {
+        const loginfo = 'Request Protocol';
+        this._sendPacket(PayloadType.PROTOCOL_GET, loginfo);
     }
 
-    _getFirmwareInfo() {
-        const loginfo = 'Request FirmwareInfo';
-        this._sendPacket(PayloadType.FIRMWARE_GET, loginfo);
+    _setProtocol() {
+        const loginfo = 'Set Protocol';
+        this._sendPacket(PayloadType.PROTOCOL_SET, loginfo);
     }
 
     _getDeviceModelId() {
         const loginfo = 'Request DeviceModelId';
         this._sendPacket(PayloadType.DEVICE_MODEL_GET, loginfo);
+    }
+
+    _getFirmwareInfo() {
+        const loginfo = 'Request FirmwareInfo';
+        this._sendPacket(PayloadType.FIRMWARE_GET, loginfo);
     }
 
     _parseFirmwareInfo(payload) {

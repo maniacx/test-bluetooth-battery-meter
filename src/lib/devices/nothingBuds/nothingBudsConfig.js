@@ -45,6 +45,9 @@ export const NothingBudsModelList = [
 ];
 
 export const PayloadType = {
+    PROTOCOL_GET: 0xC001,
+    PROTOCOL_SET: 0xF001,
+
     SERIAL_GET: 0xC006,
     SERIAL_RET: 0x4006,
 
