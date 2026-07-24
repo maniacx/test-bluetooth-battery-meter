@@ -137,19 +137,19 @@ export const NothingBudsSocket = GObject.registerClass({
             if (buf[i] !== HEADER_MAGIC[0])
                 continue;
 
-            if (buf.length - i < HEADER_LEN + CRC_LEN)
+            if (buf.length - i < HEADER_LEN)
                 return null;
 
-            const payloadLen = buf[i + 5];
-            const totalLen = HEADER_LEN + payloadLen + CRC_LEN;
+            const control = buf[i + 1] | buf[i + 2] << 8;
+            const hasCrc = (control & 0x20) !== 0;
+            const payloadLen = buf[i + 5] | buf[i + 6] << 8;
+            const totalLen = HEADER_LEN + payloadLen + (hasCrc ? CRC_LEN : 0);
 
             if (i + totalLen > buf.length)
                 return null;
 
             const raw = buf.slice(i, i + totalLen);
-
             this._rxBuffer.splice(0, i + totalLen);
-
             return this._parseMessage(raw);
         }
 
