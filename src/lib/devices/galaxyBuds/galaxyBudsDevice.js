@@ -6,12 +6,15 @@ import {gettext as _} from 'gettext';
 import {createLogger, getDeviceIdentifier} from '../logger.js';
 import {getBluezDeviceProxy} from '../../bluezDeviceProxy.js';
 import {createConfig, createProperties, DataHandler} from '../../dataHandler.js';
-import {buds2to1BatteryLevel, validateProperties, launchConfigureWindow} from '../deviceUtils.js';
+import {
+    buds2to1BatteryLevel, validateProperties, launchConfigureWindow,
+    SppUUidType, SppUUid
+} from '../deviceUtils.js';
 import {MediaController} from '../mediaController.js';
 import {GalaxyBudsSocket} from './galaxyBudsSocket.js';
 import {checkForSamsungBuds} from './galaxyBudsDetector.js';
 import {
-    GalaxyBudsModel, GalaxyBudsModelList, GalaxyBudsAnc, BudsUUID, BudsLegacyUUID,
+    GalaxyBudsModel, GalaxyBudsModelList, GalaxyBudsAnc, BudsLegacyUUID,
     SamsungMepSppUUID, GalaxyBudsEarDetectionState
 } from './galaxyBudsConfig.js';
 
@@ -32,7 +35,7 @@ export function isGalaxyBuds(bluezDeviceProxy, uuids) {
     const bluezProps = [];
     let supported = 'no';
 
-    if (uuids.includes(SamsungMepSppUUID) && uuids.includes(BudsUUID)) {
+    if (uuids.includes(SamsungMepSppUUID) && uuids.includes(SppUUid)) {
         const name = bluezDeviceProxy.Name;
         if (checkForSamsungBuds(uuids, name))
             supported = 'yes';
@@ -153,8 +156,9 @@ export const GalaxyBudsDevice = GObject.registerClass({
         this._updateGsettings();
 
         const type = this._modelId === GalaxyBudsModel.GalaxyBuds
-            ? DeviceTypeGalaxyLegacy : DeviceTypeGalaxyBuds;
-        const uuid =  type === DeviceTypeGalaxyLegacy ? BudsLegacyUUID : BudsUUID;
+            ? DeviceTypeGalaxyLegacy : SppUUidType;
+
+        const uuid = type === DeviceTypeGalaxyLegacy ? BudsLegacyUUID : SppUUid;
 
         const profile = {type, uuid};
 

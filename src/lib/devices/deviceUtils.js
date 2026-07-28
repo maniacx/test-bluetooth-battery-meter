@@ -1,6 +1,9 @@
 'use strict';
 import {createConfigureWindow} from '../../appLibs/confirueWindowlauncher.js';
 
+export const SppUUidType = 'serial';
+export const SppUUid = '00001101-0000-1000-8000-00805f9b34fb';
+
 export function booleanFromByte(val) {
     switch (val) {
         case 0x00:
