@@ -690,7 +690,7 @@ export const ConfigureWindow = GObject.registerClass({
                 marks.push({mark: i, label: i === 0 ? _('Off') : String(i)});
 
             this._sideToneSlider = new SliderRowWidget({
-                rowTitle: _('Side Tone'),
+                rowTitle: _('Ambient Sound During Calls'),
                 range: [0, maxLevel, 1],
                 marks,
                 initialValue: this._settingsItems['side-tone'],
