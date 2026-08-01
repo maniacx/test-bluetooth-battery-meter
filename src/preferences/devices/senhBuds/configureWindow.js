@@ -599,14 +599,15 @@ export const ConfigureWindow = GObject.registerClass({
         }
 
         if (this._modelData.autoPowerOff) {
+            const autoPowerOffLabelsMap = {
+                0: _('Never'),
+                15: _('After 15 minutes'),
+                30: _('After 30 minutes'),
+                60: _('After 1 hour'),
+            };
+
             const options = this._modelData.autoPowerOff.map(v => {
-                switch (v) {
-                    case 0: return _('Never');
-                    case 15: return _('15 Minutes');
-                    case 30: return _('30 Minutes');
-                    case 60: return _('60 Minutes');
-                    default: return String(v);
-                }
+                return autoPowerOffLabelsMap[v] ?? String(v);
             });
 
             this._autoPowerOffDropdown = new DropDownRowWidget({

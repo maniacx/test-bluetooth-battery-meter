@@ -463,7 +463,7 @@ export const ConfigureWindow = GObject.registerClass({
             quickAmbientSound: _('Quick Ambient Sound'),
             volume: _('Volume Control'),
             ambientSound: _('Ambient Sound'),
-            spotifySpotOn: _('Spotify Spot On'),
+            spotifySpotOn: _('Spotify'),
             noiseControl: _('Noise Control'),
             anc: _('ANC'),
         };
