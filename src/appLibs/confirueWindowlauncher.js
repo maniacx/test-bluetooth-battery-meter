@@ -72,7 +72,14 @@ export function createConfigureWindow({
     if (!_settings || !_settings.get_strv)
         return null;
 
-    const list = _settings.get_strv(schemaKey).map(JSON.parse);
+    const list = _settings.get_strv(schemaKey).map(s => {
+        try {
+            const parsed = JSON.parse(s);
+            return parsed && typeof parsed === 'object' && 'path' in parsed ? parsed : null;
+        } catch (e) {
+            return null;
+        }
+    }).filter(e => e !== null);
     const entry = list.find(e => e.path === devicePath);
     if (!entry)
         return null;
