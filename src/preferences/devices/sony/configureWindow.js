@@ -486,7 +486,7 @@ export const ConfigureWindow = GObject.registerClass({
                 ];
 
                 this._autoPowerOffDropdown = new DropDownRowWidget({
-                title: _('Automatically Power Off When Not Worn'),
+                    title: _('Automatically Power Off When Not Worn'),
                     options: this._autoPowerOffLabels,
                     values: this._autoPowerOffValues,
                     initialValue: this._settingsItems['auto-power-time'],
