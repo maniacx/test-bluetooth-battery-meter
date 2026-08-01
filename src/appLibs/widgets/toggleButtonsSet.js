@@ -4,6 +4,8 @@ import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
 import Adw from 'gi://Adw';
 
+const NO_ACTIVE_TOGGLE_WORKAROUND_INDEX = 16;
+
 export const ToggleButtonsSet = GObject.registerClass({
     GTypeName: 'BudsLink_ToggleButtonsSet',
 }, class ToggleButtonsSet extends Gtk.Box {
@@ -94,7 +96,7 @@ export const ToggleButtonsSet = GObject.registerClass({
                 return;
 
             const active = this._group.active;
-            if (active < 0)
+            if (active < 0 || active === NO_ACTIVE_TOGGLE_WORKAROUND_INDEX)
                 return;
 
             const stateProp = this._isSecondSet ? 'toggle2State' : 'toggle1State';
@@ -114,11 +116,7 @@ export const ToggleButtonsSet = GObject.registerClass({
 
         const props = this._dataHandler.getProps();
         const index = this._isSecondSet ? props.toggle2State : props.toggle1State;
-
-        if (!index)
-            return;
-
-        const desired = index - 1;
+        const desired = index === 0 ? NO_ACTIVE_TOGGLE_WORKAROUND_INDEX : index - 1;
 
         if (this._group.active !== desired) {
             this._updatingFromProps = true;
