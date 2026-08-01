@@ -1,0 +1,935 @@
+'use strict';
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
+
+import {createLogger, getDeviceIdentifier, hexBytes} from '../logger.js';
+import {SocketHandler} from '../socketByProfile.js';
+// import {booleanFromByte, isValidByte} from '../deviceUtils.js';
+import {
+    Operator, CommandType, BudId
+} from './boseBudsConfig.js';
+
+/**
+Reference Material and Credits
+https://github.com/Denton-L/based-connect/tree/master
+
+https://github.com/aaronsb/bosectl/blob/main/docs/architecture.md
+**/
+
+const MAX_BUFFER_SIZE = 250;
+
+export const BoseBudsSocket = GObject.registerClass({
+    GTypeName: 'BudsLink_BoseSocket',
+}, class BoseBudsSocket extends SocketHandler {
+    _init(devicePath, profileManager, profile, modelData, callbacks) {
+        super._init(devicePath, profileManager, profile);
+        const identifier = getDeviceIdentifier(devicePath);
+        const tag = `BoseSocket-${identifier}`;
+        this._log = createLogger(tag);
+        this._log.info('BoseSocket init');
+        this._callbacks = callbacks;
+        this._rxBuffer = [];
+        this._txQueue = [];
+        this._pendingRequest = null;
+        this._pendingTimeout = null;
+        this._modelData = modelData;
+        this._battInfo = {
+            battery1Level: 0,
+            battery2Level: 0,
+            battery3Level: 0,
+            battery1Status: 'discharging',
+            battery2Status: 'discharging',
+            battery3Status: 'discharging',
+        };
+
+        this.startSocket();
+    }
+
+    postConnectInitialization() {
+        if (this._modelData.legacy)
+            this._getInitPacket();
+
+        this._getConfiguration();
+    }
+
+    _queueRequest(command, operator, payload, loginfo = '') {
+        this._txQueue.push({command, operator, payload, loginfo});
+        this._processQueue();
+    }
+
+    _processQueue() {
+        if (this._pendingRequest)
+            return;
+
+        if (this._txQueue.length === 0)
+            return;
+
+        const item = this._txQueue.shift();
+
+        if (item.loginfo)
+            this._log.info(item.loginfo);
+
+        this._encodeBose(item.command, item.operator, item.payload);
+        this._pendingRequest = item;
+
+        if (this._pendingTimeout) {
+            GLib.source_remove(this._pendingTimeout);
+            this._pendingTimeout = null;
+        }
+
+        this._pendingTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 250, () => {
+            this._log.info(`Response Timeout type: ${hexBytes(item.command)}`);
+            this._pendingRequest = null;
+            this._processQueue();
+            this._pendingTimeout = null;
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+
+    _completePendingRequest(msg) {
+        if (!this._pendingRequest)
+            return;
+
+        if (msg.command !== this._pendingRequest.command)
+            return;
+
+        if (this._pendingTimeout)
+            GLib.source_remove(this._pendingTimeout);
+
+        this._pendingTimeout = null;
+        this._pendingRequest = null;
+        this._processQueue();
+    }
+
+    _encodeBose(command, operator, payload = []) {
+        const out = [
+            command >> 8 & 0xFF,
+            command & 0xFF,
+            operator & 0x0F,
+            payload.length & 0xFF,
+            ...payload,
+        ];
+
+        this.sendMessage(out);
+    }
+
+    processData(bytes) {
+        this._rxBuffer.push(...bytes);
+
+        while (true) {
+            const msg = this._extractMessage();
+            if (!msg)
+                break;
+
+            this._handleMessage(msg);
+            this._completePendingRequest(msg);
+        }
+    }
+
+    _extractMessage() {
+        const buf = this._rxBuffer;
+
+        if (buf.length > MAX_BUFFER_SIZE) {
+            this._log.warning('RX buffer overflow, clearing');
+            buf.length = 0;
+            return null;
+        }
+
+        if (buf.length < 4)
+            return null;
+
+        const payloadLength = buf[3];
+        const totalLength = 4 + payloadLength;
+
+        if (buf.length < totalLength)
+            return null;
+
+        return this._parseMessage(buf.splice(0, totalLength));
+    }
+
+    _parseMessage(raw) {
+        return {
+            command: raw[0] << 8 | raw[1],
+            operator: raw[2] & 0x0F,
+            payload: raw.slice(4),
+        };
+    }
+
+    _handleMessage(msg) {
+        this._log.info(`command: ${hexBytes(msg.command)} operator: ${hexBytes(msg.operator)} ` +
+                `payload: [${hexBytes(msg.payload)}]`);
+
+        if (msg.payload.length < 1 || msg.operator === Operator.ERROR)
+            return;
+
+        switch (msg.command) {
+            case CommandType.FIRMWARE: {
+                this._parseFirmware(msg.payload);
+                break;
+            }
+
+            case CommandType.BATTERY: {
+                this._parseBatteryLevel(msg.payload);
+                break;
+            }
+
+            case CommandType.CHARGING_STATE: {
+                this._parseBatteryStatus(msg.payload);
+                break;
+            }
+
+            case CommandType.INEAR_STATE: {
+                if (!this._modelData.batterySingle)
+                    this._parseInEarState(msg.payload);
+                break;
+            }
+
+            case CommandType.EQ: {
+                if (this._modelData.eq)
+                    this._parseBatteryLevel(msg.payload);
+                break;
+            }
+
+            case CommandType.ANR: {
+                if (this._modelData.anr)
+                    this._parseAnr(msg.payload);
+                break;
+            }
+
+            case CommandType.AUDIOMODE_CAPABILTY: {
+                if (this._modelData.audioModes)
+                    this._parseAudioModesCapability(msg.payload);
+                break;
+            }
+
+            case CommandType.AUDIOMODE_CURRENT: {
+                if (this._modelData.audioModes)
+                    this._parseAudioModeCurrent(msg.payload);
+                break;
+            }
+
+            case CommandType.AUDIOMODE_RESTORE: {
+                if (this._modelData.audioModes)
+                    this._parseRestoreAudioMode(msg.payload);
+                break;
+            }
+
+            case CommandType.AUDIOMODE_FAV: {
+                if (this._modelData.audioModes)
+                    this._parseAudioModeFavorites(msg.payload);
+                break;
+            }
+
+            case CommandType.AUDIOMODE_CONFIG: {
+                if (this._modelData.audioModes)
+                    this._parseAudioMode(msg.payload);
+                break;
+            }
+
+            case CommandType.CNC: {
+                if (this._modelData.audioModes?.showNCInterface)
+                    this._parseCnc(msg.payload);
+                break;
+            }
+
+            case CommandType.SPATIAL_AUDIO: {
+                if (this._modelData.audioModes?.spatialMode)
+                    this._parseSpatialAudio(msg.payload);
+                break;
+            }
+
+            case CommandType.DUALCONNECTION: {
+                if (this._modelData.dualConnection)
+                    this._parseDualConnection(msg.payload);
+                break;
+            }
+
+            case CommandType.SIDETONE: {
+                if (this._modelData.sideTone)
+                    this._parseSideTone(msg.payload);
+                break;
+            }
+
+            case CommandType.INEAR_SETTINGS: {
+                if (this._modelData.inEarSettings)
+                    this._parseInEarSettings(msg.payload);
+                break;
+            }
+
+            case CommandType.AUTO_ANSWER: {
+                if (!this._modelData.inEarSettings && this._modelData.autoAnswer)
+                    this._parseAutoAnswer(msg.payload);
+                break;
+            }
+
+            case CommandType.AUTO_PAUSE: {
+                if (!this._modelData.inEarSettings && this._modelData.autoPause)
+                    this._parseAutoPause(msg.payload);
+                break;
+            }
+
+            case CommandType.VOICE_PROMPTS: {
+                if (this._modelData.voicePrompt)
+                    this._parseVoicePrompt(msg.payload);
+                break;
+            }
+
+            case CommandType.AUTO_POWER_OFF_TIME: {
+                if (this._modelData.automaticPowerOffTimer)
+                    this._parseAutoPowerOffTimer(msg.payload);
+                break;
+            }
+
+            case CommandType.BUTTONS: {
+                if (this._modelData.gesture)
+                    this._parseActionButton(msg.payload);
+                break;
+            }
+
+            default:
+                this._log.info(`Unhandled command ${hexBytes(msg.command)}`);
+        }
+    }
+
+    _encode(command, operator, loginfo, payload = []) {
+        this._queueRequest(command, operator, payload, loginfo);
+    }
+
+    _getInitPacket() {
+        const loginfo = 'Get Init';
+        this._encode(CommandType.INIT, Operator.GET, loginfo);
+    }
+
+    _getConfiguration() {
+        this._getFirmware();
+        this._getBatteryLevel();
+        this._getBatteryStatus();
+
+        if (!this._modelData.batterySingle)
+            this._getInEarState();
+
+        if (this._modelData.eq)
+            this._getEq();
+
+        if (this._modelData.anr)
+            this._getAnr();
+
+        if (this._modelData.audioModes) {
+            this._getAudioModesCapability();
+            this._getAllAudioModes();
+            this._getAudioModeCurrent();
+            this._getRestoreAudioMode();
+            this._getAudioModeFavorites();
+        }
+
+        if (this._modelData.audioModes?.showNCInterface)
+            this._getCnc();
+
+        if (this._modelData.audioModes?.spatialMode)
+            this._getSpatialAudio();
+
+        if (this._modelData.dualConnection)
+            this._getDualConnection();
+
+        if (this._modelData.sideTone)
+            this._getSideTone();
+
+        if (this._modelData.inEarSettings)
+            this._getInEarSettings();
+
+        if (!this._modelData.inEarSettings && this._modelData.autoAnswer)
+            this._getAutoAnswer();
+
+        if (!this._modelData.inEarSettings && this._modelData.autoPause)
+            this._getAutoPause();
+
+        if (this._modelData.voicePrompt)
+            this._getVoicePrompt();
+
+        if (this._modelData.automaticPowerOffTimer)
+            this._getAutoPowerOffTimer();
+
+        if (this._modelData.gesture)
+            this._getActionButton();
+    }
+
+    _getFirmware() {
+        const loginfo = 'Get Firmware';
+        this._encode(CommandType.FIRMWARE, Operator.GET, loginfo);
+    }
+
+    _parseFirmware(payload) {
+        if (!payload.length)
+            return;
+
+        const decoder = new TextDecoder();
+        const fw = decoder.decode(Uint8Array.from(payload));
+
+        this._log.info(`Parse Firmware: ${fw}`);
+        this._callbacks?.updateFirmware?.(fw);
+    }
+
+    _getBatteryLevel() {
+        const loginfo = 'Get Battery Level';
+        this._encode(CommandType.BATTERY, Operator.GET, loginfo);
+    }
+
+    _parseBatteryLevel(payload) {
+        if (this._modelData.legacy) {
+            if (payload.length  < 1)
+                return;
+
+            this._battInfo.battery1Level = payload[0];
+            this._callbacks?.updateBatteryProps?.(this._battInfo);
+            return;
+        }
+
+        if (payload.length < 4)
+            return;
+
+        this._log.info('Parse Battery Level');
+
+        for (let i = 0; i + 3 < payload.length; i += 4) {
+            const level = payload[i];
+            const budId = payload[i + 3];
+
+            switch (budId) {
+                case BudId.Left:
+                    this._battInfo.battery1Level = level;
+                    break;
+
+                case BudId.Right:
+                    this._battInfo.battery2Level = level;
+                    break;
+
+                case BudId.Case:
+                    this._battInfo.battery3Level = level;
+                    break;
+
+                case BudId.Single:
+                default:
+                    this._battInfo.battery1Level = level;
+                    break;
+            }
+        }
+
+        this._callbacks?.updateBatteryProps?.(this._battInfo);
+    }
+
+    _getBatteryStatus() {
+        const loginfo = 'Get Battery Status';
+        this._encode(CommandType.CHARGING_STATE, Operator.GET, loginfo);
+    }
+
+    _parseBatteryStatus(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse Battery Status');
+
+        const status = payload[0] === 1 ? 'charging' : 'discharging';
+
+        if (this._modelData.batterySingle)
+            this._battInfo.battery1Status = status;
+        else
+            this._battInfo.battery3Status = status;
+
+        this._callbacks?.updateBatteryProps?.(this._battInfo);
+    }
+
+    _getInEarState() {
+        const loginfo = 'Get InEar State';
+        this._encode(CommandType.INEAR_STATE, Operator.GET, loginfo);
+    }
+
+    _parseInEarState(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse In Ear State');
+
+        const left = (payload[0] & 0x01) === 0x01;
+        const right = (payload[0] & 0x02) === 0x02;
+
+        this._callbacks?.updateInEarState?.(left, right);
+    }
+
+    _getEq() {
+        const loginfo = 'Get EqConfig';
+        this._encode(CommandType.EQ, Operator.GET, loginfo);
+    }
+
+
+    _parseEq(payload) {
+        const bands = this._modelData?.eq?.band ?? [];
+        const range = this._modelData?.eq?.range ?? 0;
+        const bandCount = bands.length;
+
+        if (payload.length !== bandCount * 4) {
+            this._log.info(`Parse EqBand: unexpected payload length ${payload.length}`);
+            return;
+        }
+
+        this._log.info('Parse EqBand');
+
+        const arr = [];
+
+        for (let i = 0; i < bandCount; i++) {
+            const offset = i * 4;
+
+            let minVal = payload[offset];
+            if (minVal >= 128)
+                minVal -= 256;
+
+            let maxVal = payload[offset + 1];
+            if (maxVal >= 128)
+                maxVal -= 256;
+
+            if (Math.abs(minVal) !== range || Math.abs(maxVal) !== range)
+                this._log.info(`EQ range mismatch ${minVal} - ${maxVal}, expected: ±${range}`);
+
+            let current = payload[offset + 2];
+            if (current >= 128)
+                current -= 256;
+
+            const band = payload[offset + 3];
+
+            arr.push({current, band});
+        }
+
+        this._callbacks?.updateEq?.(arr);
+    }
+
+    setEq(current, band) {
+        const loginfo = 'Set EqBand';
+        const payload = [current  & 0xFF, band];
+        this._encode(CommandType.EQ, Operator.SETGET, loginfo, payload);
+    }
+
+    _getAnr() {
+        const loginfo = 'Get ANR';
+        this._encode(CommandType.ANR, Operator.GET, loginfo);
+    }
+
+    _parseAnr(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse Anr');
+        const mode = payload[0];
+        this._callbacks?.updateAnr?.(mode);
+    }
+
+    setAnr(mode) {
+        const loginfo = 'Set ANR';
+        const payload = [mode];
+        this._encode(CommandType.ANR, Operator.SETGET, loginfo, payload);
+    }
+
+    _getAudioModesCapability() {
+        const loginfo = 'Get AudioModes Capability';
+        this._encode(CommandType.AUDIOMODE_CAPABILTY, Operator.GET, loginfo);
+    }
+
+    _parseAudioModesCapability(payload) {
+        this._log.info('Parse AudioModes Capability');
+
+        if (payload.length < 6) {
+            this._log.warn(`AudioModes Capability payload too short: ${payload.length}`);
+            return;
+        }
+
+        const boseModes = payload[0];
+        const userModes = payload[1];
+        const flags = payload[5];
+        const minFavorites = payload.length >= 7 ? payload[6] : 0;
+
+        this._log.info(
+            `AudioModes: boseModes: ${boseModes}, ` +
+            `userModes: ${userModes}, ` +
+            `cnc: ${!!(flags & 0x01)}, ` +
+            `autoCnc: ${!!(flags & 0x02)}, ` +
+            `spatial: ${!!(flags & 0x04)}, ` +
+            `wind: ${!!(flags & 0x08)}, ` +
+            `favorites: ${!!(flags & 0x10)}, ` +
+            `ancToggle: ${!!(flags & 0x20)}, ` +
+            `minFavorites: ${minFavorites}`
+        );
+    }
+
+    _getAudioModeCurrent() {
+        const loginfo = 'Get AudioMode Current';
+        this._encode(CommandType.AUDIOMODE_CURRENT, Operator.GET, loginfo);
+    }
+
+    _parseAudioModeCurrent(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse AudioMode Current');
+        const modeIndex = payload[0];
+        this._callbacks?.updateAudioModeCurrent?.(modeIndex);
+    }
+
+    setCurrentAudioMode(modeIndex, playVoicePrompt = false) {
+        const loginfo = 'Set AudioMode Current';
+        const payload = [modeIndex, playVoicePrompt ? 0x01 : 0x00];
+        this._encode(CommandType.AUDIOMODE_CURRENT, Operator.START, loginfo, payload);
+    }
+
+    _getRestoreAudioMode() {
+        const loginfo = 'Get AudioMode Restore';
+        this._encode(CommandType.AUDIOMODE_RESTORE, Operator.GET, loginfo);
+    }
+
+    _parseRestoreAudioMode(payload) {
+        if (payload.length < 1)
+            return;
+
+        const enabled = payload[0] === 0x01;
+        this._callbacks?.updateAudioModeRestore?.(enabled);
+    }
+
+    setRestoreAudioMode(enabled) {
+        const loginfo = 'Set AudioMode Restore';
+        const payload = [enabled ? 0x01 : 0x00];
+        this._encode(CommandType.AUDIOMODE_RESTORE, Operator.SETGET, loginfo, payload);
+    }
+
+    _getAudioModeFavorites() {
+        const loginfo = 'Get AudioMode Favorites';
+        this._encode(CommandType.AUDIOMODE_FAV, Operator.GET, loginfo);
+    }
+
+    _parseAudioModeFavorites(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse AudioMode Favorites');
+
+        const modeCount = payload[0];
+        const favorites = [];
+        const maskBytes = Math.ceil(modeCount / 8);
+
+        for (let byteIndex = maskBytes; byteIndex >= 1; byteIndex--) {
+            const value = payload[byteIndex];
+
+            for (let bit = 0; bit < 8; bit++) {
+                if ((value >> bit & 0x01) === 1)
+                    favorites.push((maskBytes - byteIndex) * 8 + bit);
+            }
+        }
+
+        this._callbacks?.updateAudioModeFavorites?.(favorites);
+    }
+
+    setAudioModeFavorites(modeCount, favorites) {
+        const loginfo = 'Set AudioMode Favorites';
+        const maskBytes = Math.ceil(modeCount / 8);
+        const payload = new Array(maskBytes + 1).fill(0);
+
+        payload[0] = modeCount;
+
+        for (const mode of favorites) {
+            const byteIndex = maskBytes - Math.floor(mode / 8);
+            payload[byteIndex] |= 1 << mode % 8;
+        }
+
+        this._encode(CommandType.AUDIOMODE_FAV, Operator.SETGET, loginfo, payload);
+    }
+
+    _getAllAudioModes() {
+        const loginfo = 'Get All AudioModes';
+        this._encode(CommandType.AUDIOMODE_GETALL, Operator.START, loginfo);
+    }
+
+    _parseAudioMode(payload) {
+        if (payload.length < 44)
+            return;
+
+        this._log.info('Parse AudioMode Config');
+
+        const index = payload[0];
+        const id = payload[2];
+        const editable = payload[3] === 1;
+        const added = payload[4] === 1;
+        const fav = payload[5] === 1;
+
+        let end = 6;
+        while (end < 38 && payload[end] !== 0)
+            end++;
+
+        const name = new TextDecoder().decode(
+            Uint8Array.from(payload.slice(6, end))
+        );
+
+        const config = {
+            index,
+            id,
+            editable,
+            added,
+            fav,
+            name,
+            flag: payload[41],
+            cnc: payload[42],
+            autoCnc: payload[43] === 1,
+            spatial: payload.length >= 45 ? payload[44] : 0,
+            wind: payload.length >= 47 ? payload[46] : 0,
+            anc: payload.length >= 48 ? payload[47] : 0,
+        };
+
+        this._log.info(`Parse AudioMode Config: ${JSON.stringify(config)}`);
+        this._callbacks?.updateAudioMode?.(config);
+    }
+
+    setAudioMode(mode) {
+        const nameBuf = new Uint8Array(32);
+        nameBuf.set(new TextEncoder().encode(mode.name).slice(0, 31));
+
+        const payload = [
+            mode.index,
+            0x00,
+            mode.id,
+            ...nameBuf,
+            mode.cnc,
+            mode.autoCnc,
+            mode.spatial,
+            mode.wind,
+            mode.anc,
+        ];
+
+        const loginfo = 'Set AudioMode';
+        this._encode(CommandType.AUDIOMODE_CONFIG, Operator.SETGET, loginfo, payload);
+    }
+
+    _getCnc() {
+        const loginfo = 'Get Noise Cancellation';
+        this._encode(CommandType.CNC, Operator.GET, loginfo);
+    }
+
+    _parseCnc(payload) {
+        if (payload.length < 3)
+            return;
+
+        this._log.info('Parse Noise Cancellation');
+        const level = payload[1];
+        const enabled = (payload[2] & 0x01) !== 0;
+
+        this._callbacks?.updateCnc?.(level, enabled);
+    }
+
+    setCnc(level, enabled) {
+        const loginfo = 'Set Noise Cancellation';
+        const payload = [level, enabled ? 1 : 0];
+        this._encode(CommandType.CNC, Operator.SETGET, loginfo, payload);
+    }
+
+    _getSpatialAudio() {
+        this._encode(CommandType.SPATIAL_AUDIO, Operator.GET, 'Get Spatial Audio');
+    }
+
+    _parseSpatialAudio(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse SpatialAudio');
+        const mode = payload[0];
+        this._callbacks?.updateSpatialAudio?.(mode);
+    }
+
+    setSpatialAudio(mode) {
+        const loginfo = 'Set Spatial Audio';
+        const payload = [mode];
+        this._encode(CommandType.SPATIAL_AUDIO, Operator.SETGET, loginfo, payload);
+    }
+
+    _getDualConnection() {
+        const loginfo = 'Get DualConnection';
+        this._encode(CommandType.DUALCONNECTION, Operator.GET, loginfo);
+    }
+
+    _parseDualConnection(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse DualConnection');
+        const enabled = (payload[0] & 0x01) !== 0;
+        this._callbacks?.updateDualConnection?.(enabled);
+    }
+
+    setDualConnection(enabled) {
+        const loginfo = 'Set DualConnection';
+        const payload = [enabled ? 0x01 : 0x00];
+        this._encode(CommandType.DUALCONNECTION, Operator.SETGET, loginfo, payload);
+    }
+
+
+    _getSideTone() {
+        const loginfo = 'Get SideTone';
+        this._encode(CommandType.SIDETONE, Operator.GET, loginfo);
+    }
+
+    _parseSideTone(payload) {
+        if (payload.length < 2)
+            return;
+
+        this._log.info('Parse SideTone');
+        const level = payload[1];
+        if (level > this._modelData.sideTone - 1) {
+            this._log.info(`Received invalid side tone level: ${level} Supported?`);
+            return;
+        }
+        this._callbacks?.updateSideTone?.(level);
+    }
+
+    setSideTone(level) {
+        const loginfo = 'Set SideTone';
+        const payload = [0x01, level];
+        this._encode(CommandType.SIDETONE, Operator.SETGET, loginfo, payload);
+    }
+
+    _getInEarSettings() {
+        const loginfo = 'Get InEarSettings';
+        this._encode(CommandType.INEAR_SETTINGS, Operator.GET, loginfo);
+    }
+
+    _parseInEarSettings(payload) {
+        if (payload.length < 2)
+            return;
+
+        this._log.info('Parse InEarSettings');
+
+        const enabled = payload[0] === 1;
+        const flags = payload[1];
+
+        const autoPause = (flags & 0x01) !== 0;
+        const autoAnswer = (flags & 0x02) !== 0;
+        const autoTransparency = (flags & 0x04) !== 0;
+
+        this._log.info(`Parse InEarSettings enabled: ${enabled} autoPause: ${autoPause} ` +
+            `autoAnswer: ${autoAnswer} autoTransparency: ${autoTransparency}`);
+
+        this._callbacks?.updateInEarSettings?.(enabled, autoPause, autoAnswer, autoTransparency);
+    }
+
+    setInEarSettings(enabled, autoPauseEnabled, autoAnswerEnabled, autoTransparencyEnabled) {
+        const loginfo = 'Set InEarSettings';
+        const payload = [
+            enabled ? 0x01 : 0x00,
+            (autoPauseEnabled ? 0x01 : 0x00) |
+            (autoAnswerEnabled ? 0x02 : 0x00) |
+            (autoTransparencyEnabled ? 0x04 : 0x00),
+        ];
+        this._encode(CommandType.INEAR_SETTINGS, Operator.SETGET, loginfo, payload);
+    }
+
+    _getAutoAnswer() {
+        const loginfo = 'Get AutoAnswer';
+        this._encode(CommandType.AUTO_ANSWER, Operator.GET, loginfo);
+    }
+
+    _parseAutoAnswer(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse AutoAnswer');
+        const enabled = (payload[0] & 0x01) !== 0;
+        this._callbacks?.updateAutoAnswer?.(enabled);
+    }
+
+    setAutoAnswer(enabled) {
+        const loginfo = 'Set AutoAnswer';
+        const payload = [enabled ? 0x01 : 0x00];
+        this._encode(CommandType.AUTO_ANSWER, Operator.SETGET, loginfo, payload);
+    }
+
+    _getAutoPause() {
+        const loginfo = 'Get AutoPause';
+        this._encode(CommandType.AUTO_PAUSE, Operator.GET, loginfo);
+    }
+
+    _parseAutoPause(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse AutoPause');
+        const enabled = payload[0] === 0x01;
+        this._callbacks?.updateAutoPause?.(enabled);
+    }
+
+    setAutoPause(enabled) {
+        const loginfo = 'Set AutoPause';
+        const payload = [enabled ? 0x01 : 0x00];
+        this._encode(CommandType.AUTO_PAUSE, Operator.SETGET, loginfo, payload);
+    }
+
+    _getAutoPowerOffTimer() {
+        const loginfo = 'Get AutoPowerOffTimer';
+        this._encode(CommandType.AUTO_POWER_OFF_TIME, Operator.GET, loginfo);
+    }
+
+    _parseAutoPowerOffTimer(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse AutoPowerOffTimer');
+        const minutes = payload[0];
+        this._callbacks?.updateAutoPowerOffTimer?.(minutes);
+    }
+
+    setAutoPowerOffTimer(minutes) {
+        const loginfo = 'Set AutoPowerOffTimer';
+        const payload = [minutes];
+        this._encode(CommandType.AUTO_POWER_OFF_TIME, Operator.SETGET, loginfo, payload);
+    }
+
+    _getVoicePrompt() {
+        const loginfo = 'Get VoicePrompt';
+        this._encode(CommandType.VOICE_PROMPTS, Operator.GET, loginfo);
+    }
+
+    _parseVoicePrompt(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse VoicePrompt');
+        const value = payload[0];
+        const enabled = Boolean(value >> 5 & 0x01);
+        const language = value & 0x1F;
+        this._callbacks?.updateVoicePrompt?.(enabled, language);
+    }
+
+    setVoicePrompt(enabled, language) {
+        const loginfo = 'Set VoicePrompt';
+        const payload = [(enabled ? 1 : 0) << 5 | language & 0x1F];
+        this._encode(CommandType.VOICE_PROMPTS, Operator.SETGET, loginfo, payload);
+    }
+
+    _getActionButton() {
+        const loginfo = 'Get Action Button';
+        this._encode(CommandType.BUTTONS, Operator.GET, loginfo);
+    }
+
+    _parseActionButton(payload) {
+        if (payload.length < 3)
+            return;
+
+        this._log.info('Parse Action Button');
+
+        const buttonId = payload[0];
+        const eventType = payload[1];
+        const action = payload[2];
+
+        this._callbacks?.updateActionButton?.(buttonId, eventType, action);
+    }
+
+    setActionButton(id, eventType, action) {
+        const loginfo = 'Set Action Button';
+        const payload = [id, eventType, action];
+        this._encode(CommandType.BUTTONS, Operator.SETGET, loginfo, payload);
+    }
+
+    destroy() {
+        super.destroy?.();
+    }
+});

@@ -1,0 +1,87 @@
+'use strict';
+
+import QC35SE from './deviceConfigs/QC35SE.js';
+import QCEarbuds2 from './deviceConfigs/QCEarbuds2.js';
+import QCUltra2Headphones from './deviceConfigs/QCUltra2Headphones.js';
+import QCUltraEarbuds from './deviceConfigs/QCUltraEarbuds.js';
+
+export const BoseBudsModelList = [
+    QC35SE,
+    QCEarbuds2,
+    QCUltra2Headphones,
+    QCUltraEarbuds,
+];
+
+export const Operator = {
+    SET: 0x00,
+    GET: 0x01,
+    SETGET: 0x02,
+    STATUS: 0x03,
+    ERROR: 0x04,
+    START: 0x05,
+    RESULT: 0x06,
+    PROCESSING: 0x07,
+};
+
+export const SourceType = {
+    NONE: 0,
+    BLUETOOTH: 1,
+    AUXILIARY: 2,
+};
+
+export const CommandType = {
+    INIT: 0x0001,
+    FIRMWARE: 0x0005,
+    PRODUCT_NAME: 0x0102,
+    VOICE_PROMPTS: 0x0103,
+    AUTO_POWER_OFF_TIME: 0x0104,
+    CNC: 0x0105,
+    ANR: 0x0106,
+    EQ: 0x0107,
+    BUTTONS: 0x0109,
+    DUALCONNECTION: 0x010A,
+    SIDETONE: 0x010B,
+    INEAR_SETTINGS: 0x0110,
+    AUTO_PAUSE: 0x0118,
+    AUTO_ANSWER: 0x011B,
+    BATTERY: 0x0202,
+    CHARGING_STATE: 0x0205,
+    INEAR_STATE: 0x0209,
+    PAIRING: 0x0408,
+    SOURCE: 0x0501,
+    SPATIAL_AUDIO: 0x050F,
+    POWER: 0x0704,
+    AUDIOMODE_GETALL: 0x1F01,
+    AUDIOMODE_CAPABILTY: 0x1F02,
+    AUDIOMODE_CURRENT: 0x1F03,
+    AUDIOMODE_DEFAULT: 0x1F04,
+    AUDIOMODE_RESTORE: 0x1F05,
+    AUDIOMODE_CONFIG: 0x1F06,
+    AUDIOMODE_FAV: 0x1F08,
+    AUDIO_SETTNGS: 0x1F0A,
+};
+
+export const BudId = {
+    Single: 0x00,
+    Right: 0x01,
+    Left: 0x02,
+    Case: 0x03,
+};
+
+export const AudioModes = {
+    1: 'quiet',
+    2: 'aware',
+    34: 'immersion',
+    36: 'cinema',
+    7: 'commute',
+    13: 'focus',
+    10: 'home',
+    12: 'music',
+    8: 'outdoor',
+    14: 'relax',
+    20: 'run',
+    21: 'walk',
+    11: 'work',
+    9: 'workout',
+};
+

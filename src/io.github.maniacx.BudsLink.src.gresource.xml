@@ -70,6 +70,19 @@
         <file>lib/devices/airpods/deviceConfigs/PowerbeatsPro2.js</file>
         <file>preferences/devices/airpods/configureWindow.js</file>
 
+        <file>lib/devices/boseBuds/boseBudsConfig.js</file>
+        <file>lib/devices/boseBuds/boseBudsDevice.js</file>
+        <file>lib/devices/boseBuds/boseBudsSocket.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QC35.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QC35SE.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QCEarbuds2.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QCUltra2Earbuds.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QCUltra2Headphones.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QCUltraEarbuds.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QCUltraHeadphones.js</file>
+        <file>preferences/devices/boseBuds/configureWindow.js</file>
+        <file>preferences/devices/boseBuds/modesGroupWidget.js</file>
+
         <file>lib/devices/galaxyBuds/galaxyBudsConfig.js</file>
         <file>lib/devices/galaxyBuds/galaxyBudsDetector.js</file>
         <file>lib/devices/galaxyBuds/galaxyBudsDevice.js</file>
