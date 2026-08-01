@@ -7,6 +7,7 @@ export default {
 
     batterySingle: true,
     legacy: true,
+
     anr: {
         off: 0x00,
         low: 0x03,

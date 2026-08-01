@@ -78,7 +78,6 @@ export default {
         windToggle: true,
         showNCInterface: true,
         spatialMode: true,
-        spatialPreset: ['immersion'],
         userMode: [
             'commute', 'focus', 'home', 'music', 'outdoor', 'relax',
             'run', 'walk', 'work', 'workout',

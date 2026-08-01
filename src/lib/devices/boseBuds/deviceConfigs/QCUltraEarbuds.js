@@ -72,13 +72,12 @@ export default {
                 spatial: 2,
             },
         },
-        showNCInterface: true,
+
         ancToggle: false,
         nc: {level: 10, steps: 1},
         autoNc: false,
         windToggle: false,
         spatialMode: true,
-        spatialPreset: ['immersion'],
         userMode: [
             'commute', 'focus', 'home', 'music', 'outdoor', 'relax',
             'run', 'walk', 'work', 'workout',
