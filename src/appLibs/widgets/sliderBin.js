@@ -3,6 +3,8 @@ import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
 import GLib from 'gi://GLib';
 
+const THROTTLE_DELAY = 1000;
+
 export const SliderBin = GObject.registerClass({
     GTypeName: 'BudsLink_SliderBin',
 }, class SliderBin extends Gtk.Box {
@@ -18,8 +20,10 @@ export const SliderBin = GObject.registerClass({
         this._id = id;
 
         this._programmaticUpdate = false;
-        this._dragTimeoutId = 0;
-
+        this._pendingSliderValue = null;
+        this._lastSentSliderValue = null;
+        this._sliderTimeoutId = null;
+        this._isDragging = false;
         const config = dataHandler.getConfig();
 
         const title = new Gtk.Label({
@@ -75,19 +79,38 @@ export const SliderBin = GObject.registerClass({
             if (this._programmaticUpdate)
                 return;
 
-            this._setDragging(true);
-
             const value = Math.round(this._scale.get_value());
-            dataHandler.emitUIAction(`box${id}SliderValue`, value);
-            this._restartDragTimeout();
+            this._throttleSliderValue(value);
         });
 
         this._dataHandlerId = dataHandler.connect('properties-changed', () => {
             const value = dataHandler.getProps()[`box${id}SliderValue`];
             this._setSliderValue(value);
         });
-    }
 
+        const controllers = this._scale.observe_controllers();
+
+        for (let i = 0; i < controllers.get_n_items(); i++) {
+            const controller = controllers.get_item(i);
+
+            if (controller instanceof Gtk.GestureClick) {
+                this._scaleGesture = controller;
+
+                this._scalePressedId = controller.connect('pressed', () => {
+                    this._isDragging = true;
+                    this._setDragging();
+                });
+
+                this._scaleReleasedId = controller.connect('released', () => {
+                    this._isDragging = false;
+                    if (!this._sliderTimeoutId)
+                        this._setDragging();
+                });
+
+                break;
+            }
+        }
+    }
 
     _setSliderValue(value) {
         this._programmaticUpdate = true;
@@ -95,35 +118,46 @@ export const SliderBin = GObject.registerClass({
         this._programmaticUpdate = false;
     }
 
-    _setDragging(active) {
-        this._dataHandler.emitUIAction(
-            `box${this._id}SliderIsDragging`,
-            active ? 1 : 0
-        );
+    _setDragging() {
+        this._dataHandler.emitUIAction(`box${this._id}SliderIsDragging`, this._isDragging ? 1 : 0);
     }
 
-    _restartDragTimeout() {
-        if (this._dragTimeoutId) {
-            GLib.source_remove(this._dragTimeoutId);
-            this._dragTimeoutId = 0;
+    _throttleSliderValue(value) {
+        this._pendingSliderValue = value;
+
+        if (this._sliderTimeoutId)
+            return;
+
+        this._emitPendingSliderValue();
+
+        this._sliderTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, THROTTLE_DELAY, () => {
+            if (this._pendingSliderValue !== null) {
+                this._emitPendingSliderValue();
+                return GLib.SOURCE_CONTINUE;
+            }
+
+            this._sliderTimeoutId = null;
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+
+    _emitPendingSliderValue() {
+        const value = this._pendingSliderValue;
+        this._pendingSliderValue = null;
+
+        if (value !== this._lastSentSliderValue) {
+            this._lastSentSliderValue = value;
+            this._dataHandler.emitUIAction(`box${this._id}SliderValue`, value);
         }
 
-        this._dragTimeoutId = GLib.timeout_add(
-            GLib.PRIORITY_DEFAULT,
-            200,
-            () => {
-                this._dragTimeoutId = 0;
-                this._setDragging(false);
-                return GLib.SOURCE_REMOVE;
-            }
-        );
+        if (!this._isDragging)
+            this._setDragging();
     }
 
     destroy() {
-        if (this._dragTimeoutId) {
-            GLib.source_remove(this._dragTimeoutId);
-            this._dragTimeoutId = 0;
-        }
+        if (this._sliderTimeoutId)
+            GLib.source_remove(this._sliderTimeoutId);
+        this._sliderTimeoutId = null;
 
         if (this._dataHandler && this._dataHandlerId)
             this._dataHandler.disconnect(this._dataHandlerId);
@@ -135,6 +169,18 @@ export const SliderBin = GObject.registerClass({
             this._scale.disconnect(this._scaleId);
 
         this._scaleId = null;
+
+        if (this._scaleGesture) {
+            if (this._scalePressedId)
+                this._scaleGesture.disconnect(this._scalePressedId);
+
+            if (this._scaleReleasedId)
+                this._scaleGesture.disconnect(this._scaleReleasedId);
+        }
+
+        this._scaleGesture = null;
+        this._scalePressedId = null;
+        this._scaleReleasedId = null;
         this._scale = null;
     }
 });
