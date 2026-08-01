@@ -7,7 +7,7 @@ export default {
         pid: [0x5069, 0x505F],
     },
 
-    batteryMutiple: true,
+    batteryMultiple: true,
     batteryCase: true,
 
     albumArtIcon: 'earbuds-stem',
