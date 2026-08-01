@@ -6,7 +6,6 @@ import {
     supportedAudioSingleIcons, supportedAudioDualIcons, supportedCaseIcons
 } from '../../../lib/widgets/iconGroups.js';
 import {DropDownRowWidget} from './../../widgets/dropDownRowWidget.js';
-import {SliderRowWidget} from './../../widgets/sliderRowWidget.js';
 import {IconSelectorWidget} from './../../widgets/iconSelectorWidget.js';
 import {RadioButtonRowWidget} from './../../widgets/radioButtonRowWidget.js';
 import {EqualizerWidget} from './../../widgets/equalizerWidget.js';
@@ -151,8 +150,8 @@ export const ConfigureWindow = GObject.registerClass({
             if (this._autoTransparencySwitch)
                 this._autoTransparencySwitch.active = this._settingsItems['auto-transp'];
 
-            if (this._sideToneSlider)
-                this._sideToneSlider.value = this._settingsItems['side-tone'];
+            if (this._sideToneDropdown)
+                this._sideToneDropdown.selected_item = this._settingsItems['side-tone'];
 
             if (this._dualConnSwitch)
                 this._dualConnSwitch.active = this._settingsItems['multipoint'];
@@ -455,37 +454,36 @@ export const ConfigureWindow = GObject.registerClass({
     }
 
     _addCallsSetting() {
-        if (!this._modelData.sideTone && !this._modelData.comfortCalls)
+        const st = this._modelData.sideTone;
+        if (!st)
             return;
 
         const _ = this._gettext;
         const callGroup = new Adw.PreferencesGroup({title: _('Calls Settings')});
         this._page.add(callGroup);
 
-        if (this._modelData.sideTone) {
-            const maxLevel = this._modelData.sideTone - 1;
+        const sideToneLabelsMap = {
+            [st.off]: _('Off'),
+            [st.low]: _('Low'),
+            [st.mid]: _('Medium'),
+            [st.high]: _('High'),
+        };
 
-            const marks = [];
+        const values = Object.values(st);
+        const options = values.map(value => sideToneLabelsMap[value]);
 
-            for (let i = 0; i <= maxLevel; i++)
-                marks.push({mark: i, label: i === 0 ? _('Off') : String(i)});
+        this._sideToneDropdown = new DropDownRowWidget({
+            title: _('Ambient Sound During Calls'),
+            options,
+            values,
+            initialValue: this._settingsItems['side-tone'],
+        });
 
-            this._sideToneSlider = new SliderRowWidget({
-                rowTitle: _('Ambient Sound During Calls'),
-                range: [0, maxLevel, 1],
-                marks,
-                initialValue: this._settingsItems['side-tone'],
-                snapOnStep: true,
-            });
+        this._sideToneDropdown.connect('notify::selected-item', () => {
+            this._updateGsettings('side-tone', this._sideToneDropdown.selected_item);
+        });
 
-            this._sideToneSlider.compact_mode = this._isCompactMode;
-
-            this._sideToneSlider.connect('notify::value', () => {
-                this._updateGsettings('side-tone', this._sideToneSlider.value);
-            });
-
-            callGroup.add(this._sideToneSlider);
-        }
+        callGroup.add(this._sideToneDropdown);
     }
 
     _addMiscSetting() {
@@ -758,6 +756,6 @@ export const ConfigureWindow = GObject.registerClass({
     }
 
     _updateCompactStatus() {
-        this._sideToneSlider?.set_property('compact-mode', this._isCompactMode);
+
     }
 });

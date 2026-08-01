@@ -775,10 +775,6 @@ export const BoseBudsSocket = GObject.registerClass({
 
         this._log.info('Parse SideTone');
         const level = payload[1];
-        if (level > this._modelData.sideTone - 1) {
-            this._log.info(`Received invalid side tone level: ${level} Supported?`);
-            return;
-        }
         this._callbacks?.updateSideTone?.(level);
     }
 

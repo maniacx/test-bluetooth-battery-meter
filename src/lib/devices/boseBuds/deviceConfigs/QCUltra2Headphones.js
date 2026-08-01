@@ -97,7 +97,13 @@ export default {
         maxAllowedFav: 10,
     },
 
-    sideTone: 4,
+    sideTone: {
+        off: 0x00,
+        low: 0x03,
+        mid: 0x02,
+        high: 0x01,
+    },
+
     inEarSettings: true,
     autoAnswer: true,
     autoPause: true,
