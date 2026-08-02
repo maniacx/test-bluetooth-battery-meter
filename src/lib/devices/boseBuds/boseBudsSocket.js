@@ -4,7 +4,6 @@ import GObject from 'gi://GObject';
 
 import {createLogger, getDeviceIdentifier, hexBytes} from '../logger.js';
 import {SocketHandler} from '../socketByProfile.js';
-// import {booleanFromByte, isValidByte} from '../deviceUtils.js';
 import {
     Operator, CommandType, BudId
 } from './boseBudsConfig.js';
@@ -14,6 +13,8 @@ Reference Material and Credits
 https://github.com/Denton-L/based-connect/tree/master
 
 https://github.com/aaronsb/bosectl/blob/main/docs/architecture.md
+
+https://github.com/myNameArnav/libreqc/tree/main/docs
 **/
 
 const MAX_BUFFER_SIZE = 250;
