@@ -14,13 +14,6 @@ export default {
         high: 0x01,
     },
 
-    sideTone: {
-        off: 0x00,
-        low: 0x03,
-        mid: 0x02,
-        high: 0x01,
-    },
-
     voicePrompt: true,
     automaticPowerOffTimer: [0, 5, 20, 40, 60, 180],
 
