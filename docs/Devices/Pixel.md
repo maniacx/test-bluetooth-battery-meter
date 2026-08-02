@@ -1,7 +1,8 @@
 ---
 layout: default
 title: Google Pixel Buds
-nav_order: 8
+parent: Devices
+nav_order: 5
 permalink: /pixel
 ---
 

@@ -1,7 +1,8 @@
 ---
 layout: default
 title: Samsung Galaxy Buds
-nav_order: 7
+nav_order: 4
+parent: Devices
 permalink: /galaxy
 ---
 
@@ -81,7 +82,7 @@ When enabled, media playback automatically pauses when the earbuds are removed a
 * Resume with any earbud: Playback resumes as soon as at least one earbud is worn.
 
 ## Other settings:
-Other settings are self explanatory similar to settings available in OEM Mobile App Wearables
+Other settings are self explanatory similar to settings available in OEM Mobile App
 
 ## Compatibility
 

@@ -1,16 +1,17 @@
 ---
 layout: default
-title: Sony Bluetooth Audio
-nav_order: 5
+title: Sony
+nav_order: 2
+parent: Devices
 permalink: /sony
 ---
 
 
-# Sony Bluetooth Audio
+# Sony
 
 {: .note }
 >
-> Sony Bluetooth sockets can be accessed by only one application at a time.  
+> Sony Bluetooth sockets can be accessed by only one application at a time.
 > Do not run other Sony's companion or monitoring apps while using BudsLink, such as:
 >
 > * **SonyHeadphonesClient**
@@ -68,7 +69,7 @@ Configure per device settings if supported
 * Case icon: For models that report a case battery, an additional case icon can be selected.
 
 ## Other settings:
-Other settings are self explanatory similar to settings available in Sony's Sound Connect app.
+Other settings are self explanatory similar to settings available in OEM Mobile App
 
 ## Compatibility
 Some devices have not yet been tested and may show incorrect features in the configuration. Others may be missing entirely. If you notice missing devices or incorrect feature mappings, please open an issue on GitHub so we can add or correct them.

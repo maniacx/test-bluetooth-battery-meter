@@ -8,7 +8,26 @@ permalink: /changelogs
 # Changelogs
 
 {: .important-title }
-> Version 0.1.5 &emsp;&emsp; Upcoming
+> Version 0.2.0 &emsp;&emsp; Upcoming
+> * Updated Device Information UI and added serial number for several devices
+> * Added support for Beats Powerbeats Fit credits: schlagmichdoch@github.com
+> * Added support for Bose QC Ultra Earbuds credits: MobileAZN@github.com
+> * Added support for Bose QC35/QC35SE credits: amaxine@github.com 
+> * Added support for Sennheiser HDB 630 credits: TheGentleChainsaw@github.com 
+> * Added support for Sennheiser  MOMENTUM 4 credits: TheGentleChainsaw@github.com / jacostag@github.com 
+> * Added support for Redmi Buds 6 Play credits: drinkingoutofcups@github.com 
+> * Added support for Nothing Headphone (a) credits: The-Nyla@github.com
+> * Equalizer UI in Adw.dialog, to prevent accidental changes while scrolling
+> * NothingBuds: Improvement in packet decoding and init handshake
+> * GPFS: Fix missing schema key
+> * AirPods: Force adaptive controls visibility while setting ANC mode.
+> * Added Dutch translation. credits: klascal@github.com 
+> * Added French translation. credits: naplon74@github.com 
+> * Added Occitan translation. credits: Mejans@github.com
+> * Added Czech translation. credits: p-bo@github.com 
+
+{: .important-title }
+> Version 0.1.5 &emsp;&emsp; May 28, 2026
 > * Added support for Pixel Buds. credits: bhack@github.com
 > * Added support for Google Fast Pair Devices. credits: IGS-GIT@github.com
 > * Sony: BugFix: DSEE indicator not turning off

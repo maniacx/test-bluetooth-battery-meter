@@ -57,7 +57,7 @@ permalink: /credits
 > * luc-salles
 
 
-## AirPods
+## AirPods Headband / Earbuds 
 
 > steam3d for MagicCore core for reverse battery reporting , ANC control and docs which made this project possible.
 >
@@ -77,7 +77,7 @@ permalink: /credits
 > * hazzac181
 > * Cameo007
 
-## Sony
+## Sony Headband / Earbuds 
 
 > Gadgetbridge
 >
@@ -127,7 +127,7 @@ permalink: /credits
 > * adlr
 > * kerembayulgen
 
-## Nothing / CMF Buds
+## Nothing / CMF Headband / Earbuds 
 
 > Gadgetbridge
 >
@@ -165,3 +165,57 @@ permalink: /credits
 > Contribution / Testing
 >
 > * IGS-GIT
+
+## Redmi / Xiaomi Earbuds 
+
+> Gadgetbridge
+>
+> <https://codeberg.org/Freeyourgadget/Gadgetbridge>
+
+
+> web1n/android_packages_apps_XiaomiTWS
+>
+> <https://github.com/web1n/android_packages_apps_XiaomiTWS/tree/main>
+
+> Contribution / Testing
+>
+> * drinkingoutofcups **Special thanks for testing and helping bring up the Redmi protocol.**
+> * iamirayman
+
+## Sennheiser Headband / Earbuds 
+
+> hatemosphere/hdb630-control-macos
+>
+> <https://github.com/hatemosphere/hdb630-control-macos>
+
+
+> nikita36078/sennheiser-desktop-client
+>
+> <https://github.com/nikita36078/sennheiser-desktop-client>
+
+> Contribution / Testing
+>
+> * TheGentleChainsaw **Special thanks for testing and helping bring up the Sennheiser protocol.**
+> * jacostag
+
+## Bose
+
+> aaronsb/bosectl
+>
+> <https://github.com/aaronsb/bosectl/blob/main/docs/architecture.md>
+
+> Denton-L/based-connect
+>
+> <https://github.com/Denton-L/based-connect/tree/master>
+
+> myNameArnav/libreqc
+>
+> <https://github.com/myNameArnav/libreqc/tree/main>
+
+> Contribution / Testing
+>
+> * MobileAZN **Special thanks for testing and helping bring up the Bose protocol.**
+> * amaxine **Special thanks for testing and helping bring up the Bose legacy protocol.**
+> * SMaiz
+> * RupertMichaelBear
+
