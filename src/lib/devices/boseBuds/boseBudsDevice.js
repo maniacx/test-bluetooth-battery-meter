@@ -247,6 +247,7 @@ export const BoseBudsDevice = GObject.registerClass({
             ...this._modelData.voicePrompt && {
                 'voice-enabled': false,
                 'voice-prompt': 0xFF,
+                'supported-voice': 0xFFFFFFFF,
             },
 
             ...this._modelData.gestureOptions && {
@@ -311,6 +312,7 @@ export const BoseBudsDevice = GObject.registerClass({
         if (this._modelData.voicePrompt) {
             this._voiceEnabled = this._settingsItems['voice-enabled'];
             this._voicePrompt = this._settingsItems['voice-prompt'];
+            this._supportedVoice = this._settingsItems['supported-voice'];
         }
 
         if (this._modelData.gestureOptions)
@@ -1158,8 +1160,9 @@ export const BoseBudsDevice = GObject.registerClass({
         this._boseBudsSocket?.setAutoPowerOffTimer(minutes);
     }
 
-    updateVoicePrompt(enabled, language) {
+    updateVoicePrompt(enabled, language, supported) {
         let update = false;
+
         if (this._voiceEnabled !== enabled) {
             this._voiceEnabled = enabled;
             this._settingsItems['voice-enabled'] = enabled;
@@ -1169,6 +1172,12 @@ export const BoseBudsDevice = GObject.registerClass({
         if (this._voicePrompt !== language) {
             this._voicePrompt = language;
             this._settingsItems['voice-prompt'] = language;
+            update = true;
+        }
+
+        if (this._supportedVoice !== supported) {
+            this._supportedVoice = supported;
+            this._settingsItems['supported-voice'] = supported;
             update = true;
         }
 

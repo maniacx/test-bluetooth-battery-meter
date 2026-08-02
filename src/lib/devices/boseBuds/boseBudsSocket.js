@@ -459,7 +459,6 @@ export const BoseBudsSocket = GObject.registerClass({
         this._encode(CommandType.EQ, Operator.GET, loginfo);
     }
 
-
     _parseEq(payload) {
         const bands = this._modelData?.eq?.band ?? [];
         const range = this._modelData?.eq?.range ?? 0;
@@ -885,14 +884,23 @@ export const BoseBudsSocket = GObject.registerClass({
     }
 
     _parseVoicePrompt(payload) {
-        if (payload.length < 1)
+        if (payload.length < 5)
             return;
 
         this._log.info('Parse VoicePrompt');
+
         const value = payload[0];
+
         const enabled = Boolean(value >> 5 & 0x01);
         const language = value & 0x1F;
-        this._callbacks?.updateVoicePrompt?.(enabled, language);
+
+        const supported =
+        payload[1] << 24 |
+        payload[2] << 16 |
+        payload[3] << 8 |
+        payload[4];
+
+        this._callbacks?.updateVoicePrompt?.(enabled, language, supported >>> 0);
     }
 
     setVoicePrompt(enabled, language) {

@@ -10,7 +10,7 @@ import {IconSelectorWidget} from './../../widgets/iconSelectorWidget.js';
 import {RadioButtonRowWidget} from './../../widgets/radioButtonRowWidget.js';
 import {EqualizerWidget} from './../../widgets/equalizerWidget.js';
 import {ModesGroupWidget} from './modesGroupWidget.js';
-import {BoseBudsModelList} from '../../../lib/devices/boseBuds/boseBudsConfig.js';
+import {BoseBudsModelList, VoicePrompt} from '../../../lib/devices/boseBuds/boseBudsConfig.js';
 
 export const ConfigureWindow = GObject.registerClass({
     GTypeName: 'BudsLink_BoseBudsConfigureWindow',
@@ -113,6 +113,7 @@ export const ConfigureWindow = GObject.registerClass({
         this._addSoundSettings();
         this._addCallsSetting();
         this._addInEarSettings();
+        this._addVoicePrompt();
         this._addMiscSetting();
         this._addGestureControls();
 
@@ -158,6 +159,9 @@ export const ConfigureWindow = GObject.registerClass({
 
             if (this._autoPowerOffDropdown)
                 this._autoPowerOffDropdown.selected_item = this._settingsItems['auto-power'];
+
+            if (this._modelData.voicePrompt && !this._voicePromptSwitch)
+                this._addVoicePrompt();
 
             if (this._voicePromptSwitch)
                 this._voicePromptSwitch.active = this._settingsItems['voice-enabled'];
@@ -487,8 +491,7 @@ export const ConfigureWindow = GObject.registerClass({
     }
 
     _addMiscSetting() {
-        if (!this._modelData.dualConnection && !this._modelData.automaticPowerOffTimer &&
-                this._modelData.voicePrompt)
+        if (!this._modelData.dualConnection && !this._modelData.automaticPowerOffTimer)
             return;
 
         const _ = this._gettext;
@@ -537,45 +540,69 @@ export const ConfigureWindow = GObject.registerClass({
             });
             miscGroup.add(this._autoPowerOffDropdown);
         }
-
-        if (this._modelData.voicePrompt) {
-            this._voicePromptSwitch = new Adw.SwitchRow({
-                title: _('Voice Prompts'),
-            });
-
-            this._voicePromptSwitch.active = this._settingsItems['voice-enabled'];
-
-            this._voicePromptSwitch.connect('notify::active', () => {
-                this._updateGsettings('voice-enabled', this._voicePromptSwitch.active);
-            });
-
-            miscGroup.add(this._voicePromptSwitch);
-
-            const voicePromptLabels = Object.values(this._modelData.voicePrompt);
-            const voicePromptValues = Object.keys(this._modelData.voicePrompt).map(v => Number(v));
-
-
-            this._voicePrompDropdown = new DropDownRowWidget({
-                title: _('Prompt Language'),
-                options: voicePromptLabels,
-                values: voicePromptValues,
-                initialValue: this._settingsItems['voice-prompt'],
-            });
-
-            this._voicePrompDropdown.connect('notify::selected-item', () => {
-                const selectedVal = this._voicePrompDropdown.selected_item;
-                this._updateGsettings('voice-prompt', selectedVal);
-            });
-            miscGroup.add(this._voicePrompDropdown);
-
-            this._updateVoicePromptVisibitly();
-        }
     }
 
-    _updateVoicePromptVisibitly() {
-        const visible =  this._settingsItems['voice-prompt'] !== 0xFF;
-        this._voicePromptSwitch.visible = visible;
-        this._voicePrompDropdown.visible = visible;
+    _addVoicePrompt() {
+        if (!this._modelData.voicePrompt)
+            return;
+
+        const _ = this._gettext;
+
+        if (!this._promptGroup) {
+            this._promptGroup = new Adw.PreferencesGroup({
+                title: _('Voice Prompts'),
+                visible: false,
+            });
+            this._page.add(this._promptGroup);
+        }
+
+        const supportedVoice = this._settingsItems['supported-voice'];
+
+        if (supportedVoice === 0xFFFFFFFF)
+            return;
+
+        const currentVoicePrompt = this._settingsItems['voice-prompt'];
+        if (currentVoicePrompt === 0xFF)
+            return;
+
+        this._voicePromptSwitch = new Adw.SwitchRow({title: _('Enable Voice Prompts')});
+        this._voicePromptSwitch.active = this._settingsItems['voice-enabled'];
+
+        this._voicePromptSwitch.connect('notify::active', () => {
+            this._updateGsettings('voice-enabled', this._voicePromptSwitch.active);
+        });
+
+        this._promptGroup.add(this._voicePromptSwitch);
+
+        const getSupportedVoiceLanguages = mask => {
+            const languages = [];
+
+            for (let i = 0; i < 32; i++) {
+                if (mask & 1 << i)
+                    languages.push(i);
+            }
+
+            return languages;
+        };
+
+        const voicePromptValues = getSupportedVoiceLanguages(supportedVoice);
+        const voicePromptLabels = voicePromptValues.map(value =>
+            VoicePrompt[value] ?? String(value)
+        );
+
+        this._voicePrompDropdown = new DropDownRowWidget({
+            title: _('Prompt Language'),
+            options: voicePromptLabels,
+            values: voicePromptValues,
+            initialValue: this._settingsItems['voice-prompt'],
+        });
+
+        this._voicePrompDropdown.connect('notify::selected-item', () => {
+            const selectedVal = this._voicePrompDropdown.selected_item;
+            this._updateGsettings('voice-prompt', selectedVal);
+        });
+        this._promptGroup.add(this._voicePrompDropdown);
+        this._promptGroup.visible = true;
     }
 
     _addGestureControls() {
