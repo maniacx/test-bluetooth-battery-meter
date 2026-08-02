@@ -287,7 +287,7 @@ export const BoseBudsSocket = GObject.registerClass({
             }
 
             case CommandType.BUTTONS: {
-                if (this._modelData.gesture)
+                if (this._modelData.gestureOptions)
                     this._parseActionButton(msg.payload);
                 break;
             }
@@ -356,7 +356,7 @@ export const BoseBudsSocket = GObject.registerClass({
         if (this._modelData.automaticPowerOffTimer)
             this._getAutoPowerOffTimer();
 
-        if (this._modelData.gesture)
+        if (this._modelData.gestureOptions)
             this._getActionButton();
     }
 
