@@ -1,7 +1,7 @@
 'use strict';
 
 export default {
-    name: 'QuietComfort 35 II',
+    name: 'QuietComfort 35',
     id: '400C',
     type: 'headband',
 
