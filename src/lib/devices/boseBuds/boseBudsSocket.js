@@ -168,6 +168,11 @@ export const BoseBudsSocket = GObject.registerClass({
                 break;
             }
 
+            case CommandType.SERIAL: {
+                this._parseSerial(msg.payload);
+                break;
+            }
+
             case CommandType.BATTERY: {
                 this._parseBatteryLevel(msg.payload);
                 break;
@@ -302,6 +307,7 @@ export const BoseBudsSocket = GObject.registerClass({
 
     _getConfiguration() {
         this._getFirmware();
+        this._getSerial();
         this._getBatteryLevel();
         this._getBatteryStatus();
 
@@ -367,6 +373,22 @@ export const BoseBudsSocket = GObject.registerClass({
 
         this._log.info(`Parse Firmware: ${fw}`);
         this._callbacks?.updateFirmware?.(fw);
+    }
+
+    _getSerial() {
+        const loginfo = 'Get Serial';
+        this._encode(CommandType.SERIAL, Operator.GET, loginfo);
+    }
+
+    _parseSerial(payload) {
+        if (!payload.length)
+            return;
+
+        const decoder = new TextDecoder();
+        const serial = decoder.decode(Uint8Array.from(payload));
+
+        this._log.info(`Parse Serial: ${serial}`);
+        this._callbacks?.updateSerial?.(serial);
     }
 
     _getBatteryLevel() {

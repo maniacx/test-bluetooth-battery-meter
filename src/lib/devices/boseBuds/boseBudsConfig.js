@@ -32,6 +32,7 @@ export const SourceType = {
 export const CommandType = {
     INIT: 0x0001,
     FIRMWARE: 0x0005,
+    SERIAL: 0x0007,
     PRODUCT_NAME: 0x0102,
     VOICE_PROMPTS: 0x0103,
     AUTO_POWER_OFF_TIME: 0x0104,

@@ -62,9 +62,11 @@ export const BoseBudsDevice = GObject.registerClass({
         this._props = createProperties();
         this._modelData = null;
         this._fwVersion = '';
+        this._serialNo = '';
 
         this._callbacks = {
             updateFirmware: this.updateFirmware.bind(this),
+            updateSerial: this.updateSerial.bind(this),
             updateBatteryProps: this.updateBatteryProps.bind(this),
             updateInEarState: this.updateInEarState.bind(this),
             updateEq: this.updateEq.bind(this),
@@ -196,6 +198,7 @@ export const BoseBudsDevice = GObject.registerClass({
             alias: this._alias,
             icon: this._commonIcon,
             'fw-version': this._fwVersion,
+            'serial': this._serialNo,
 
             ...!this._modelData.batterySingle && {
                 'case': this._caseIcon,
@@ -581,6 +584,14 @@ export const BoseBudsDevice = GObject.registerClass({
         this._fwVersion = fwVersion;
         if (this._settingsItems) {
             this._settingsItems['fw-version'] = fwVersion;
+            this._updateGsettings();
+        }
+    }
+
+    updateSerial(serial) {
+        this._serialNo = serial;
+        if (this._settingsItems) {
+            this._settingsItems['serial'] = serial;
             this._updateGsettings();
         }
     }
