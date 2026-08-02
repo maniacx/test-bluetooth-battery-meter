@@ -386,8 +386,6 @@ export const BoseBudsSocket = GObject.registerClass({
 
         const decoder = new TextDecoder();
         const serial = decoder.decode(Uint8Array.from(payload));
-
-        this._log.info(`Parse Serial: ${serial}`);
         this._callbacks?.updateSerial?.(serial);
     }
 
