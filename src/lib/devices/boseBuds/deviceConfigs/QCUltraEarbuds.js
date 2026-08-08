@@ -77,6 +77,7 @@ export default {
         nc: {level: 10, steps: 1},
         autoNc: false,
         windToggle: false,
+        showNCInterface: true,
         spatialMode: true,
         userMode: [
             'commute', 'focus', 'home', 'music', 'outdoor', 'relax',

@@ -110,7 +110,6 @@ export default {
     autoTransparency: true,
     dualConnection: true,
     maxConnected: 2,
-
     voicePrompt: true,
 
     gestureOptions: {
