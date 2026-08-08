@@ -697,7 +697,7 @@ export const BoseBudsSocket = GObject.registerClass({
             }
         }
 
-        this._callbacks?.updateAudioModeFavorites?.(favorites);
+        this._callbacks?.updateAudioModeFavorites?.(modeCount, favorites);
     }
 
     setAudioModeFavorites(modeCount, favorites) {

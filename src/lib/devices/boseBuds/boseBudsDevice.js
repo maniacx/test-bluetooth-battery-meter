@@ -67,6 +67,7 @@ export const BoseBudsDevice = GObject.registerClass({
         this._serialNo = '';
         this._deviceInfo = [];
         this._pendingBTOperations = new Map();
+        this._modeCount = 10;
 
         this._callbacks = {
             updateFirmware: this.updateFirmware.bind(this),
@@ -369,7 +370,6 @@ export const BoseBudsDevice = GObject.registerClass({
 
         if (this._modelData.audioModes) {
             const modes = this._settingsItems['modes'];
-            let enabledModes = 0;
             let favoritesChanged = false;
             let uiModesChanged = false;
             const favorites = [];
@@ -397,16 +397,12 @@ export const BoseBudsDevice = GObject.registerClass({
                 if (current && !isUiEqual(current, mode))
                     uiModesChanged = true;
 
-                if (mode.added) {
-                    enabledModes++;
-
-                    if (mode.fav)
-                        favorites.push(mode.index);
-                }
+                if (mode.added && mode.fav)
+                    favorites.push(mode.index);
             }
 
             if (favoritesChanged)
-                this._setAudioModeFavorites(enabledModes, favorites);
+                this._setAudioModeFavorites(favorites);
 
             this._audioModes = modes.map(mode => ({...mode}));
 
@@ -967,12 +963,13 @@ export const BoseBudsDevice = GObject.registerClass({
         this._boseBudsSocket?.setCurrentAudioMode(index);
     }
 
-    updateAudioModeFavorites(favorites) {
+    updateAudioModeFavorites(modeCount, favorites) {
         this._log.info(`updateAudioModeFavorites favorites: ${JSON.stringify(favorites)}`);
+        this._modeCount = modeCount;
     }
 
-    _setAudioModeFavorites(enabledModes, favorites) {
-        this._boseBudsSocket?.setAudioModeFavorites(enabledModes, favorites);
+    _setAudioModeFavorites(favorites) {
+        this._boseBudsSocket?.setAudioModeFavorites(this._modeCount, favorites);
     }
 
     updateAudioModeRestore(enabled) {
