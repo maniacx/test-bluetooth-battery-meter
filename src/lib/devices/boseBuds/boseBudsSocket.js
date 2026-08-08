@@ -3,6 +3,7 @@ import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 
 import {createLogger, getDeviceIdentifier, hexBytes} from '../logger.js';
+import {bytesToHex, hexToBytes} from '../deviceUtils.js';
 import {SocketHandler} from '../socketByProfile.js';
 import {
     Operator, CommandType, BudId
@@ -300,6 +301,48 @@ export const BoseBudsSocket = GObject.registerClass({
                 break;
             }
 
+            case CommandType.GET_ALL_DEVICES: {
+                if (this._modelData.dualConnection && (isResult || isStatus))
+                    this._parseAllBTDevices(msg.payload);
+                break;
+            }
+
+            case CommandType.DEVICE_INFO: {
+                if (this._modelData.dualConnection && (isResult || isStatus || isProcessing))
+                    this._parseBTDeviceInfo(msg.payload);
+                break;
+            }
+
+            case CommandType.PAIRING_MODE: {
+                if (this._modelData.dualConnection)
+                    this._parsePairingMode(msg.payload);
+                break;
+            }
+
+            case CommandType.CONNECT_DEVICE: {
+                if (this._modelData.dualConnection)
+                    this._parseConnectBTDevice(msg);
+                break;
+            }
+
+            case CommandType.DISCONNECT_DEVICE: {
+                if (this._modelData.dualConnection)
+                    this._parseDisconnectBTDevice(msg);
+                break;
+            }
+
+            case CommandType.REMOVE_DEVICE: {
+                if (this._modelData.dualConnection)
+                    this._parseRemoveBTDevice(msg);
+                break;
+            }
+
+            case CommandType.DEVICE_ROUTING: {
+                if (this._modelData.dualConnection)
+                    this._parseRoutingBTDevice(msg);
+                break;
+            }
+
             default:
                 this._log.info(`Unhandled command ${hexBytes(msg.command)}`);
         }
@@ -366,6 +409,12 @@ export const BoseBudsSocket = GObject.registerClass({
 
         if (this._modelData.gestureOptions)
             this._getActionButton();
+
+        if (this._modelData.dualConnection) {
+            this._getAllBTDevices();
+            this._getPairingMode();
+            this._getRoutingBTDevice();
+        }
     }
 
     _getFirmware() {
@@ -960,6 +1009,160 @@ export const BoseBudsSocket = GObject.registerClass({
         const loginfo = 'Set Action Button';
         const payload = [id, eventType, action];
         this._encode(CommandType.BUTTONS, Operator.SETGET, loginfo, payload);
+    }
+
+    _getAllBTDevices() {
+        const loginfo = 'Get AllBTDevices';
+        this._encode(CommandType.GET_ALL_DEVICES, Operator.GET, loginfo);
+    }
+
+    _parseAllBTDevices(payload) {
+        this._log.info('Parse AllBTDevices');
+
+        if (payload.length < 1)
+            return;
+
+        if (payload.length === 1) {
+            this._callbacks?.updateBTDeviceList?.([]);
+            return;
+        }
+
+        const devicesHex = [];
+        const devicesBytes = [];
+
+        for (let i = 1; i + 5 < payload.length; i += 6) {
+            const mac = payload.slice(i, i + 6);
+
+            devicesBytes.push(mac);
+            devicesHex.push(bytesToHex(mac));
+        }
+
+        this._callbacks?.updateBTDeviceList?.(devicesHex);
+
+        for (const mac of devicesBytes)
+            this._getBTDeviceInfo(mac);
+    }
+
+    _getBTDeviceInfo(macAddress) {
+        const loginfo = 'Get BTDevice Info';
+        this._encode(CommandType.DEVICE_INFO, Operator.GET, loginfo, macAddress);
+    }
+
+    _parseBTDeviceInfo(payload) {
+        if (payload.length < 9)
+            return;
+
+        this._log.info('Parse BTDevice Info');
+        const macAddress = bytesToHex(payload.slice(0, 6));
+        const flags = payload[6];
+        const connected = (flags & 0x01) !== 0;
+        const nameOffset = (flags & 0x04) !== 0 ? 10 : 9;
+        const deviceName = new TextDecoder().decode(new Uint8Array(payload.slice(nameOffset)));
+
+        this._callbacks?.updateBTDeviceInfo?.(macAddress, deviceName, connected);
+    }
+
+    _getPairingMode() {
+        const loginfo = 'Get PairingMode';
+        this._encode(CommandType.PAIRING_MODE, Operator.GET, loginfo);
+    }
+
+    _parsePairingMode(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse PairingMode');
+
+        const enabled = payload[0] === 0x01;
+        this._callbacks?.updatePairingMode?.(enabled);
+    }
+
+    setPairingMode(enabled) {
+        const loginfo = 'Set PairingMode';
+        const payload = [enabled ? 0x01 : 0x00];
+        this._encode(CommandType.PAIRING_MODE, Operator.START, loginfo, payload);
+    }
+
+    _parseConnectBTDevice(msg) {
+        const isStatus = msg.operator === Operator.STATUS;
+        const isError = msg.operator === Operator.ERROR;
+
+        if (isError) {
+            this._callbacks?.updateConnectError();
+        } else if (msg.payload.length > 6 && isStatus) {
+            this._log.info('Parse Connect Result');
+            const macAddress = bytesToHex(msg.payload.slice(0, 6));
+            const flags = msg.payload[6];
+            const connected = (flags & 0x01) !== 0 || (flags & 0x02) !== 0;
+            this._callbacks?.updateConnectStatus?.(macAddress, connected);
+        }
+    }
+
+    connectBTDevice(macHex) {
+        const loginfo = 'Connect BTDevice';
+        const mac = hexToBytes(macHex);
+        this._encode(CommandType.CONNECT_DEVICE, Operator.START, loginfo, [0x00, ...mac]);
+    }
+
+    _parseDisconnectBTDevice(msg) {
+        const isStatus = msg.operator === Operator.STATUS;
+        const isError = msg.operator === Operator.ERROR;
+
+        if (isError) {
+            this._callbacks?.updateDisconnectError?.();
+        } else if (msg.payload.length >= 6 && isStatus) {
+            this._log.info('Parse Disconnect Result');
+            const macAddress = bytesToHex(msg.payload.slice(0, 6));
+            this._callbacks?.updateDisconnectStatus?.(macAddress);
+        }
+    }
+
+    disconnectBTDevice(macHex) {
+        const loginfo = 'Disconnect BTDevice';
+        const mac = hexToBytes(macHex);
+        this._encode(CommandType.DISCONNECT_DEVICE, Operator.START, loginfo, mac);
+    }
+
+    _parseRemoveBTDevice(msg) {
+        const isStatus = msg.operator === Operator.STATUS;
+        const isError = msg.operator === Operator.ERROR;
+
+        if (isError) {
+            this._callbacks?.updateRemoveBTDeviceError?.();
+        } else if (msg.payload.length >= 6 && isStatus) {
+            this._log.info('Parse Remove BTDevice Result');
+            const macAddress = bytesToHex(msg.payload.slice(0, 6));
+            this._callbacks?.updateRemoveBTDeviceStatus?.(macAddress);
+        }
+    }
+
+    removeBTDevice(macHex) {
+        const loginfo = 'Remove BTDevice';
+        const mac = hexToBytes(macHex);
+        this._encode(CommandType.REMOVE_DEVICE, Operator.START, loginfo, mac);
+    }
+
+    _getRoutingBTDevice() {
+        const loginfo = 'Get Routing BTDevice';
+        this._encode(CommandType.DEVICE_ROUTING, Operator.GET, loginfo);
+    }
+
+    _parseRoutingBTDevice(msg) {
+        const isStatus = msg.operator === Operator.STATUS;
+        const isResult = msg.operator === Operator.RESULT;
+
+        if (isResult && msg.payload.length >= 6 || isStatus && msg.payload.length >= 8) {
+            this._log.info('Parse Routing BTDevice');
+            const routingAddress = isResult ? msg.payload.slice(0, 6) : msg.payload.slice(2, 8);
+            const mac = bytesToHex(routingAddress);
+            this._callbacks?.updateRoutingStatus?.(mac);
+        }
+    }
+
+    setRoutingBTDevice(macHex) {
+        const loginfo = 'Set Routing BTDevice';
+        const mac = hexToBytes(macHex);
+        this._encode(CommandType.DEVICE_ROUTING, Operator.START, loginfo, mac);
     }
 
     destroy() {

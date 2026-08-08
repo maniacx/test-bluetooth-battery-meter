@@ -98,6 +98,7 @@ export default {
     autoPause: true,
     autoTransparency: true,
     dualConnection: true,
+    maxConnected: 2,
     voicePrompt: true,
 
     gestureOptions: {

@@ -23,6 +23,8 @@ export default {
     automaticPowerOffTimer: [0, 5, 20, 40, 60, 180],
     voicePrompt: true,
 
+    dualConnection: true,
+    maxConnected: 2,
     gestureOptions: {
         buttons: {
             action: {

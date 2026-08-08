@@ -9,6 +9,7 @@ import {DropDownRowWidget} from './../../widgets/dropDownRowWidget.js';
 import {IconSelectorWidget} from './../../widgets/iconSelectorWidget.js';
 import {RadioButtonRowWidget} from './../../widgets/radioButtonRowWidget.js';
 import {EqualizerWidget} from './../../widgets/equalizerWidget.js';
+import {DeviceManagementRow} from './../../widgets/deviceMgmtRowWidget.js';
 import {ModesGroupWidget} from './modesGroupWidget.js';
 import {BoseBudsModelList, VoicePrompt} from '../../../lib/devices/boseBuds/boseBudsConfig.js';
 
@@ -155,8 +156,14 @@ export const ConfigureWindow = GObject.registerClass({
             if (this._sideToneDropdown)
                 this._sideToneDropdown.selected_item = this._settingsItems['side-tone'];
 
-            if (this._dualConnSwitch)
+            if (this._dualConnSwitch) {
                 this._dualConnSwitch.active = this._settingsItems['multipoint'];
+                this._dualConnSwitch.pair_mode = this._settingsItems['pairing-mode'];
+                const deviceInfo = this._settingsItems['dev-mgmt'];
+                this._dualConnSwitch?.updateDevices(deviceInfo);
+                const routeInfo = this._settingsItems['active-dev'];
+                this._dualConnSwitch?.updateRouteDevice(routeInfo);
+            }
 
             if (this._autoPowerOffDropdown)
                 this._autoPowerOffDropdown.selected_item = this._settingsItems['auto-power'];
@@ -501,14 +508,31 @@ export const ConfigureWindow = GObject.registerClass({
         this._page.add(miscGroup);
 
         if (this._modelData.dualConnection) {
-            this._dualConnSwitch = new Adw.SwitchRow({
-                title: _('Allow Connections to Multiple Devices'),
-            });
+            const maxConnected = this._modelData.maxConnected;
+            const hasRouting = true;
+            const deviceInfo = this._settingsItems['dev-mgmt'];
+            const currentActiveRoute = this._settingsItems['active-dev'];
+
+            this._dualConnSwitch = new DeviceManagementRow(this, this._gettext, maxConnected,
+                hasRouting, deviceInfo, this._devicePath, currentActiveRoute);
 
             this._dualConnSwitch.active = this._settingsItems['multipoint'];
+            this._dualConnSwitch.pair_mode = this._settingsItems['pairing-mode'];
 
             this._dualConnSwitch.connect('notify::active', () => {
                 this._updateGsettings('multipoint', this._dualConnSwitch.active);
+            });
+
+            this._dualConnSwitch.connect('notify::pair-mode', () => {
+                this._updateGsettings('pairing-mode', this._dualConnSwitch.pair_mode);
+            });
+
+            const actionData = this._settingsItems['dev-mgmt-action'];
+            this._actionId = actionData?.id ?? 0;
+
+            this._dualConnSwitch.connect('device-action', (_row, action, mac) => {
+                const data = {id: this._actionId ^= 1, action, mac};
+                this._updateGsettings('dev-mgmt-action', data);
             });
 
             miscGroup.add(this._dualConnSwitch);

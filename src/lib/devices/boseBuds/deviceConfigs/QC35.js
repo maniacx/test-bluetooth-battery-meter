@@ -14,6 +14,8 @@ export default {
         high: 0x01,
     },
 
+    dualConnection: true,
+    maxConnected: 2,
     voicePrompt: true,
     automaticPowerOffTimer: [0, 5, 20, 40, 60, 180],
 
