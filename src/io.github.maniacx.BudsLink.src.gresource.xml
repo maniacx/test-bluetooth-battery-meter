@@ -21,6 +21,7 @@
         <file>lib/bluezDeviceProxy.js</file>
         <file>lib/dataHandler.js</file>
         <file>lib/enhancedDeviceSupportManager.js</file>
+        <file>lib/devices/commonEmuns.js</file>
         <file>lib/devices/deviceUtils.js</file>
         <file>lib/devices/logger.js</file>
         <file>lib/devices/mediaController.js</file>
@@ -30,6 +31,7 @@
         <file>lib/widgets/iconGroups.js</file>
         <file>main.js</file>
         <file>preferences/widgets/checkBoxesRowWidget.js</file>
+        <file>preferences/widgets/deviceMgmtRowWidget.js</file>
         <file>preferences/widgets/dropDownRowWidget.js</file>
         <file>preferences/widgets/equalizerWidget.js</file>
         <file>preferences/widgets/iconSelectorWidget.js</file>
