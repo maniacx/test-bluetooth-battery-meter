@@ -160,38 +160,46 @@ export const BoseBudsSocket = GObject.registerClass({
         this._log.info(`command: ${hexBytes(msg.command)} operator: ${hexBytes(msg.operator)} ` +
                 `payload: [${hexBytes(msg.payload)}]`);
 
-        if (msg.payload.length < 1 || msg.operator === Operator.ERROR)
+        if (msg.payload.length < 1)
             return;
+
+        const isStatus = msg.operator === Operator.STATUS;
+        const isResult = msg.operator === Operator.RESULT;
+        const isProcessing = msg.operator === Operator.PROCESSING;
 
         switch (msg.command) {
             case CommandType.FIRMWARE: {
-                this._parseFirmware(msg.payload);
+                if (isStatus)
+                    this._parseFirmware(msg.payload);
                 break;
             }
 
             case CommandType.SERIAL: {
-                this._parseSerial(msg.payload);
+                if (isStatus)
+                    this._parseSerial(msg.payload);
                 break;
             }
 
             case CommandType.BATTERY: {
-                this._parseBatteryLevel(msg.payload);
+                if (isStatus)
+                    this._parseBatteryLevel(msg.payload);
                 break;
             }
 
             case CommandType.CHARGING_STATE: {
-                this._parseBatteryStatus(msg.payload);
+                if (isStatus)
+                    this._parseBatteryStatus(msg.payload);
                 break;
             }
 
             case CommandType.INEAR_STATE: {
-                if (!this._modelData.batterySingle)
+                if (isStatus && !this._modelData.batterySingle)
                     this._parseInEarState(msg.payload);
                 break;
             }
 
             case CommandType.EQ: {
-                if (this._modelData.eq)
+                if (this._modelData.eq  && isStatus)
                     this._parseBatteryLevel(msg.payload);
                 break;
             }
@@ -203,55 +211,55 @@ export const BoseBudsSocket = GObject.registerClass({
             }
 
             case CommandType.AUDIOMODE_CAPABILTY: {
-                if (this._modelData.audioModes)
+                if (this._modelData.audioModes && isStatus)
                     this._parseAudioModesCapability(msg.payload);
                 break;
             }
 
             case CommandType.AUDIOMODE_CURRENT: {
-                if (this._modelData.audioModes)
+                if (this._modelData.audioModes && (isStatus || isResult))
                     this._parseAudioModeCurrent(msg.payload);
                 break;
             }
 
             case CommandType.AUDIOMODE_RESTORE: {
-                if (this._modelData.audioModes)
+                if (this._modelData.audioModes && isResult)
                     this._parseRestoreAudioMode(msg.payload);
                 break;
             }
 
             case CommandType.AUDIOMODE_FAV: {
-                if (this._modelData.audioModes)
+                if (this._modelData.audioModes && isStatus)
                     this._parseAudioModeFavorites(msg.payload);
                 break;
             }
 
             case CommandType.AUDIOMODE_CONFIG: {
-                if (this._modelData.audioModes)
+                if (this._modelData.audioModes && isStatus)
                     this._parseAudioMode(msg.payload);
                 break;
             }
 
             case CommandType.CNC: {
-                if (this._modelData.audioModes?.showNCInterface)
+                if (this._modelData.audioModes?.showNCInterface && isStatus)
                     this._parseCnc(msg.payload);
                 break;
             }
 
             case CommandType.SPATIAL_AUDIO: {
-                if (this._modelData.audioModes?.spatialMode)
+                if (this._modelData.audioModes?.spatialMode && isStatus)
                     this._parseSpatialAudio(msg.payload);
                 break;
             }
 
             case CommandType.DUALCONNECTION: {
-                if (this._modelData.dualConnection)
+                if (this._modelData.dualConnection && isStatus)
                     this._parseDualConnection(msg.payload);
                 break;
             }
 
             case CommandType.SIDETONE: {
-                if (this._modelData.sideTone)
+                if (this._modelData.sideTone && isStatus)
                     this._parseSideTone(msg.payload);
                 break;
             }
@@ -263,31 +271,31 @@ export const BoseBudsSocket = GObject.registerClass({
             }
 
             case CommandType.AUTO_ANSWER: {
-                if (!this._modelData.inEarSettings && this._modelData.autoAnswer)
+                if (!this._modelData.inEarSettings && this._modelData.autoAnswer && isStatus)
                     this._parseAutoAnswer(msg.payload);
                 break;
             }
 
             case CommandType.AUTO_PAUSE: {
-                if (!this._modelData.inEarSettings && this._modelData.autoPause)
+                if (!this._modelData.inEarSettings && this._modelData.autoPause && isStatus)
                     this._parseAutoPause(msg.payload);
                 break;
             }
 
             case CommandType.VOICE_PROMPTS: {
-                if (this._modelData.voicePrompt)
+                if (this._modelData.voicePrompt && isStatus)
                     this._parseVoicePrompt(msg.payload);
                 break;
             }
 
             case CommandType.AUTO_POWER_OFF_TIME: {
-                if (this._modelData.automaticPowerOffTimer)
+                if (this._modelData.automaticPowerOffTimer && isStatus)
                     this._parseAutoPowerOffTimer(msg.payload);
                 break;
             }
 
             case CommandType.BUTTONS: {
-                if (this._modelData.gestureOptions)
+                if (this._modelData.gestureOptions && isStatus)
                     this._parseActionButton(msg.payload);
                 break;
             }
