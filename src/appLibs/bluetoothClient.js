@@ -1,3 +1,4 @@
+'use strict';
 import GObject from 'gi://GObject';
 import Gio from 'gi://Gio';
 

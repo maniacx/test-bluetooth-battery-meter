@@ -1,3 +1,4 @@
+'use strict';
 export const supportedAudioSingleIcons = [
     'audio-headphones', 'audio-headset', 'headphone1',
     'earbuds', 'earbuds-wingtip', 'earbuds-wingtip2', 'earbuds-neckband', 'earbuds-stem',

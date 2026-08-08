@@ -1,3 +1,4 @@
+'use strict';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 

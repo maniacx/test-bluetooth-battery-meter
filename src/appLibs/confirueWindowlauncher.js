@@ -1,3 +1,4 @@
+'use strict';
 import * as Airpods from '../preferences/devices/airpods/configureWindow.js';
 import * as Sony from '../preferences/devices/sony/configureWindow.js';
 import * as GalaxyBuds from '../preferences/devices/galaxyBuds/configureWindow.js';
