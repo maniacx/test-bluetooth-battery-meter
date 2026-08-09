@@ -11,6 +11,7 @@ import {IconSelectorWidget} from './../../widgets/iconSelectorWidget.js';
 import {RadioButtonRowWidget} from './../../widgets/radioButtonRowWidget.js';
 import {EqualizerWidget} from './../../widgets/equalizerWidget.js';
 import {ParametricEqRowWidget} from './../../widgets/peqRowWidget.js';
+import {DeviceManagementRow} from './../../widgets/deviceMgmtRowWidget.js';
 import {SenhBudsModelList} from '../../../lib/devices/senhBuds/senhBudsConfig.js';
 
 export const ConfigureWindow = GObject.registerClass({
@@ -114,6 +115,7 @@ export const ConfigureWindow = GObject.registerClass({
         this._addSoundSettings();
         this._addCallsSetting();
         this._addInEarSettings();
+        this._addDevMgmtSetting();
 
         const settingSignalId = this._settings.connect('changed::senh-buds-list', () => {
             const updatedList = this._settings.get_strv('senh-buds-list').map(JSON.parse);
@@ -162,6 +164,13 @@ export const ConfigureWindow = GObject.registerClass({
 
             if (this._comfortCallsSwitch)
                 this._comfortCallsSwitch.active = this._settingsItems['comfort-call'];
+
+            if (this._dualConnSwitch) {
+                const deviceInfo = this._settingsItems['dev-mgmt'];
+                this._dualConnSwitch?.updateDevices(deviceInfo);
+                const ownDevice = this._settingsItems['own-dev'];
+                this._dualConnSwitch?.updateOwnDevice(ownDevice);
+            }
 
             this._updateInEarSensitivity();
             this._updateSoundVisibility();
@@ -716,6 +725,43 @@ export const ConfigureWindow = GObject.registerClass({
             callGroup.add(this._comfortCallsSwitch);
         }
     }
+
+    _addDevMgmtSetting() {
+        if (!this._modelData.dualConnection)
+            return;
+
+        const _ = this._gettext;
+
+        const devMgmtGroup = new Adw.PreferencesGroup({title: _('Connection Management')});
+        this._page.add(devMgmtGroup);
+
+        const deviceInfo = this._settingsItems['dev-mgmt'];
+        const maxConnected = this._settingsItems['max-dev'];
+        const ownDevice = this._settingsItems['own-dev'];
+
+        const deviceManagementConfig = {
+            maxConnected,
+            hasMultipointSwitch: false,
+            hasPairMode: false,
+            hasRouting: false,
+            showMac: false,
+        };
+
+        this._dualConnSwitch = new DeviceManagementRow(this, this._gettext, deviceInfo,
+            ownDevice, '', deviceManagementConfig);
+
+        const actionData = this._settingsItems['dev-mgmt-action'];
+        this._seq = actionData?.seq ?? 0;
+
+        this._dualConnSwitch.connect('device-action', (_row, action, id) => {
+            const data = {seq: this._seq ^= 1, action, id};
+            this._updateGsettings('dev-mgmt-action', data);
+        });
+
+        devMgmtGroup.add(this._dualConnSwitch);
+    }
+
+
 
     _updateCompactStatus() {
         this._sideToneSlider?.set_property('compact-mode', this._isCompactMode);

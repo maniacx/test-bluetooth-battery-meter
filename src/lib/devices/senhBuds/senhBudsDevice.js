@@ -1,5 +1,6 @@
 'use strict';
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import {gettext as _} from 'gettext';
 
@@ -11,6 +12,7 @@ import {createConfig, createProperties, DataHandler} from '../../dataHandler.js'
 import {MediaController} from '../mediaController.js';
 import {SenhBudsSocket} from './senhBudsSocket.js';
 import {CodecMap, PeqFilterType} from './senhBudsConfig.js';
+import {BtDeviceState, DeviceManagementAction} from '../commonEmuns.js';
 
 export const DeviceTypeSenhBuds = 'senhBuds';
 
@@ -36,6 +38,8 @@ export const SenhBudsDevice = GObject.registerClass({
         this._extPath = extPath;
         this.updateDeviceMapCb = updateDeviceMapCb;
         this._ignoreGsettingsChange = false;
+        this._deviceInfo = [];
+        this._pendingBTOperations = new Map();
 
         this._config = createConfig();
         this._props = createProperties();
@@ -67,6 +71,14 @@ export const SenhBudsDevice = GObject.registerClass({
             updateAutoAnswer: this.updateAutoAnswer.bind(this),
             updateAutoPowerOff: this.updateAutoPowerOff.bind(this),
             updateCodec: this.updateCodec.bind(this),
+            updatePairedDevMax: this.updatePairedDevMax.bind(this),
+            updatePairedDevOwn: this.updatePairedDevOwn.bind(this),
+            updatePairedDevList: this.updatePairedDevList.bind(this),
+            updatePairedDevInfo: this.updatePairedDevInfo.bind(this),
+            updatePairedDevStatus: this.updatePairedDevStatus.bind(this),
+            updatePairedDevConnectErr: this.updatePairedDevConnectErr.bind(this),
+            updatePairedDevDisconnectErr: this.updatePairedDevDisconnectErr.bind(this),
+            updatePairedDevRemoveErr: this.updatePairedDevRemoveErr.bind(this),
         };
 
         const profile = {type: DeviceTypeSenhBuds, uuid: SenhBudsUUID};
@@ -191,6 +203,13 @@ export const SenhBudsDevice = GObject.registerClass({
             ...this._modelData.ring && {
                 'ring-state': 'stopped',
             },
+
+            ...this._modelData.dualConnection && {
+                'dev-mgmt': [],
+                'dev-mgmt-action': {seq: 0, action: 0, id: ''},
+                'own-dev': '',
+                'max-dev': 2,
+            },
         };
     }
 
@@ -254,6 +273,12 @@ export const SenhBudsDevice = GObject.registerClass({
 
         if (this._modelData.ring)
             this._ringState = this._settingsItems['ring-state'];
+
+        if (this._modelData.dualConnection) {
+            this._devMgmtAction = this._settingsItems['dev-mgmt-action'];
+            this._maxDevices = this._settingsItems['max-dev'];
+            this._ownDevice = this._settingsItems['own-dev'];
+        }
     }
 
     _updateGsettingsProps() {
@@ -397,6 +422,27 @@ export const SenhBudsDevice = GObject.registerClass({
             if (this._ringState !== state) {
                 this._ringState = state;
                 this._setRingMyBuds(state);
+            }
+        }
+
+        if (this._modelData.dualConnection) {
+            const devMgmtAction = this._settingsItems['dev-mgmt-action'];
+            if (this._devMgmtAction.seq !== devMgmtAction.seq) {
+                this._devMgmtAction = devMgmtAction;
+
+                switch (devMgmtAction.action) {
+                    case DeviceManagementAction.Connect:
+                        this._connectPairedDev(devMgmtAction.id);
+                        break;
+
+                    case DeviceManagementAction.Disconnect:
+                        this._disconnectPairedDev(devMgmtAction.id);
+                        break;
+
+                    case DeviceManagementAction.Remove:
+                        this._removePairedDev(devMgmtAction.id);
+                        break;
+                }
             }
         }
     }
@@ -1049,12 +1095,242 @@ export const SenhBudsDevice = GObject.registerClass({
         this.dataHandler?.setProps(this._props);
     }
 
+    updatePairedDevMax(max) {
+        this._log.info(`updatePairedDevMax max: ${max}`);
+        if (this._maxDevices !== max) {
+            this._maxDevices = max;
+            this._settingsItems['max-dev'] = max;
+            this._updateGsettings();
+        }
+    }
+
+    updatePairedDevOwn(id) {
+        this._log.info(`updatePairedDevOwn id: ${id}`);
+        if (this._ownDevice !== id) {
+            this._ownDevice = id;
+            this._settingsItems['own-dev'] = id;
+            this._updateGsettings();
+        }
+    }
+
+    updatePairedDevList(size) {
+        this._log.info(`updatePairedDevList size: ${size}`);
+
+        while (this._deviceInfo.length > size)
+            this._deviceInfo.pop();
+
+        while (this._deviceInfo.length < size) {
+            const id = String(this._deviceInfo.length);
+
+            this._deviceInfo.push({
+                id,
+                name: '',
+                connected: false,
+                state: BtDeviceState.NotInitialized,
+            });
+        }
+
+        this._settingsItems['dev-mgmt'] = this._deviceInfo;
+        this._updateGsettings();
+    }
+
+    updatePairedDevInfo(id, name, connected) {
+        this._log.info(`updatePairedDevInfo id: ${id}, name: ${name}, connected: ${connected}`);
+
+        this._stopBTTimeout(id);
+
+        const device = this._deviceInfo.find(info => info.id === id);
+
+        if (!device)
+            return;
+
+        let changed = false;
+
+        if (device.name !== name) {
+            device.name = name;
+            changed = true;
+        }
+
+        if (device.connected !== connected) {
+            device.connected = connected;
+            changed = true;
+        }
+
+        if (device.state !== BtDeviceState.Ready) {
+            device.state = BtDeviceState.Ready;
+            changed = true;
+        }
+
+        if (changed) {
+            this._settingsItems['dev-mgmt'] = this._deviceInfo;
+            this._updateGsettings();
+        }
+    }
+
+    updatePairedDevStatus(id, connected) {
+        this._log.info(`updatePairedDevStatus id: ${id}, connected: ${connected}`);
+
+        const device = this._deviceInfo.find(device => device.id === id);
+
+        if (!device)
+            return;
+
+        device.connected = connected !== 0;
+        device.state = BtDeviceState.Ready;
+
+        this._settingsItems['dev-mgmt'] = this._deviceInfo;
+        this._updateGsettings();
+
+        this._stopBTTimeout(id);
+    }
+
+    _startBTTimeout(id, operation) {
+        const timeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 10, () => {
+            const pending = this._pendingBTOperations.get(id);
+
+            if (!pending)
+                return GLib.SOURCE_REMOVE;
+
+            const device = this._deviceInfo.find(info => info.id === id);
+
+            if (device) {
+                device.state = BtDeviceState.Ready;
+                this._settingsItems['dev-mgmt'] = this._deviceInfo;
+                this._updateGsettings();
+            }
+
+            this._pendingBTOperations.delete(id);
+
+            return GLib.SOURCE_REMOVE;
+        });
+
+        this._pendingBTOperations.set(id, {operation, timeoutId});
+    }
+
+    _stopBTTimeout(id) {
+        const pending = this._pendingBTOperations.get(id);
+        if (!pending)
+            return;
+
+        if (pending.timeoutId)
+            GLib.Source.remove(pending.timeoutId);
+
+        this._pendingBTOperations.delete(id);
+    }
+
+    updatePairedDevConnectErr() {
+        const pending = [...this._pendingBTOperations.entries()]
+                .find(([, pending]) => pending.operation === 'connect');
+
+        if (!pending)
+            return;
+
+        const [id] = pending;
+        const device = this._deviceInfo.find(device => device.id === id);
+
+        if (device) {
+            device.state = BtDeviceState.Ready;
+            this._settingsItems['dev-mgmt'] = this._deviceInfo;
+            this._updateGsettings();
+        }
+
+        this._stopBTTimeout(id);
+    }
+
+    _connectPairedDev(id) {
+        const device = this._deviceInfo.find(info => info.id === id);
+        if (!device)
+            return;
+
+        if (this._pendingBTOperations.has(id))
+            return;
+
+        device.state = BtDeviceState.Processing;
+        this._settingsItems['dev-mgmt'] = this._deviceInfo;
+        this._updateGsettings();
+        this._startBTTimeout(id, 'connect');
+        this._senhBudsSocket?.connectPairedDev(id);
+    }
+
+    updatePairedDevDisconnectErr() {
+        const pending = [...this._pendingBTOperations.entries()]
+        .find(([, pending]) => pending.operation === 'disconnect');
+
+        if (!pending)
+            return;
+
+        const [id] = pending;
+        const device = this._deviceInfo.find(device => device.id === id);
+
+        if (device) {
+            device.state = BtDeviceState.Ready;
+            this._settingsItems['dev-mgmt'] = this._deviceInfo;
+            this._updateGsettings();
+        }
+
+        this._stopBTTimeout(id);
+    }
+
+    _disconnectPairedDev(id) {
+        const device = this._deviceInfo.find(info => info.id === id);
+        if (!device)
+            return;
+
+        if (this._pendingBTOperations.has(id))
+            return;
+
+        device.state = BtDeviceState.Processing;
+        this._settingsItems['dev-mgmt'] = this._deviceInfo;
+        this._updateGsettings();
+        this._startBTTimeout(id, 'disconnect');
+        this._senhBudsSocket?.disconnectPairedDev(id);
+    }
+
+    updatePairedDevRemoveErr() {
+        const pending = [...this._pendingBTOperations.entries()]
+                .find(([, pending]) => pending.operation === 'remove');
+
+        if (!pending)
+            return;
+
+        const [id] = pending;
+        const device = this._deviceInfo.find(device => device.id === id);
+
+        if (device) {
+            device.state = BtDeviceState.Ready;
+            this._settingsItems['dev-mgmt'] = this._deviceInfo;
+            this._updateGsettings();
+        }
+
+        this._stopBTTimeout(id);
+    }
+
+    _removePairedDev(id) {
+        const device = this._deviceInfo.find(info => info.id === id);
+        if (!device)
+            return;
+
+        if (this._pendingBTOperations.has(id))
+            return;
+
+        device.state = BtDeviceState.Processing;
+        this._settingsItems['dev-mgmt'] = this._deviceInfo;
+        this._updateGsettings();
+        this._startBTTimeout(id, 'remove');
+        this._senhBudsSocket?.removePairedDev(id);
+    }
+
     destroy() {
         this._configureWindowLauncherCancellable?.cancel();
         this._configureWindowLauncherCancellable = null;
 
         this._senhBudsSocket?.destroy();
         this._senhBudsSocket = null;
+
+        for (const {timeoutId} of this._pendingBTOperations.values())
+            GLib.Source.remove(timeoutId);
+
+        this._pendingBTOperations.clear();
 
         if (this._dataHandlerId)
             this.dataHandler?.disconnect(this._dataHandlerId);

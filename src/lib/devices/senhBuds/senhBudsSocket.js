@@ -198,9 +198,6 @@ export const SenhBudsSocket = GObject.registerClass({
         this._log.info(`SENH: CommandType: [${hexBytes(msg.command)}] ` +
             `payload: [${hexBytes(msg.payload)}]`);
 
-        if (msg.payload.length < 1)
-            return;
-
         switch (msg.command) {
             case CommandType.MODELID_RET: {
                 this._parseModelId(msg.payload);
@@ -406,6 +403,73 @@ export const SenhBudsSocket = GObject.registerClass({
                 break;
             }
 
+            case CommandType.PAIRED_DEVICEMAX_RET: {
+                if (this._modelData?.dualConnection)
+                    this._parsePairedDevMax(msg.payload);
+                break;
+            }
+
+            case CommandType.PAIRED_OWN_DEVICE_RET: {
+                if (this._modelData?.dualConnection)
+                    this._parsePairedDevOwn(msg.payload);
+                break;
+            }
+
+            case CommandType.PAIRED_DEVICELIST_RET: {
+                if (this._modelData?.dualConnection)
+                    this._parsePairedDevList(msg.payload);
+                break;
+            }
+
+            case CommandType.PAIRED_DEVICEINFO_RET: {
+                if (this._modelData?.dualConnection)
+                    this._parsePairedDevInfo(msg.payload);
+                break;
+            }
+
+            case CommandType.PAIRED_DEVICE_STATUS_RET:
+            case CommandType.PAIRED_DEVICE_STATUS_NOTI: {
+                if (this._modelData?.dualConnection)
+                    this._parsePairedDevStatus(msg.payload);
+                break;
+            }
+
+            case CommandType.PAIRED_DEVICE_CONNECT_RET: {
+                if (this._modelData?.dualConnection)
+                    this._parsePairedDevConnect();
+                break;
+            }
+
+            case CommandType.PAIRED_DEVICE_CONNECT_ERR: {
+                if (this._modelData?.dualConnection)
+                    this._parsePairedDevConnectErr();
+                break;
+            }
+
+            case CommandType.PAIRED_DEVICE_DISCONNECT_RET: {
+                if (this._modelData?.dualConnection)
+                    this._parsePairedDevDisconnect();
+                break;
+            }
+
+            case CommandType.PAIRED_DEVICE_DISCONNECT_ERR: {
+                if (this._modelData?.dualConnection)
+                    this._parsePairedDevDisconnectErr();
+                break;
+            }
+
+            case CommandType.PAIRED_DEVICE_REMOVE_RET: {
+                if (this._modelData?.dualConnection)
+                    this._parsePairedDevRemove();
+                break;
+            }
+
+            case CommandType.PAIRED_DEVICE_REMOVE_ERR: {
+                if (this._modelData?.dualConnection)
+                    this._parsePairedDevRemoveErr();
+                break;
+            }
+
             default:
                 this._log.info(`Unhandled command ${hexBytes(msg.command)}`);
         }
@@ -514,6 +578,12 @@ export const SenhBudsSocket = GObject.registerClass({
 
         if (this._modelData.reportsCodec)
             this._getCodec();
+
+        if (this._modelData.dualConnection) {
+            this._getPairedDevMax();
+            this._getPairedDevOwn();
+            this._getPairedDevList();
+        }
     }
 
     _getFirmware() {
@@ -1156,6 +1226,136 @@ export const SenhBudsSocket = GObject.registerClass({
         this._log.info('Parse Codec');
         const codec = payload[0];
         this._callbacks?.updateCodec?.(codec);
+    }
+
+    _getPairedDevMax() {
+        const loginfo = 'Get PairedDevMax';
+        this._encodeSenh(CommandType.PAIRED_DEVICEMAX_GET, loginfo);
+    }
+
+    _parsePairedDevMax(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse PairedDevMax');
+        const size = payload[0];
+        this._callbacks?.updatePairedDevMax?.(size);
+    }
+
+    _getPairedDevOwn() {
+        const loginfo = 'Get PairedDevOwn';
+        this._encodeSenh(CommandType.PAIRED_OWN_DEVICE_GET, loginfo);
+    }
+
+    _parsePairedDevOwn(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse PairedDevOwn');
+        const index = payload[0];
+        this._callbacks?.updatePairedDevOwn?.(String(index));
+    }
+
+    _getPairedDevList() {
+        const loginfo = 'Get PairedDevList';
+        this._encodeSenh(CommandType.PAIRED_DEVICELIST_GET, loginfo);
+    }
+
+    _parsePairedDevList(payload) {
+        if (payload.length < 2)
+            return;
+
+        this._log.info('Parse PairedDevList');
+        const size = payload[0] << 8 | payload[1];
+        this._callbacks?.updatePairedDevList?.(size);
+
+        for (let index = 0; index < size; index++)
+            this._getPairedDevInfo(index);
+    }
+
+    _getPairedDevInfo(index) {
+        const loginfo = 'Get PairedDevList';
+        const payload = [index];
+        this._encodeSenh(CommandType.PAIRED_DEVICELIST_GET, loginfo, payload);
+    }
+
+    _parsePairedDevInfo(payload) {
+        if (payload.length < 4)
+            return;
+
+        this._log.info('Parse PairedDevInfo');
+
+        const id = String(payload[0]);
+        const connected = payload[2] !== 0;
+
+        const nameBytes = payload.slice(3);
+        const nullIndex = nameBytes.indexOf(0);
+        const nameData = nullIndex >= 0 ? nameBytes.slice(0, nullIndex) : nameBytes;
+        const deviceName = new TextDecoder().decode(new Uint8Array(nameData));
+        this._callbacks?.updatePairedDevInfo?.(id, deviceName, connected);
+    }
+
+    _getPairedDevStatus(index) {
+        const loginfo = 'Get PairedDevStatus';
+        const payload = [Number(index)];
+        this._encodeSenh(CommandType.PAIRED_DEVICE_STATUS_GET, loginfo, payload);
+    }
+
+    _parsePairedDevStatus(payload) {
+        if (payload.length < 2)
+            return;
+
+        this._log.info('Parse PairedDevStatus');
+        const index = payload[0];
+        const connected = payload[1];
+        this._callbacks?.updatePairedDevStatus?.(String(index), connected);
+    }
+
+    _parsePairedDevConnect() {
+        this._log.info('Parse PairedDevConnect');
+    }
+
+    _parsePairedDevConnectErr() {
+        this._log.info('Parse PairedDevConnectErr');
+        this._callbacks?.updatePairedDevConnectErr?.();
+    }
+
+    connectPairedDev(index) {
+        const loginfo = 'Connect PairedDev';
+        const payload = [Number(index)];
+        this._encodeSenh(CommandType.PAIRED_DEVICE_CONNECT_SET, loginfo, payload);
+    }
+
+    _parsePairedDevDisconnect() {
+        this._log.info('Parse PairedDevDisconnect');
+    }
+
+    _parsePairedDevDisconnectErr() {
+        this._log.info('Parse PairedDevDisconnectErr');
+        this._callbacks?.updatePairedDevDisconnectErr?.();
+    }
+
+    disconnectPairedDev(index) {
+        const loginfo = 'Disconnect PairedDev';
+        const payload = [Number(index)];
+        this._encodeSenh(CommandType.PAIRED_DEVICE_DISCONNECT_SET, loginfo, payload);
+    }
+
+    _parsePairedDevRemove() {
+        this._log.info('Parse PairedDevRemove');
+        this._getPairedDevList();
+    }
+
+    _parsePairedDevRemoveErr() {
+        this._log.info('Parse PairedDevRemoveErr');
+        this._callbacks?.updatePairedDevRemoveErr?.();
+        this._getPairedDevList();
+    }
+
+    removePairedDev(index) {
+        const loginfo = 'Remove PairedDev';
+        const payload = [Number(index)];
+        this._encodeSenh(CommandType.PAIRED_DEVICE_REMOVE_SET, loginfo, payload);
     }
 
     destroy() {
