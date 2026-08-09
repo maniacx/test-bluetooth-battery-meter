@@ -33,7 +33,7 @@ const DeviceManagementDialog = GObject.registerClass({
         toolbarView.add_top_bar(headerBar);
         const page = new Adw.PreferencesPage();
 
-        if (this._mgmtRow.hasPairMode) {
+        if (this._mgmtRow.config.hasPairMode) {
             const pairModeGroup = new Adw.PreferencesGroup({title: _('Pairing Mode')});
             const pairModeRow = new Adw.ActionRow({
                 title: _('Enable Pairing Mode'),
@@ -150,12 +150,12 @@ const DeviceManagementDialog = GObject.registerClass({
 
             info.row.title = title;
 
-            if (this._mgmtRow.showMac)
+            if (this._mgmtRow.config.showMac)
                 info.row.subtitle = this._formatMac(device.id);
 
             info.row.spinner.visible = isProcessing || isInitializing;
 
-            if (this._mgmtRow.hasRouting) {
+            if (this._mgmtRow.config.hasRouting) {
                 const isRouteDevice = this._routeDevice === device.id;
                 info.row.routeIcon.visible = !isInitializing && !isProcessing &&
                         device.connected && isRouteDevice;
@@ -236,11 +236,11 @@ const DeviceManagementDialog = GObject.registerClass({
         else
             title = device.name;
 
-        const subtitle = this._mgmtRow.showMac ? this._formatMac(device.id) : '';
+        const subtitle = this._mgmtRow.config.showMac ? this._formatMac(device.id) : '';
         const row = new Adw.ActionRow({title, subtitle});
 
         let routeIcon;
-        if (this._mgmtRow.hasRouting) {
+        if (this._mgmtRow.config.hasRouting) {
             routeIcon = new Gtk.Image({
                 icon_name: 'bbm-speakers-symbolic',
                 css_classes: ['flat'],
@@ -264,7 +264,7 @@ const DeviceManagementDialog = GObject.registerClass({
         const menu = new Gio.Menu();
         const actionGroup = new Gio.SimpleActionGroup();
 
-        if (this._mgmtRow.hasRouting) {
+        if (this._mgmtRow.config.hasRouting) {
             const routingAction = new Gio.SimpleAction({name: 'routing'});
             routingAction.connect('activate', () => {
                 this._mgmtRow?.emit('device-action', DeviceManagementAction.Routing, device.id);
@@ -320,7 +320,7 @@ const DeviceManagementDialog = GObject.registerClass({
         row.connectItem = connectItem;
         row.disconnectItem = disconnectItem;
         row.removeItem = removeItem;
-        if (this._mgmtRow.hasRouting)
+        if (this._mgmtRow.config.hasRouting)
             row.routingItem = routingItem;
 
 
@@ -334,7 +334,7 @@ const DeviceManagementDialog = GObject.registerClass({
             GObject.BindingFlags.SYNC_CREATE
         );
 
-        if (this._mgmtRow.hasRouting) {
+        if (this._mgmtRow.config.hasRouting) {
             row.add_suffix(routeIcon);
             row.routeIcon = routeIcon;
         }
@@ -352,14 +352,14 @@ const DeviceManagementDialog = GObject.registerClass({
         menu.remove_all();
 
         if (device.connected) {
-            if (this._mgmtRow.hasRouting)
+            if (this._mgmtRow.config.hasRouting)
                 menu.append_item(row.routingItem);
 
             menu.append_item(row.disconnectItem);
             menu.append_item(row.removeItem);
         } else {
-            const maxReached = this._mgmtRow.maxConnected > 0 &&
-            this._connectedRows.length >= this._mgmtRow.maxConnected;
+            const maxReached = this._mgmtRow.config.maxConnected > 0 &&
+                this._connectedRows.length >= this._mgmtRow.config.maxConnected;
 
             if (!maxReached)
                 menu.append_item(row.connectItem);
@@ -369,7 +369,7 @@ const DeviceManagementDialog = GObject.registerClass({
     }
 
     updateRouteDevice(id) {
-        if (!this._mgmtRow.hasRouting)
+        if (!this._mgmtRow.config.hasRouting)
             return;
 
         if (!id || this._routeDevice === id)
@@ -404,18 +404,21 @@ export const DeviceManagementRow = GObject.registerClass({
             GObject.ParamFlags.READWRITE, false),
     },
 }, class DeviceManagementRow extends Adw.ActionRow {
-    _init(window, gtxt, maxConnected, hasRouting, hasPairMode, showMac,
-        deviceArr, ownDevice, routeDevice) {
+    _init(window, gtxt, deviceArr, ownDevice, routeDevice, config = {}) {
         super._init();
+        this.config = {
+            hasMultipointSwitch: true,
+            maxConnected: 2,
+            hasPairMode: true,
+            hasRouting: true,
+            showMac: true,
+            ...config,
+        };
 
         const _ = gtxt;
         this.title = _('Allow Connections to Multiple Devices');
         this.gtxt = gtxt;
-        this.maxConnected = maxConnected;
         this.deviceArr = deviceArr.map(device => ({...device}));
-        this.hasRouting = hasRouting;
-        this.hasPairMode = hasPairMode;
-        this.showMac = showMac;
         this._active = false;
 
         const box = new Gtk.Box({
@@ -431,30 +434,33 @@ export const DeviceManagementRow = GObject.registerClass({
             tooltip_text: _('Manage Devices'),
         });
 
-        this._switch = new Gtk.Switch({
-            valign: Gtk.Align.CENTER,
-        });
+        box.append(this._button);
 
-        this.bind_property(
-            'active',
-            this._switch,
-            'active',
-            GObject.BindingFlags.BIDIRECTIONAL |
-            GObject.BindingFlags.SYNC_CREATE
-        );
+        if (this.config.hasMultipointSwitch) {
+            this._switch = new Gtk.Switch({
+                valign: Gtk.Align.CENTER,
+            });
 
-        this._switch.bind_property(
-            'active',
-            this._button,
-            'sensitive',
+            this.bind_property(
+                'active',
+                this._switch,
+                'active',
+                GObject.BindingFlags.BIDIRECTIONAL |
             GObject.BindingFlags.SYNC_CREATE
-        );
+            );
+
+            this._switch.bind_property(
+                'active',
+                this._button,
+                'sensitive',
+                GObject.BindingFlags.SYNC_CREATE
+            );
+
+            box.append(this._switch);
+        }
 
         this._dialog = new DeviceManagementDialog(this, ownDevice, routeDevice);
         this._button.connect('clicked', () => this._dialog.present(window));
-
-        box.append(this._button);
-        box.append(this._switch);
         this.add_suffix(box);
     }
 

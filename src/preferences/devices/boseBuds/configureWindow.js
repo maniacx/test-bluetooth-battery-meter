@@ -510,16 +510,19 @@ export const ConfigureWindow = GObject.registerClass({
         this._page.add(miscGroup);
 
         if (this._modelData.dualConnection) {
-            const maxConnected = this._modelData.maxConnected ?? 2;
-            const hasRouting = true;
-            const hasPairMode = true;
-            const showMac = true;
+            const deviceManagementConfig = {
+                maxConnected: this._modelData.maxConnected ?? 2,
+                hasMultipointSwitch: true,
+                hasPairMode: true,
+                hasRouting: true,
+                showMac: true,
+            };
             const deviceInfo = this._settingsItems['dev-mgmt'];
             const currentActiveRoute = this._settingsItems['active-dev'];
             const ownDevice = this._settingsItems['own-dev'];
 
-            this._dualConnSwitch = new DeviceManagementRow(this, this._gettext, maxConnected,
-                hasRouting, hasPairMode, showMac, deviceInfo, ownDevice, currentActiveRoute);
+            this._dualConnSwitch = new DeviceManagementRow(this, this._gettext, deviceInfo,
+                ownDevice, currentActiveRoute, deviceManagementConfig);
 
             this._dualConnSwitch.active = this._settingsItems['multipoint'];
             this._dualConnSwitch.pair_mode = this._settingsItems['pairing-mode'];
