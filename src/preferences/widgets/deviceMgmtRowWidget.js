@@ -274,6 +274,23 @@ const DeviceManagementDialog = GObject.registerClass({
 
         const connectAction = new Gio.SimpleAction({name: 'connect'});
         connectAction.connect('activate', () => {
+            const maxReached = this._mgmtRow.config.maxConnected > 0 &&
+                this._connectedRows.length >= this._mgmtRow.config.maxConnected;
+
+            if (maxReached) {
+                const dialog = new Adw.AlertDialog({
+                    heading: _('Connection Limit Reached'),
+                    body: _('Disconnect another device before connecting this device.'),
+                });
+
+                dialog.add_response('ok', _('OK'));
+                dialog.set_default_response('ok');
+                dialog.set_close_response('ok');
+                dialog.present(this);
+
+                return;
+            }
+
             this._mgmtRow?.emit('device-action', DeviceManagementAction.Connect, device.id);
         });
         actionGroup.add_action(connectAction);
@@ -304,7 +321,7 @@ const DeviceManagementDialog = GObject.registerClass({
                     this._mgmtRow?.emit('device-action', DeviceManagementAction.Remove, device.id);
             });
 
-            dialog.present(this.get_root());
+            dialog.present(this);
         });
         actionGroup.add_action(removeAction);
 
@@ -358,12 +375,7 @@ const DeviceManagementDialog = GObject.registerClass({
             menu.append_item(row.disconnectItem);
             menu.append_item(row.removeItem);
         } else {
-            const maxReached = this._mgmtRow.config.maxConnected > 0 &&
-                this._connectedRows.length >= this._mgmtRow.config.maxConnected;
-
-            if (!maxReached)
-                menu.append_item(row.connectItem);
-
+            menu.append_item(row.connectItem);
             menu.append_item(row.removeItem);
         }
     }
