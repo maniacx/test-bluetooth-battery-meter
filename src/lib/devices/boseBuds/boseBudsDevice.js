@@ -99,7 +99,7 @@ export const BoseBudsDevice = GObject.registerClass({
             updateRemoveBTDeviceError: this.updateRemoveBTDeviceError.bind(this),
             updateRemoveBTDeviceStatus: this.updateRemoveBTDeviceStatus.bind(this),
             updateRoutingStatus: this.updateRoutingStatus.bind(this),
-
+            updateOwnDeviceId: this.updateOwnDeviceId.bind(this),
         };
 
         const bluezDeviceProxy = getBluezDeviceProxy(this._devicePath);
@@ -238,8 +238,9 @@ export const BoseBudsDevice = GObject.registerClass({
                 'multipoint': false,
                 'dev-mgmt': [],
                 'pairing-mode': false,
-                'dev-mgmt-action': {id: 0, action: 0, mac: ''},
+                'dev-mgmt-action': {seq: 0, action: 0, id: ''},
                 'active-dev': '',
+                'own-dev': '',
             },
 
             ...this._modelData.sideTone && {
@@ -314,6 +315,7 @@ export const BoseBudsDevice = GObject.registerClass({
             this._pairingMode = this._settingsItems['pairing-mode'];
             this._devMgmtAction = this._settingsItems['dev-mgmt-action'];
             this._activeDevice = this._settingsItems['active-dev'];
+            this._ownDevice = this._settingsItems['own-dev'];
         }
 
         if (this._modelData.sideTone)
@@ -448,24 +450,24 @@ export const BoseBudsDevice = GObject.registerClass({
             }
 
             const devMgmtAction = this._settingsItems['dev-mgmt-action'];
-            if (this._devMgmtAction.id !== devMgmtAction.id) {
+            if (this._devMgmtAction.seq !== devMgmtAction.seq) {
                 this._devMgmtAction = devMgmtAction;
 
                 switch (devMgmtAction.action) {
                     case DeviceManagementAction.Connect:
-                        this._connectBTDevice(devMgmtAction.mac);
+                        this._connectBTDevice(devMgmtAction.id);
                         break;
 
                     case DeviceManagementAction.Disconnect:
-                        this._disconnectBTDevice(devMgmtAction.mac);
+                        this._disconnectBTDevice(devMgmtAction.id);
                         break;
 
                     case DeviceManagementAction.Remove:
-                        this._removeBTDevice(devMgmtAction.mac);
+                        this._removeBTDevice(devMgmtAction.id);
                         break;
 
                     case DeviceManagementAction.Routing:
-                        this._setRoutingBTDevice(devMgmtAction.mac);
+                        this._setRoutingBTDevice(devMgmtAction.id);
                         break;
                 }
             }
@@ -1287,12 +1289,12 @@ export const BoseBudsDevice = GObject.registerClass({
     updateBTDeviceList(devices) {
         this._log.info('updateBTDeviceList');
         const deviceSet = new Set(devices);
-        this._deviceInfo = this._deviceInfo.filter(info => deviceSet.has(info.mac));
+        this._deviceInfo = this._deviceInfo.filter(info => deviceSet.has(info.id));
 
-        for (const mac of devices) {
-            if (!this._deviceInfo.some(info => info.mac === mac)) {
+        for (const id of devices) {
+            if (!this._deviceInfo.some(info => info.id === id)) {
                 this._deviceInfo.push({
-                    mac,
+                    id,
                     name: '',
                     connected: false,
                     state: BtDeviceState.NotInitialized,
@@ -1307,7 +1309,7 @@ export const BoseBudsDevice = GObject.registerClass({
     updateBTDeviceInfo(mac, name, connected) {
         this._log.info(`updateBTDeviceInfo name: ${name}, connected: ${connected}`);
 
-        const device = this._deviceInfo.find(info => info.mac === mac);
+        const device = this._deviceInfo.find(info => info.id === mac);
         if (!device)
             return;
 
@@ -1347,14 +1349,14 @@ export const BoseBudsDevice = GObject.registerClass({
         this._boseBudsSocket?.setPairingMode(enabled);
     }
 
-    _startBTTimeout(mac, operation) {
+    _startBTTimeout(id, operation) {
         const timeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 10, () => {
-            const pending = this._pendingBTOperations.get(mac);
+            const pending = this._pendingBTOperations.get(id);
 
             if (!pending)
                 return GLib.SOURCE_REMOVE;
 
-            const device = this._deviceInfo.find(info => info.mac === mac);
+            const device = this._deviceInfo.find(info => info.id === id);
 
             if (device) {
                 device.state = BtDeviceState.Ready;
@@ -1362,24 +1364,24 @@ export const BoseBudsDevice = GObject.registerClass({
                 this._updateGsettings();
             }
 
-            this._pendingBTOperations.delete(mac);
+            this._pendingBTOperations.delete(id);
 
             return GLib.SOURCE_REMOVE;
         });
 
-        this._pendingBTOperations.set(mac, {operation, timeoutId});
+        this._pendingBTOperations.set(id, {operation, timeoutId});
     }
 
 
-    _stopBTTimeout(mac) {
-        const pending = this._pendingBTOperations.get(mac);
+    _stopBTTimeout(id) {
+        const pending = this._pendingBTOperations.get(id);
         if (!pending)
             return;
 
         if (pending.timeoutId)
             GLib.Source.remove(pending.timeoutId);
 
-        this._pendingBTOperations.delete(mac);
+        this._pendingBTOperations.delete(id);
     }
 
     updateConnectError() {
@@ -1389,8 +1391,8 @@ export const BoseBudsDevice = GObject.registerClass({
         if (!pending)
             return;
 
-        const [mac] = pending;
-        const device = this._deviceInfo.find(device => device.mac === mac);
+        const [id] = pending;
+        const device = this._deviceInfo.find(device => device.id === id);
 
         if (device) {
             device.state = BtDeviceState.Ready;
@@ -1398,35 +1400,35 @@ export const BoseBudsDevice = GObject.registerClass({
             this._updateGsettings();
         }
 
-        this._stopBTTimeout(mac);
+        this._stopBTTimeout(id);
     }
 
-    updateConnectStatus(mac, connected) {
-        const device = this._deviceInfo.find(info => info.mac === mac);
+    updateConnectStatus(id, connected) {
+        const device = this._deviceInfo.find(info => info.id === id);
 
         if (!device)
             return;
 
-        this._stopBTTimeout(mac);
+        this._stopBTTimeout(id);
         device.connected = connected;
         device.state = BtDeviceState.Ready;
         this._settingsItems['dev-mgmt'] = this._deviceInfo;
         this._updateGsettings();
     }
 
-    _connectBTDevice(mac) {
-        const device = this._deviceInfo.find(info => info.mac === mac);
+    _connectBTDevice(id) {
+        const device = this._deviceInfo.find(info => info.id === id);
         if (!device)
             return;
 
-        if (this._pendingBTOperations.has(mac))
+        if (this._pendingBTOperations.has(id))
             return;
 
         device.state = BtDeviceState.Processing;
         this._settingsItems['dev-mgmt'] = this._deviceInfo;
         this._updateGsettings();
-        this._startBTTimeout(mac, 'connect');
-        this._boseBudsSocket?.connectBTDevice(mac);
+        this._startBTTimeout(id, 'connect');
+        this._boseBudsSocket?.connectBTDevice(id);
     }
 
     updateDisconnectError() {
@@ -1436,8 +1438,8 @@ export const BoseBudsDevice = GObject.registerClass({
         if (!pending)
             return;
 
-        const [mac] = pending;
-        const device = this._deviceInfo.find(device => device.mac === mac);
+        const [id] = pending;
+        const device = this._deviceInfo.find(device => device.id === id);
 
         if (device) {
             device.state = BtDeviceState.Ready;
@@ -1445,12 +1447,12 @@ export const BoseBudsDevice = GObject.registerClass({
             this._updateGsettings();
         }
 
-        this._stopBTTimeout(mac);
+        this._stopBTTimeout(id);
     }
 
 
-    updateDisconnectStatus(mac) {
-        const device = this._deviceInfo.find(device => device.mac === mac);
+    updateDisconnectStatus(id) {
+        const device = this._deviceInfo.find(device => device.id === id);
 
         if (!device)
             return;
@@ -1459,22 +1461,22 @@ export const BoseBudsDevice = GObject.registerClass({
         device.state = BtDeviceState.Ready;
         this._settingsItems['dev-mgmt'] = this._deviceInfo;
         this._updateGsettings();
-        this._stopBTTimeout(mac);
+        this._stopBTTimeout(id);
     }
 
-    _disconnectBTDevice(mac) {
-        const device = this._deviceInfo.find(info => info.mac === mac);
+    _disconnectBTDevice(id) {
+        const device = this._deviceInfo.find(info => info.id === id);
         if (!device)
             return;
 
-        if (this._pendingBTOperations.has(mac))
+        if (this._pendingBTOperations.has(id))
             return;
 
         device.state = BtDeviceState.Processing;
         this._settingsItems['dev-mgmt'] = this._deviceInfo;
         this._updateGsettings();
-        this._startBTTimeout(mac, 'disconnect');
-        this._boseBudsSocket?.disconnectBTDevice(mac);
+        this._startBTTimeout(id, 'disconnect');
+        this._boseBudsSocket?.disconnectBTDevice(id);
     }
 
     updateRemoveBTDeviceError() {
@@ -1484,8 +1486,8 @@ export const BoseBudsDevice = GObject.registerClass({
         if (!pending)
             return;
 
-        const [mac] = pending;
-        const device = this._deviceInfo.find(device => device.mac === mac);
+        const [id] = pending;
+        const device = this._deviceInfo.find(device => device.id === id);
 
         if (device) {
             device.state = BtDeviceState.Ready;
@@ -1493,42 +1495,49 @@ export const BoseBudsDevice = GObject.registerClass({
             this._updateGsettings();
         }
 
-        this._stopBTTimeout(mac);
+        this._stopBTTimeout(id);
     }
 
-    updateRemoveBTDeviceStatus(mac) {
-        this._deviceInfo = this._deviceInfo.filter(device => device.mac !== mac);
+    updateRemoveBTDeviceStatus(id) {
+        this._deviceInfo = this._deviceInfo.filter(device => device.id !== id);
         this._settingsItems['dev-mgmt'] = this._deviceInfo;
         this._updateGsettings();
-        this._stopBTTimeout(mac);
+        this._stopBTTimeout(id);
     }
 
-    _removeBTDevice(mac) {
-        const device = this._deviceInfo.find(info => info.mac === mac);
+    _removeBTDevice(id) {
+        const device = this._deviceInfo.find(info => info.id === id);
         if (!device)
             return;
 
-        if (this._pendingBTOperations.has(mac))
+        if (this._pendingBTOperations.has(id))
             return;
 
         device.state = BtDeviceState.Processing;
         this._settingsItems['dev-mgmt'] = this._deviceInfo;
         this._updateGsettings();
-        this._startBTTimeout(mac, 'remove');
-        this._boseBudsSocket?.removeBTDevice(mac);
+        this._startBTTimeout(id, 'remove');
+        this._boseBudsSocket?.removeBTDevice(id);
     }
 
-    updateRoutingStatus(mac) {
-        this._log.info(`updateRoutingStatus mac: ${mac}`);
-        if (this._activeDevice !== mac) {
-            this._activeDevice = mac;
-            this._settingsItems['active-dev'] = mac;
+    updateRoutingStatus(id) {
+        if (this._activeDevice !== id) {
+            this._activeDevice = id;
+            this._settingsItems['active-dev'] = id;
             this._updateGsettings();
         }
     }
 
-    _setRoutingBTDevice(mac) {
-        this._boseBudsSocket?.setRoutingBTDevice(mac);
+    _setRoutingBTDevice(id) {
+        this._boseBudsSocket?.setRoutingBTDevice(id);
+    }
+
+    updateOwnDeviceId(id) {
+        if (this._ownDevice !== id) {
+            this._ownDevice = id;
+            this._settingsItems['own-dev'] = id;
+            this._updateGsettings();
+        }
     }
 
     _settingsButtonClicked() {

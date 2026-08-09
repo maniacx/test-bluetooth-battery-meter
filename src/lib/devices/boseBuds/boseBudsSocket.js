@@ -343,6 +343,12 @@ export const BoseBudsSocket = GObject.registerClass({
                 break;
             }
 
+            case CommandType.GET_OWN_DEVICE_ID: {
+                if (this._modelData.dualConnection && isStatus)
+                    this._parseOwnDeviceId(msg.payload);
+                break;
+            }
+
             default:
                 this._log.info(`Unhandled command ${hexBytes(msg.command)}`);
         }
@@ -411,9 +417,10 @@ export const BoseBudsSocket = GObject.registerClass({
             this._getActionButton();
 
         if (this._modelData.dualConnection) {
-            this._getAllBTDevices();
-            this._getPairingMode();
+            this._getOwnDeviceId();
             this._getRoutingBTDevice();
+            this._getPairingMode();
+            this._getAllBTDevices();
         }
     }
 
@@ -1163,6 +1170,20 @@ export const BoseBudsSocket = GObject.registerClass({
         const loginfo = 'Set Routing BTDevice';
         const mac = hexToBytes(macHex);
         this._encode(CommandType.DEVICE_ROUTING, Operator.START, loginfo, mac);
+    }
+
+    _getOwnDeviceId() {
+        const loginfo = 'Get OwnDeviceId';
+        this._encode(CommandType.GET_OWN_DEVICE_ID, Operator.GET, loginfo);
+    }
+
+    _parseOwnDeviceId(payload) {
+        if (payload.length !== 6)
+            return;
+
+        this._log.info('Parse OwnDeviceId');
+        const macAddress = bytesToHex(payload);
+        this._callbacks?.updateOwnDeviceId?.(macAddress);
     }
 
     destroy() {

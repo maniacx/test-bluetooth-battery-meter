@@ -163,6 +163,8 @@ export const ConfigureWindow = GObject.registerClass({
                 this._dualConnSwitch?.updateDevices(deviceInfo);
                 const routeInfo = this._settingsItems['active-dev'];
                 this._dualConnSwitch?.updateRouteDevice(routeInfo);
+                const ownDevice = this._settingsItems['own-dev'];
+                this._dualConnSwitch?.updateOwnDevice(ownDevice);
             }
 
             if (this._autoPowerOffDropdown)
@@ -508,13 +510,16 @@ export const ConfigureWindow = GObject.registerClass({
         this._page.add(miscGroup);
 
         if (this._modelData.dualConnection) {
-            const maxConnected = this._modelData.maxConnected;
+            const maxConnected = this._modelData.maxConnected ?? 2;
             const hasRouting = true;
+            const hasPairMode = true;
+            const showMac = true;
             const deviceInfo = this._settingsItems['dev-mgmt'];
             const currentActiveRoute = this._settingsItems['active-dev'];
+            const ownDevice = this._settingsItems['own-dev'];
 
             this._dualConnSwitch = new DeviceManagementRow(this, this._gettext, maxConnected,
-                hasRouting, deviceInfo, this._devicePath, currentActiveRoute);
+                hasRouting, hasPairMode, showMac, deviceInfo, ownDevice, currentActiveRoute);
 
             this._dualConnSwitch.active = this._settingsItems['multipoint'];
             this._dualConnSwitch.pair_mode = this._settingsItems['pairing-mode'];
@@ -528,10 +533,10 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             const actionData = this._settingsItems['dev-mgmt-action'];
-            this._actionId = actionData?.id ?? 0;
+            this._seq = actionData?.seq ?? 0;
 
-            this._dualConnSwitch.connect('device-action', (_row, action, mac) => {
-                const data = {id: this._actionId ^= 1, action, mac};
+            this._dualConnSwitch.connect('device-action', (_row, action, id) => {
+                const data = {seq: this._seq ^= 1, action, id};
                 this._updateGsettings('dev-mgmt-action', data);
             });
 

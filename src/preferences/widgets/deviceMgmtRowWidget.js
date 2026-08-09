@@ -9,7 +9,7 @@ import {BtDeviceState, DeviceManagementAction} from '../../lib/devices/commonEmu
 const DeviceManagementDialog = GObject.registerClass({
     GTypeName: 'BudsLink_DeviceManagementDialog',
 }, class DeviceManagementDialog extends Adw.Dialog {
-    _init(mgmtRow) {
+    _init(mgmtRow, ownDevice, routeDevice) {
         super._init({
             title: '',
             content_width: 360,
@@ -18,11 +18,11 @@ const DeviceManagementDialog = GObject.registerClass({
 
         const _ = mgmtRow.gtxt;
         this._mgmtRow = mgmtRow;
-        this._routeDevice = this._mgmtRow.routeDevice;
+        this._ownDevice = ownDevice;
+        this._routeDevice = routeDevice;
         this._rows = new Map();
         this._connectedRows = [];
         this._pairedRows = [];
-        this._currentMac = this._pathToMac(this._mgmtRow.currentDevicePath);
 
         const toolbarView = new Adw.ToolbarView();
         const headerBar = new Adw.HeaderBar({
@@ -32,65 +32,59 @@ const DeviceManagementDialog = GObject.registerClass({
         });
         toolbarView.add_top_bar(headerBar);
         const page = new Adw.PreferencesPage();
-        const pairModeGroup = new Adw.PreferencesGroup({title: _('Pairing Mode')});
-        const pairModeRow = new Adw.ActionRow({
-            title: _('Enable Pairing Mode'),
-            subtitle: _('Allow a new Bluetooth device to pair.'),
-        });
 
-        const spinner = new Adw.Spinner({
-            halign: Gtk.Align.CENTER,
-            valign: Gtk.Align.CENTER,
-            width_request: 16,
-            height_request: 16,
-            visible: false,
-        });
+        if (this._mgmtRow.hasPairMode) {
+            const pairModeGroup = new Adw.PreferencesGroup({title: _('Pairing Mode')});
+            const pairModeRow = new Adw.ActionRow({
+                title: _('Enable Pairing Mode'),
+                subtitle: _('Allow a new Bluetooth device to pair.'),
+            });
 
-        const pairModeSwitch = new Gtk.Switch({
-            valign: Gtk.Align.CENTER,
-            active: this._mgmtRow.pairMode,
-        });
+            const spinner = new Adw.Spinner({
+                halign: Gtk.Align.CENTER,
+                valign: Gtk.Align.CENTER,
+                width_request: 16,
+                height_request: 16,
+                visible: false,
+            });
 
-        pairModeSwitch.bind_property(
-            'active',
-            spinner,
-            'visible',
-            GObject.BindingFlags.BIDIRECTIONAL |
+            const pairModeSwitch = new Gtk.Switch({
+                valign: Gtk.Align.CENTER,
+                active: this._mgmtRow.pairMode,
+            });
+
+            pairModeSwitch.bind_property(
+                'active',
+                spinner,
+                'visible',
+                GObject.BindingFlags.BIDIRECTIONAL |
             GObject.BindingFlags.SYNC_CREATE
-        );
+            );
 
-        this._mgmtRow.bind_property(
-            'pair-mode',
-            pairModeSwitch,
-            'active',
-            GObject.BindingFlags.BIDIRECTIONAL |
+            this._mgmtRow.bind_property(
+                'pair-mode',
+                pairModeSwitch,
+                'active',
+                GObject.BindingFlags.BIDIRECTIONAL |
             GObject.BindingFlags.SYNC_CREATE
-        );
+            );
 
-        pairModeRow.add_suffix(spinner);
-        pairModeRow.add_suffix(pairModeSwitch);
-        pairModeGroup.add(pairModeRow);
+            pairModeRow.add_suffix(spinner);
+            pairModeRow.add_suffix(pairModeSwitch);
+            pairModeGroup.add(pairModeRow);
+            page.add(pairModeGroup);
+        }
 
         this._connectedGroup = new Adw.PreferencesGroup({title: _('Connected')});
         this._pairedGroup = new Adw.PreferencesGroup({title: _('Paired')});
         this._connectedEmptyRow = new Adw.ActionRow({title: _('No device connected')});
         this._pairedEmptyRow = new Adw.ActionRow({title: _('No additional device paired')});
-        page.add(pairModeGroup);
         page.add(this._connectedGroup);
         page.add(this._pairedGroup);
         toolbarView.set_content(page);
         this.set_child(toolbarView);
 
         this.updateDevices(this._mgmtRow.deviceArr);
-    }
-
-    _pathToMac(devicePath) {
-        const match = devicePath.match(/\/dev_([0-9A-Fa-f_]+)$/);
-
-        if (!match)
-            return null;
-
-        return match[1].replaceAll('_', '').toUpperCase();
     }
 
     _formatMac(mac) {
@@ -102,20 +96,18 @@ const DeviceManagementDialog = GObject.registerClass({
         const devices = deviceArr.map(device => ({...device}));
 
         devices.sort((a, b) => {
-            const aCurrent = a.mac === this._currentMac;
-            const bCurrent = b.mac === this._currentMac;
-
+            const aCurrent = a.id === this._ownDevice;
+            const bCurrent = b.id === this._ownDevice;
             if (aCurrent === bCurrent)
                 return 0;
 
             return aCurrent ? -1 : 1;
         });
 
-        const newMacs = new Set(devices.map(device => device.mac));
+        const newIds = new Set(devices.map(device => device.id));
 
-
-        for (const [mac, info] of this._rows) {
-            if (!newMacs.has(mac)) {
+        for (const [id, info] of this._rows) {
+            if (!newIds.has(id)) {
                 info.group.remove(info.row);
 
                 if (info.group === this._connectedGroup)
@@ -123,13 +115,12 @@ const DeviceManagementDialog = GObject.registerClass({
                 else
                     this._pairedRows = this._pairedRows.filter(r => r !== info.row);
 
-                this._rows.delete(mac);
+                this._rows.delete(id);
             }
         }
 
-
         for (const device of devices) {
-            const info = this._rows.get(device.mac);
+            const info = this._rows.get(device.id);
 
             if (!info) {
                 const row = this._createDeviceRow(device);
@@ -141,22 +132,32 @@ const DeviceManagementDialog = GObject.registerClass({
                 else
                     this._pairedRows.push(row);
 
-                this._rows.set(device.mac, {row, group});
+                this._rows.set(device.id, {row, group});
                 continue;
             }
 
-            const isCurrent = device.mac === this._currentMac;
-            const isNotInitialized = device.state === BtDeviceState.NotInitialized;
+            const isOwnDevice = device.id === this._ownDevice;
+            const isInitializing = device.state === BtDeviceState.NotInitialized;
             const isProcessing = device.state === BtDeviceState.Processing;
-            const macLabel = this._formatMac(device.mac);
-            info.row.title = isNotInitialized ? _('Loading Device Information...') : device.name;
-            info.row.subtitle = isCurrent ? _('%s (This Device)').replace('%s', macLabel)
-                : macLabel;
-            info.row.spinner.visible = isProcessing || isNotInitialized;
+
+            let title;
+            if (isInitializing)
+                title = _('Loading Device Information...');
+            else if (isOwnDevice)
+                title = `${device.name} <span alpha="60%"><i>${_('(This Device)')}</i></span>`;
+            else
+                title = device.name;
+
+            info.row.title = title;
+
+            if (this._mgmtRow.showMac)
+                info.row.subtitle = this._formatMac(device.id);
+
+            info.row.spinner.visible = isProcessing || isInitializing;
 
             if (this._mgmtRow.hasRouting) {
-                const isRouteDevice = this._routeDevice === device.mac;
-                info.row.routeIcon.visible = !isNotInitialized && !isProcessing &&
+                const isRouteDevice = this._routeDevice === device.id;
+                info.row.routeIcon.visible = !isInitializing && !isProcessing &&
                         device.connected && isRouteDevice;
             }
 
@@ -178,6 +179,12 @@ const DeviceManagementDialog = GObject.registerClass({
             }
             this._updateDeviceMenu(info.row, device);
         }
+
+        const connectedIds = devices.filter(device => device.connected).map(device => device.id);
+        const pairedIds = devices.filter(device => !device.connected).map(device => device.id);
+        this._reorderRows(this._connectedRows, this._connectedGroup, connectedIds);
+        this._reorderRows(this._pairedRows, this._pairedGroup, pairedIds);
+
         this._updateEmptyRows();
     }
 
@@ -197,14 +204,39 @@ const DeviceManagementDialog = GObject.registerClass({
         }
     }
 
+    _reorderRows(rows, group, orderedIds) {
+        if (rows.length !== orderedIds.length)
+            return;
+
+        const orderedRows = orderedIds.map(id => this._rows.get(id)?.row).filter(Boolean);
+
+        if (rows.every((row, i) => row === orderedRows[i]))
+            return;
+
+        for (const row of rows)
+            group.remove(row);
+
+        for (const row of orderedRows)
+            group.add(row);
+
+        rows.splice(0, rows.length, ...orderedRows);
+    }
+
     _createDeviceRow(device) {
         const _ = this._mgmtRow.gtxt;
-        const isCurrent = device.mac === this._currentMac;
+        const isOwnDevice = device.id === this._ownDevice;
         const isInitializing = device.state === BtDeviceState.NotInitialized;
         const isProcessing = device.state === BtDeviceState.Processing;
-        const macLabel = this._formatMac(device.mac);
-        const title = isInitializing ? _('Loading Device Information...') : device.name;
-        const subtitle = isCurrent ? _('%s (This Device)').replace('%s', macLabel) : macLabel;
+
+        let title;
+        if (isInitializing)
+            title = _('Loading Device Information...');
+        else if (isOwnDevice)
+            title = `${device.name} <span alpha="60%"><i>${_('(This Device)')}</i></span>`;
+        else
+            title = device.name;
+
+        const subtitle = this._mgmtRow.showMac ? this._formatMac(device.id) : '';
         const row = new Adw.ActionRow({title, subtitle});
 
         let routeIcon;
@@ -212,7 +244,7 @@ const DeviceManagementDialog = GObject.registerClass({
             routeIcon = new Gtk.Image({
                 icon_name: 'bbm-speakers-symbolic',
                 css_classes: ['flat'],
-                visible: !isProcessing && device.connected && this._routeDevice === device.mac,
+                visible: !isProcessing && device.connected && this._routeDevice === device.id,
             });
         }
 
@@ -224,12 +256,10 @@ const DeviceManagementDialog = GObject.registerClass({
             visible: isInitializing || isProcessing,
         });
 
-
         const button = new Gtk.MenuButton({
             valign: Gtk.Align.CENTER,
             icon_name: 'bbm-settings-symbolic',
         });
-
 
         const menu = new Gio.Menu();
         const actionGroup = new Gio.SimpleActionGroup();
@@ -237,20 +267,20 @@ const DeviceManagementDialog = GObject.registerClass({
         if (this._mgmtRow.hasRouting) {
             const routingAction = new Gio.SimpleAction({name: 'routing'});
             routingAction.connect('activate', () => {
-                this._mgmtRow?.emit('device-action', DeviceManagementAction.Routing, device.mac);
+                this._mgmtRow?.emit('device-action', DeviceManagementAction.Routing, device.id);
             });
             actionGroup.add_action(routingAction);
         }
 
         const connectAction = new Gio.SimpleAction({name: 'connect'});
         connectAction.connect('activate', () => {
-            this._mgmtRow?.emit('device-action', DeviceManagementAction.Connect, device.mac);
+            this._mgmtRow?.emit('device-action', DeviceManagementAction.Connect, device.id);
         });
         actionGroup.add_action(connectAction);
 
         const disconnectAction = new Gio.SimpleAction({name: 'disconnect'});
         disconnectAction.connect('activate', () => {
-            this._mgmtRow?.emit('device-action', DeviceManagementAction.Disconnect, device.mac);
+            this._mgmtRow?.emit('device-action', DeviceManagementAction.Disconnect, device.id);
         });
         actionGroup.add_action(disconnectAction);
 
@@ -271,7 +301,7 @@ const DeviceManagementDialog = GObject.registerClass({
 
             dialog.connect('response', (_dialog, response) => {
                 if (response === 'remove')
-                    this._mgmtRow?.emit('device-action', DeviceManagementAction.Remove, device.mac);
+                    this._mgmtRow?.emit('device-action', DeviceManagementAction.Remove, device.id);
             });
 
             dialog.present(this.get_root());
@@ -338,20 +368,28 @@ const DeviceManagementDialog = GObject.registerClass({
         }
     }
 
-    updateRouteDevice(mac) {
+    updateRouteDevice(id) {
         if (!this._mgmtRow.hasRouting)
             return;
 
-        if (!mac || this._routeDevice === mac)
+        if (!id || this._routeDevice === id)
             return;
 
-        this._routeDevice = mac;
+        this._routeDevice = id;
 
-        for (const [deviceMac, info] of this._rows) {
+        for (const [deviceId, info] of this._rows) {
             const isConnectedRow = this._connectedRows.includes(info.row);
             info.row.routeIcon.visible =
-                isConnectedRow && deviceMac === mac && !info.row.spinner.visible;
+                isConnectedRow && deviceId === id && !info.row.spinner.visible;
         }
+    }
+
+    updateOwnDevice(id) {
+        if (!id || this._ownDevice === id)
+            return;
+
+        this._ownDevice = id;
+        this.updateDevices(this._mgmtRow.deviceArr);
     }
 });
 
@@ -366,7 +404,8 @@ export const DeviceManagementRow = GObject.registerClass({
             GObject.ParamFlags.READWRITE, false),
     },
 }, class DeviceManagementRow extends Adw.ActionRow {
-    _init(window, gtxt, maxConnected, hasRouting, deviceArr, currentDevicePath, routeDevice) {
+    _init(window, gtxt, maxConnected, hasRouting, hasPairMode, showMac,
+        deviceArr, ownDevice, routeDevice) {
         super._init();
 
         const _ = gtxt;
@@ -374,9 +413,9 @@ export const DeviceManagementRow = GObject.registerClass({
         this.gtxt = gtxt;
         this.maxConnected = maxConnected;
         this.deviceArr = deviceArr.map(device => ({...device}));
-        this.routeDevice = routeDevice;
         this.hasRouting = hasRouting;
-        this.currentDevicePath = currentDevicePath;
+        this.hasPairMode = hasPairMode;
+        this.showMac = showMac;
         this._active = false;
 
         const box = new Gtk.Box({
@@ -411,7 +450,7 @@ export const DeviceManagementRow = GObject.registerClass({
             GObject.BindingFlags.SYNC_CREATE
         );
 
-        this._dialog = new DeviceManagementDialog(this);
+        this._dialog = new DeviceManagementDialog(this, ownDevice, routeDevice);
         this._button.connect('clicked', () => this._dialog.present(window));
 
         box.append(this._button);
@@ -438,7 +477,7 @@ export const DeviceManagementRow = GObject.registerClass({
         return a.every((device, i) => {
             const other = b[i];
 
-            return device.mac === other.mac &&
+            return device.id === other.id &&
                 device.name === other.name &&
                 device.connected === other.connected &&
                 device.state === other.state;
@@ -453,8 +492,12 @@ export const DeviceManagementRow = GObject.registerClass({
         this._dialog?.updateDevices(deviceArr);
     }
 
-    updateRouteDevice(mac) {
-        this._dialog?.updateRouteDevice(mac);
+    updateRouteDevice(id) {
+        this._dialog?.updateRouteDevice(id);
+    }
+
+    updateOwnDevice(id) {
+        this._dialog?.updateOwnDevice(id);
     }
 });
 
