@@ -201,7 +201,7 @@ export const BoseBudsSocket = GObject.registerClass({
 
             case CommandType.EQ: {
                 if (this._modelData.eq  && isStatus)
-                    this._parseBatteryLevel(msg.payload);
+                    this._parseEq(msg.payload);
                 break;
             }
 
