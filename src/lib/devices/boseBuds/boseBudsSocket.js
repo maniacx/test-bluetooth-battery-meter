@@ -18,7 +18,7 @@ https://github.com/aaronsb/bosectl/blob/main/docs/architecture.md
 https://github.com/myNameArnav/libreqc/tree/main/docs
 **/
 
-const MAX_BUFFER_SIZE = 250;
+const MAX_BUFFER_SIZE = 2048;
 
 export const BoseBudsSocket = GObject.registerClass({
     GTypeName: 'BudsLink_BoseSocket',
@@ -132,7 +132,7 @@ export const BoseBudsSocket = GObject.registerClass({
         const buf = this._rxBuffer;
 
         if (buf.length > MAX_BUFFER_SIZE) {
-            this._log.warning('RX buffer overflow, clearing');
+            this._log.info('RX buffer overflow, clearing');
             buf.length = 0;
             return null;
         }
@@ -743,9 +743,7 @@ export const BoseBudsSocket = GObject.registerClass({
         while (end < 38 && payload[end] !== 0)
             end++;
 
-        const name = new TextDecoder().decode(
-            Uint8Array.from(payload.slice(6, end))
-        );
+        const name = new TextDecoder().decode(Uint8Array.from(payload.slice(6, end)));
 
         const config = {
             index,
