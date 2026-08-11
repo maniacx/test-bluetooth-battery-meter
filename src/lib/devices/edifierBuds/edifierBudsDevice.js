@@ -287,7 +287,7 @@ export const EdifierBudsDevice = GObject.registerClass({
         const icons = {
             off: 'bbm-anc-off-symbolic.svg',
             nc: 'bbm-anc-on-symbolic.svg',
-            ambient: 'bbm-transparency-symbolic.svg',
+            ambient: 'bbm-transperancy-symbolic.svg',
         };
 
         for (let i = 1; i <= 4; i++) {
