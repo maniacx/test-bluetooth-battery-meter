@@ -93,7 +93,7 @@ export default {
     gestureOptions: {
         buttons: {
             left: {
-                id: 0x03,
+                id: 0x04,
                 gestures: {
                     'action-hold': {
                         type: 'tap',
@@ -109,7 +109,7 @@ export default {
             },
 
             right: {
-                id: 0x04,
+                id: 0x03,
                 gestures: {
                     'action-hold': {
                         type: 'tap',
