@@ -1273,11 +1273,7 @@ export const BoseBudsDevice = GObject.registerClass({
         if (this._gestures[index].action === action)
             return;
 
-        this._gestures[index] = {
-            ...this._gestures[index],
-            action,
-        };
-
+        this._gestures[index] = {...this._gestures[index], action};
         this._settingsItems['gestures'] = this._gestures;
         this._updateGsettings();
     }

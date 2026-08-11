@@ -110,7 +110,7 @@ export default {
                         type: 'tap',
                         byte: 0x09,
                         actions: {
-                            'no-action': 0x00,
+                            'disabled': 0x0E,
                             'battery-level': 0x03,
                             'spatial': 0x13,
                             'voice-assistant': 0x01,

@@ -971,17 +971,10 @@ export const BoseBudsSocket = GObject.registerClass({
             return;
 
         this._log.info('Parse VoicePrompt');
-
         const value = payload[0];
-
         const enabled = Boolean(value >> 5 & 0x01);
         const language = value & 0x1F;
-
-        const supported =
-        payload[1] << 24 |
-        payload[2] << 16 |
-        payload[3] << 8 |
-        payload[4];
+        const supported = payload[1] << 24 |payload[2] << 16 | payload[3] << 8 |payload[4];
 
         this._callbacks?.updateVoicePrompt?.(enabled, language, supported >>> 0);
     }

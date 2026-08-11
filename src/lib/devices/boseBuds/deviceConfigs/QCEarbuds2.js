@@ -99,9 +99,8 @@ export default {
                         type: 'tap',
                         byte: 0x09,
                         actions: {
-                            'no-action': 0x00,
+                            'disabled': 0x0E,
                             'mode': 0x11,
-                            'spatial': 0x13,
                             'voice-assistant': 0x01,
                         },
                     },
@@ -115,9 +114,8 @@ export default {
                         type: 'tap',
                         byte: 0x09,
                         actions: {
-                            'no-action': 0x00,
+                            'disabled': 0x0E,
                             'mode': 0x11,
-                            'spatial': 0x13,
                             'voice-assistant': 0x01,
                         },
                     },

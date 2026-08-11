@@ -744,7 +744,6 @@ export const ConfigureWindow = GObject.registerClass({
 
         switch (action) {
             case 'no-action':
-            case 'disabled':
                 return _('No Action');
 
             case 'mode':
@@ -809,6 +808,9 @@ export const ConfigureWindow = GObject.registerClass({
 
             case 'linking':
                 return _('Speaker Link');
+
+            case 'disabled':
+                return _('Disabled');
 
             default:
                 return action;
