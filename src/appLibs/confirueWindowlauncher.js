@@ -5,6 +5,7 @@ import * as NothingBuds from '../preferences/devices/nothingBuds/configureWindow
 import * as GoogleBuds from '../preferences/devices/googleBuds/configureWindow.js';
 import * as RedmiBuds from '../preferences/devices/redmiBuds/configureWindow.js';
 import * as SenhBuds from '../preferences/devices/senhBuds/configureWindow.js';
+import * as EdifierBuds from '../preferences/devices/edifierBuds/configureWindow.js';
 import * as Gfps from '../preferences/devices/gfps/configureWindow.js';
 
 let _settings = null;
@@ -60,6 +61,10 @@ export function createConfigureWindow({
         case 'senhBuds':
             Prefs = SenhBuds;
             schemaKey = 'senh-buds-list';
+            break;
+        case 'edifierBuds':
+            Prefs = EdifierBuds;
+            schemaKey = 'edifier-buds-list';
             break;
         case 'gfps':
             Prefs = Gfps;
