@@ -59,6 +59,7 @@ export const BoseBudsDevice = GObject.registerClass({
         this._extPath = extPath;
         this.updateDeviceMapCb = updateDeviceMapCb;
         this._ignoreGsettingsChange = false;
+        this._inEarSettings = false;
 
         this._config = createConfig();
         this._props = createProperties();
@@ -86,6 +87,7 @@ export const BoseBudsDevice = GObject.registerClass({
             updateInEarSettings: this.updateInEarSettings.bind(this),
             updateAutoAnswer: this.updateAutoAnswer.bind(this),
             updateAutoPause: this.updateAutoPause.bind(this),
+            updateAutoTransparency: this.updateAutoTransparency.bind(this),
             updateAutoPowerOffTimer: this.updateAutoPowerOffTimer.bind(this),
             updateVoicePrompt: this.updateVoicePrompt.bind(this),
             updateActionButton: this.updateActionButton.bind(this),
@@ -515,7 +517,7 @@ export const BoseBudsDevice = GObject.registerClass({
             const autoTransparency = this._settingsItems['auto-transp'];
             if (this._autoTransparency !== autoTransparency) {
                 this._autoTransparency = autoTransparency;
-                this._setInEarSettings(this._inEarSettings);
+                this._setAutoTransparency(autoTransparency);
             }
         }
 
@@ -1207,6 +1209,22 @@ export const BoseBudsDevice = GObject.registerClass({
             this._setInEarSettings(this._inEarSettings);
         else
             this._boseBudsSocket?.setAutoPause(enabled);
+    }
+
+    updateAutoTransparency(enabled) {
+        this._log.info(`updateAutoTransparency enabled: ${enabled}`);
+        if (this._autoTransparency !== enabled) {
+            this._autoTransparency = enabled;
+            this._settingsItems['auto-transp'] = enabled;
+            this._updateGsettings();
+        }
+    }
+
+    _setAutoTransparency(enabled) {
+        if (this._modelData.inEarSettings)
+            this._setInEarSettings(this._inEarSettings);
+        else
+            this._boseBudsSocket?.setAutoTransparency(enabled);
     }
 
     updateAutoPowerOffTimer(minutes) {

@@ -51,6 +51,7 @@ export const CommandType = {
     INEAR_SETTINGS: 0x0110,
     AUTO_PAUSE: 0x0118,
     AUTO_ANSWER: 0x011B,
+    AUTO_TRANSP: 0x011D,
     BATTERY: 0x0202,
     CHARGING_STATE: 0x0205,
     INEAR_STATE: 0x0209,

@@ -104,7 +104,7 @@ export default {
         high: 0x01,
     },
 
-    inEarSettings: true,
+    // inEarSettings: true,
     autoAnswer: true,
     autoPause: true,
     autoTransparency: true,

@@ -283,6 +283,12 @@ export const BoseBudsSocket = GObject.registerClass({
                 break;
             }
 
+            case CommandType.AUTO_TRANSP: {
+                if (!this._modelData.inEarSettings && this._modelData.autoTransparency && isStatus)
+                    this._parseAutoTransparency(msg.payload);
+                break;
+            }
+
             case CommandType.VOICE_PROMPTS: {
                 if (this._modelData.voicePrompt && isStatus)
                     this._parseVoicePrompt(msg.payload);
@@ -406,6 +412,9 @@ export const BoseBudsSocket = GObject.registerClass({
 
         if (!this._modelData.inEarSettings && this._modelData.autoPause)
             this._getAutoPause();
+
+        if (!this._modelData.inEarSettings && this._modelData.autoTransparency)
+            this._getAutoTransparency();
 
         if (this._modelData.voicePrompt)
             this._getVoicePrompt();
@@ -941,6 +950,26 @@ export const BoseBudsSocket = GObject.registerClass({
         this._encode(CommandType.AUTO_PAUSE, Operator.SETGET, loginfo, payload);
     }
 
+    _getAutoTransparency() {
+        const loginfo = 'Get AutoTransparency';
+        this._encode(CommandType.AUTO_TRANSP, Operator.GET, loginfo);
+    }
+
+    _parseAutoTransparency(payload) {
+        if (payload.length < 1)
+            return;
+
+        this._log.info('Parse AutoTransparency');
+        const enabled = payload[0] === 0x01;
+        this._callbacks?.updateAutoTransparency?.(enabled);
+    }
+
+    setAutoTransparency(enabled) {
+        const loginfo = 'Set AutoTransparency';
+        const payload = [enabled ? 0x01 : 0x00];
+        this._encode(CommandType.AUTO_TRANSP, Operator.SETGET, loginfo, payload);
+    }
+
     _getAutoPowerOffTimer() {
         const loginfo = 'Get AutoPowerOffTimer';
         this._encode(CommandType.AUTO_POWER_OFF_TIME, Operator.GET, loginfo);
@@ -974,7 +1003,7 @@ export const BoseBudsSocket = GObject.registerClass({
         const value = payload[0];
         const enabled = Boolean(value >> 5 & 0x01);
         const language = value & 0x1F;
-        const supported = payload[1] << 24 |payload[2] << 16 | payload[3] << 8 |payload[4];
+        const supported = payload[1] << 24 | payload[2] << 16 | payload[3] << 8 | payload[4];
 
         this._callbacks?.updateVoicePrompt?.(enabled, language, supported >>> 0);
     }
