@@ -5,9 +5,7 @@ import GObject from 'gi://GObject';
 import {createLogger, getDeviceIdentifier, hexBytes} from '../logger.js';
 import {bytesToHex, hexToBytes} from '../deviceUtils.js';
 import {SocketHandler} from '../socketByProfile.js';
-import {
-    Operator, CommandType, BudId
-} from './boseBudsConfig.js';
+import {Operator, CommandType, BudId} from './boseBudsConfig.js';
 
 /**
 Reference Material and Credits
@@ -1005,12 +1003,25 @@ export const BoseBudsSocket = GObject.registerClass({
         const language = value & 0x1F;
         const supported = payload[1] << 24 | payload[2] << 16 | payload[3] << 8 | payload[4];
 
-        this._callbacks?.updateVoicePrompt?.(enabled, language, supported >>> 0);
+        let batSupported = false;
+        let batEnabled = false;
+
+        if (payload.length >= 7) {
+            batSupported = payload[5] === 0x01;
+            batEnabled = payload[6] === 0x01;
+        }
+
+        this._callbacks?.updateVoicePrompt?.(enabled, language, supported >>> 0,
+            batSupported, batEnabled);
     }
 
-    setVoicePrompt(enabled, language) {
+    setVoicePrompt(enabled, language, batSupported, batEnabled) {
         const loginfo = 'Set VoicePrompt';
         const payload = [(enabled ? 1 : 0) << 5 | language & 0x1F];
+
+        if (batSupported)
+            payload.push(batEnabled ? 0x01 : 0x00);
+
         this._encode(CommandType.VOICE_PROMPTS, Operator.SETGET, loginfo, payload);
     }
 

@@ -179,6 +179,11 @@ export const ConfigureWindow = GObject.registerClass({
             if (this._voicePrompDropdown)
                 this._voicePrompDropdown.selected_item = this._settingsItems['voice-prompt'];
 
+            if (this._battVoiceSwitch) {
+                this._battVoiceSwitch.active = this._settingsItems['vobat-en'];
+                this._battVoiceSwitch.visible = this._settingsItems['vobat-sup'];
+            }
+
             if (this._gestureRows) {
                 const gestures = this._settingsItems['gestures'] ?? [];
 
@@ -635,6 +640,20 @@ export const ConfigureWindow = GObject.registerClass({
             this._updateGsettings('voice-prompt', selectedVal);
         });
         this._promptGroup.add(this._voicePrompDropdown);
+
+        this._battVoiceSwitch = new Adw.SwitchRow({
+            title: _('Announce Battery Level at Startup'),
+            visible: this._settingsItems['vobat-sup'],
+        });
+
+        this._battVoiceSwitch.active = this._settingsItems['vobat-en'];
+
+        this._battVoiceSwitch.connect('notify::active', () => {
+            this._updateGsettings('vobat-en', this._battVoiceSwitch.active);
+        });
+
+        this._promptGroup.add(this._battVoiceSwitch);
+
         this._promptGroup.visible = true;
     }
 

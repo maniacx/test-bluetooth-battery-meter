@@ -274,6 +274,9 @@ export const BoseBudsDevice = GObject.registerClass({
                 'voice-enabled': false,
                 'voice-prompt': 0xFF,
                 'supported-voice': 0xFFFFFFFF,
+                'batt-voice': 0,
+                'vobat-sup': false,
+                'vobat-en': false,
             },
 
             ...this._modelData.gestureOptions && {
@@ -344,6 +347,8 @@ export const BoseBudsDevice = GObject.registerClass({
             this._voiceEnabled = this._settingsItems['voice-enabled'];
             this._voicePrompt = this._settingsItems['voice-prompt'];
             this._supportedVoice = this._settingsItems['supported-voice'];
+            this._voiceBatSupported = this._settingsItems['vobat-sup'];
+            this._voiceBatEnabled = this._settingsItems['vobat-en'];
         }
 
         if (this._modelData.gestureOptions)
@@ -530,17 +535,27 @@ export const BoseBudsDevice = GObject.registerClass({
         }
 
         if (this._modelData.voicePrompt) {
+            let update = false;
             const voiceEnabled = this._settingsItems['voice-enabled'];
             if (this._voiceEnabled !== voiceEnabled) {
                 this._voiceEnabled = voiceEnabled;
-                this._setVoicePromptEnable(voiceEnabled);
+                update = true;
             }
 
             const voicePrompt = this._settingsItems['voice-prompt'];
             if (this._voicePrompt !== voicePrompt) {
                 this._voicePrompt = voicePrompt;
-                this._setVoicePrompt(voicePrompt);
+                update = true;
             }
+
+            const batEnabled = this._settingsItems['vobat-en'];
+            if (this._voiceBatEnabled !== batEnabled) {
+                this._voiceBatEnabled = batEnabled;
+                update = true;
+            }
+
+            if (update)
+                this._setVoicePrompt();
         }
 
         if (this._modelData.gestureOptions) {
@@ -1240,7 +1255,7 @@ export const BoseBudsDevice = GObject.registerClass({
         this._boseBudsSocket?.setAutoPowerOffTimer(minutes);
     }
 
-    updateVoicePrompt(enabled, language, supported) {
+    updateVoicePrompt(enabled, language, supported, batSupported, batEnabled) {
         let update = false;
 
         if (this._voiceEnabled !== enabled) {
@@ -1261,22 +1276,28 @@ export const BoseBudsDevice = GObject.registerClass({
             update = true;
         }
 
+        if (this._voiceBatSupported !== batSupported) {
+            this._voiceBatSupported = batSupported;
+            this._settingsItems['vobat-sup'] = batSupported;
+            update = true;
+        }
+
+        if (this._voiceBatEnabled !== batEnabled) {
+            this._voiceBatEnabled = batEnabled;
+            this._settingsItems['vobat-en'] = batEnabled;
+            update = true;
+        }
+
         if (update)
             this._updateGsettings();
     }
 
-    _setVoicePromptEnable(enabled) {
+    _setVoicePrompt() {
         if (this._voicePrompt === 0xFF)
             return;
 
-        this._boseBudsSocket?.setVoicePrompt(enabled, this._voicePrompt);
-    }
-
-    _setVoicePrompt(language) {
-        if (language === 0xFF)
-            return;
-
-        this._boseBudsSocket?.setVoicePrompt(this._voiceEnabled, language);
+        this._boseBudsSocket?.setVoicePrompt(this._voiceEnabled, this._voicePrompt,
+            this._voiceBatSupported, this._voiceBatEnabled);
     }
 
     updateActionButton(buttonId, eventType, action) {
