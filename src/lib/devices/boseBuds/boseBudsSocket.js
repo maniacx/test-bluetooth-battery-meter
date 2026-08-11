@@ -753,7 +753,7 @@ export const BoseBudsSocket = GObject.registerClass({
             fav,
             name,
             flag: payload[41],
-            cnc: payload[42],
+            cnc: this._modelData.audioModes.nc.level - payload[42],
             autoCnc: payload[43] === 1,
             spatial: payload.length >= 45 ? payload[44] : 0,
             wind: payload.length >= 47 ? payload[46] : 0,
@@ -773,7 +773,7 @@ export const BoseBudsSocket = GObject.registerClass({
             0x00,
             mode.id,
             ...nameBuf,
-            mode.cnc,
+            this._modelData.audioModes.nc.level - mode.cnc,
             mode.autoCnc,
             mode.spatial,
             mode.wind,
@@ -794,7 +794,7 @@ export const BoseBudsSocket = GObject.registerClass({
             return;
 
         this._log.info('Parse Noise Cancellation');
-        const level = payload[1];
+        const level = this._modelData.audioModes.nc.level - payload[1];
         const enabled = (payload[2] & 0x01) !== 0;
 
         this._callbacks?.updateCnc?.(level, enabled);
@@ -802,7 +802,7 @@ export const BoseBudsSocket = GObject.registerClass({
 
     setCnc(level, enabled) {
         const loginfo = 'Set Noise Cancellation';
-        const payload = [level, enabled ? 1 : 0];
+        const payload = [this._modelData.audioModes.nc.level - level, enabled ? 1 : 0];
         this._encode(CommandType.CNC, Operator.SETGET, loginfo, payload);
     }
 
