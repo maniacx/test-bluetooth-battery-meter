@@ -1485,7 +1485,6 @@ export const BoseBudsDevice = GObject.registerClass({
         this._stopBTTimeout(id);
     }
 
-
     updateDisconnectStatus(id) {
         const device = this._deviceInfo.find(device => device.id === id);
 

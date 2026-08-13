@@ -167,6 +167,12 @@ export const BoseBudsSocket = GObject.registerClass({
         const isProcessing = msg.operator === Operator.PROCESSING;
 
         switch (msg.command) {
+            case CommandType.NOTIFICATION_BY_BLOCK: {
+                if (isStatus)
+                    this._parseNotificationByBlock(msg.payload);
+                break;
+            }
+
             case CommandType.FIRMWARE: {
                 if (isStatus)
                     this._parseFirmware(msg.payload);
@@ -368,6 +374,7 @@ export const BoseBudsSocket = GObject.registerClass({
     }
 
     _getConfiguration() {
+        this._setNotificationByBlock();
         this._getFirmware();
         this._getSerial();
         this._getBatteryLevel();
@@ -429,6 +436,50 @@ export const BoseBudsSocket = GObject.registerClass({
             this._getPairingMode();
             this._getAllBTDevices();
         }
+    }
+
+    _setNotificationByBlock() {
+        const loginfo = 'Set NotificationByBlock';
+        const blocks = [0, 1, 5, 9];
+
+        if (this._modelData.dualConnection)
+            blocks.push(4);
+
+        if (this._modelData.audioModes)
+            blocks.push(31);
+
+        blocks.sort((a, b) => a - b);
+
+        const notification = new Uint8Array(4);
+
+        for (const block of blocks) {
+            const byteIndex = 3 - Math.floor(block / 8);
+            const bitIndex = block % 8;
+
+            notification[byteIndex] |= 1 << bitIndex;
+        }
+
+        const payload = [0x01, ...notification];
+        this._encode(CommandType.NOTIFICATION_BY_BLOCK, Operator.SETGET, loginfo, payload);
+    }
+
+    _parseNotificationByBlock(payload) {
+        if (payload.length < 4)
+            return;
+
+        this._log.info('Parse NotificationByBlock');
+
+        const blocks = [];
+
+        for (let block = 0; block < 32; block++) {
+            const byteIndex = 3 - Math.floor(block / 8);
+            const bitIndex = block % 8;
+
+            if (payload[byteIndex] & 1 << bitIndex)
+                blocks.push(block);
+        }
+
+        this._log.info(`Notification blocks: [${blocks.join(', ')}]`);
     }
 
     _getFirmware() {
