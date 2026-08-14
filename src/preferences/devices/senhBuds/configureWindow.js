@@ -743,7 +743,9 @@ export const ConfigureWindow = GObject.registerClass({
             maxConnected,
             hasMultipointSwitch: false,
             hasPairMode: false,
-            hasRouting: false,
+            hasRoutingIndicator: false,
+            hasRoutingControl: false,
+            hasActiveFix: false,
             showMac: false,
         };
 

@@ -57,22 +57,39 @@ const DeviceManagementDialog = GObject.registerClass({
                 'active',
                 spinner,
                 'visible',
-                GObject.BindingFlags.BIDIRECTIONAL |
-            GObject.BindingFlags.SYNC_CREATE
+                GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE
             );
 
             this._mgmtRow.bind_property(
                 'pair-mode',
                 pairModeSwitch,
                 'active',
-                GObject.BindingFlags.BIDIRECTIONAL |
-            GObject.BindingFlags.SYNC_CREATE
+                GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE
             );
 
             pairModeRow.add_suffix(spinner);
             pairModeRow.add_suffix(pairModeSwitch);
             pairModeGroup.add(pairModeRow);
             page.add(pairModeGroup);
+        }
+
+        if (this._mgmtRow.config.hasActiveFix) {
+            const activeFixedGroup = new Adw.PreferencesGroup({title: _('Playback Device')});
+            const title = _('Lock Playback Device');
+            const subtitle = _('Prevent playback from switching to another connected device ' +
+                'while the set playback device is streaming.');
+
+            const activeFixedRow = new Adw.SwitchRow({title,  subtitle});
+
+            this._mgmtRow.bind_property(
+                'active-fixed',
+                activeFixedRow,
+                'active',
+                GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE
+            );
+
+            activeFixedGroup.add(activeFixedRow);
+            page.add(activeFixedGroup);
         }
 
         this._connectedGroup = new Adw.PreferencesGroup({title: _('Connected')});
@@ -155,7 +172,7 @@ const DeviceManagementDialog = GObject.registerClass({
 
             info.row.spinner.visible = isProcessing || isInitializing;
 
-            if (this._mgmtRow.config.hasRouting) {
+            if (this._mgmtRow.config.hasRoutingIndicator) {
                 const isRouteDevice = this._routeDevice === device.id;
                 info.row.routeIcon.visible = !isInitializing && !isProcessing &&
                         device.connected && isRouteDevice;
@@ -240,7 +257,7 @@ const DeviceManagementDialog = GObject.registerClass({
         const row = new Adw.ActionRow({title, subtitle});
 
         let routeIcon;
-        if (this._mgmtRow.config.hasRouting) {
+        if (this._mgmtRow.config.hasRoutingIndicator) {
             routeIcon = new Gtk.Image({
                 icon_name: 'bbm-speakers-symbolic',
                 css_classes: ['flat'],
@@ -264,7 +281,7 @@ const DeviceManagementDialog = GObject.registerClass({
         const menu = new Gio.Menu();
         const actionGroup = new Gio.SimpleActionGroup();
 
-        if (this._mgmtRow.config.hasRouting) {
+        if (this._mgmtRow.config.hasRoutingControl) {
             const routingAction = new Gio.SimpleAction({name: 'routing'});
             routingAction.connect('activate', () => {
                 this._mgmtRow?.emit('device-action', DeviceManagementAction.Routing, device.id);
@@ -337,7 +354,7 @@ const DeviceManagementDialog = GObject.registerClass({
         row.connectItem = connectItem;
         row.disconnectItem = disconnectItem;
         row.removeItem = removeItem;
-        if (this._mgmtRow.config.hasRouting)
+        if (this._mgmtRow.config.hasRoutingControl)
             row.routingItem = routingItem;
 
 
@@ -347,11 +364,10 @@ const DeviceManagementDialog = GObject.registerClass({
             'visible',
             button,
             'visible',
-            GObject.BindingFlags.INVERT_BOOLEAN |
-            GObject.BindingFlags.SYNC_CREATE
+            GObject.BindingFlags.INVERT_BOOLEAN | GObject.BindingFlags.SYNC_CREATE
         );
 
-        if (this._mgmtRow.config.hasRouting) {
+        if (this._mgmtRow.config.hasRoutingIndicator) {
             row.add_suffix(routeIcon);
             row.routeIcon = routeIcon;
         }
@@ -369,7 +385,8 @@ const DeviceManagementDialog = GObject.registerClass({
         menu.remove_all();
 
         if (device.connected) {
-            if (this._mgmtRow.config.hasRouting)
+            const isRouteDevice = this._routeDevice === device.id;
+            if (this._mgmtRow.config.hasRoutingControl && !isRouteDevice)
                 menu.append_item(row.routingItem);
 
             menu.append_item(row.disconnectItem);
@@ -381,7 +398,7 @@ const DeviceManagementDialog = GObject.registerClass({
     }
 
     updateRouteDevice(id) {
-        if (!this._mgmtRow.config.hasRouting)
+        if (!this._mgmtRow.config.hasRoutingIndicator && !this._mgmtRow.config.hasRoutingControl)
             return;
 
         if (!id || this._routeDevice === id)
@@ -391,8 +408,15 @@ const DeviceManagementDialog = GObject.registerClass({
 
         for (const [deviceId, info] of this._rows) {
             const isConnectedRow = this._connectedRows.includes(info.row);
-            info.row.routeIcon.visible =
-                isConnectedRow && deviceId === id && !info.row.spinner.visible;
+            const isRouteDevice = deviceId === id;
+
+            if (this._mgmtRow.config.hasRoutingIndicator) {
+                info.row.routeIcon.visible = isConnectedRow && isRouteDevice &&
+                            !info.row.spinner.visible;
+            }
+
+            if (this._mgmtRow.config.hasRoutingControl)
+                this._updateDeviceMenu(info.row, {id: deviceId, connected: isConnectedRow});
         }
     }
 
@@ -414,6 +438,8 @@ export const DeviceManagementRow = GObject.registerClass({
         'active': GObject.ParamSpec.boolean('active', '', '', GObject.ParamFlags.READWRITE, false),
         'pair-mode': GObject.ParamSpec.boolean('pair-mode', '', '',
             GObject.ParamFlags.READWRITE, false),
+        'active-fixed': GObject.ParamSpec.boolean('active-fixed', '', '',
+            GObject.ParamFlags.READWRITE, false),
     },
 }, class DeviceManagementRow extends Adw.ActionRow {
     _init(window, gtxt, deviceArr, ownDevice, routeDevice, config = {}) {
@@ -421,8 +447,10 @@ export const DeviceManagementRow = GObject.registerClass({
         this.config = {
             hasMultipointSwitch: true,
             maxConnected: 2,
-            hasPairMode: true,
-            hasRouting: true,
+            hasPairMode: false,
+            hasRoutingIndicator: false,
+            hasRoutingControl: false,
+            hasActiveFix: false,
             showMac: true,
             ...config,
         };
@@ -457,8 +485,7 @@ export const DeviceManagementRow = GObject.registerClass({
                 'active',
                 this._switch,
                 'active',
-                GObject.BindingFlags.BIDIRECTIONAL |
-            GObject.BindingFlags.SYNC_CREATE
+                GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE
             );
 
             this._switch.bind_property(

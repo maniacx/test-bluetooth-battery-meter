@@ -449,7 +449,6 @@ export const BoseBudsSocket = GObject.registerClass({
             blocks.push(31);
 
         blocks.sort((a, b) => a - b);
-
         const notification = new Uint8Array(4);
 
         for (const block of blocks) {
@@ -468,7 +467,6 @@ export const BoseBudsSocket = GObject.registerClass({
             return;
 
         this._log.info('Parse NotificationByBlock');
-
         const blocks = [];
 
         for (let block = 0; block < 32; block++) {

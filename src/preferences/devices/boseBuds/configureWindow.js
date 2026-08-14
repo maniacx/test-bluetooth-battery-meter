@@ -522,7 +522,9 @@ export const ConfigureWindow = GObject.registerClass({
                 maxConnected: this._modelData.maxConnected ?? 2,
                 hasMultipointSwitch: true,
                 hasPairMode: true,
-                hasRouting: true,
+                hasRoutingIndicator: true,
+                hasRoutingControl: true,
+                hasActiveFix: true,
                 showMac: true,
             };
             const deviceInfo = this._settingsItems['dev-mgmt'];

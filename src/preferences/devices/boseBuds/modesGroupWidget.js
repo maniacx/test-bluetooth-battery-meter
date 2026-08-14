@@ -588,6 +588,8 @@ const ModeRow = GObject.registerClass({
 
     destroy() {
         this.dialog.destroy();
+        this.dialog = null;
+
         if (this._rowActiveSignalId)
             this.disconnect(this._rowActiveSignalId);
         this._rowActiveSignalId = null;
