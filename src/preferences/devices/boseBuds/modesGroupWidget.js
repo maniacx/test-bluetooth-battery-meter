@@ -361,6 +361,7 @@ const ModeRow = GObject.registerClass({
         this._mode = mode;
         this._modes = modes;
         this.updatingProgrammatically = false;
+        this._dialogPresented = false;
 
         const iconMode = AudioModes[this._mode.id];
         const modeIcon = new Gtk.Image({
@@ -446,7 +447,14 @@ const ModeRow = GObject.registerClass({
             this._updateFavoriteButton();
         });
 
-        editButton.connect('clicked', () => this.dialog.present(window));
+        editButton.connect('clicked', () => {
+            this._dialogPresented = true;
+            this.dialog.present(window);
+        });
+
+        this.dialog.connect('closed', () => {
+            this._dialogPresented = false;
+        });
 
         box.append(this.addToggleButton);
         box.append(this.favoriteButton);
@@ -485,7 +493,7 @@ const ModeRow = GObject.registerClass({
                     this.updatingProgrammatically = false;
                     const txt = _('Maximum 4 modes can be selected');
 
-                    if (this.dialog.get_focus())
+                    if (this._dialogPresented)
                         this.dialog.showToast(txt);
                     else
                         this._window.showToast(txt);
@@ -499,7 +507,7 @@ const ModeRow = GObject.registerClass({
                 this.updatingProgrammatically = false;
                 const txt = _('At least 2 modes must be selected.');
 
-                if (this.dialog.get_focus())
+                if (this._dialogPresented)
                     this.dialog.showToast(txt);
                 else
                     this._window.showToast(txt);
@@ -540,7 +548,7 @@ const ModeRow = GObject.registerClass({
 
                     const txt = _('Maximum favorites limit reached.');
 
-                    if (this.dialog.get_focus())
+                    if (this._dialogPresented)
                         this.dialog.showToast(txt);
                     else
                         this._window.showToast(txt);
@@ -555,7 +563,7 @@ const ModeRow = GObject.registerClass({
 
                 const txt = _('At least 2 favorites are required.');
 
-                if (this.dialog.get_focus())
+                if (this._dialogPresented)
                     this.dialog.showToast(txt);
                 else
                     this._window.showToast(txt);

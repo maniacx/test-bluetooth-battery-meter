@@ -201,6 +201,9 @@ export const ConfigureWindow = GObject.registerClass({
             this._eq?.destroy();
             this._eq = null;
 
+            this._audioModesGrp?.destroy();
+            this._audioModesGrp = null;
+
             if (settingSignalId && this._settings)
                 this._settings.disconnect(settingSignalId);
 
