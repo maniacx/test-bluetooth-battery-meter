@@ -6,8 +6,9 @@ import {DropDownRowWidget} from './../../widgets/dropDownRowWidget.js';
 import {SliderRowWidget} from './../../widgets/sliderRowWidget.js';
 import {AudioModes} from '../../../lib/devices/boseBuds/boseBudsConfig.js';
 
-const ModeEditDialog = GObject.registerClass(
-class ModeEditDialog extends Adw.Dialog {
+const ModeEditDialog = GObject.registerClass({
+    GTypeName: 'BudsLink_ModeEditDialog',
+}, class ModeEditDialog extends Adw.Dialog {
     _init(modeRow, gtxt, modelData, mode, alias) {
         super._init({
             title: alias,
@@ -597,6 +598,7 @@ const ModeRow = GObject.registerClass({
 });
 
 const ModeAddButton = GObject.registerClass({
+    GTypeName: 'BudsLink_ModeAddButton',
     Signals: {
         'mode-added': {
             param_types: [GObject.TYPE_JSOBJECT],
