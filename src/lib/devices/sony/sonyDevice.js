@@ -178,12 +178,12 @@ export const SonyDevice = GObject.registerClass({
 
         if (this._ambientSoundControlSupported) {
             this._config.toggle1Title = _('Noise Control');
-            this._config.toggle1Button1Icon = 'bbm-anc-off-symbolic.svg';
+            this._config.toggle1Button1Icon = 'bbm-anc-off-symbolic';
             this._config.toggle1Button1Name = _('Off');
-            this._config.toggle1Button2Icon = 'bbm-transperancy-symbolic.svg';
+            this._config.toggle1Button2Icon = 'bbm-transperancy-symbolic';
             this._config.toggle1Button2Name = _('Ambient');
             if (!this._noNoiseCancellingSupported) {
-                this._config.toggle1Button3Icon = 'bbm-anc-on-symbolic.svg';
+                this._config.toggle1Button3Icon = 'bbm-anc-on-symbolic';
                 this._config.toggle1Button3Name = _('Noise Cancellation');
             }
             this._config.optionsBox1 = ['check-button', 'slider'];
@@ -209,9 +209,9 @@ export const SonyDevice = GObject.registerClass({
 
         if (this._speakToChatEnabledSupported) {
             this._config.toggle2Title = _('Conversation Awareness');
-            this._config.toggle2Button1Icon = 'bbm-ca-on-symbolic.svg';
+            this._config.toggle2Button1Icon = 'bbm-ca-on-symbolic';
             this._config.toggle2Button1Name = _('On');
-            this._config.toggle2Button2Icon = 'bbm-ca-off-symbolic.svg';
+            this._config.toggle2Button2Icon = 'bbm-ca-off-symbolic';
             this._config.toggle2Button2Name = _('Off');
         }
 

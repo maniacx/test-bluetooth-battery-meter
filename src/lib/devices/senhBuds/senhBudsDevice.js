@@ -562,9 +562,9 @@ export const SenhBudsDevice = GObject.registerClass({
         };
 
         const icons = {
-            off: 'bbm-anc-off-symbolic.svg',
-            nc: 'bbm-anc-on-symbolic.svg',
-            adaptive: 'bbm-adaptive-symbolic.svg',
+            off: 'bbm-anc-off-symbolic',
+            nc: 'bbm-anc-on-symbolic',
+            adaptive: 'bbm-adaptive-symbolic',
         };
 
         for (let i = 1; i <= 4; i++) {

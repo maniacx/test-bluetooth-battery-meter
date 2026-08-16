@@ -679,10 +679,10 @@ export const BoseBudsDevice = GObject.registerClass({
         };
 
         const icons = {
-            off: 'bbm-anc-off-symbolic.svg',
-            low: 'bbm-transperancy-symbolic.svg',
-            high: 'bbm-anc-on-symbolic.svg',
-            wind: 'bbm-anc-wind-symbolic.svg',
+            off: 'bbm-anc-off-symbolic',
+            low: 'bbm-transperancy-symbolic',
+            high: 'bbm-anc-on-symbolic',
+            wind: 'bbm-anc-wind-symbolic',
         };
 
         this._toggle1Modes = Object.keys(anr);

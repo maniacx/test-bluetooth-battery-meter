@@ -617,10 +617,10 @@ export const GalaxyBudsDevice = GObject.registerClass({
         this._toggle1Modes = modes;
 
         const icons = {
-            off: 'bbm-anc-off-symbolic.svg',
-            transparency: 'bbm-transperancy-symbolic.svg',
-            adaptive: 'bbm-adaptive-symbolic.svg',
-            anc: 'bbm-anc-on-symbolic.svg',
+            off: 'bbm-anc-off-symbolic',
+            transparency: 'bbm-transperancy-symbolic',
+            adaptive: 'bbm-adaptive-symbolic',
+            anc: 'bbm-anc-on-symbolic',
         };
 
         const labels = {
@@ -687,9 +687,9 @@ export const GalaxyBudsDevice = GObject.registerClass({
 
         this._toggle2Enabled = true;
         this._config.toggle2Title = _('Conversation Awareness');
-        this._config.toggle2Button1Icon = 'bbm-ca-on-symbolic.svg';
+        this._config.toggle2Button1Icon = 'bbm-ca-on-symbolic';
         this._config.toggle2Button1Name = _('On');
-        this._config.toggle2Button2Icon = 'bbm-ca-off-symbolic.svg';
+        this._config.toggle2Button2Icon = 'bbm-ca-off-symbolic';
         this._config.toggle2Button2Name = _('Off');
     }
 

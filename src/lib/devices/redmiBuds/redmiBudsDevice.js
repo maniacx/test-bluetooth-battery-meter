@@ -537,7 +537,7 @@ export const RedmiBudsDevice = GObject.registerClass({
             addToggle(
                 'off',
                 nc.off,
-                'bbm-anc-off-symbolic.svg',
+                'bbm-anc-off-symbolic',
                 _('Off')
             );
         }
@@ -546,7 +546,7 @@ export const RedmiBudsDevice = GObject.registerClass({
             addToggle(
                 'transparency',
                 nc.transparency,
-                'bbm-transperancy-symbolic.svg',
+                'bbm-transperancy-symbolic',
                 _('Transparency')
             );
         }
@@ -555,7 +555,7 @@ export const RedmiBudsDevice = GObject.registerClass({
             addToggle(
                 'noiseCancellation',
                 nc.noiseCancellation,
-                'bbm-anc-on-symbolic.svg',
+                'bbm-anc-on-symbolic',
                 _('Noise Cancellation')
             );
         }
