@@ -10,7 +10,7 @@ permalink: /
 [<img src="{{ 'assets/images/home/view-sources-on-github.png' | relative_url }}" width="45%" class="float-right">](https://github.com/maniacx/BudsLink)
 
 
-**BudsLink is an application that provides battery monitoring and feature control for supported Bluetooth wearable audio devices, including AirPods, Beats, Sony Audio wearables, Samsung Galaxy Buds and Nothing/CMF buds.**
+**BudsLink is an application that provides battery monitoring and feature control for supported Bluetooth wearable audio devices, including AirPods, Beats, Sony, Samsung Galaxy Buds, Nothing/CMF, Bose, Redmi, Xiaomi and Sennheiser .**
 
 <br>
 <br>
@@ -19,7 +19,7 @@ permalink: /
 
 
 # Disclaimer
-**This project is an independent effort and is not affiliated with, endorsed by, or sponsored by Apple, Sony, Samsung, or Nothing. All product and company names are trademarks™ or registered® trademarks of their respective holders and are used for identification purposes only.**
+**This project is an independent effort and is not affiliated with, endorsed by, or sponsored by Apple, Sony, Samsung, Nothing/CMF, Bose, Redmi, Xiaomi or Sennheiser. All product and company names are trademarks™ or registered® trademarks of their respective holders and are used for identification purposes only.**
 
 
 # Supported Bluetooth audio wearables
@@ -27,6 +27,9 @@ permalink: /
 * Sony
 * Samsung Galaxy Buds
 * Nothing / CMF
+* Bose
+* Redmi / Xiaomi
+* Sennheiser
 
 # Features:
 

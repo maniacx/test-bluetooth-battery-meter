@@ -309,7 +309,6 @@ table th:nth-of-type(3) {
 | Battery Level                 | L, R, Case     | ❌     |
 | In‑Ear Play/Pause             | ✅             | ❌     |
 
-
 <br>
 ### Beats Fit Pro
 
