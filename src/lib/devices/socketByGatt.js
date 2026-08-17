@@ -69,6 +69,7 @@ export const GattHandler = GObject.registerClass({
         this._writeProxy = null;
         this._peerPath = null;
         this._discovering = false;
+        this._reconnecting = false;
         this._timeoutIds = new Set();
 
         /* Populated from the peer's advertisement when available. Vendors use these
@@ -454,7 +455,7 @@ export const GattHandler = GObject.registerClass({
                     Gio.DBusCallFlags.NONE, 5000, this._cancellable);
             } catch (e) {
                 this._socketLog.error(e, 'Send Message');
-                this.destroy();
+                this._handleLinkLost();
                 break;
             }
         }
@@ -468,16 +469,11 @@ export const GattHandler = GObject.registerClass({
     processData() {
     }
 
-    destroy() {
-        if (this._destroyed)
-            return;
-
-        const wasRunning = this.running;
-
-        this._destroyed = true;
+    /* Drops the LE link but leaves the transport usable, so it can be brought back
+       up. Everything terminal belongs in destroy() instead. */
+    _teardownLink() {
         this.running = false;
         this._output_queue = [];
-        this._socketLog.info('Destroying GATT transport');
 
         for (const id of this._timeoutIds)
             GLib.source_remove(id);
@@ -501,11 +497,49 @@ export const GattHandler = GObject.registerClass({
             this._setDiscovery(false, null);
         }
 
+        this._cancellable.cancel();
+    }
+
+    /* The LE control link is independent of the classic audio link, so it can drop
+       on its own — putting the buds in the case is enough. Nothing above us
+       watches for that (the device manager only reacts to the classic device), so
+       the transport has to bring itself back. */
+    _handleLinkLost() {
+        if (this._destroyed || this._reconnecting)
+            return;
+
+        this._reconnecting = true;
+        this._socketLog.info('GATT link lost — reconnecting');
+
+        const peerPath = this._peerPath;
+        this._teardownLink();
+
+        if (peerPath)
+            this._disconnectPeer(peerPath);
+
+        /* _teardownLink() cancelled the old one. */
+        this._cancellable = new Gio.Cancellable();
+        this._peerPath = null;
+        this._reconnecting = false;
+
+        this.startSocket();
+    }
+
+    destroy() {
+        if (this._destroyed)
+            return;
+
+        const wasRunning = this.running;
+        const peerPath = this._peerPath;
+
+        this._destroyed = true;
+        this._socketLog.info('Destroying GATT transport');
+
+        this._teardownLink();
+
         /* Release the LE link explicitly rather than waiting for BlueZ to drop it
            once the last client reference goes away. */
-        if (this._peerPath && wasRunning)
-            this._disconnectPeer(this._peerPath);
-
-        this._cancellable.cancel();
+        if (peerPath && wasRunning)
+            this._disconnectPeer(peerPath);
     }
 });
