@@ -68,6 +68,7 @@
         <file>lib/devices/airpods/deviceConfigs/BeatsX.js</file>
         <file>lib/devices/airpods/deviceConfigs/Powerbeats3.js</file>
         <file>lib/devices/airpods/deviceConfigs/Powerbeats4.js</file>
+        <file>lib/devices/airpods/deviceConfigs/PowerbeatsFit.js</file>
         <file>lib/devices/airpods/deviceConfigs/PowerbeatsPro.js</file>
         <file>lib/devices/airpods/deviceConfigs/PowerbeatsPro2.js</file>
         <file>preferences/devices/airpods/configureWindow.js</file>
