@@ -61,6 +61,7 @@ export const GattHandler = GObject.registerClass({
         this._writeProxy = null;
         this._peerPath = null;
         this._discovering = false;
+        this._timeoutIds = new Set();
 
         /* Populated from the peer's advertisement when available. Vendors use these
            to pick a protocol variant instead of guessing. */
@@ -234,10 +235,12 @@ export const GattHandler = GObject.registerClass({
 
     _sleep(ms) {
         return new Promise(resolve => {
-            GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms, () => {
+            const sourceId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms, () => {
+                this._timeoutIds.delete(sourceId);
                 resolve();
                 return GLib.SOURCE_REMOVE;
             });
+            this._timeoutIds.add(sourceId);
         });
     }
 
@@ -413,6 +416,11 @@ export const GattHandler = GObject.registerClass({
         this.running = false;
         this._output_queue = [];
         this._socketLog.info('Destroying GATT transport');
+
+        for (const id of this._timeoutIds)
+            GLib.source_remove(id);
+
+        this._timeoutIds.clear();
 
         this._notifyProxies.forEach((proxy, i) => {
             if (this._notifyIds[i])
