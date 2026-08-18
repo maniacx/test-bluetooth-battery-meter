@@ -10,6 +10,7 @@ import {DeviceTypeGoogleBuds} from './googleBuds/googleBudsDevice.js';
 import {DeviceTypeRedmiBuds} from './redmiBuds/redmiBudsDevice.js';
 import {DeviceTypeSenhBuds} from './senhBuds/senhBudsDevice.js';
 import {DeviceTypeBoseBuds} from './boseBuds/boseBudsDevice.js';
+import {DeviceTypeEdifierBuds} from './edifierBuds/edifierBudsDevice.js';
 import {DeviceTypeGfps} from './gfps/gfpsDevice.js';
 
 export class Notifier {
@@ -36,6 +37,8 @@ export class Notifier {
             label = _('Sennheiser Bluetooth audio devices');
         else if (type === DeviceTypeBoseBuds)
             label = _('Bose Bluetooth audio devices');
+        else if (type === DeviceTypeEdifierBuds)
+            label = _('Edifier Bluetooth audio devices');
         else if (type === DeviceTypeGfps)
             label = _('Google Fast Pair Bluetooth audio devices');
         else
