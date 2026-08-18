@@ -67,6 +67,10 @@ export const GalaxyBudsDevice = GObject.registerClass({
         this._ambientLevel = 0;
         this._ncLevel = 0;
         this._focusOnVoice = false;
+        this._fwVersion = '';
+        this._leftSerial = '';
+        this._rightSerial = '';
+        this._caseSerial = '';
 
         this._config = createConfig();
         this._props = createProperties();
@@ -101,6 +105,8 @@ export const GalaxyBudsDevice = GObject.registerClass({
 
         this._callbacks = {
             updateFirmwareInfo: this.updateFirmwareInfo.bind(this),
+            updateLRSerial: this.updateLRSerial.bind(this),
+            updateCaseSerial: this.updateCaseSerial.bind(this),
             updateExtendedStatusStarted: this.updateExtendedStatusStarted.bind(this),
             updateExtendedStatusEnded: this.updateExtendedStatusEnded.bind(this),
             updateBatteryProps: this.updateBatteryProps.bind(this),
@@ -192,7 +198,10 @@ export const GalaxyBudsDevice = GObject.registerClass({
             modelId: this._modelId,
             alias: this._alias,
             icon: this._commonIcon,
-            'fw-version': '',
+            'fw-version': this._fwVersion,
+            'lsn': this._leftSerial,
+            'rsn': this._rightSerial,
+            'csn': this._caseSerial,
 
             ...this._features.caseBattery && {
                 'case': this._caseIcon,
@@ -608,10 +617,10 @@ export const GalaxyBudsDevice = GObject.registerClass({
         this._toggle1Modes = modes;
 
         const icons = {
-            off: 'bbm-anc-off-symbolic.svg',
-            transparency: 'bbm-transperancy-symbolic.svg',
-            adaptive: 'bbm-adaptive-symbolic.svg',
-            anc: 'bbm-anc-on-symbolic.svg',
+            off: 'bbm-anc-off-symbolic',
+            transparency: 'bbm-transperancy-symbolic',
+            adaptive: 'bbm-adaptive-symbolic',
+            anc: 'bbm-anc-on-symbolic',
         };
 
         const labels = {
@@ -678,9 +687,9 @@ export const GalaxyBudsDevice = GObject.registerClass({
 
         this._toggle2Enabled = true;
         this._config.toggle2Title = _('Conversation Awareness');
-        this._config.toggle2Button1Icon = 'bbm-ca-on-symbolic.svg';
+        this._config.toggle2Button1Icon = 'bbm-ca-on-symbolic';
         this._config.toggle2Button1Name = _('On');
-        this._config.toggle2Button2Icon = 'bbm-ca-off-symbolic.svg';
+        this._config.toggle2Button2Icon = 'bbm-ca-off-symbolic';
         this._config.toggle2Button2Name = _('Off');
     }
 
@@ -744,8 +753,29 @@ export const GalaxyBudsDevice = GObject.registerClass({
     }
 
     updateFirmwareInfo(fwVersion) {
-        this._settingsItems['fw-version'] = fwVersion ?? '';
-        this._updateGsettings();
+        this._fwVersion = fwVersion;
+        if (this._settingsItems) {
+            this._settingsItems['fw-version'] = fwVersion;
+            this._updateGsettings();
+        }
+    }
+
+    updateLRSerial(left, right) {
+        this._leftSerial = left;
+        this._rightSerial = right;
+        if (this._settingsItems) {
+            this._settingsItems['lsn'] = left;
+            this._settingsItems['rsn'] = right;
+            this._updateGsettings();
+        }
+    }
+
+    updateCaseSerial(caseSn) {
+        this._caseSerial = caseSn;
+        if (this._settingsItems) {
+            this._settingsItems['csn'] = caseSn;
+            this._updateGsettings();
+        }
     }
 
     updateBatteryProps(props) {

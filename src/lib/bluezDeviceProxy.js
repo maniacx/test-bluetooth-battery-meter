@@ -1,3 +1,4 @@
+'use strict';
 import Gio from 'gi://Gio';
 
 const BluezDeviceInterface = `

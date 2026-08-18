@@ -21,6 +21,7 @@
         <file>lib/bluezDeviceProxy.js</file>
         <file>lib/dataHandler.js</file>
         <file>lib/enhancedDeviceSupportManager.js</file>
+        <file>lib/devices/commonEmuns.js</file>
         <file>lib/devices/deviceUtils.js</file>
         <file>lib/devices/logger.js</file>
         <file>lib/devices/mediaController.js</file>
@@ -31,6 +32,7 @@
         <file>lib/widgets/iconGroups.js</file>
         <file>main.js</file>
         <file>preferences/widgets/checkBoxesRowWidget.js</file>
+        <file>preferences/widgets/deviceMgmtRowWidget.js</file>
         <file>preferences/widgets/dropDownRowWidget.js</file>
         <file>preferences/widgets/equalizerWidget.js</file>
         <file>preferences/widgets/iconSelectorWidget.js</file>
@@ -67,9 +69,23 @@
         <file>lib/devices/airpods/deviceConfigs/BeatsX.js</file>
         <file>lib/devices/airpods/deviceConfigs/Powerbeats3.js</file>
         <file>lib/devices/airpods/deviceConfigs/Powerbeats4.js</file>
+        <file>lib/devices/airpods/deviceConfigs/PowerbeatsFit.js</file>
         <file>lib/devices/airpods/deviceConfigs/PowerbeatsPro.js</file>
         <file>lib/devices/airpods/deviceConfigs/PowerbeatsPro2.js</file>
         <file>preferences/devices/airpods/configureWindow.js</file>
+
+        <file>lib/devices/boseBuds/boseBudsConfig.js</file>
+        <file>lib/devices/boseBuds/boseBudsDevice.js</file>
+        <file>lib/devices/boseBuds/boseBudsSocket.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QC35.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QC35SE.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QCEarbuds2.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QCUltra2Earbuds.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QCUltra2Headphones.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QCUltraEarbuds.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QCUltraHeadphones.js</file>
+        <file>preferences/devices/boseBuds/configureWindow.js</file>
+        <file>preferences/devices/boseBuds/modesGroupWidget.js</file>
 
         <file>lib/devices/galaxyBuds/galaxyBudsConfig.js</file>
         <file>lib/devices/galaxyBuds/galaxyBudsDetector.js</file>

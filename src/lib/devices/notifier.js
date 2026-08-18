@@ -9,6 +9,7 @@ import {DeviceTypeNothingBuds} from './nothingBuds/nothingBudsDevice.js';
 import {DeviceTypeGoogleBuds} from './googleBuds/googleBudsDevice.js';
 import {DeviceTypeRedmiBuds} from './redmiBuds/redmiBudsDevice.js';
 import {DeviceTypeSenhBuds} from './senhBuds/senhBudsDevice.js';
+import {DeviceTypeBoseBuds} from './boseBuds/boseBudsDevice.js';
 import {DeviceTypeGfps} from './gfps/gfpsDevice.js';
 
 export class Notifier {
@@ -20,21 +21,23 @@ export class Notifier {
     notifyProfileRegisteredError(type) {
         let label;
         if (type === DeviceTypeAirpods)
-            label = _('AirPods / Beats');
+            label = _('AirPods / Beats Bluetooth audio devices');
         else if (type === DeviceTypeSonyV1 || type === DeviceTypeSonyV2)
-            label = _('Sony audio devices');
+            label = _('Sony Bluetooth audio devices');
         else if (type === DeviceTypeGalaxyLegacy || type === DeviceTypeGalaxyBuds)
-            label = _('Samsung Galaxy Buds');
+            label = _('Samsung Galaxy Bluetooth audio devices');
         else if (type === DeviceTypeNothingBuds)
-            label = _('Nothing / CMF Buds');
+            label = _('Nothing / CMF Bluetooth audio devices');
         else if (type === DeviceTypeGoogleBuds)
-            label = _('Google Pixel Buds');
+            label = _('Google Pixel Buds Bluetooth audio devices');
         else if (type === DeviceTypeRedmiBuds)
-            label = _('Redmi / Xiaomi Buds');
+            label = _('Redmi / Xiaomi Bluetooth audio devices');
         else if (type === DeviceTypeSenhBuds)
-            label = _('Sennheiser');
+            label = _('Sennheiser Bluetooth audio devices');
+        else if (type === DeviceTypeBoseBuds)
+            label = _('Bose Bluetooth audio devices');
         else if (type === DeviceTypeGfps)
-            label = _('Google Fast Pair');
+            label = _('Google Fast Pair Bluetooth audio devices');
         else
             label = type;
 

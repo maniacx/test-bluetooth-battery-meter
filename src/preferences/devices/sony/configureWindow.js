@@ -10,6 +10,7 @@ import {SliderRowWidget} from './../../widgets/sliderRowWidget.js';
 import {EqualizerWidget} from './../../widgets/equalizerWidget.js';
 import {CheckBoxesRowWidget} from './../../widgets/checkBoxesRowWidget.js';
 import {IconSelectorWidget} from './../../widgets/iconSelectorWidget.js';
+import {DeviceManagementRow} from './../../widgets/deviceMgmtRowWidget.js';
 import {
     SonyConfiguration, EqualizerPreset, ListeningMode, BgmDistance, ButtonModes, AutoPowerOffTime
 
@@ -62,6 +63,7 @@ export const ConfigureWindow = GObject.registerClass({
         this.title = this._settingsItems.alias;
 
         const modelData = SonyConfiguration.find(cfg => cfg.pattern.test(this._settingsItems.name));
+        this._modelData = modelData;
 
         const toolViewBar = new Adw.ToolbarView();
         const headerBar = new Adw.HeaderBar();
@@ -501,6 +503,8 @@ export const ConfigureWindow = GObject.registerClass({
             }
         }
 
+        this._addDevMgmtSetting(_, page);
+
         const settingSignalId = this._settings.connect('changed::sony-list', () => {
             const updatedList = this._settings.get_strv('sony-list').map(JSON.parse);
             this._settingsItems = updatedList.find(info => info.path === devicePath);
@@ -551,6 +555,15 @@ export const ConfigureWindow = GObject.registerClass({
 
             if (modelData.automaticPowerOffByTime)
                 this._autoPowerOffDropdown.selected_item = this._settingsItems['auto-power-time'];
+
+            if (this._dualConnSwitch) {
+                this._dualConnSwitch.pair_mode = this._settingsItems['pairing-mode'];
+                const deviceInfo = this._settingsItems['dev-mgmt'];
+                this._dualConnSwitch?.updateDevices(deviceInfo);
+                const routeInfo = this._settingsItems['active-dev'];
+                this._dualConnSwitch?.updateRouteDevice(routeInfo);
+                this._dualConnSwitch.active_fixed = this._settingsItems['active-fix'];
+            }
         });
 
         this.connect('close-request', () => {
@@ -591,6 +604,61 @@ export const ConfigureWindow = GObject.registerClass({
 
         if (this._eqPresetDropdown)
             this._eqPresetDropdown.sensitive = isStdMode;
+    }
+
+    _addDevMgmtSetting(_, page) {
+        if (!this._modelData.dualConnection)
+            return;
+
+        const devMgmtGroup = new Adw.PreferencesGroup({title: _('Connection Management')});
+        page.add(devMgmtGroup);
+
+        const hasRoutingIndicator = this._modelData.dualConnection?.hasRoutingIndicator ?? false;
+        const hasRoutingControl = this._modelData.dualConnection?.hasRoutingControl ?? false;
+        const hasActiveFix = this._modelData.dualConnection?.hasActiveFix ?? false;
+
+        const deviceInfo = this._settingsItems['dev-mgmt'];
+
+        const currentActiveRoute = hasRoutingIndicator || hasRoutingControl
+            ? this._settingsItems['active-dev'] : '';
+
+        const deviceManagementConfig = {
+            maxConnected: this._modelData.maxConnected ?? 2,
+            hasMultipointSwitch: false,
+            hasPairMode: true,
+            hasRoutingIndicator,
+            hasRoutingControl,
+            hasActiveFix,
+            showMac: true,
+        };
+
+        this._dualConnSwitch = new DeviceManagementRow(this, _, deviceInfo,
+            '', currentActiveRoute, deviceManagementConfig);
+
+        this._dualConnSwitch.pair_mode = this._settingsItems['pairing-mode'];
+
+        this._dualConnSwitch.connect('notify::pair-mode', () => {
+            this._updateGsettings('pairing-mode', this._dualConnSwitch.pair_mode);
+        });
+
+
+        if (hasActiveFix) {
+            this._dualConnSwitch.active_fixed = this._settingsItems['active-fix'];
+
+            this._dualConnSwitch.connect('notify::active-fixed', () => {
+                this._updateGsettings('active-fix', this._dualConnSwitch.active_fixed);
+            });
+        }
+
+        const actionData = this._settingsItems['dev-mgmt-action'];
+        this._seq = actionData?.seq ?? 0;
+
+        this._dualConnSwitch.connect('device-action', (_row, action, id) => {
+            const data = {seq: this._seq ^= 1, action, id};
+            this._updateGsettings('dev-mgmt-action', data);
+        });
+
+        devMgmtGroup.add(this._dualConnSwitch);
     }
 
     _updateCompactStatus() {

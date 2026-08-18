@@ -37,6 +37,25 @@ export function isArrayEqual(a, b) {
     return true;
 }
 
+export function bytesToHex(bytes) {
+    if (!bytes || bytes.length === 0)
+        return '';
+
+    return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+}
+
+export function hexToBytes(hex) {
+    if (!hex || hex.length === 0 || hex.length % 2 !== 0)
+        return [];
+
+    const bytes = [];
+
+    for (let i = 0; i < hex.length; i += 2)
+        bytes.push(parseInt(hex.slice(i, i + 2), 16));
+
+    return bytes;
+}
+
 export function buds2to1BatteryLevel(battProps) {
     const bat1 = battProps.battery1Level;
     const bat2 = battProps.battery2Level;

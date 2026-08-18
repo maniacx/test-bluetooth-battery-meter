@@ -39,10 +39,12 @@ export const RedmiBudsDevice = GObject.registerClass({
         this._props = createProperties();
         this._modelData = null;
         this._fwVersion = '';
+        this._serialNo = '';
 
         this._callbacks = {
             modelIntialized: this.modelIntialized.bind(this),
             updateFirmware: this.updateFirmware.bind(this),
+            updateSerial: this.updateSerial.bind(this),
             updateBatteryProps: this.updateBatteryProps.bind(this),
             updateInEarState: this.updateInEarState.bind(this),
             updateNoiseControl: this.updateNoiseControl.bind(this),
@@ -127,6 +129,7 @@ export const RedmiBudsDevice = GObject.registerClass({
             alias: this._alias,
             icon: this._commonIcon,
             'fw-version': this._fwVersion,
+            'serial': this._serialNo,
 
             ...this._modelData.batteryCase && {
                 'case': this._caseIcon,
@@ -495,6 +498,14 @@ export const RedmiBudsDevice = GObject.registerClass({
         }
     }
 
+    updateSerial(serial) {
+        this._serialNo = serial;
+        if (this._settingsItems) {
+            this._settingsItems['serial'] = serial;
+            this._updateGsettings();
+        }
+    }
+
     _setupAncConfig() {
         const nc = this._modelData.noiseControl;
         if (!nc)
@@ -526,7 +537,7 @@ export const RedmiBudsDevice = GObject.registerClass({
             addToggle(
                 'off',
                 nc.off,
-                'bbm-anc-off-symbolic.svg',
+                'bbm-anc-off-symbolic',
                 _('Off')
             );
         }
@@ -535,7 +546,7 @@ export const RedmiBudsDevice = GObject.registerClass({
             addToggle(
                 'transparency',
                 nc.transparency,
-                'bbm-transperancy-symbolic.svg',
+                'bbm-transperancy-symbolic',
                 _('Transparency')
             );
         }
@@ -544,7 +555,7 @@ export const RedmiBudsDevice = GObject.registerClass({
             addToggle(
                 'noiseCancellation',
                 nc.noiseCancellation,
-                'bbm-anc-on-symbolic.svg',
+                'bbm-anc-on-symbolic',
                 _('Noise Cancellation')
             );
         }
