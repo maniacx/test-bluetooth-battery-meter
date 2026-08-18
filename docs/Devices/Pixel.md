@@ -66,6 +66,7 @@ Configure per device settings if supported
 Other settings are self explanatory similar to settings available in OEM Mobile App
 
 ## Compatibility
+Some devices have not yet been tested and may show incorrect features in the configuration. Others may be missing entirely. If you notice missing devices or incorrect feature mappings, please open an issue on GitHub so we can add or correct them.
 
 Currently tested and confirmed working:
 

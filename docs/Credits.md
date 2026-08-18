@@ -57,7 +57,7 @@ permalink: /credits
 > * luc-salles
 
 
-## AirPods Headband / Earbuds 
+## AirPods / Beats
 
 > steam3d for MagicCore core for reverse battery reporting , ANC control and docs which made this project possible.
 >
@@ -77,7 +77,7 @@ permalink: /credits
 > * hazzac181
 > * Cameo007
 
-## Sony Headband / Earbuds 
+## Sony
 
 > Gadgetbridge
 >
@@ -127,7 +127,7 @@ permalink: /credits
 > * adlr
 > * kerembayulgen
 
-## Nothing / CMF Headband / Earbuds 
+## Nothing / CMF
 
 > Gadgetbridge
 >
@@ -166,7 +166,7 @@ permalink: /credits
 >
 > * IGS-GIT
 
-## Redmi / Xiaomi Earbuds 
+## Redmi / Xiaomi
 
 > Gadgetbridge
 >
@@ -182,7 +182,7 @@ permalink: /credits
 > * drinkingoutofcups **Special thanks for testing and helping bring up the Redmi protocol.**
 > * iamirayman
 
-## Sennheiser Headband / Earbuds 
+## Sennheiser
 
 > hatemosphere/hdb630-control-macos
 >
@@ -216,6 +216,6 @@ permalink: /credits
 >
 > * MobileAZN **Special thanks for testing and helping bring up the Bose protocol.**
 > * amaxine **Special thanks for testing and helping bring up the Bose legacy protocol.**
-> * SMaiz
+> * SMaiz **Special thanks for testing and helping bring up the Bose protocol.**
 > * RupertMichaelBear
 

@@ -3,7 +3,7 @@ layout: default
 title: Bose
 parent: Devices
 nav_order: 6
-permalink: /Bose
+permalink: /bose
 ---
 
 
@@ -48,9 +48,9 @@ Configure per device settings if supported
 ## Modes
 <img src="{{ 'assets/images/bose/bose-mode.png' | relative_url }}" width="85%">
 
-The Modes page provides the same mode selection and configuration options as the OEM mobile app. The main difference is the `Add to toggle` button.
+The Modes page provides the same mode selection and configuration options as the OEM mobile app. The main difference is the `Show in toggle` button.
 
-Clicking `Add to toggle` adds the selected mode to the Main Page toggle, allowing you to switch between modes directly from the main page. A maximum of 4 modes can be added to the Main Page.
+Clicking `Show in toggle` adds the selected mode to the Main Page toggle, allowing you to switch between modes directly from the main page. A maximum of 4 modes can be added to the Main Page.
 <img src="{{ 'assets/images/bose/bose-add-toggle.png' | relative_url }}" width="100%">
 
 
@@ -92,7 +92,7 @@ table th:nth-of-type(3) {
 | Auto Answer Calls              |          ✅          |    ✅   |
 | Auto Pause                     |          ✅          |    ✅   |
 | Auto Transparency              |          ✅          |    ✅   |
-| Device Management (Multipoint) |          ✅          |    ✅   |
+| Device Management (Multipoint) |          ✅          |    Not tested   |
 | Voice Prompts                  |          ✅          |    ✅   |
 | Gesture Customization          |          ✅          |    ✅   |
 
@@ -106,7 +106,7 @@ table th:nth-of-type(3) {
 | SideTone                       |     ✅     |    ✅   |
 | Automatic Power Off Timer      |     ✅     |    ✅   |
 | Voice Prompts                  |     ✅     |    ✅   |
-| Device Management (Multipoint) |     ❌     |    ❌   |
+| Device Management (Multipoint) |     ✅     |    Not tested   |
 | Gesture / Button Customization |     ✅     |    ✅   |
 
 ### Bose QuietComfort 35
@@ -117,7 +117,7 @@ table th:nth-of-type(3) {
 | Noise Cancellation (strength)  |     ✅     |    ✅   |
 | Automatic Power Off Timer      |     ✅     |    ✅   |
 | Voice Prompts                  |     ✅     |    ✅   |
-| Device Management (Multipoint) |     ❌     |    ❌   |
+| Device Management (Multipoint) |     ✅     |    Not tested   |
 
 
 
