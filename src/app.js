@@ -149,6 +149,7 @@ export const BudsLinkApplication = GObject.registerClass({
         this.redmiBudsEnabled = true;
         this.senhBudsEnabled = true;
         this.boseBudsEnabled = true;
+        this.edifierBudsEnabled = true;
         this.gfpsEnabled = true;
 
         this._client = new BluetoothClient();

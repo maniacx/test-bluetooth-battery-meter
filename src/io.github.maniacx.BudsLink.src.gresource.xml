@@ -28,6 +28,7 @@
         <file>lib/devices/notifier.js</file>
         <file>lib/devices/profileManager.js</file>
         <file>lib/devices/socketByProfile.js</file>
+        <file>lib/devices/socketByGatt.js</file>
         <file>lib/widgets/iconGroups.js</file>
         <file>main.js</file>
         <file>preferences/widgets/checkBoxesRowWidget.js</file>
@@ -192,6 +193,11 @@
         <file>lib/devices/senhBuds/deviceConfigs/MomentumWireless4.js</file>
         <file>lib/devices/senhBuds/deviceConfigs/MomentumWireless5.js</file>
         <file>preferences/devices/senhBuds/configureWindow.js</file>
+        <file>lib/devices/edifierBuds/edifierBudsConfig.js</file>
+        <file>lib/devices/edifierBuds/edifierBudsDevice.js</file>
+        <file>lib/devices/edifierBuds/edifierBudsSocket.js</file>
+        <file>lib/devices/edifierBuds/deviceConfigs/X5Pro.js</file>
+        <file>preferences/devices/edifierBuds/configureWindow.js</file>
 
         <file>lib/devices/sony/sonyConfig.js</file>
         <file>lib/devices/sony/sonyDevice.js</file>
