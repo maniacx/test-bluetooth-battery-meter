@@ -5,9 +5,11 @@ sdk: org.gnome.Sdk
 command: budslink
 
 finish-args:
+  - --allow=bluetooth
   - --socket=wayland
   - --socket=fallback-x11
   - --share=ipc
+  - --share=network
   - --env=PULSE_PROP_media.category=Manager
   - --system-talk-name=org.bluez
   - --talk-name=org.mpris.MediaPlayer2.*

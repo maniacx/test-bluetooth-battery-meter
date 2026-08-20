@@ -5,12 +5,23 @@ import GObject from 'gi://GObject';
 
 import {createLogger, getDeviceIdentifier} from './logger.js';
 
+const BudsLinkBluetooth = (await import('gi://BudsLinkBluetooth')).default;
+
 const LOG_BYTES = true;
+
+function pathToMac(path) {
+    const idx = path.indexOf('dev_');
+    if (idx === -1)
+        return '';
+
+    return path.substring(idx + 4).replace(/_/g, ':');
+}
+
 
 export const SocketHandler = GObject.registerClass({
     GTypeName: 'BudsLink_SocketHandler',
 }, class SocketHandler extends GObject.Object {
-    _init(devicePath, profileManager, profile) {
+    _init(devicePath, profileManager, profile, fallback = null) {
         super._init();
         const subclassName = this.constructor.name;
         const identifier = getDeviceIdentifier(devicePath);
@@ -22,8 +33,10 @@ export const SocketHandler = GObject.registerClass({
         this.running = false;
         this._cancellable = new Gio.Cancellable();
         this._output_queue = [];
+        this._fallback = fallback;
     }
 
+    /* eslint-disable no-await-in-loop */
     async startSocket() {
         const fd = await this._profileManager.acquireFd(
             this._profile.type,
@@ -31,9 +44,47 @@ export const SocketHandler = GObject.registerClass({
             this._devicePath
         );
 
-        if (fd !== -1)
-            this._attachSocket(fd);
+        if (fd !== -1) {
+            await this._attachSocket(fd);
+        } else if (this._fallback?.psm) {
+            const mac = pathToMac(this._devicePath);
+
+            for (const psm of this._fallback.psm) {
+                try {
+                    const fd = BudsLinkBluetooth.l2cap_connect(mac, psm);
+                    if (fd >= 0) {
+                        await this._attachSocket(fd);
+                        break;
+                    }
+
+                    this._socketLog.info(`L2CAP fallback connection failed for PSM ${psm}`);
+                } catch (e) {
+                    this._socketLog.error(e, `L2CAP fallback connection failed for PSM ${psm}`);
+                }
+            }
+        } else if (this._fallback?.channel) {
+            const mac = pathToMac(this._devicePath);
+
+            for (const channel of this._fallback.channel) {
+                try {
+                    const fd = BudsLinkBluetooth.budslink_rfcomm_connect(mac, channel);
+                    if (fd >= 0) {
+                        await this._attachSocket(fd);
+                        break;
+                    }
+
+                    this._socketLog.info(
+                        `RFCOMM fallback connection failed for channel ${channel}`
+                    );
+                } catch (e) {
+                    this._socketLog.error(
+                        e, `RFCOMM fallback connection failed for channel ${channel}`
+                    );
+                }
+            }
+        }
     }
+    /* eslint-enable no-await-in-loop */
 
     // Credits: GSCConnect
     // https://github.com/jtojnar/gnome-shell-extension-gsconnect/

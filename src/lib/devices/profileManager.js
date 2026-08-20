@@ -213,15 +213,17 @@ export const ProfileManager = GObject.registerClass({
                 'ConnectProfile',
                 GLib.Variant.new_tuple([new GLib.Variant('s', profile.uuid)]),
                 Gio.DBusCallFlags.NONE,
-                -1,
+                250,
                 null
             );
 
             this._log.info(
                 `ConnectProfile OK for ${profile.uuid} on ${sanitizeDevPath(devicePath)}`
             );
-        } catch {
-            // do nothing
+        } catch (e) {
+            this._log.info(
+                `ConnectProfile Failed for ${profile.uuid} on ${sanitizeDevPath(devicePath)}. ${e}`
+            );
         }
     }
 
@@ -241,7 +243,7 @@ export const ProfileManager = GObject.registerClass({
                     new GLib.Variant('s', profile.uuid),
                 ]),
                 Gio.DBusCallFlags.NONE,
-                -1,
+                400,
                 null
             );
 
@@ -317,21 +319,21 @@ export const ProfileManager = GObject.registerClass({
 
                     attempt++;
 
-                    if (attempt === 1 || attempt === 2 || attempt === 4 || attempt === 8)
+                    if (attempt === 1) {
                         this.connectProfile(deviceType, devicePath);
-
-                    if (attempt > 8) {
-                        if (entry.signalId) {
-                            this.disconnect(entry.signalId);
-                            entry.signalId = null;
-                        }
-                        this._fdByDevice.delete(devicePath);
-                        entry.timeoutId = null;
-                        resolve(-1);
-                        return GLib.SOURCE_REMOVE;
+                        return GLib.SOURCE_CONTINUE;
                     }
 
-                    return GLib.SOURCE_CONTINUE;
+                    if (entry.signalId) {
+                        this.disconnect(entry.signalId);
+                        entry.signalId = null;
+                    }
+
+                    this._fdByDevice.delete(devicePath);
+                    entry.timeoutId = null;
+                    resolve(-1);
+
+                    return GLib.SOURCE_REMOVE;
                 }
             );
 

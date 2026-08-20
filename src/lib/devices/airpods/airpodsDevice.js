@@ -140,11 +140,13 @@ export const AirpodsDevice = GObject.registerClass({
         this._updateAwarnessConfig();
 
         const profile = {type: DeviceTypeAirpods, uuid: AirpodsUUID};
+        const fallback = {psm: [4097]};
 
         this._airpodsSocket = new AirpodsSocket(
             this._devicePath,
             profileManager,
             profile,
+            fallback,
             this._modelData,
             this._callbacks
         );

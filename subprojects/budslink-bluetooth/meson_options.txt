@@ -1,0 +1,23 @@
+option('package_version',
+  type: 'string',
+  value: '',
+  description: 'Package version'
+)
+
+option('pkglibdir',
+  type: 'string',
+  value: '',
+  description: 'Private library installation directory'
+)
+
+option('pkgdatadir',
+  type: 'string',
+  value: '',
+  description: 'Package data installation directory'
+)
+
+option('introspection',
+  type: 'boolean',
+  value: false,
+  description: 'Build GObject Introspection support'
+)

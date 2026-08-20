@@ -27,8 +27,8 @@ const TRAILER = 0xEF;
 export const RedmiBudsSocket = GObject.registerClass({
     GTypeName: 'BudsLink_RedmiSocket',
 }, class RedmiBudsSocket extends SocketHandler {
-    _init(devicePath, profileManager, profile, callbacks) {
-        super._init(devicePath, profileManager, profile);
+    _init(devicePath, profileManager, profile, fallback, callbacks) {
+        super._init(devicePath, profileManager, profile, fallback);
         const identifier = getDeviceIdentifier(devicePath);
         const tag = `RedmiSocket-${identifier}`;
         this._log = createLogger(tag);

@@ -68,11 +68,13 @@ export const RedmiBudsDevice = GObject.registerClass({
         };
 
         const profile = {type: DeviceTypeRedmiBuds, uuid: RedmiBudsUUID};
+        const fallback = {channel: [24, 25, 26, 20, 19, 18, 6]};
 
         this._redmiBudsSocket = new RedmiBudsSocket(
             this._devicePath,
             profileManager,
             profile,
+            fallback,
             this._callbacks
         );
     }

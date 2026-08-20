@@ -35,4 +35,16 @@ libgvc = subproject(
 
 libgvc_gir = libgvc.get_variable('libgvc_gir')
 
+libbudslink_bluetooth = subproject(
+  'budslink-bluetooth',
+  default_options: [
+    'package_version=' + meson.project_version(),
+    'pkgdatadir=' + pkgdatadir,
+    'pkglibdir=' + pkglibdir,
+    'introspection=true',
+  ],
+)
+
+libbudslink_bluetooth_gir = libbudslink_bluetooth.get_variable('libbudslink_bluetooth_gir')
+
 

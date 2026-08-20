@@ -25,8 +25,8 @@ kavishdevar for Conversation awarness and AAP Definations
 export const AirpodsSocket = GObject.registerClass({
     GTypeName: 'BudsLink_AirpodsSocket',
 }, class AirpodsSocket extends SocketHandler {
-    _init(devicePath, profileManager, profile, modelData, callbacks) {
-        super._init(devicePath, profileManager, profile);
+    _init(devicePath, profileManager, profile, fallback, modelData, callbacks) {
+        super._init(devicePath, profileManager, profile, fallback);
         const identifier = getDeviceIdentifier(devicePath);
         const tag = `AirpodsSocket-${identifier}`;
         this._log = createLogger(tag);
