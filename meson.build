@@ -1,6 +1,6 @@
 project(
 	'BudsLink',
-	version: '0.1.6',
+	version: '0.1.5',
 	license: ['GPL-3.0-or-later'],
 	meson_version: '>= 0.61.0'
 )
