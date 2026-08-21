@@ -1,21 +1,11 @@
 'use strict';
 
-import MomentumWireless5 from './deviceConfigs/MomentumWireless5.js';
 import MomentumWireless4 from './deviceConfigs/MomentumWireless4.js';
-import MomentumTrueWireless4 from './deviceConfigs/MomentumTrueWireless4.js';
 import HDB630 from './deviceConfigs/HDB630.js';
-import AccentumWireless from './deviceConfigs/AccentumWireless.js';
-import AccentumTrueWireless from './deviceConfigs/AccentumTrueWireless.js';
-import AccentumPlusWireless from './deviceConfigs/AccentumPlusWireless.js';
 
 export const SenhBudsModelList = [
-    MomentumWireless5,
     MomentumWireless4,
-    MomentumTrueWireless4,
     HDB630,
-    AccentumWireless,
-    AccentumTrueWireless,
-    AccentumPlusWireless,
 ];
 
 export const VendorType = {
