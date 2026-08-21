@@ -714,6 +714,9 @@ export const RedmiBudsDevice = GObject.registerClass({
     updateBatteryProps(props) {
         this._props = {...this._props, ...props};
 
+        if (!this._modelData)
+            return;
+
         if (!this._modelData.batteryMutiple)
             this._props.computedBatteryLevel = props.battery1Level;
         else
@@ -761,7 +764,7 @@ export const RedmiBudsDevice = GObject.registerClass({
 
     updateAdaptiveNC(enabled) {
         this._log.info(`updateAdaptiveNC enabled: ${enabled}`);
-        if (!this._modelData.adaptiveNcSwitch)
+        if (!this._modelData?.adaptiveNcSwitch)
             return;
 
         const state = enabled ? 1 : 0;
@@ -776,6 +779,9 @@ export const RedmiBudsDevice = GObject.registerClass({
     }
 
     updateAncStrength(strength) {
+        if (!this._modelData)
+            return;
+
         this._log.info(`updateAncStrength strength: ${hexBytes(strength)}`);
 
         this._strengthMap['noiseCancellation'] = strength;
@@ -800,6 +806,9 @@ export const RedmiBudsDevice = GObject.registerClass({
     }
 
     updateAmbientStrength(strength) {
+        if (!this._modelData)
+            return;
+
         this._log.info(`updateAmbientStrength strength: ${hexBytes(strength)}`);
 
         this._strengthMap['transparency'] = strength;
@@ -881,7 +890,7 @@ export const RedmiBudsDevice = GObject.registerClass({
 
     updateEqPreset(mode) {
         this._log.info(`updateEqPreset : ${hexBytes(mode)}`);
-        if (!this._modelData.eqPreset)
+        if (!this._modelData?.eqPreset)
             return;
 
         if (this._eqPreset === mode)
@@ -901,7 +910,7 @@ export const RedmiBudsDevice = GObject.registerClass({
 
     updateCustomEq(eqArray) {
         this._log.info(`updateCustomEq : ${hexBytes(eqArray)}`);
-        if (this._modelData.eqPreset.custom === undefined)
+        if (this._modelData?.eqPreset?.custom === undefined)
             return;
 
         if (isArrayEqual(this._customEq, eqArray))
@@ -921,7 +930,7 @@ export const RedmiBudsDevice = GObject.registerClass({
 
     updateAdaptiveSound(enable) {
         this._log.info(`updateAdaptiveSound : ${enable}`);
-        if (!this._modelData.adaptiveSound)
+        if (!this._modelData?.adaptiveSound)
             return;
 
         if (this._adaptiveSound === enable)
@@ -942,7 +951,7 @@ export const RedmiBudsDevice = GObject.registerClass({
 
     updateDualConnection(enable) {
         this._log.info(`updateDualConnection : ${enable}`);
-        if (!this._modelData.dualConnection)
+        if (!this._modelData?.dualConnection)
             return;
 
         if (this._dualConn === enable)
@@ -962,7 +971,7 @@ export const RedmiBudsDevice = GObject.registerClass({
 
     updateAutoAnswer(enable) {
         this._log.info(`updateAutoAnswer : ${enable}`);
-        if (!this._modelData.autoAnswer)
+        if (!this._modelData?.autoAnswer)
             return;
 
         if (this._autoAnswer === enable)
@@ -982,7 +991,7 @@ export const RedmiBudsDevice = GObject.registerClass({
 
     updateLowLatency(enable) {
         this._log.info(`updateLowLatency : ${enable}`);
-        if (!this._modelData.lowLatencyMode)
+        if (!this._modelData?.lowLatencyMode)
             return;
 
         if (this._lowLatency === enable)
@@ -1002,6 +1011,8 @@ export const RedmiBudsDevice = GObject.registerClass({
 
     updateGestureSingle(left, right) {
         this._log.info(`updateGestureSingle L : ${hexBytes(left)} R: ${hexBytes(right)}`);
+        if (!this._modelData)
+            return;
 
         const gestureTypes = this._modelData.gestureOptions?.gestureTypes;
         if (gestureTypes.single === undefined)
@@ -1026,6 +1037,9 @@ export const RedmiBudsDevice = GObject.registerClass({
 
     updateGestureDouble(left, right) {
         this._log.info(`updateGestureDouble L : ${hexBytes(left)} R: ${hexBytes(right)}`);
+
+        if (!this._modelData)
+            return;
 
         const gestureTypes = this._modelData.gestureOptions?.gestureTypes;
         if (gestureTypes.double === undefined)
@@ -1052,6 +1066,9 @@ export const RedmiBudsDevice = GObject.registerClass({
     updateGestureTriple(left, right) {
         this._log.info(`updateGestureTriple L : ${hexBytes(left)} R: ${hexBytes(right)}`);
 
+        if (!this._modelData)
+            return;
+
         const gestureTypes = this._modelData.gestureOptions?.gestureTypes;
         if (gestureTypes.triple === undefined)
             return;
@@ -1077,6 +1094,9 @@ export const RedmiBudsDevice = GObject.registerClass({
     updateGestureLong(left, right) {
         this._log.info(`updateGestureLong L : ${hexBytes(left)} R: ${hexBytes(right)}`);
 
+        if (!this._modelData)
+            return;
+
         const gestureTypes = this._modelData.gestureOptions?.gestureTypes;
         if (gestureTypes['action-hold'] === undefined)
             return;
@@ -1101,6 +1121,9 @@ export const RedmiBudsDevice = GObject.registerClass({
 
     updateGestureSwipe(left, right) {
         this._log.info(`updateGestureSwipe L : ${hexBytes(left)} R: ${hexBytes(right)}`);
+
+        if (!this._modelData)
+            return;
 
         const gestureTypes = this._modelData.gestureOptions?.gestureTypes;
         if (gestureTypes.swipe === undefined)
@@ -1132,7 +1155,7 @@ export const RedmiBudsDevice = GObject.registerClass({
         this._log.info(`updateLongGestures L: ${hexBytes(leftPressMode)}
             R: ${hexBytes(rightPressMode)}`);
 
-        if (this._modelData.gestureOptions?.noiseControlModes === undefined)
+        if (this._modelData?.gestureOptions?.noiseControlModes === undefined)
             return;
 
         let update = false;
