@@ -213,7 +213,7 @@ export const ProfileManager = GObject.registerClass({
                 'ConnectProfile',
                 GLib.Variant.new_tuple([new GLib.Variant('s', profile.uuid)]),
                 Gio.DBusCallFlags.NONE,
-                250,
+                400,
                 null
             );
 
