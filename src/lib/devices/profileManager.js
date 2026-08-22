@@ -213,7 +213,7 @@ export const ProfileManager = GObject.registerClass({
                 'ConnectProfile',
                 GLib.Variant.new_tuple([new GLib.Variant('s', profile.uuid)]),
                 Gio.DBusCallFlags.NONE,
-                400,
+                -1,
                 null
             );
 
@@ -243,15 +243,16 @@ export const ProfileManager = GObject.registerClass({
                     new GLib.Variant('s', profile.uuid),
                 ]),
                 Gio.DBusCallFlags.NONE,
-                400,
+                -1,
                 null
             );
 
             this._log.info(
                 `DisconnectProfile OK for ${profile.uuid} on ${sanitizeDevPath(devicePath)}`
             );
-        } catch {
-            // do nothing
+        } catch (e) {
+            this._log.info(`DisconnectProfile Failed for ${profile.uuid} on ` +
+                `${sanitizeDevPath(devicePath)}. ${e}`);
         }
     }
 
