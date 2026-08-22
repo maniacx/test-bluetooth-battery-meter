@@ -8,9 +8,9 @@ msgstr ""
 "Project-Id-Version: BudsLink\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-08-20 17:29-0600\n"
-"PO-Revision-Date: 2026-01-28 21:26-0700\n"
-"Last-Translator: Automatically generated\n"
-"Language-Team: none\n"
+"PO-Revision-Date: 2026-08-22 20:12-0700\n"
+"Last-Translator: Pavel Borecki\n"
+"Language-Team: Czech\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -88,7 +88,7 @@ msgstr "Zaznamenávání paketů"
 
 #: src/appLibs/widgets/settingsButton.js:84
 msgid "BudsLink Companion"
-msgstr ""
+msgstr "Doprovodná aplikace BudsLink"
 
 #: src/appLibs/widgets/settingsButton.js:91
 msgid "About BudsLink"
@@ -149,15 +149,15 @@ msgstr "Vypnuto"
 
 #: src/appLibs/widgets/settingsButton.js:364
 msgid "GNOME Extension"
-msgstr ""
+msgstr "Rozšířezní pro GNOME"
 
 #: src/appLibs/widgets/settingsButton.js:370
 msgid "Plasma Widget"
-msgstr ""
+msgstr "Plasma Widget"
 
 #: src/appLibs/widgets/settingsButton.js:376
 msgid "Cinnamon Spice"
-msgstr ""
+msgstr "Cinnamon Spice"
 
 #: src/appLibs/widgets/deviceRow.js:98
 msgid "Configure"
@@ -209,7 +209,7 @@ msgstr "Vyberte ikonu sloužící jako indikátor a pohotová nabídka"
 #: src/preferences/devices/senhBuds/configureWindow.js:220
 #: src/preferences/devices/boseBuds/configureWindow.js:272
 msgid "Sound Settings"
-msgstr ""
+msgstr "Nastavení zvuku"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:228
 #: src/preferences/devices/redmiBuds/configureWindow.js:209
@@ -222,26 +222,26 @@ msgstr "Ekvalizér"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:229
 msgid "Podcast"
-msgstr ""
+msgstr "Podcast"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:230
 msgid "Sound personalization"
-msgstr ""
+msgstr "Přizpůsobení zvuku"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:231
 #: src/preferences/widgets/peqRowWidget.js:883
 #: src/preferences/widgets/peqRowWidget.js:1308
 msgid "Parametric Equalizer"
-msgstr ""
+msgstr "Parametrický ekvalizér"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:242
 msgid "Audio Mode"
-msgstr ""
+msgstr "Režim zvuku"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:262
 #: src/preferences/devices/boseBuds/configureWindow.js:281
 msgid "Flat"
-msgstr ""
+msgstr "Plochý"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:263
 #: src/preferences/devices/nothingBuds/configureWindow.js:222
@@ -255,11 +255,11 @@ msgstr "Pop"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:265
 msgid "Dance"
-msgstr ""
+msgstr "Taneční"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:266
 msgid "Hip Hop"
-msgstr ""
+msgstr "Hip Hop"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:267
 #: src/preferences/devices/nothingBuds/configureWindow.js:226
@@ -268,11 +268,11 @@ msgstr "Klasická"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:268
 msgid "Movie"
-msgstr ""
+msgstr "Film"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:269
 msgid "Jazz"
-msgstr ""
+msgstr "Jazz"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:282
 #: src/preferences/devices/redmiBuds/configureWindow.js:220
@@ -304,7 +304,7 @@ msgstr "Přednastavení ekvalizéru"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:303
 msgid "50"
-msgstr ""
+msgstr "50"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:304
 #: src/preferences/devices/sony/configureWindow.js:260
@@ -336,7 +336,7 @@ msgstr "500"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:309
 msgid "800"
-msgstr ""
+msgstr "800"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:310
 #: src/preferences/devices/redmiBuds/configureWindow.js:262
@@ -358,7 +358,7 @@ msgstr "2,5k"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:313
 msgid "3k"
-msgstr ""
+msgstr "3k"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:314
 #: src/preferences/devices/redmiBuds/configureWindow.js:262
@@ -373,7 +373,7 @@ msgstr "6,3k"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:316
 msgid "7k"
-msgstr ""
+msgstr "7k"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:317
 #: src/preferences/devices/redmiBuds/configureWindow.js:263
@@ -384,7 +384,7 @@ msgstr "8k"
 #: src/preferences/devices/senhBuds/configureWindow.js:318
 #: src/preferences/devices/redmiBuds/configureWindow.js:263
 msgid "12k"
-msgstr ""
+msgstr "12k"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:319
 #: src/preferences/devices/redmiBuds/configureWindow.js:263
@@ -397,7 +397,7 @@ msgstr "16k"
 #: src/preferences/devices/redmiBuds/configureWindow.js:272
 #: src/preferences/devices/sony/configureWindow.js:270
 msgid "Frequency (Hz)"
-msgstr ""
+msgstr "Frekvence (Hz)"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:337
 #: src/preferences/devices/redmiBuds/configureWindow.js:273
@@ -406,12 +406,12 @@ msgstr ""
 #: src/preferences/devices/boseBuds/configureWindow.js:338
 #: src/preferences/devices/sony/configureWindow.js:271
 msgid "Gain (dB)"
-msgstr ""
+msgstr "Zisk (dB)"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:364
 #: src/preferences/devices/nothingBuds/configureWindow.js:288
 msgid "Enable Bass Boost"
-msgstr ""
+msgstr "Zapnout posílení basů"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:439
 #: src/preferences/devices/boseBuds/configureWindow.js:490
@@ -435,51 +435,51 @@ msgstr "Vysoké"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:451
 msgid "Crossfeed"
-msgstr ""
+msgstr "Prolínání kanálů"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:557
 #: src/preferences/devices/boseBuds/configureWindow.js:371
 msgid "In Ear Settings"
-msgstr ""
+msgstr "Nastavení pro „v uchu“"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:557
 #: src/preferences/devices/boseBuds/configureWindow.js:372
 msgid "On Head Settings"
-msgstr ""
+msgstr "Nastavení pro „na hlavě“"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:562
 #: src/preferences/devices/boseBuds/configureWindow.js:378
 msgid "Enable In-Ear Detection"
-msgstr ""
+msgstr "Zapnout zjišťování vložení v uchu"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:563
 #: src/preferences/devices/boseBuds/configureWindow.js:379
 msgid "Enable On Head Detection"
-msgstr ""
+msgstr "Zapnout zjišťování nasazení na hlavě"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:576
 #: src/preferences/devices/boseBuds/configureWindow.js:393
 msgid "Pause Media When Not Worn"
-msgstr ""
+msgstr "Pozastavit médium, když nenošeno"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:577
 #: src/preferences/devices/boseBuds/configureWindow.js:394
 msgid "Playback controlled by the OEM app"
-msgstr ""
+msgstr "Přehrávání ovládáno aplikací výrobce"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:589
 #: src/preferences/devices/boseBuds/configureWindow.js:406
 msgid "Automatically Answer Calls When Worn"
-msgstr ""
+msgstr "Když nošeny, automaticky zvedat hovory"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:601
 msgid "Pause Media When Transparency Mode Is Enabled"
-msgstr ""
+msgstr "Pokud je zapnutý režim transparentnosti, pozastavit médium"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:613
 #: src/preferences/devices/boseBuds/configureWindow.js:562
 msgid "Never"
-msgstr ""
+msgstr "Nikdy"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:614
 msgid "After 15 minutes"
@@ -499,7 +499,7 @@ msgstr "Po hodině"
 #: src/preferences/devices/senhBuds/configureWindow.js:624
 #: src/preferences/devices/sony/configureWindow.js:491
 msgid "Automatically Power Off When Not Worn"
-msgstr ""
+msgstr "Automaticky vypnout pokud nenošeno"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:639
 #: src/preferences/devices/galaxyBuds/configureWindow.js:115
@@ -511,7 +511,7 @@ msgstr "Chování přehrávání"
 #: src/preferences/devices/senhBuds/configureWindow.js:640
 #: src/preferences/devices/boseBuds/configureWindow.js:431
 msgid "Playback controlled by the BudsLink"
-msgstr ""
+msgstr "Přehrávání ovládáno z BudsLink"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:644
 #: src/preferences/devices/senhBuds/configureWindow.js:648
@@ -550,12 +550,12 @@ msgstr "Pokračovat pokud nošeno"
 #: src/preferences/devices/senhBuds/configureWindow.js:653
 #: src/preferences/devices/boseBuds/configureWindow.js:444
 msgid "Choose playback behavior for in-ear detection"
-msgstr ""
+msgstr "Zvolte chování přehrávání pro zjišťování vložení do ucha"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:654
 #: src/preferences/devices/boseBuds/configureWindow.js:445
 msgid "Choose playback behavior for on-head detection"
-msgstr ""
+msgstr "Zvolte chování přehrávání pro zjišťování nasazení na hlavě"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:658
 #: src/preferences/devices/galaxyBuds/configureWindow.js:126
@@ -569,7 +569,7 @@ msgstr ""
 #: src/preferences/devices/senhBuds/configureWindow.js:692
 #: src/preferences/devices/boseBuds/configureWindow.js:485
 msgid "Calls Settings"
-msgstr ""
+msgstr "Nastavení hovorů"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:704
 #: src/preferences/devices/galaxyBuds/configureWindow.js:622
@@ -579,12 +579,12 @@ msgstr "Okolní zvuky v průběhu hovorů"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:721
 msgid "Comfort Calls"
-msgstr ""
+msgstr "Komvortní volání"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:736
 #: src/preferences/devices/sony/configureWindow.js:613
 msgid "Connection Management"
-msgstr ""
+msgstr "Správa připojení"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:215
 #: src/preferences/devices/sony/configureWindow.js:130
@@ -611,40 +611,40 @@ msgstr "Více výšek"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:219
 msgid "Volume Boost"
-msgstr ""
+msgstr "Posílení hlasitosti"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:221
 msgid "Classic"
-msgstr ""
+msgstr "Klasické"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:222
 msgid "Audiophile"
-msgstr ""
+msgstr "Audiofilní"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:223
 msgid "Decrease bass"
-msgstr ""
+msgstr "Snížit basy"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:224
 msgid "Harman EFX"
-msgstr ""
+msgstr "Harman EFX"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:225
 msgid "Harman Master"
-msgstr ""
+msgstr "Harman Master"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:226
 msgid "Standard 2"
-msgstr ""
+msgstr "Standardní 2"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:227
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:627
 msgid "Outdoor"
-msgstr ""
+msgstr "Venku"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:228
 msgid "Underwater"
-msgstr ""
+msgstr "Pod vodou"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:229
 #: src/preferences/devices/nothingBuds/configureWindow.js:217
@@ -654,7 +654,7 @@ msgstr "Vyvážené"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:262
 msgid "62"
-msgstr ""
+msgstr "62"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:290
 #: src/preferences/devices/nothingBuds/configureWindow.js:355
@@ -666,15 +666,15 @@ msgstr "Další nastavení"
 #: src/preferences/devices/redmiBuds/configureWindow.js:296
 #: src/preferences/widgets/deviceMgmtRowWidget.js:459
 msgid "Allow Connections to Multiple Devices"
-msgstr ""
+msgstr "Umožnit spojení s vícero zařízeními"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:310
 msgid "Automatically answer phone calls"
-msgstr ""
+msgstr "Automaticky zvedat volání"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:324
 msgid "Adaptive Sound"
-msgstr ""
+msgstr "Přizpůsobivý zvuk"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:338
 #: src/preferences/devices/nothingBuds/configureWindow.js:360
@@ -804,7 +804,7 @@ msgstr "Roztažení a držení"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:414
 msgid "Swipe"
-msgstr ""
+msgstr "Přejet"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:418
 #: src/preferences/devices/nothingBuds/configureWindow.js:600
@@ -893,7 +893,7 @@ msgstr "Vyp/zap. nízké zpoždění"
 #: src/preferences/devices/redmiBuds/configureWindow.js:519
 #: src/preferences/devices/nothingBuds/configureWindow.js:685
 msgid "Take Photo"
-msgstr ""
+msgstr "Pořídit fotku"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:221
 msgid "Dirac"
@@ -936,7 +936,7 @@ msgstr "Výšky"
 #: src/preferences/widgets/peqRowWidget.js:983
 #: src/preferences/widgets/peqRowWidget.js:1154
 msgid "Band"
-msgstr ""
+msgstr "Pásmo"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:285
 #: src/preferences/devices/galaxyBuds/configureWindow.js:275
@@ -947,7 +947,7 @@ msgstr "Posílení basů"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:300
 msgid "Bass Boost Level"
-msgstr ""
+msgstr "Úroveň posílení basů"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:303
 msgid "-"
@@ -1015,7 +1015,7 @@ msgstr "Ovládání gesty navijáku"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:609
 msgid "Case Gesture Control"
-msgstr "Ovládání gesty krabičky"
+msgstr "Ovládání gesty na krabičce"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:612
 msgid "Slider Gesture Control"
@@ -1055,7 +1055,7 @@ msgstr "Základní prostor"
 #: src/preferences/devices/galaxyBuds/configureWindow.js:125
 #: src/preferences/devices/airpods/configureWindow.js:119
 msgid "Choose playback behavior for Ear detection"
-msgstr ""
+msgstr "Zvolte chování přehrávání pro zjišťování nasazení do ucha"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:249
 msgid "Voice detection"
@@ -1098,7 +1098,7 @@ msgstr "Posílení výšek"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:309
 msgid "Balance"
-msgstr "Vyvážené"
+msgstr "Vyvážení"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:313
 msgid "Left"
@@ -1157,7 +1157,7 @@ msgstr "Okolní zvuk"
 #: src/preferences/devices/galaxyBuds/configureWindow.js:469
 #: src/preferences/devices/boseBuds/configureWindow.js:784
 msgid "Spotify"
-msgstr ""
+msgstr "Spotify"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:471
 msgid "ANC"
@@ -1200,7 +1200,7 @@ msgstr "Vyberte libovolné dva přepínače"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:551
 msgid "Pinch and Hold Cycle for Left Earbud"
-msgstr "Cyklus roztažení a držení pro levé sluchátko"
+msgstr "Cyklovat roztažením a držením pro levé sluchátko"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:552
 msgid "Pinch and hold cycles between modes (Left)"
@@ -1208,7 +1208,7 @@ msgstr "Roztažení a držení cykluje mezi režimy (Levé)"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:553
 msgid "Pinch and Hold Cycle for Right Earbud"
-msgstr "Cyklus roztažení a držení pro pravé sluchátko"
+msgstr "Cyklovat roztažením a držením pro pravé sluchátko"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:554
 msgid "Pinch and hold cycles between modes (Right)"
@@ -1216,7 +1216,7 @@ msgstr "Roztažení a držení cykluje mezi režim (pravé)"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:556
 msgid "Touch and Hold Cycle for Left Earbud"
-msgstr "Cyklus klepnutí a držení pro levé sluchátko"
+msgstr "Cyklovat klepnutím a držením pro levé sluchátko"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:557
 msgid "Touch and hold cycles between modes (Left)"
@@ -1224,15 +1224,15 @@ msgstr "Klepnutí a držení cykluje mezi režimy (levé)"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:558
 msgid "Touch and Hold Cycle for Right Earbud"
-msgstr "Cyklus klepnutí a držení pro pravé sluchátko"
+msgstr "Cyklovat klepnutím a držením pro pravé sluchátko"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:559
 msgid "Touch and hold cycles between modes (Right)"
-msgstr "KLepnutí a držení cykluje mezi režimy (pravé)"
+msgstr "Klepnutí a držení cykluje mezi režimy (pravé)"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:562
 msgid "Pinch and Hold Cycle"
-msgstr "Cyklus roztažení a držení"
+msgstr "Cyklovat roztažením a držením"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:563
 msgid "Pinch and hold cycles between modes"
@@ -1252,7 +1252,7 @@ msgstr "Zvládání hluku s jedním sluchátkem"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:650
 msgid "Double Tap Outside Edge For Volume Controls"
-msgstr "Dvojité klepnutí vhě hrany pro ovládání hlasitosti"
+msgstr "Dvojité klepnutí vně hrany pro ovládání hlasitosti"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:693
 msgid "Left Ambient Sound Volume"
@@ -1268,7 +1268,7 @@ msgstr "Tón okolního zvuku"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:73
 msgid "Volume EQ"
-msgstr ""
+msgstr "Ekvalizér hlasitosti"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:82
 #: src/preferences/devices/airpods/configureWindow.js:323
@@ -1279,105 +1279,105 @@ msgstr "Výchozí"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:83
 msgid "Heavy bass"
-msgstr ""
+msgstr "Těžké basy"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:84
 msgid "Light bass"
-msgstr ""
+msgstr "Lehké basy"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:86
 msgid "Vocal boost"
-msgstr ""
+msgstr "Posílení hlasů"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:87
 msgid "Clarity"
-msgstr ""
+msgstr "Zřetelnost"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:88
 msgid "Last saved"
-msgstr ""
+msgstr "Naposledy uloženo"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:130
 msgid "Low Bass"
-msgstr ""
+msgstr "Zvýraznit basy"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:134
 msgid "Upper Treble"
-msgstr ""
+msgstr "Vytáhnout výšky"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:67
 msgid "Settings"
-msgstr ""
+msgstr "Nastavení"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:72
 msgid "Game Mode"
-msgstr ""
+msgstr "Herní režim"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:73
 msgid "Reduce audio latency while gaming"
-msgstr ""
+msgstr "Při hraní her snížit prodlevu zvuku"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:84
 msgid "In-Ear Detection"
-msgstr ""
+msgstr "Zjišťování nasazení v uchu"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:85
 msgid "Let the earbuds detect when they are worn"
-msgstr ""
+msgstr "Nechat slucháátka zjišťovat, kdy jsou nasazená"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:94
 msgid "Auto Pause"
-msgstr ""
+msgstr "Automatické pozastavení"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:95
 msgid "Control media playback using in-ear detection"
-msgstr ""
+msgstr "Ovládá přehrávání média pomocí zjišťování zda nasazeno v uchu"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:97
 #: src/preferences/devices/boseBuds/configureWindow.js:838
 msgid "Disabled"
-msgstr ""
+msgstr "Vypnuto"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:98
 msgid "Pause when both removed"
-msgstr ""
+msgstr "Pozastavit, pokud sudnány obě"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:99
 msgid "Pause when either removed"
-msgstr ""
+msgstr "Pozastavit pokud sundáno některé z nich"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:256
 msgid "Remember my mode"
-msgstr ""
+msgstr "Zapamatovat můj režim"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:283
 msgid "Bass Reducer"
-msgstr ""
+msgstr "Redukce basů"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:285
 msgid "Treble Reducer"
-msgstr ""
+msgstr "Redukce výšek"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:417
 msgid "Automatically switch to Transparency mode when an earbud is removed"
-msgstr ""
+msgstr "Při sundání sluchátek automaticky přepnout na režim transparentnosti"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:491
 msgid "Medium"
-msgstr ""
+msgstr "Střední"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:563
 #: src/preferences/devices/sony/configureWindow.js:477
 msgid "After 5 minutes"
-msgstr "Po 5 minutích"
+msgstr "Po 5 minutách"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:564
 msgid "After 20 minutes"
-msgstr ""
+msgstr "Po 20 minutách"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:565
 msgid "After 40 minutes"
-msgstr ""
+msgstr "Po 40 minutách"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:567
 #: src/preferences/devices/sony/configureWindow.js:480
@@ -1386,97 +1386,97 @@ msgstr "Po 3 hodinách"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:575
 msgid "Automatic Power Off"
-msgstr ""
+msgstr "Automatické vypnutí"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:597
 msgid "Voice Prompts"
-msgstr ""
+msgstr "Hlasové prompty"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:612
 msgid "Enable Voice Prompts"
-msgstr ""
+msgstr "Zapnout hlasové prompty"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:638
 msgid "Prompt Language"
-msgstr ""
+msgstr "Jazyk promptu"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:651
 msgid "Announce Battery Level at Startup"
-msgstr ""
+msgstr "Při spuštění oznámit stupeň nabití akumulátoru"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:775
 msgid "Cycle Through Modes"
-msgstr ""
+msgstr "Cyklovat režimy"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:781
 msgid "Switch Devices"
-msgstr ""
+msgstr "Přepnout zařízení"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:790
 msgid "Not Configured"
-msgstr ""
+msgstr "Nenastaveno"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:799
 msgid "Hear Battery Level"
-msgstr ""
+msgstr "Slyšet stupeń nabití"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:805
 msgid "Increase Noise Cancellation"
-msgstr ""
+msgstr "Zvýšit intenzitu potlačování hluku"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:808
 msgid "Decrease Noise Cancellation"
-msgstr ""
+msgstr "Snížit intenzitu potlačování hluku"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:811
 msgid "Toggle Wake Word"
-msgstr ""
+msgstr "Vyp/zap. probouzecí slovo"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:814
 msgid "Conversation Mode"
-msgstr ""
+msgstr "Konverzační režim"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:823
 msgid "Hear Notifications"
-msgstr ""
+msgstr "Slyšet notifikace"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:826
 msgid "Wind Mode"
-msgstr ""
+msgstr "Režim vítr"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:829
 msgid "Client Interaction"
-msgstr ""
+msgstr "Interakce klienta"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:832
 msgid "Audio Line-In"
-msgstr ""
+msgstr "Linkový vstup zvuku"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:835
 msgid "Speaker Link"
-msgstr ""
+msgstr "Napojení reproduktoru"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:57
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:387
 msgid "Show in toggle"
-msgstr ""
+msgstr "Zobrazit v přepínači"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:62
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:393
 msgid "Favorite"
-msgstr ""
+msgstr "Oblíbený"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:74
 msgid "Preset modes cannot be deleted."
-msgstr ""
+msgstr "Přednastavené režimy není možné mazat."
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:75
 msgid "Delete"
-msgstr ""
+msgstr "Smazat"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:86
 msgid "Mode"
-msgstr ""
+msgstr "Režim"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:122
 #: src/lib/devices/nothingBuds/nothingBudsDevice.js:393
@@ -1487,25 +1487,25 @@ msgstr "Stupeň potlačení hluku"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:158
 msgid "Wind Block"
-msgstr ""
+msgstr "Blokování vlivu větru"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:182
 #: src/lib/devices/boseBuds/boseBudsDevice.js:760
 msgid "Still"
-msgstr ""
+msgstr "Klidové"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:182
 #: src/lib/devices/boseBuds/boseBudsDevice.js:762
 msgid "Motion"
-msgstr ""
+msgstr "Pohyb"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:238
 msgid "Remove Mode?"
-msgstr ""
+msgstr "Odebrat režim?"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:239
 msgid "This mode will be removed."
-msgstr ""
+msgstr "Tento režim bude odebrán."
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:242
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:287
@@ -1520,89 +1520,89 @@ msgstr "Zrušit"
 #: src/preferences/widgets/deviceMgmtRowWidget.js:331
 #: src/preferences/widgets/deviceMgmtRowWidget.js:351
 msgid "Remove"
-msgstr ""
+msgstr "Odebrat"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:283
 msgid "Rename Mode?"
-msgstr ""
+msgstr "Přejmenovat režim"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:284
 #, javascript-format
 msgid "Change the mode name to \"%s\"?"
-msgstr ""
+msgstr "Změnit název režimu na „%s“?"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:288
 msgid "Rename"
-msgstr ""
+msgstr "Přejmenovat"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:401
 msgid "Edit"
-msgstr ""
+msgstr "Upravit"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:496
 msgid "Maximum 4 modes can be selected"
-msgstr ""
+msgstr "Vybrat je možné nejvýše 4 režimy"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:510
 msgid "At least 2 modes must be selected."
-msgstr ""
+msgstr "Je třeba vybrat alespoň 2 režimy."
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:551
 msgid "Maximum favorites limit reached."
-msgstr ""
+msgstr "Dosaženo nejvyššího možného počtu oblíbených."
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:566
 msgid "At least 2 favorites are required."
-msgstr ""
+msgstr "Je zapotřebí alespoň 2 oblíbené."
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:617
 msgid "Add"
-msgstr ""
+msgstr "Přidat"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:623
 msgid "Commute"
-msgstr ""
+msgstr "Dojiždění"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:624
 msgid "Focus"
-msgstr ""
+msgstr "Soustředění"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:625
 msgid "Home"
-msgstr ""
+msgstr "Doma"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:626
 msgid "Music"
-msgstr ""
+msgstr "Hudba"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:628
 msgid "Relax"
-msgstr ""
+msgstr "Relaxace"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:629
 msgid "Run"
-msgstr ""
+msgstr "Spustit"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:630
 msgid "Walk"
-msgstr ""
+msgstr "Procházka"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:631
 msgid "Work"
-msgstr ""
+msgstr "Práce"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:632
 msgid "Workout"
-msgstr ""
+msgstr "Cvičení"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:633
 msgid "Stereo"
-msgstr ""
+msgstr "Stereo"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:736
 #: src/lib/devices/boseBuds/boseBudsDevice.js:706
 msgid "Modes"
-msgstr ""
+msgstr "Režimy"
 
 #: src/preferences/devices/sony/configureWindow.js:112
 #: src/lib/devices/galaxyBuds/galaxyBudsDevice.js:689
@@ -1632,7 +1632,7 @@ msgstr "Dlouhé"
 #: src/preferences/devices/sony/configureWindow.js:150
 #: src/preferences/devices/sony/configureWindow.js:166
 msgid "Listening Mode"
-msgstr "Režim poslouchání"
+msgstr "Režim naslouchání"
 
 #: src/preferences/devices/sony/configureWindow.js:155
 msgid "Background Music"
@@ -1664,7 +1664,7 @@ msgstr "Jasné"
 
 #: src/preferences/devices/sony/configureWindow.js:214
 msgid "Excited"
-msgstr "Ukončené"
+msgstr "Vzrušené"
 
 #: src/preferences/devices/sony/configureWindow.js:215
 msgid "Mellow"
@@ -1676,7 +1676,7 @@ msgstr "Uvolněné"
 
 #: src/preferences/devices/sony/configureWindow.js:217
 msgid "Vocal"
-msgstr "Vokál"
+msgstr "Hlas"
 
 #: src/preferences/devices/sony/configureWindow.js:220
 msgid "Speech"
@@ -1704,7 +1704,7 @@ msgstr "DSEE"
 
 #: src/preferences/devices/sony/configureWindow.js:291
 msgid "Enable DSEE enhancement"
-msgstr "Zpanout vylepšení DSSE"
+msgstr "Zapnout DSEE vylepšení"
 
 #: src/preferences/devices/sony/configureWindow.js:305
 msgid "Button/Touch Settings"
@@ -1741,11 +1741,11 @@ msgstr "Nastavení tlačtíka ANC"
 
 #: src/preferences/devices/sony/configureWindow.js:373
 msgid "[NC/AMB] Button Settings"
-msgstr "Nastavneí tlačítka [NC/AMB]"
+msgstr "Nastavení tlačítka [NC/AMB]"
 
 #: src/preferences/devices/sony/configureWindow.js:374
 msgid "Select the modes to toggle when the button is pressed"
-msgstr "Vyberte režim pro přepínánípři stisknutí tlačítka"
+msgstr "Vyberte režimy pro přepínání při stisknutí tlačítka"
 
 #: src/preferences/devices/sony/configureWindow.js:392
 msgid "Notification"
@@ -1785,11 +1785,11 @@ msgstr "+2"
 
 #: src/preferences/devices/sony/configureWindow.js:440
 msgid "Headset Take off"
-msgstr "Sejmutí náhlavní soupravy"
+msgstr "Sundání sluchátek"
 
 #: src/preferences/devices/sony/configureWindow.js:447
 msgid "Pause when taken off"
-msgstr "Při sejmutí pozastavit"
+msgstr "Při sundání pozastavit"
 
 #: src/preferences/devices/sony/configureWindow.js:461
 msgid "Automatically Power Off"
@@ -1823,7 +1823,7 @@ msgid ""
 "if current volume is below this level."
 msgstr ""
 "V průběhu hovoru omezí hlasitost média na toto procento. Pozn.: Pokud je "
-"stávající hlasitost už pod tuto úroveň, pak beze změny."
+"stávající hlasitost už pod touto úrovní, pak beze změny."
 
 #: src/preferences/devices/airpods/configureWindow.js:184
 msgid "Turn off listening modes"
@@ -1855,7 +1855,7 @@ msgstr "Transparentnost"
 
 #: src/preferences/devices/airpods/configureWindow.js:252
 msgid "Press and Hold Cycle"
-msgstr "Cyklus stisknout a držet"
+msgstr "Cyklovat stisknutím a držením"
 
 #: src/preferences/devices/airpods/configureWindow.js:255
 msgid "Press and hold cycles between"
@@ -1892,7 +1892,7 @@ msgstr "125%"
 
 #: src/preferences/devices/airpods/configureWindow.js:313
 msgid "Volume Swipe"
-msgstr "Hlasitost posouváním"
+msgstr "Hlasitost přejetím"
 
 #: src/preferences/devices/airpods/configureWindow.js:314
 msgid "Enable or disable volume adjustment by swiping on earbud stems"
@@ -1943,7 +1943,7 @@ msgstr "Kratší"
 
 #: src/preferences/devices/airpods/configureWindow.js:374
 msgid "Shortest"
-msgstr "Kratší"
+msgstr "Nejkratší"
 
 #: src/preferences/devices/airpods/configureWindow.js:377
 msgid "Press and Hold Duration"
@@ -1993,200 +1993,202 @@ msgstr "MAC adresa"
 
 #: src/preferences/widgets/iconSelectorWidget.js:106
 msgid "Firmware Version"
-msgstr "Verze firmware"
+msgstr "Verze firmwaru"
 
 #: src/preferences/widgets/iconSelectorWidget.js:116
 #: src/preferences/widgets/iconSelectorWidget.js:149
 msgid "Serial Number"
-msgstr ""
+msgstr "Sériové číslo"
 
 #: src/preferences/widgets/peqRowWidget.js:631
 msgid "Peak"
-msgstr ""
+msgstr "Špička"
 
 #: src/preferences/widgets/peqRowWidget.js:632
 msgid "Low Pass Filter"
-msgstr ""
+msgstr "Nízkoprůchodový filtr"
 
 #: src/preferences/widgets/peqRowWidget.js:633
 msgid "High Pass Filter"
-msgstr ""
+msgstr "Vysokoprůchodový filtr"
 
 #: src/preferences/widgets/peqRowWidget.js:634
 msgid "Low Shelf Filter"
-msgstr ""
+msgstr "Spodní shelf filtr"
 
 #: src/preferences/widgets/peqRowWidget.js:635
 msgid "High Shelf Filter"
-msgstr ""
+msgstr "Horní shelf filtr"
 
 #: src/preferences/widgets/peqRowWidget.js:641
 msgid "Frequency"
-msgstr ""
+msgstr "Frekvence"
 
 #: src/preferences/widgets/peqRowWidget.js:649
 msgid "Quality Factor"
-msgstr ""
+msgstr "Koeficient kvality"
 
 #: src/preferences/widgets/peqRowWidget.js:657
 msgid "Gain"
-msgstr ""
+msgstr "Zisk"
 
 #: src/preferences/widgets/peqRowWidget.js:782
 msgid "Bypass"
-msgstr ""
+msgstr "Obejití"
 
 #: src/preferences/widgets/peqRowWidget.js:790
 #, javascript-format
 msgid "%d Hz,  %s dB,  Q: %s"
-msgstr ""
+msgstr "%d Hz,  %s dB,  Q: %s"
 
 #: src/preferences/widgets/peqRowWidget.js:931
 msgid "Pre Amp Gain"
-msgstr ""
+msgstr "Zisk předzesilovače"
 
 #: src/preferences/widgets/peqRowWidget.js:963
 msgid "Add Band"
-msgstr ""
+msgstr "Přidat pásmo"
 
 #: src/preferences/widgets/peqRowWidget.js:969
 msgid "Remove Last Band"
-msgstr ""
+msgstr "Odebrat poslední pásmo"
 
 #: src/preferences/widgets/peqRowWidget.js:1105
 #, javascript-format
 msgid "Band %d"
-msgstr ""
+msgstr "Pásmo %d"
 
 #: src/preferences/widgets/peqRowWidget.js:1118
 msgid "Remove Band?"
-msgstr ""
+msgstr "Odebrat pásmo"
 
 #: src/preferences/widgets/peqRowWidget.js:1119
 #, javascript-format
 msgid "Band %d will be removed."
-msgstr ""
+msgstr "Pásmo %d bude odebráno."
 
 #: src/preferences/widgets/peqRowWidget.js:1340
 msgid "Show"
-msgstr ""
+msgstr "Zobrazit"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:30
 msgid "Connection Manager"
-msgstr ""
+msgstr "Správce připojení"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:37
 msgid "Pairing Mode"
-msgstr ""
+msgstr "Párovací režim"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:39
 msgid "Enable Pairing Mode"
-msgstr ""
+msgstr "Povolit párovací režim"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:40
 msgid "Allow a new Bluetooth device to pair."
-msgstr ""
+msgstr "Umožnit spárování nového Bluetooth zařízení."
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:77
 msgid "Playback Device"
-msgstr ""
+msgstr "Přehrávací zařízení"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:78
 msgid "Lock Playback Device"
-msgstr ""
+msgstr "Uzamknout zařízení nastavené jako přehrávací"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:79
 msgid ""
 "Prevent playback from switching to another connected device while the set "
 "playback device is streaming."
 msgstr ""
+"Bránit přehrávání v přepnutí na jiné připojené zařízení zatímco je "
+"vysíláno do zařízení nastaveného jako přehrávací."
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:95
 msgid "Connected"
-msgstr ""
+msgstr "Připojeno"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:96
 msgid "Paired"
-msgstr ""
+msgstr "Spárováno"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:97
 msgid "No device connected"
-msgstr ""
+msgstr "Nepřipojeno žádné zařízení"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:98
 msgid "No additional device paired"
-msgstr ""
+msgstr "Žádná další spárovaná zařízení"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:162
 #: src/preferences/widgets/deviceMgmtRowWidget.js:250
 msgid "Loading Device Information..."
-msgstr ""
+msgstr "Načítání informací o zařízení…"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:164
 #: src/preferences/widgets/deviceMgmtRowWidget.js:252
 msgid "(This Device)"
-msgstr ""
+msgstr "(Toto zařízení)"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:299
 msgid "Connection Limit Reached"
-msgstr ""
+msgstr "Dosaženo limitu počtu souběžně připojených"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:300
 msgid "Disconnect another device before connecting this device."
-msgstr ""
+msgstr "Aby bylo možné připojit toto zařízení, odpojte napřed nějaké jiné."
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:303
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:326
 msgid "Remove Device?"
-msgstr ""
+msgstr "Odebrat zařízení?"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:327
 msgid "The device will be removed from the paired devices list."
-msgstr ""
+msgstr "Zařízení bude odebráno ze seznamu spárovaných."
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:348
 msgid "Set as Playback Device"
-msgstr ""
+msgstr "Nastavit jako zařízení pro přehrávání"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:349
 msgid "Connect"
-msgstr ""
+msgstr "Připojit"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:350
 msgid "Disconnect"
-msgstr ""
+msgstr "Odpojit"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:474
 msgid "Manage Devices"
-msgstr ""
+msgstr "Spravovat zařízení"
 
 #: src/lib/devices/senhBuds/senhBudsDevice.js:582
 #: src/lib/devices/redmiBuds/redmiBudsDevice.js:624
 msgid "Noise Level"
-msgstr ""
+msgstr "Úroveň hluku"
 
 #: src/lib/devices/senhBuds/senhBudsDevice.js:590
 msgid "Max"
-msgstr ""
+msgstr "Max"
 
 #: src/lib/devices/senhBuds/senhBudsDevice.js:601
 msgid "Anti Wind"
-msgstr ""
+msgstr "Potlačení vlivu větru"
 
 #: src/lib/devices/redmiBuds/redmiBudsDevice.js:611
 msgid "Noise Cancellation Strength"
-msgstr ""
+msgstr "Míra potlačování hluku"
 
 #: src/lib/devices/redmiBuds/redmiBudsDevice.js:633
 msgid "Regular"
-msgstr ""
+msgstr "Běžná"
 
 #: src/lib/devices/redmiBuds/redmiBudsDevice.js:655
 msgid "Transparency Strength"
-msgstr ""
+msgstr "Míra transparentnosti"
 
 #: src/lib/devices/nothingBuds/nothingBudsDevice.js:429
 msgid "Personalised ANC"
@@ -2208,7 +2210,7 @@ msgstr "Zaměření na hlas"
 
 #: src/lib/devices/boseBuds/boseBudsDevice.js:678
 msgid "Wind"
-msgstr ""
+msgstr "Vítr"
 
 #: src/lib/devices/sony/sonyDevice.js:193
 #: src/lib/devices/sony/sonyDevice.js:195
@@ -2217,47 +2219,47 @@ msgstr "Automatické okolní"
 
 #: src/lib/devices/sony/sonyDevice.js:196
 msgid "Auto Ambient Sensitivity"
-msgstr "Citlivost automatického okolního"
+msgstr "Automatická citlivost na okolní"
 
 #: src/lib/devices/notifier.js:25
 msgid "AirPods / Beats Bluetooth audio devices"
-msgstr ""
+msgstr "Bluetooth zvuková zařízení AirPods / Beats"
 
 #: src/lib/devices/notifier.js:27
 msgid "Sony Bluetooth audio devices"
-msgstr ""
+msgstr "Bluetooth zvuková zařízení Sony"
 
 #: src/lib/devices/notifier.js:29
 msgid "Samsung Galaxy Bluetooth audio devices"
-msgstr ""
+msgstr "Bluetooth zvuková zařízení Samsung Galaxy"
 
 #: src/lib/devices/notifier.js:31
 msgid "Nothing / CMF Bluetooth audio devices"
-msgstr ""
+msgstr "Bluetooth zvuková zařízení Nothing / CMF"
 
 #: src/lib/devices/notifier.js:33
 msgid "Google Pixel Buds Bluetooth audio devices"
-msgstr ""
+msgstr "Bluetooth zvuková zařízení Google Pixel Buds"
 
 #: src/lib/devices/notifier.js:35
 msgid "Redmi / Xiaomi Bluetooth audio devices"
-msgstr ""
+msgstr "Bluetooth zvuková zařízení Redmi / Xioami"
 
 #: src/lib/devices/notifier.js:37
 msgid "Sennheiser Bluetooth audio devices"
-msgstr ""
+msgstr "Bluetooth zvuková zařízení Sennheiser"
 
 #: src/lib/devices/notifier.js:39
 msgid "Bose Bluetooth audio devices"
-msgstr ""
+msgstr "Bluetooth zvuková zařízení Bose"
 
 #: src/lib/devices/notifier.js:41
 msgid "Edifier Bluetooth audio devices"
-msgstr ""
+msgstr "Bluetooth zvuková zařízení Edifier"
 
 #: src/lib/devices/notifier.js:43
 msgid "Google Fast Pair Bluetooth audio devices"
-msgstr ""
+msgstr "Bluetooth zvuková zařízení Google Fast Pair"
 
 #: src/lib/devices/notifier.js:49
 #, javascript-format
