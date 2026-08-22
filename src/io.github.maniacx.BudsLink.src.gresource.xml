@@ -79,7 +79,11 @@
         <file>lib/devices/boseBuds/boseBudsSocket.js</file>
         <file>lib/devices/boseBuds/deviceConfigs/QC35.js</file>
         <file>lib/devices/boseBuds/deviceConfigs/QC35SE.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QCEarbuds2.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QCUltra2Earbuds.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QCUltra2Headphones.js</file>
         <file>lib/devices/boseBuds/deviceConfigs/QCUltraEarbuds.js</file>
+        <file>lib/devices/boseBuds/deviceConfigs/QCUltraHeadphones.js</file>
         <file>preferences/devices/boseBuds/configureWindow.js</file>
         <file>preferences/devices/boseBuds/modesGroupWidget.js</file>
 
@@ -142,15 +146,52 @@
         <file>lib/devices/redmiBuds/redmiBudsConfig.js</file>
         <file>lib/devices/redmiBuds/redmiBudsDevice.js</file>
         <file>lib/devices/redmiBuds/redmiBudsSocket.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/FlipBudsPro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiAirDots3Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds3.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds3Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds4.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds4Active.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds4Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds5.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds5Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds6.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds6Active.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds6Lite.js</file>
         <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds6Play.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds6Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds6s.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds7s.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds8.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds8Active.js</file>
         <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds8Lite.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBuds8Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiBudsSE.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/RedmiTemplate.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiAirSE.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiBuds3.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiBuds3Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiBuds3TPro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiBuds4.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiBuds4Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiBuds5.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiBuds5Pro.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiBuds6.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiOpenWear.js</file>
+        <file>lib/devices/redmiBuds/deviceConfigs/XiaomiOpenWearPro.js</file>
         <file>preferences/devices/redmiBuds/configureWindow.js</file>
 
         <file>lib/devices/senhBuds/senhBudsConfig.js</file>
         <file>lib/devices/senhBuds/senhBudsDevice.js</file>
         <file>lib/devices/senhBuds/senhBudsSocket.js</file>
+        <file>lib/devices/senhBuds/deviceConfigs/AccentumPlusWireless.js</file>
+        <file>lib/devices/senhBuds/deviceConfigs/AccentumTrueWireless.js</file>
+        <file>lib/devices/senhBuds/deviceConfigs/AccentumWireless.js</file>
         <file>lib/devices/senhBuds/deviceConfigs/HDB630.js</file>
+        <file>lib/devices/senhBuds/deviceConfigs/MomentumTrueWireless3.js</file>
+        <file>lib/devices/senhBuds/deviceConfigs/MomentumTrueWireless4.js</file>
         <file>lib/devices/senhBuds/deviceConfigs/MomentumWireless4.js</file>
+        <file>lib/devices/senhBuds/deviceConfigs/MomentumWireless5.js</file>
         <file>preferences/devices/senhBuds/configureWindow.js</file>
         <file>lib/devices/edifierBuds/edifierBudsConfig.js</file>
         <file>lib/devices/edifierBuds/edifierBudsDevice.js</file>

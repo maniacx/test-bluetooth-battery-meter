@@ -2,12 +2,20 @@
 
 import QC35 from './deviceConfigs/QC35.js';
 import QC35SE from './deviceConfigs/QC35SE.js';
+import QCEarbuds2 from './deviceConfigs/QCEarbuds2.js';
+import QCUltra2Earbuds from './deviceConfigs/QCUltra2Earbuds.js';
+import QCUltra2Headphones from './deviceConfigs/QCUltra2Headphones.js';
 import QCUltraEarbuds from './deviceConfigs/QCUltraEarbuds.js';
+import QCUltraHeadphones from './deviceConfigs/QCUltraHeadphones.js';
 
 export const BoseBudsModelList = [
     QC35,
     QC35SE,
+    QCEarbuds2,
+    QCUltra2Earbuds,
+    QCUltra2Headphones,
     QCUltraEarbuds,
+    QCUltraHeadphones,
 ];
 
 export const Operator = {

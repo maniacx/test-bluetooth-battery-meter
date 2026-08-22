@@ -1,11 +1,71 @@
 'use strict';
 
+import FlipBudsPro from './deviceConfigs/FlipBudsPro.js';
+import RedmiAirDots3Pro from './deviceConfigs/RedmiAirDots3Pro.js';
+import RedmiBuds3 from './deviceConfigs/RedmiBuds3.js';
+import RedmiBuds3Pro from './deviceConfigs/RedmiBuds3Pro.js';
+import RedmiBuds4 from './deviceConfigs/RedmiBuds4.js';
+import RedmiBuds4Active from './deviceConfigs/RedmiBuds4Active.js';
+import RedmiBuds4Pro from './deviceConfigs/RedmiBuds4Pro.js';
+import RedmiBuds5 from './deviceConfigs/RedmiBuds5.js';
+import RedmiBuds5Pro from './deviceConfigs/RedmiBuds5Pro.js';
+import RedmiBuds6 from './deviceConfigs/RedmiBuds6.js';
+import RedmiBuds6Active from './deviceConfigs/RedmiBuds6Active.js';
+import RedmiBuds6Lite from './deviceConfigs/RedmiBuds6Lite.js';
 import RedmiBuds6Play from './deviceConfigs/RedmiBuds6Play.js';
+import RedmiBuds6Pro from './deviceConfigs/RedmiBuds6Pro.js';
+import RedmiBuds6s from './deviceConfigs/RedmiBuds6s.js';
+import RedmiBuds7s from './deviceConfigs/RedmiBuds7s.js';
+import RedmiBuds8 from './deviceConfigs/RedmiBuds8.js';
+import RedmiBuds8Active from './deviceConfigs/RedmiBuds8Active.js';
 import RedmiBuds8Lite from './deviceConfigs/RedmiBuds8Lite.js';
+import RedmiBuds8Pro from './deviceConfigs/RedmiBuds8Pro.js';
+import RedmiBudsSE from './deviceConfigs/RedmiBudsSE.js';
+import XiaomiAirSE from './deviceConfigs/XiaomiAirSE.js';
+import XiaomiBuds3 from './deviceConfigs/XiaomiBuds3.js';
+import XiaomiBuds3Pro from './deviceConfigs/XiaomiBuds3Pro.js';
+import XiaomiBuds3TPro from './deviceConfigs/XiaomiBuds3TPro.js';
+import XiaomiBuds4 from './deviceConfigs/XiaomiBuds4.js';
+import XiaomiBuds4Pro from './deviceConfigs/XiaomiBuds4Pro.js';
+import XiaomiBuds5 from './deviceConfigs/XiaomiBuds5.js';
+import XiaomiBuds5Pro from './deviceConfigs/XiaomiBuds5Pro.js';
+import XiaomiBuds6 from './deviceConfigs/XiaomiBuds6.js';
+import XiaomiOpenWear from './deviceConfigs/XiaomiOpenWear.js';
+import XiaomiOpenWearPro from './deviceConfigs/XiaomiOpenWearPro.js';
 
 export const RedmiBudsModelList = [
+    FlipBudsPro,
+    RedmiAirDots3Pro,
+    RedmiBuds3,
+    RedmiBuds3Pro,
+    RedmiBuds4,
+    RedmiBuds4Active,
+    RedmiBuds4Pro,
+    RedmiBuds5,
+    RedmiBuds5Pro,
+    RedmiBuds6,
+    RedmiBuds6Active,
+    RedmiBuds6Lite,
     RedmiBuds6Play,
+    RedmiBuds6Pro,
+    RedmiBuds6s,
+    RedmiBuds7s,
+    RedmiBuds8,
+    RedmiBuds8Active,
     RedmiBuds8Lite,
+    RedmiBuds8Pro,
+    RedmiBudsSE,
+    XiaomiAirSE,
+    XiaomiBuds3,
+    XiaomiBuds3Pro,
+    XiaomiBuds3TPro,
+    XiaomiBuds4,
+    XiaomiBuds4Pro,
+    XiaomiBuds5,
+    XiaomiBuds5Pro,
+    XiaomiBuds6,
+    XiaomiOpenWear,
+    XiaomiOpenWearPro,
 ];
 
 export const MessageType = {
