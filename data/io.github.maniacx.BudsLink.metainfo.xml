@@ -90,6 +90,28 @@
     <value key="Purism::form_factor">mobile</value>
   </custom>
   <releases>
+    <release version="0.2.0" date="2026-08-23">
+      <description>
+        <ul>
+          <li>Updated Device Information UI and added serial number for several devices</li>
+          <li>Added support for Beats Powerbeats Fit credits: schlagmichdoch@github.com</li>
+          <li>Added support for Bose QC Ultra Earbuds credits: MobileAZN@github.com</li>
+          <li>Added support for Bose QC35/QC35SE credits: amaxine@github.com</li>
+          <li>Added support for Sennheiser HDB 630 credits: TheGentleChainsaw@github.com</li>
+          <li>Added support for Sennheiser MOMENTUM 4 credits: TheGentleChainsaw@github.com / jacostag@github.com</li>
+          <li>Added support for Redmi Buds 6 Play credits: drinkingoutofcups@github.com</li>
+          <li>Added support for Nothing Headphone (a) credits: The-Nyla@github.com</li>
+          <li>Equalizer UI in Adw.dialog, to prevent accidental changes while scrolling</li>
+          <li>NothingBuds: Improvement in packet decoding and init handshake</li>
+          <li>GPFS: Fix missing schema key</li>
+          <li>AirPods: Force adaptive controls visibility while setting ANC mode.</li>
+          <li>Added Dutch translation. credits: klascal@github.com</li>
+          <li>Added French translation. credits: naplon74@github.com</li>
+          <li>Added Occitan translation. credits: Mejans@github.com</li>
+          <li>Added Czech translation. credits: p-bo@github.com</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.5" date="2026-05-29">
       <description>
         <ul>
