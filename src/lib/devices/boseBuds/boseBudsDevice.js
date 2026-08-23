@@ -1344,6 +1344,8 @@ export const BoseBudsDevice = GObject.registerClass({
     updateBTDeviceInfo(mac, name, connected) {
         this._log.info(`updateBTDeviceInfo connected: ${connected}`);
 
+        this._stopBTTimeout(mac);
+
         const device = this._deviceInfo.find(info => info.id === mac);
         if (!device)
             return;
