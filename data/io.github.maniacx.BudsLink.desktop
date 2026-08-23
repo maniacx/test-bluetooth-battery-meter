@@ -6,4 +6,4 @@ Exec=@BINDIR@/@APP_COMMAND@
 Type=Application
 DBusActivatable=true
 Categories=Audio;Utility;
-Keywords=Bluetooth;Earbuds;Headphones;Battery;ANC;TouchControls;Sony;AirPods;Beats;Samsung;Galaxy;Buds;Nothing;CMF;Google;Pixel;
+Keywords=Bluetooth;Earbuds;Headphones;Battery;ANC;TouchControls;Sony;AirPods;Beats;Samsung;Galaxy;Buds;Nothing;CMF;Google;Pixel;Bose;Redmi;Xiaomi;Sennheiser;
