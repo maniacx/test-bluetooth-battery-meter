@@ -93,6 +93,14 @@
     <value key="Purism::form_factor">mobile</value>
   </custom>
   <releases>
+    <release version="0.2.1" date="2026-08-24">
+      <description>
+        <ul>
+          <li>Updated metadata</li>
+          <li>Added Italian translation. credits:  albanobattistella@github.com</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.2.0" date="2026-08-23">
       <description>
         <ul>
