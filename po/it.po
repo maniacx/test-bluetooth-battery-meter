@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: BudsLink\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-08-20 17:29-0600\n"
-"PO-Revision-Date: 2026-04-28 20:25+0200\n"
+"PO-Revision-Date: 2026-08-23 08:45+0200\n"
 "Last-Translator: Albano Battistella\n"
 "Language-Team: italian\n"
 "Language: it\n"
@@ -88,7 +88,7 @@ msgstr "Registrazione pacchetti"
 
 #: src/appLibs/widgets/settingsButton.js:84
 msgid "BudsLink Companion"
-msgstr ""
+msgstr "BudsLink Companion"
 
 #: src/appLibs/widgets/settingsButton.js:91
 msgid "About BudsLink"
@@ -149,15 +149,15 @@ msgstr "Disattivato"
 
 #: src/appLibs/widgets/settingsButton.js:364
 msgid "GNOME Extension"
-msgstr ""
+msgstr "Estensione GNOME"
 
 #: src/appLibs/widgets/settingsButton.js:370
 msgid "Plasma Widget"
-msgstr ""
+msgstr "Widget di Plasma"
 
 #: src/appLibs/widgets/settingsButton.js:376
 msgid "Cinnamon Spice"
-msgstr ""
+msgstr "Cinnamon Spice"
 
 #: src/appLibs/widgets/deviceRow.js:98
 msgid "Configure"
@@ -209,7 +209,7 @@ msgstr "Seleziona l'icona utilizzata per l'indicatore e il menu rapido"
 #: src/preferences/devices/senhBuds/configureWindow.js:220
 #: src/preferences/devices/boseBuds/configureWindow.js:272
 msgid "Sound Settings"
-msgstr ""
+msgstr "Impostazioni audio"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:228
 #: src/preferences/devices/redmiBuds/configureWindow.js:209
@@ -222,26 +222,26 @@ msgstr "Equalizzatore"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:229
 msgid "Podcast"
-msgstr ""
+msgstr "Podcast"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:230
 msgid "Sound personalization"
-msgstr ""
+msgstr "Personalizzazione del suono"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:231
 #: src/preferences/widgets/peqRowWidget.js:883
 #: src/preferences/widgets/peqRowWidget.js:1308
 msgid "Parametric Equalizer"
-msgstr ""
+msgstr "Equalizzatore parametrico"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:242
 msgid "Audio Mode"
-msgstr ""
+msgstr "Modalità audio"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:262
 #: src/preferences/devices/boseBuds/configureWindow.js:281
 msgid "Flat"
-msgstr ""
+msgstr "Piatto"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:263
 #: src/preferences/devices/nothingBuds/configureWindow.js:222
@@ -253,13 +253,13 @@ msgstr "Rock"
 msgid "Pop"
 msgstr "Pop"
 
-#: src/preferences/devices/senhBuds/configureWindow.js:265
+##: src/preferences/devices/senhBuds/configureWindow.js:265
 msgid "Dance"
-msgstr ""
+msgstr "Dance"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:266
 msgid "Hip Hop"
-msgstr ""
+msgstr "Hip Hop"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:267
 #: src/preferences/devices/nothingBuds/configureWindow.js:226
@@ -268,11 +268,11 @@ msgstr "Classica"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:268
 msgid "Movie"
-msgstr ""
+msgstr "Cinema"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:269
 msgid "Jazz"
-msgstr ""
+msgstr "Jazz"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:282
 #: src/preferences/devices/redmiBuds/configureWindow.js:220
@@ -304,7 +304,7 @@ msgstr "Preset equalizzatore"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:303
 msgid "50"
-msgstr ""
+msgstr "50"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:304
 #: src/preferences/devices/sony/configureWindow.js:260
@@ -336,7 +336,7 @@ msgstr "500"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:309
 msgid "800"
-msgstr ""
+msgstr "800"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:310
 #: src/preferences/devices/redmiBuds/configureWindow.js:262
@@ -358,7 +358,7 @@ msgstr "2.5k"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:313
 msgid "3k"
-msgstr ""
+msgstr "3k"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:314
 #: src/preferences/devices/redmiBuds/configureWindow.js:262
@@ -373,7 +373,7 @@ msgstr "6.3k"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:316
 msgid "7k"
-msgstr ""
+msgstr "7k"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:317
 #: src/preferences/devices/redmiBuds/configureWindow.js:263
@@ -384,7 +384,7 @@ msgstr "8k"
 #: src/preferences/devices/senhBuds/configureWindow.js:318
 #: src/preferences/devices/redmiBuds/configureWindow.js:263
 msgid "12k"
-msgstr ""
+msgstr "12k"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:319
 #: src/preferences/devices/redmiBuds/configureWindow.js:263
@@ -397,7 +397,7 @@ msgstr "16k"
 #: src/preferences/devices/redmiBuds/configureWindow.js:272
 #: src/preferences/devices/sony/configureWindow.js:270
 msgid "Frequency (Hz)"
-msgstr ""
+msgstr "Frequenza (Hz)"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:337
 #: src/preferences/devices/redmiBuds/configureWindow.js:273
@@ -406,12 +406,12 @@ msgstr ""
 #: src/preferences/devices/boseBuds/configureWindow.js:338
 #: src/preferences/devices/sony/configureWindow.js:271
 msgid "Gain (dB)"
-msgstr ""
+msgstr "Guadagno (dB)"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:364
 #: src/preferences/devices/nothingBuds/configureWindow.js:288
 msgid "Enable Bass Boost"
-msgstr ""
+msgstr "Attiva l'amplificazione dei bassi"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:439
 #: src/preferences/devices/boseBuds/configureWindow.js:490
@@ -435,51 +435,51 @@ msgstr "Alto"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:451
 msgid "Crossfeed"
-msgstr ""
+msgstr "Crossfeed"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:557
 #: src/preferences/devices/boseBuds/configureWindow.js:371
 msgid "In Ear Settings"
-msgstr ""
+msgstr "Impostazioni intraauricolari"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:557
 #: src/preferences/devices/boseBuds/configureWindow.js:372
 msgid "On Head Settings"
-msgstr ""
+msgstr "Impostazioni sul capo"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:562
 #: src/preferences/devices/boseBuds/configureWindow.js:378
 msgid "Enable In-Ear Detection"
-msgstr ""
+msgstr "Attiva rilevamento intraauricolare"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:563
 #: src/preferences/devices/boseBuds/configureWindow.js:379
 msgid "Enable On Head Detection"
-msgstr ""
+msgstr "Attiva rilevamento sul capo"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:576
 #: src/preferences/devices/boseBuds/configureWindow.js:393
 msgid "Pause Media When Not Worn"
-msgstr ""
+msgstr "Sospendi contenuti multimediali quando non indossati"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:577
 #: src/preferences/devices/boseBuds/configureWindow.js:394
 msgid "Playback controlled by the OEM app"
-msgstr ""
+msgstr "Riproduzione controllata dall'app OEM"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:589
 #: src/preferences/devices/boseBuds/configureWindow.js:406
 msgid "Automatically Answer Calls When Worn"
-msgstr ""
+msgstr "Rispondi automaticamente alle chiamate quando indossati"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:601
 msgid "Pause Media When Transparency Mode Is Enabled"
-msgstr ""
+msgstr "Sospendi contenuti multimediali quando la modalità trasparenza è attiva"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:613
 #: src/preferences/devices/boseBuds/configureWindow.js:562
 msgid "Never"
-msgstr ""
+msgstr "Mai"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:614
 msgid "After 15 minutes"
@@ -499,7 +499,7 @@ msgstr "Dopo 1 ora"
 #: src/preferences/devices/senhBuds/configureWindow.js:624
 #: src/preferences/devices/sony/configureWindow.js:491
 msgid "Automatically Power Off When Not Worn"
-msgstr ""
+msgstr "Spegni automaticamente quando non indossati"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:639
 #: src/preferences/devices/galaxyBuds/configureWindow.js:115
@@ -511,7 +511,7 @@ msgstr "Comportamento riproduzione"
 #: src/preferences/devices/senhBuds/configureWindow.js:640
 #: src/preferences/devices/boseBuds/configureWindow.js:431
 msgid "Playback controlled by the BudsLink"
-msgstr ""
+msgstr "Riproduzione controllata da BudsLink"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:644
 #: src/preferences/devices/senhBuds/configureWindow.js:648
@@ -543,15 +543,15 @@ msgstr "Riprendi con qualsiasi auricolare, metti in pausa se rimuovi entrambi"
 msgid "Resume when worn"
 msgstr "Riprendi quando indossati"
 
-#: src/preferences/devices/senhBuds/configureWindow.js:653
+##: src/preferences/devices/senhBuds/configureWindow.js:653
 #: src/preferences/devices/boseBuds/configureWindow.js:444
 msgid "Choose playback behavior for in-ear detection"
-msgstr ""
+msgstr "Scegli il comportamento della riproduzione per il rilevamento intraauricolare"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:654
 #: src/preferences/devices/boseBuds/configureWindow.js:445
 msgid "Choose playback behavior for on-head detection"
-msgstr ""
+msgstr "Scegli il comportamento della riproduzione per il rilevamento sul capo"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:658
 #: src/preferences/devices/galaxyBuds/configureWindow.js:126
@@ -565,7 +565,7 @@ msgstr ""
 #: src/preferences/devices/senhBuds/configureWindow.js:692
 #: src/preferences/devices/boseBuds/configureWindow.js:485
 msgid "Calls Settings"
-msgstr ""
+msgstr "Impostazioni chiamate"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:704
 #: src/preferences/devices/galaxyBuds/configureWindow.js:622
@@ -575,12 +575,12 @@ msgstr "Suono ambiente durante le chiamate"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:721
 msgid "Comfort Calls"
-msgstr ""
+msgstr "Chiamate Comfort"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:736
 #: src/preferences/devices/sony/configureWindow.js:613
 msgid "Connection Management"
-msgstr ""
+msgstr "Gestione connessioni"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:215
 #: src/preferences/devices/sony/configureWindow.js:130
@@ -607,40 +607,40 @@ msgstr "Più acuti"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:219
 msgid "Volume Boost"
-msgstr ""
+msgstr "Amplificazione volume"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:221
 msgid "Classic"
-msgstr ""
+msgstr "Classico"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:222
 msgid "Audiophile"
-msgstr ""
+msgstr "Audiofilo"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:223
 msgid "Decrease bass"
-msgstr ""
+msgstr "Riduci bassi"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:224
 msgid "Harman EFX"
-msgstr ""
+msgstr "Harman EFX"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:225
 msgid "Harman Master"
-msgstr ""
+msgstr "Harman Master"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:226
 msgid "Standard 2"
-msgstr ""
+msgstr "Standard 2"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:227
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:627
 msgid "Outdoor"
-msgstr ""
+msgstr "All'aperto"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:228
 msgid "Underwater"
-msgstr ""
+msgstr "Sott'acqua"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:229
 #: src/preferences/devices/nothingBuds/configureWindow.js:217
@@ -650,7 +650,7 @@ msgstr "Bilanciato"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:262
 msgid "62"
-msgstr ""
+msgstr "62"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:290
 #: src/preferences/devices/nothingBuds/configureWindow.js:355
@@ -662,15 +662,15 @@ msgstr "Impostazioni aggiuntive"
 #: src/preferences/devices/redmiBuds/configureWindow.js:296
 #: src/preferences/widgets/deviceMgmtRowWidget.js:459
 msgid "Allow Connections to Multiple Devices"
-msgstr ""
+msgstr "Consenti connessioni a più dispositivi"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:310
 msgid "Automatically answer phone calls"
-msgstr ""
+msgstr "Rispondi automaticamente alle chiamate telefoniche"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:324
 msgid "Adaptive Sound"
-msgstr ""
+msgstr "Suono adattivo"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:338
 #: src/preferences/devices/nothingBuds/configureWindow.js:360
@@ -800,7 +800,7 @@ msgstr "Pizzica e tieni premuto"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:414
 msgid "Swipe"
-msgstr ""
+msgstr "Scorrimento"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:418
 #: src/preferences/devices/nothingBuds/configureWindow.js:600
@@ -889,7 +889,7 @@ msgstr "Attiva/disattiva bassa latenza"
 #: src/preferences/devices/redmiBuds/configureWindow.js:519
 #: src/preferences/devices/nothingBuds/configureWindow.js:685
 msgid "Take Photo"
-msgstr ""
+msgstr "Scatta foto"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:221
 msgid "Dirac"
@@ -932,7 +932,7 @@ msgstr "Acuti"
 #: src/preferences/widgets/peqRowWidget.js:983
 #: src/preferences/widgets/peqRowWidget.js:1154
 msgid "Band"
-msgstr ""
+msgstr "Banda"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:285
 #: src/preferences/devices/galaxyBuds/configureWindow.js:275
@@ -943,7 +943,7 @@ msgstr "Enfatizzazione bassi"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:300
 msgid "Bass Boost Level"
-msgstr ""
+msgstr "Livello amplificazione bassi"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:303
 msgid "-"
@@ -1051,7 +1051,7 @@ msgstr "Spazio essenziale"
 #: src/preferences/devices/galaxyBuds/configureWindow.js:125
 #: src/preferences/devices/airpods/configureWindow.js:119
 msgid "Choose playback behavior for Ear detection"
-msgstr ""
+msgstr "Scegli il comportamento della riproduzione per il rilevamento dell'orecchio"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:249
 msgid "Voice detection"
@@ -1153,7 +1153,7 @@ msgstr "Suono ambiente"
 #: src/preferences/devices/galaxyBuds/configureWindow.js:469
 #: src/preferences/devices/boseBuds/configureWindow.js:784
 msgid "Spotify"
-msgstr ""
+msgstr "Spotify"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:471
 msgid "ANC"
@@ -1264,7 +1264,7 @@ msgstr "Tono suono ambiente"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:73
 msgid "Volume EQ"
-msgstr ""
+msgstr "Volume EQ"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:82
 #: src/preferences/devices/airpods/configureWindow.js:323
@@ -1275,92 +1275,92 @@ msgstr "Standard"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:83
 msgid "Heavy bass"
-msgstr ""
+msgstr "Bassi intensi"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:84
 msgid "Light bass"
-msgstr ""
+msgstr "Bassi leggeri"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:86
 msgid "Vocal boost"
-msgstr ""
+msgstr "Amplificazione vocale"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:87
 msgid "Clarity"
-msgstr ""
+msgstr "Chiarezza"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:88
 msgid "Last saved"
-msgstr ""
+msgstr "Ultimo salvataggio"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:130
 msgid "Low Bass"
-msgstr ""
+msgstr "Bassi profondi"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:134
 msgid "Upper Treble"
-msgstr ""
+msgstr "Alti superiori"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:67
 msgid "Settings"
-msgstr ""
+msgstr "Impostazioni"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:72
 msgid "Game Mode"
-msgstr ""
+msgstr "Modalità gioco"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:73
 msgid "Reduce audio latency while gaming"
-msgstr ""
+msgstr "Riduci la latenza audio durante il gioco"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:84
 msgid "In-Ear Detection"
-msgstr ""
+msgstr "Rilevamento intraauricolare"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:85
 msgid "Let the earbuds detect when they are worn"
-msgstr ""
+msgstr "Consente agli auricolari di rilevare quando sono indossati"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:94
 msgid "Auto Pause"
-msgstr ""
+msgstr "Pausa automatica"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:95
 msgid "Control media playback using in-ear detection"
-msgstr ""
+msgstr "Controlla la riproduzione multimediale tramite il rilevamento intraauricolare"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:97
 #: src/preferences/devices/boseBuds/configureWindow.js:838
 msgid "Disabled"
-msgstr ""
+msgstr "Disattivato"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:98
 msgid "Pause when both removed"
-msgstr ""
+msgstr "In pausa quando vengono rimossi entrambi"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:99
 msgid "Pause when either removed"
-msgstr ""
+msgstr "In pausa quando viene rimosso uno dei due"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:256
 msgid "Remember my mode"
-msgstr ""
+msgstr "Ricorda la mia modalità"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:283
 msgid "Bass Reducer"
-msgstr ""
+msgstr "Riduzione bassi"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:285
 msgid "Treble Reducer"
-msgstr ""
+msgstr "Riduzione alti"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:417
 msgid "Automatically switch to Transparency mode when an earbud is removed"
-msgstr ""
+msgstr "Passa automaticamente alla modalità Trasparenza quando viene rimosso un auricolare"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:491
 msgid "Medium"
-msgstr ""
+msgstr "Medio"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:563
 #: src/preferences/devices/sony/configureWindow.js:477
@@ -1369,11 +1369,11 @@ msgstr "Dopo 5 minuti"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:564
 msgid "After 20 minutes"
-msgstr ""
+msgstr "Dopo 20 minuti"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:565
 msgid "After 40 minutes"
-msgstr ""
+msgstr "Dopo 40 minuti"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:567
 #: src/preferences/devices/sony/configureWindow.js:480
@@ -1382,97 +1382,97 @@ msgstr "Dopo 3 ore"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:575
 msgid "Automatic Power Off"
-msgstr ""
+msgstr "Spegnimento automatico"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:597
 msgid "Voice Prompts"
-msgstr ""
+msgstr "Guida vocale"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:612
 msgid "Enable Voice Prompts"
-msgstr ""
+msgstr "Attiva la guida vocale"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:638
 msgid "Prompt Language"
-msgstr ""
+msgstr "Lingua della guida vocale"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:651
 msgid "Announce Battery Level at Startup"
-msgstr ""
+msgstr "Annuncia il livello della batteria all'avvio"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:775
 msgid "Cycle Through Modes"
-msgstr ""
+msgstr "Scorri tra le modalità"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:781
 msgid "Switch Devices"
-msgstr ""
+msgstr "Passa da un dispositivo all'altro"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:790
 msgid "Not Configured"
-msgstr ""
+msgstr "Non configurato"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:799
 msgid "Hear Battery Level"
-msgstr ""
+msgstr "Ascolta livello batteria"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:805
 msgid "Increase Noise Cancellation"
-msgstr ""
+msgstr "Aumenta cancellazione del rumore"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:808
 msgid "Decrease Noise Cancellation"
-msgstr ""
+msgstr "Riduci cancellazione del rumore"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:811
 msgid "Toggle Wake Word"
-msgstr ""
+msgstr "Attiva/Disattiva parola di attivazione"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:814
 msgid "Conversation Mode"
-msgstr ""
+msgstr "Modalità conversazione"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:823
 msgid "Hear Notifications"
-msgstr ""
+msgstr "Ascolta notifiche"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:826
 msgid "Wind Mode"
-msgstr ""
+msgstr "Modalità vento"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:829
 msgid "Client Interaction"
-msgstr ""
+msgstr "Interazione client"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:832
 msgid "Audio Line-In"
-msgstr ""
+msgstr "Ingresso audio di linea"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:835
 msgid "Speaker Link"
-msgstr ""
+msgstr "Collegamento altoparlanti"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:57
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:387
 msgid "Show in toggle"
-msgstr ""
+msgstr "Mostra nel selettore"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:62
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:393
 msgid "Favorite"
-msgstr ""
+msgstr "Preferito"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:74
 msgid "Preset modes cannot be deleted."
-msgstr ""
+msgstr "Le modalità predefinite non possono essere eliminate."
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:75
 msgid "Delete"
-msgstr ""
+msgstr "Elimina"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:86
 msgid "Mode"
-msgstr ""
+msgstr "Modalità"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:122
 #: src/lib/devices/nothingBuds/nothingBudsDevice.js:393
@@ -1483,25 +1483,25 @@ msgstr "Livello cancellazione del rumore"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:158
 msgid "Wind Block"
-msgstr ""
+msgstr "Blocco del vento"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:182
 #: src/lib/devices/boseBuds/boseBudsDevice.js:760
 msgid "Still"
-msgstr ""
+msgstr "Fermo"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:182
 #: src/lib/devices/boseBuds/boseBudsDevice.js:762
 msgid "Motion"
-msgstr ""
+msgstr "In movimento"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:238
 msgid "Remove Mode?"
-msgstr ""
+msgstr "Rimuovere la modalità?"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:239
 msgid "This mode will be removed."
-msgstr ""
+msgstr "Questa modalità verrà rimossa."
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:242
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:287
@@ -1516,89 +1516,89 @@ msgstr "Annulla"
 #: src/preferences/widgets/deviceMgmtRowWidget.js:331
 #: src/preferences/widgets/deviceMgmtRowWidget.js:351
 msgid "Remove"
-msgstr ""
+msgstr "Rimuovi"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:283
 msgid "Rename Mode?"
-msgstr ""
+msgstr "Rinominare la modalità?"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:284
 #, javascript-format
 msgid "Change the mode name to \"%s\"?"
-msgstr ""
+msgstr "Cambiare il nome della modalità in \"%s\"?"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:288
 msgid "Rename"
-msgstr ""
+msgstr "Rinomina"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:401
 msgid "Edit"
-msgstr ""
+msgstr "Modifica"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:496
 msgid "Maximum 4 modes can be selected"
-msgstr ""
+msgstr "È possibile selezionare al massimo 4 modalità"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:510
 msgid "At least 2 modes must be selected."
-msgstr ""
+msgstr "È necessario selezionare almeno 2 modalità."
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:551
 msgid "Maximum favorites limit reached."
-msgstr ""
+msgstr "Limite massimo di preferiti raggiunto."
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:566
 msgid "At least 2 favorites are required."
-msgstr ""
+msgstr "Sono richiesti almeno 2 preferiti."
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:617
 msgid "Add"
-msgstr ""
+msgstr "Aggiungi"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:623
 msgid "Commute"
-msgstr ""
+msgstr "Viaggio casa-lavoro"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:624
 msgid "Focus"
-msgstr ""
+msgstr "Concentrazione"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:625
 msgid "Home"
-msgstr ""
+msgstr "Casa"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:626
 msgid "Music"
-msgstr ""
+msgstr "Musica"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:628
 msgid "Relax"
-msgstr ""
+msgstr "Relax"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:629
 msgid "Run"
-msgstr ""
+msgstr "Corsa"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:630
 msgid "Walk"
-msgstr ""
+msgstr "Camminata"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:631
 msgid "Work"
-msgstr ""
+msgstr "Lavoro"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:632
 msgid "Workout"
-msgstr ""
+msgstr "Allenamento"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:633
 msgid "Stereo"
-msgstr ""
+msgstr "Stereo"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:736
 #: src/lib/devices/boseBuds/boseBudsDevice.js:706
 msgid "Modes"
-msgstr ""
+msgstr "Modalità"
 
 #: src/preferences/devices/sony/configureWindow.js:112
 #: src/lib/devices/galaxyBuds/galaxyBudsDevice.js:689
@@ -1859,7 +1859,7 @@ msgstr "Premi e tieni premuto per scorrere tra"
 
 #: src/preferences/devices/airpods/configureWindow.js:256
 msgid "Settings don’t reflect current state"
-msgstr ""
+msgstr "Le impostazioni non riflettono lo stato attuale"
 
 #: src/preferences/devices/airpods/configureWindow.js:283
 msgid "Notification Volume"
@@ -1997,195 +1997,189 @@ msgstr "Versione firmware"
 #: src/preferences/widgets/iconSelectorWidget.js:116
 #: src/preferences/widgets/iconSelectorWidget.js:149
 msgid "Serial Number"
-msgstr ""
+msgstr "Numero di serie"
 
 #: src/preferences/widgets/peqRowWidget.js:631
 msgid "Peak"
-msgstr ""
+msgstr "Picco"
 
 #: src/preferences/widgets/peqRowWidget.js:632
 msgid "Low Pass Filter"
-msgstr ""
+msgstr "Filtro passa-basso"
 
 #: src/preferences/widgets/peqRowWidget.js:633
 msgid "High Pass Filter"
-msgstr ""
-
-#: src/preferences/widgets/peqRowWidget.js:634
-msgid "Low Shelf Filter"
-msgstr ""
-
-#: src/preferences/widgets/peqRowWidget.js:635
-msgid "High Shelf Filter"
-msgstr ""
+msgstr "Filtro passa-alto"
 
 #: src/preferences/widgets/peqRowWidget.js:641
 msgid "Frequency"
-msgstr ""
+msgstr "Frequenza"
 
 #: src/preferences/widgets/peqRowWidget.js:649
 msgid "Quality Factor"
-msgstr ""
+msgstr "Fattore di qualità"
 
 #: src/preferences/widgets/peqRowWidget.js:657
 msgid "Gain"
-msgstr ""
+msgstr "Guadagno"
 
 #: src/preferences/widgets/peqRowWidget.js:782
 msgid "Bypass"
-msgstr ""
+msgstr "Bypass"
 
 #: src/preferences/widgets/peqRowWidget.js:790
 #, javascript-format
 msgid "%d Hz,  %s dB,  Q: %s"
-msgstr ""
+msgstr "%d Hz,  %s dB,  Q: %s"
 
 #: src/preferences/widgets/peqRowWidget.js:931
 msgid "Pre Amp Gain"
-msgstr ""
+msgstr "Guadagno pre-amp"
 
 #: src/preferences/widgets/peqRowWidget.js:963
 msgid "Add Band"
-msgstr ""
+msgstr "Aggiungi banda"
 
 #: src/preferences/widgets/peqRowWidget.js:969
 msgid "Remove Last Band"
-msgstr ""
+msgstr "Rimuovi ultima banda"
 
 #: src/preferences/widgets/peqRowWidget.js:1105
 #, javascript-format
 msgid "Band %d"
-msgstr ""
+msgstr "Banda %d"
 
 #: src/preferences/widgets/peqRowWidget.js:1118
 msgid "Remove Band?"
-msgstr ""
+msgstr "Rimuovere la banda?"
 
 #: src/preferences/widgets/peqRowWidget.js:1119
 #, javascript-format
 msgid "Band %d will be removed."
-msgstr ""
+msgstr "La banda %d verrà rimossa."
 
 #: src/preferences/widgets/peqRowWidget.js:1340
 msgid "Show"
-msgstr ""
+msgstr "Mostra"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:30
 msgid "Connection Manager"
-msgstr ""
+msgstr "Gestione connessioni"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:37
 msgid "Pairing Mode"
-msgstr ""
+msgstr "Modalità associazione"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:39
 msgid "Enable Pairing Mode"
-msgstr ""
+msgstr "Attiva modalità associazione"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:40
 msgid "Allow a new Bluetooth device to pair."
-msgstr ""
+msgstr "Consente l'associazione di un nuovo dispositivo Bluetooth."
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:77
 msgid "Playback Device"
-msgstr ""
+msgstr "Dispositivo di riproduzione"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:78
 msgid "Lock Playback Device"
-msgstr ""
+msgstr "Blocca dispositivo di riproduzione"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:79
 msgid ""
 "Prevent playback from switching to another connected device while the set "
 "playback device is streaming."
 msgstr ""
+"Impedisce il passaggio della riproduzione a un altro dispositivo connesso "
+"mentre il dispositivo di riproduzione impostato è in streaming."
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:95
 msgid "Connected"
-msgstr ""
+msgstr "Connesso"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:96
 msgid "Paired"
-msgstr ""
+msgstr "Associato"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:97
 msgid "No device connected"
-msgstr ""
+msgstr "Nessun dispositivo connesso"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:98
 msgid "No additional device paired"
-msgstr ""
+msgstr "Nessun dispositivo aggiuntivo associato"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:162
 #: src/preferences/widgets/deviceMgmtRowWidget.js:250
 msgid "Loading Device Information..."
-msgstr ""
+msgstr "Caricamento informazioni dispositivo..."
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:164
 #: src/preferences/widgets/deviceMgmtRowWidget.js:252
 msgid "(This Device)"
-msgstr ""
+msgstr "(Questo dispositivo)"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:299
 msgid "Connection Limit Reached"
-msgstr ""
+msgstr "Limite di connessioni raggiunto"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:300
 msgid "Disconnect another device before connecting this device."
-msgstr ""
+msgstr "Disconnetti un altro dispositivo prima di connettere questo dispositivo."
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:303
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:326
 msgid "Remove Device?"
-msgstr ""
+msgstr "Rimuovere il dispositivo?"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:327
 msgid "The device will be removed from the paired devices list."
-msgstr ""
+msgstr "Il dispositivo verrà rimosso dall'elenco dei dispositivi associati."
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:348
 msgid "Set as Playback Device"
-msgstr ""
+msgstr "Imposta come dispositivo di riproduzione"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:349
 msgid "Connect"
-msgstr ""
+msgstr "Connetti"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:350
 msgid "Disconnect"
-msgstr ""
+msgstr "Disconnetti"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:474
 msgid "Manage Devices"
-msgstr ""
+msgstr "Gestisci dispositivi"
 
 #: src/lib/devices/senhBuds/senhBudsDevice.js:582
 #: src/lib/devices/redmiBuds/redmiBudsDevice.js:624
 msgid "Noise Level"
-msgstr ""
+msgstr "Livello del rumore"
 
 #: src/lib/devices/senhBuds/senhBudsDevice.js:590
 msgid "Max"
-msgstr ""
+msgstr "Max"
 
 #: src/lib/devices/senhBuds/senhBudsDevice.js:601
 msgid "Anti Wind"
-msgstr ""
+msgstr "Anti-vento"
 
 #: src/lib/devices/redmiBuds/redmiBudsDevice.js:611
 msgid "Noise Cancellation Strength"
-msgstr ""
+msgstr "Intensità cancellazione rumore"
 
 #: src/lib/devices/redmiBuds/redmiBudsDevice.js:633
 msgid "Regular"
-msgstr ""
+msgstr "Regolare"
 
 #: src/lib/devices/redmiBuds/redmiBudsDevice.js:655
 msgid "Transparency Strength"
-msgstr ""
+msgstr "Intensità trasparenza"
 
 #: src/lib/devices/nothingBuds/nothingBudsDevice.js:429
 msgid "Personalised ANC"
@@ -2207,7 +2201,7 @@ msgstr "Focus sulla voce"
 
 #: src/lib/devices/boseBuds/boseBudsDevice.js:678
 msgid "Wind"
-msgstr ""
+msgstr "Vento"
 
 #: src/lib/devices/sony/sonyDevice.js:193
 #: src/lib/devices/sony/sonyDevice.js:195
@@ -2220,43 +2214,43 @@ msgstr "Sensibilità ambiente automatico"
 
 #: src/lib/devices/notifier.js:25
 msgid "AirPods / Beats Bluetooth audio devices"
-msgstr ""
+msgstr "Dispositivi audio Bluetooth AirPods / Beats"
 
 #: src/lib/devices/notifier.js:27
 msgid "Sony Bluetooth audio devices"
-msgstr ""
+msgstr "Dispositivi audio Bluetooth Sony"
 
 #: src/lib/devices/notifier.js:29
 msgid "Samsung Galaxy Bluetooth audio devices"
-msgstr ""
+msgstr "Dispositivi audio Bluetooth Samsung Galaxy"
 
 #: src/lib/devices/notifier.js:31
 msgid "Nothing / CMF Bluetooth audio devices"
-msgstr ""
+msgstr "Dispositivi audio Bluetooth Nothing / CMF"
 
 #: src/lib/devices/notifier.js:33
 msgid "Google Pixel Buds Bluetooth audio devices"
-msgstr ""
+msgstr "Dispositivi audio Bluetooth Google Pixel Buds"
 
 #: src/lib/devices/notifier.js:35
 msgid "Redmi / Xiaomi Bluetooth audio devices"
-msgstr ""
+msgstr "Dispositivi audio Bluetooth Redmi / Xiaomi"
 
 #: src/lib/devices/notifier.js:37
 msgid "Sennheiser Bluetooth audio devices"
-msgstr ""
+msgstr "Dispositivi audio Bluetooth Sennheiser"
 
 #: src/lib/devices/notifier.js:39
 msgid "Bose Bluetooth audio devices"
-msgstr ""
+msgstr "Dispositivi audio Bluetooth Bose"
 
 #: src/lib/devices/notifier.js:41
 msgid "Edifier Bluetooth audio devices"
-msgstr ""
+msgstr "Dispositivi audio Bluetooth Edifier"
 
 #: src/lib/devices/notifier.js:43
 msgid "Google Fast Pair Bluetooth audio devices"
-msgstr ""
+msgstr "Dispositivi audio Bluetooth Google Fast Pair"
 
 #: src/lib/devices/notifier.js:49
 #, javascript-format
