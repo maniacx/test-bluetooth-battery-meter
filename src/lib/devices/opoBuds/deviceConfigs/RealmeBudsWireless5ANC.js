@@ -57,10 +57,9 @@ export default {
             actions: {
                 'none': [0x00],
                 'play-pause': [0x01],
-                'skip-back': [0x05],
                 'skip-forward': [0x06],
+                'skip-back': [0x05],
                 'voice-assistant': [0x04],
-                'voice-assistant-hold': [0x03],
                 'game-mode': [0x11],
                 'noise-control': [0x08],
             },
@@ -80,9 +79,9 @@ export default {
             'double': {
                 type: 'press',
                 actions: [
+                    'play-pause',
                     'skip-forward',
                     'skip-back',
-                    'play-pause',
                     'voice-assistant',
                     'game-mode',
                     'none',
@@ -91,9 +90,9 @@ export default {
             'triple': {
                 type: 'press',
                 actions: [
-                    'skip-back',
-                    'skip-forward',
                     'play-pause',
+                    'skip-forward',
+                    'skip-back',
                     'voice-assistant',
                     'game-mode',
                     'none',
@@ -102,9 +101,11 @@ export default {
             'action-hold': {
                 type: 'hold',
                 actions: [
-                    'voice-assistant-hold',
+                    'play-pause',
+                    'skip-forward',
+                    'skip-back',
+                    'voice-assistant',
                     'game-mode',
-                    'noise-control',
                     'none',
                 ],
             },
