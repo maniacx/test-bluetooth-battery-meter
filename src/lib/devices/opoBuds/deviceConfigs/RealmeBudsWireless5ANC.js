@@ -40,10 +40,11 @@ export default {
     gestureOptions: {
         default: '0101010101010206010103050101040301040108',
         slots: [
-            {group: 'single', device: 0x01, buttonId: 0x01, type: 'double'},
-            {group: 'single', device: 0x01, buttonId: 0x01, type: 'triple'},
-            {group: 'single', device: 0x01, buttonId: 0x01, type: 'action-hold'},
-            {group: 'single', device: 0x01, buttonId: 0x04, type: 'single'},
+            {group: 'mfb', device: 0x01, buttonId: 0x01, type: 'single'},
+            {group: 'mfb', device: 0x01, buttonId: 0x01, type: 'double'},
+            {group: 'mfb', device: 0x01, buttonId: 0x01, type: 'triple'},
+            {group: 'mfb', device: 0x01, buttonId: 0x01, type: 'action-hold'},
+            {group: 'anc', device: 0x01, buttonId: 0x04, type: 'anc-single'},
         ],
         mapping: {
             gestureTypes: {
@@ -51,6 +52,7 @@ export default {
                 'double': 0x02,
                 'triple': 0x03,
                 'action-hold': 0x04,
+                'anc-single': 0x01,
             },
             actions: {
                 'none': [0x00],
@@ -68,7 +70,7 @@ export default {
             'single': {
                 type: 'press',
                 actions: [
-                    'noise-control',
+                    'play-pause',
                     'none',
                 ],
             },
@@ -86,9 +88,9 @@ export default {
             'triple': {
                 type: 'press',
                 actions: [
-                    'game-mode',
-                    'skip-forward',
                     'skip-back',
+                    'skip-forward',
+                    'game-mode',
                     'voice-assistant',
                     'none',
                 ],
@@ -96,9 +98,16 @@ export default {
             'action-hold': {
                 type: 'hold',
                 actions: [
-                    'device-switch',
                     'voice-assistant',
+                    'device-switch',
                     'game-mode',
+                    'noise-control',
+                    'none',
+                ],
+            },
+            'anc-single': {
+                type: 'press',
+                actions: [
                     'noise-control',
                     'none',
                 ],
