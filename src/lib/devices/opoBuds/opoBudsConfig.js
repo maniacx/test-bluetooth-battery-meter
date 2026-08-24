@@ -70,13 +70,13 @@ export const Cmd = {
 export const FeatureId = {
     IN_EAR: 0x04,
     GAME_MODE: 0x06,
-    WIND_NOISE: 0x08,
+    DYNAMIC_BASS: 0x08,
     VOLUME_ENHANCER: 0x09,
     DUAL_DEVICE: 0x11,
     HIGH_RES: 0x18,
-    DYNAMIC_BASS: 0x1A,
+    AUTO_ANSWER: 0x1A,
     SPATIAL: 0x1B,
-    AUTO_ANSWER: 0x1D,
+    WIND_NOISE: 0x1D,
     FIND_PHONE: 0x26,
 };
 
