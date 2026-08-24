@@ -123,11 +123,34 @@ export const ConfigureWindow = GObject.registerClass({
             if (this._modelData.inEarDetection && this._inEarSwitch)
                 this._inEarSwitch.active = this._settingsItems['inear-enable'] ?? false;
 
-            if (this._modelData.dualConnection && this._dualConnectionSwitch)
-                this._dualConnectionSwitch.active = this._settingsItems['dual-connection'] ?? false;
-
             if (this._modelData.autoAnswer && this._autoAnswerSwitch)
                 this._autoAnswerSwitch.active = this._settingsItems['auto-answer'] ?? false;
+
+            if (this._modelData.findMyPhone && this._findPhoneSwitch)
+                this._findPhoneSwitch.active = this._settingsItems['find-phone'] ?? false;
+
+            if (this._modelData.gestureOptions && this._gestureDropdowns) {
+                const gesturesHex = this._settingsItems['gestures'] ?? this._modelData.gestureOptions.default;
+                const slots = this._decodeGestures(gesturesHex);
+                Object.entries(this._gestureDropdowns).forEach(([slotKey, dropdown]) => {
+                    if (slots[slotKey] !== undefined && dropdown.selected_item !== slots[slotKey]) {
+                        dropdown.selected_item = slots[slotKey];
+                        if (this._ncCycleSwitches?.ncSwitch) {
+                            const isNC = (slots[slotKey] === 0x08);
+                            this._ncCycleSwitches.ncSwitch.visible = isNC;
+                            this._ncCycleSwitches.transSwitch.visible = isNC;
+                            this._ncCycleSwitches.offSwitch.visible = isNC;
+                        }
+                    }
+                });
+
+                if (this._ncCycleSwitches?.ncSwitch) {
+                    const mask = this._settingsItems['nc-cycle-mask'] ?? 0x0B;
+                    this._ncCycleSwitches.ncSwitch.active = (mask & 0x08) !== 0;
+                    this._ncCycleSwitches.transSwitch.active = (mask & 0x02) !== 0;
+                    this._ncCycleSwitches.offSwitch.active = (mask & 0x01) !== 0;
+                }
+            }
         });
 
         this.connect('close-request', () => {
@@ -349,6 +372,20 @@ export const ConfigureWindow = GObject.registerClass({
             miscGroup.add(this._autoAnswerSwitch);
         }
 
+        if (this._modelData.findMyPhone) {
+            this._findPhoneSwitch = new Adw.SwitchRow({
+                title: _('Find My Phone'),
+                subtitle: _('Allow triggering phone ringing from neckband controls'),
+                active: this._settingsItems['find-phone'] ?? false,
+            });
+
+            this._findPhoneSwitch.connect('notify::active', () => {
+                this._updateGsettings('find-phone', this._findPhoneSwitch.active);
+            });
+
+            miscGroup.add(this._findPhoneSwitch);
+        }
+
         if (this._modelData.ring) {
             const ringRow = new RingMyBudsRow(_, {
                 title: _('Find My Buds'),
@@ -372,6 +409,9 @@ export const ConfigureWindow = GObject.registerClass({
 
         const _ = this._gettext;
         const gesturesConfig = this._modelData.gestureOptions;
+        this._gestureDropdowns = {};
+        this._ncCycleSwitches = null;
+
         const gestureGroup = new Adw.PreferencesGroup({
             title: _('Gesture &amp; Button Controls'),
             description: _('Customize actions for buttons and touch gestures'),
@@ -439,6 +479,7 @@ export const ConfigureWindow = GObject.registerClass({
                     initialValue: currentFuncCode,
                 });
 
+                this._gestureDropdowns[slotKey] = dropdown;
                 groupExpander.add_row(dropdown);
 
                 if (allowedActions.includes('noise-control')) {
@@ -462,6 +503,8 @@ export const ConfigureWindow = GObject.registerClass({
                         active: (currentMask & 0x01) !== 0,
                     });
                     offSwitch.add_prefix(new Gtk.Image({icon_name: 'bbm-anc-off-symbolic'}));
+
+                    this._ncCycleSwitches = { ncSwitch, transSwitch, offSwitch };
 
                     const isNcVisible = (currentFuncCode === 0x08);
                     ncSwitch.visible = isNcVisible;

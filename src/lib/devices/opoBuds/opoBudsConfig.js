@@ -77,6 +77,7 @@ export const FeatureId = {
     DYNAMIC_BASS: 0x1A,
     SPATIAL: 0x1B,
     AUTO_ANSWER: 0x1D,
+    FIND_PHONE: 0x26,
 };
 
 export const EventCode = {

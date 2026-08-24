@@ -60,6 +60,7 @@ export const OpoBudsDevice = GObject.registerClass({
             updateHighRes: this.updateHighRes.bind(this),
             updateDynamicBass: this.updateDynamicBass.bind(this),
             updateAutoAnswer: this.updateAutoAnswer.bind(this),
+            updateFindPhone: this.updateFindPhone.bind(this),
             updateEqPreset: this.updateEqPreset.bind(this),
             updateGestures: this.updateGestures.bind(this),
         };
@@ -155,6 +156,10 @@ export const OpoBudsDevice = GObject.registerClass({
 
             ...this._modelData.autoAnswer && {
                 'auto-answer': false,
+            },
+
+            ...this._modelData.findMyPhone && {
+                'find-phone': false,
             },
 
             ...this._modelData.gestureOptions && {
@@ -293,6 +298,14 @@ export const OpoBudsDevice = GObject.registerClass({
                 if (this._autoAnswer !== autoAnswer) {
                     this._autoAnswer = autoAnswer;
                     this._opoBudsSocket?.setAutoAnswer(autoAnswer);
+                }
+            }
+
+            if (this._modelData.findMyPhone) {
+                const findPhone = this._settingsItems['find-phone'];
+                if (this._findPhone !== findPhone) {
+                    this._findPhone = findPhone;
+                    this._opoBudsSocket?.setFindPhone(findPhone);
                 }
             }
 
@@ -636,6 +649,14 @@ export const OpoBudsDevice = GObject.registerClass({
         this._autoAnswer = autoAnswer;
         if (this._settingsItems) {
             this._settingsItems['auto-answer'] = this._autoAnswer;
+            this._updateGsettings();
+        }
+    }
+
+    updateFindPhone(findPhone) {
+        this._findPhone = findPhone;
+        if (this._settingsItems) {
+            this._settingsItems['find-phone'] = this._findPhone;
             this._updateGsettings();
         }
     }
