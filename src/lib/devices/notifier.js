@@ -52,6 +52,8 @@ export class Notifier {
             'Another app or session is already using the Bluetooth socket/profile on %s. ' +
             'Close any other apps using this device, then restart this app.').replace('%s', label);
 
+        const test = _('Testing Weblate');
+
         notification.set_title(title);
         notification.set_body(body);
 
