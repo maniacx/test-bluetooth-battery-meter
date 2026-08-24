@@ -236,6 +236,7 @@ export const OpoBudsSocket = GObject.registerClass({
             FeatureId.HIGH_RES,
             FeatureId.DYNAMIC_BASS,
             FeatureId.AUTO_ANSWER,
+            FeatureId.FIND_PHONE,
         ];
         this._queuePacket(Cmd.FEATURE_SWITCH, [features.length, ...features], 'Query Features');
     }
@@ -359,11 +360,19 @@ export const OpoBudsSocket = GObject.registerClass({
         if (payload.length < 2)
             return;
 
-        let startIdx = 2;
-        if (payload[0] !== 0x00)
-            startIdx = 1;
+        let startIdx = 1;
+        let count = payload[0];
 
-        const count = payload[startIdx - 1];
+        if (payload[0] === 0x00) {
+            if (payload.length > 2 && payload[1] === 0x00) {
+                startIdx = 3;
+                count = payload[2];
+            } else {
+                startIdx = 2;
+                count = payload[1];
+            }
+        }
+
         for (let i = 0; i < count; i++) {
             const idx = startIdx + i * 2;
             if (idx + 1 >= payload.length)
@@ -390,6 +399,8 @@ export const OpoBudsSocket = GObject.registerClass({
                 this._callbacks?.updateDynamicBass?.(val);
             else if (feat === FeatureId.AUTO_ANSWER)
                 this._callbacks?.updateAutoAnswer?.(val);
+            else if (feat === FeatureId.FIND_PHONE)
+                this._callbacks?.updateFindPhone?.(val);
         }
     }
 
@@ -508,6 +519,11 @@ export const OpoBudsSocket = GObject.registerClass({
     setAutoAnswer(enable) {
         this._log.info(`Set Auto Answer: ${enable}`);
         this._queuePacket(Cmd.SET_FEATURE_SWITCH, [FeatureId.AUTO_ANSWER, enable ? 0x01 : 0x00], 'Set Auto Answer');
+    }
+
+    setFindPhone(enable) {
+        this._log.info(`Set Find My Phone: ${enable}`);
+        this._queuePacket(Cmd.SET_FEATURE_SWITCH, [FeatureId.FIND_PHONE, enable ? 0x01 : 0x00], 'Set Find My Phone');
     }
 
     setEqPreset(presetId) {

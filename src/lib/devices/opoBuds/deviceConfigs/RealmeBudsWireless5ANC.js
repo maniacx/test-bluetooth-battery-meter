@@ -34,6 +34,7 @@ export default {
     dynamicBass: true,
     spatialAudio: true,
     autoAnswer: true,
+    findMyPhone: true,
     ring: true,
 
     gestureOptions: {
