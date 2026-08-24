@@ -38,7 +38,7 @@ export default {
     ring: true,
 
     gestureOptions: {
-        default: '0101010101010206010103050101040301040108',
+        default: '0101010101010206010103050101040401040108',
         slots: [
             {group: 'mfb', device: 0x01, buttonId: 0x01, type: 'single'},
             {group: 'mfb', device: 0x01, buttonId: 0x01, type: 'double'},
@@ -55,7 +55,6 @@ export default {
             actions: {
                 'none': [0x00],
                 'play-pause': [0x01],
-                'device-switch': [0x03],
                 'voice-assistant': [0x04],
                 'skip-back': [0x05],
                 'skip-forward': [0x06],
@@ -70,7 +69,6 @@ export default {
                     'skip-forward',
                     'skip-back',
                     'voice-assistant',
-                    'device-switch',
                     'game-mode',
                     'none',
                 ],
@@ -82,7 +80,6 @@ export default {
                     'skip-forward',
                     'skip-back',
                     'voice-assistant',
-                    'device-switch',
                     'game-mode',
                     'none',
                 ],
@@ -94,7 +91,6 @@ export default {
                     'skip-forward',
                     'skip-back',
                     'voice-assistant',
-                    'device-switch',
                     'game-mode',
                     'none',
                 ],
@@ -102,7 +98,6 @@ export default {
             'action-hold': {
                 type: 'hold',
                 actions: [
-                    'device-switch',
                     'voice-assistant',
                     'play-pause',
                     'skip-forward',
