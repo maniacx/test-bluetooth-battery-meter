@@ -31,7 +31,6 @@ export default {
     lowLatencyMode: true,
     dualConnection: true,
     windNoiseReduction: true,
-    volumeEnhancer: true,
     dynamicBass: true,
     spatialAudio: true,
     autoAnswer: true,
