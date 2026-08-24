@@ -278,6 +278,7 @@ export const OpoBudsSocket = GObject.registerClass({
                 break;
 
             case Cmd.FEATURE_SWITCH_RSP:
+            case Cmd.FEATURE_EVENT:
                 this._parseFeatureSwitches(payload);
                 break;
 
@@ -287,6 +288,9 @@ export const OpoBudsSocket = GObject.registerClass({
                 break;
 
             case Cmd.KEY_FUNCTION_RSP:
+            case Cmd.SET_KEY_FUNCTION_RSP:
+            case 0x0501:
+            case 0x0508:
                 this._parseGestures(payload);
                 break;
 
@@ -352,12 +356,16 @@ export const OpoBudsSocket = GObject.registerClass({
     }
 
     _parseFeatureSwitches(payload) {
-        if (payload.length < 2 || payload[0] !== 0x00)
+        if (payload.length < 2)
             return;
 
-        const count = payload[1];
+        let startIdx = 2;
+        if (payload[0] !== 0x00)
+            startIdx = 1;
+
+        const count = payload[startIdx - 1];
         for (let i = 0; i < count; i++) {
-            const idx = 2 + i * 2;
+            const idx = startIdx + i * 2;
             if (idx + 1 >= payload.length)
                 break;
 
@@ -395,10 +403,18 @@ export const OpoBudsSocket = GObject.registerClass({
     }
 
     _parseGestures(payload) {
-        if (payload.length < 2 || payload[0] !== 0x00)
+        if (payload.length < 3)
             return;
 
-        const hex = Array.from(payload.slice(2)).map(b => b.toString(16).padStart(2, '0')).join('');
+        let startIdx = 3;
+        if (payload[0] === 0x00 && payload[1] !== 0x00)
+            startIdx = 2;
+        else if (payload[0] !== 0x00)
+            startIdx = 1;
+
+        const count = payload[startIdx - 1];
+        const slotsBytes = payload.slice(startIdx, startIdx + count * 4);
+        const hex = Array.from(slotsBytes).map(b => b.toString(16).padStart(2, '0')).join('');
         this._log.info(`Parsed gestures hex: ${hex}`);
         this._callbacks?.updateGestures?.(hex);
     }
@@ -512,7 +528,7 @@ export const OpoBudsSocket = GObject.registerClass({
             bytes.push(parseInt(gesturesHex.slice(i, i + 2), 16));
 
         const count = Math.floor(bytes.length / 4);
-        this._queuePacket(Cmd.SET_KEY_FUNCTION, [count, ...bytes], 'Set Key Functions');
+        this._queuePacket(Cmd.SET_KEY_FUNCTION, [0x00, count, ...bytes], 'Set Key Functions');
     }
 
     destroy() {
