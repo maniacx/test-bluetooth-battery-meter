@@ -373,8 +373,8 @@ export const ConfigureWindow = GObject.registerClass({
         const _ = this._gettext;
         const gesturesConfig = this._modelData.gestureOptions;
         const gestureGroup = new Adw.PreferencesGroup({
-            title: _('Gesture Controls'),
-            description: _('Customize touch actions for left and right earbuds'),
+            title: _('Gesture &amp; Button Controls'),
+            description: _('Customize actions for buttons and touch gestures'),
         });
 
         const gestureActionNames = {
@@ -387,13 +387,14 @@ export const ConfigureWindow = GObject.registerClass({
             'voice-assistant': _('Voice Assistant'),
             'noise-control': _('Noise Control'),
             'game-mode': _('Game Mode Toggle'),
+            'device-switch': _('Switch Device / Voice Assistant'),
         };
 
         const gestureSlotNames = {
-            'single': _('Single Tap'),
-            'double': _('Double Tap'),
-            'triple': _('Triple Tap'),
-            'action-hold': _('Touch &amp; Hold'),
+            'single': _('Single Press'),
+            'double': _('Double Press / Tap'),
+            'triple': _('Triple Press / Tap'),
+            'action-hold': _('Press &amp; Hold / Touch &amp; Hold'),
             'double-action-hold': _('Double Tap &amp; Hold'),
         };
 
@@ -401,13 +402,15 @@ export const ConfigureWindow = GObject.registerClass({
         const currentSlots = this._decodeGestures(currentGesturesHex);
         const currentMask = this._settingsItems['nc-cycle-mask'] ?? 0x0B;
 
-        ['left', 'right'].forEach(side => {
-            const sideExpander = new Adw.ExpanderRow({
-                title: side === 'left' ? _('Left Earbud') : _('Right Earbud'),
-                subtitle: _('Configure gestures'),
+        const groups = [...new Set(gesturesConfig.slots.map(s => s.group))];
+
+        groups.forEach(groupKey => {
+            const groupExpander = new Adw.ExpanderRow({
+                title: this._getGroupTitle(groupKey),
+                subtitle: _('Configure controls'),
             });
 
-            gesturesConfig.slots.filter(s => s.group === side).forEach(slot => {
+            gesturesConfig.slots.filter(s => s.group === groupKey).forEach(slot => {
                 const gestureDef = gesturesConfig.gestures[slot.type];
                 if (!gestureDef)
                     return;
@@ -421,36 +424,46 @@ export const ConfigureWindow = GObject.registerClass({
                     values.push(gesturesConfig.mapping.actions[actionKey]?.[0] ?? 0);
                 });
 
-                const slotKey = `${slot.device}_${gesturesConfig.mapping.gestureTypes[slot.type]}`;
+                const btnId = slot.buttonId ?? 0x01;
+                const slotKey = `${slot.device}_${btnId}_${gesturesConfig.mapping.gestureTypes[slot.type]}`;
                 const currentFuncCode = currentSlots[slotKey] !== undefined ? currentSlots[slotKey] : values[0];
 
+                let rowTitle = gestureSlotNames[slot.type] ?? slot.type;
+                if (slot.buttonId === 0x04)
+                    rowTitle = _('ANC Button: Single Press');
+                else if (slot.group === 'single' && slot.buttonId === 0x01) {
+                    if (slot.type === 'double') rowTitle = _('Double Press (MFB)');
+                    else if (slot.type === 'triple') rowTitle = _('Triple Press (MFB)');
+                    else if (slot.type === 'action-hold') rowTitle = _('Press &amp; Hold (MFB)');
+                }
+
                 const dropdown = new DropDownRowWidget({
-                    title: gestureSlotNames[slot.type] ?? slot.type,
+                    title: rowTitle,
                     options,
                     values,
                     initialValue: currentFuncCode,
                 });
 
-                sideExpander.add_row(dropdown);
+                groupExpander.add_row(dropdown);
 
-                if (slot.type === 'action-hold' && allowedActions.includes('noise-control')) {
+                if (allowedActions.includes('noise-control')) {
                     const ncSwitch = new Adw.SwitchRow({
                         title: _('Cycle: Noise Cancellation'),
-                        subtitle: _('Include Noise Cancellation mode in touch &amp; hold cycle'),
+                        subtitle: _('Include Noise Cancellation mode in cycle'),
                         active: (currentMask & 0x08) !== 0,
                     });
                     ncSwitch.add_prefix(new Gtk.Image({icon_name: 'bbm-anc-on-symbolic'}));
 
                     const transSwitch = new Adw.SwitchRow({
                         title: _('Cycle: Transparency'),
-                        subtitle: _('Include Transparency mode in touch &amp; hold cycle'),
+                        subtitle: _('Include Transparency mode in cycle'),
                         active: (currentMask & 0x02) !== 0,
                     });
                     transSwitch.add_prefix(new Gtk.Image({icon_name: 'bbm-transperancy-symbolic'}));
 
                     const offSwitch = new Adw.SwitchRow({
                         title: _('Cycle: Off / Normal'),
-                        subtitle: _('Include Normal (Off) mode in touch &amp; hold cycle'),
+                        subtitle: _('Include Normal (Off) mode in cycle'),
                         active: (currentMask & 0x01) !== 0,
                     });
                     offSwitch.add_prefix(new Gtk.Image({icon_name: 'bbm-anc-off-symbolic'}));
@@ -496,9 +509,9 @@ export const ConfigureWindow = GObject.registerClass({
                         offSwitch.visible = isNC;
                     });
 
-                    sideExpander.add_row(ncSwitch);
-                    sideExpander.add_row(transSwitch);
-                    sideExpander.add_row(offSwitch);
+                    groupExpander.add_row(ncSwitch);
+                    groupExpander.add_row(transSwitch);
+                    groupExpander.add_row(offSwitch);
                 } else {
                     dropdown.connect('notify::selected-item', () => {
                         currentSlots[slotKey] = dropdown.selected_item;
@@ -508,19 +521,38 @@ export const ConfigureWindow = GObject.registerClass({
                 }
             });
 
-            gestureGroup.add(sideExpander);
+            gestureGroup.add(groupExpander);
         });
 
         this._page.add(gestureGroup);
+    }
+
+    _getGroupTitle(group) {
+        const _ = this._gettext;
+        switch (group) {
+            case 'left':
+                return _('Left Earbud');
+            case 'right':
+                return _('Right Earbud');
+            case 'single':
+                return _('Button Controls');
+            case 'mfb':
+                return _('Multi-Function Button');
+            case 'anc':
+                return _('Noise Control Button');
+            default:
+                return _('Button &amp; Gesture Controls');
+        }
     }
 
     _decodeGestures(hex) {
         const slots = {};
         for (let i = 0; i < hex.length; i += 8) {
             const dev = parseInt(hex.slice(i, i + 2), 16);
+            const btn = parseInt(hex.slice(i + 2, i + 4), 16);
             const act = parseInt(hex.slice(i + 4, i + 6), 16);
             const func = parseInt(hex.slice(i + 6, i + 8), 16);
-            slots[`${dev}_${act}`] = func;
+            slots[`${dev}_${btn}_${act}`] = func;
         }
         return slots;
     }
@@ -533,7 +565,8 @@ export const ConfigureWindow = GObject.registerClass({
             const act = parseInt(baseHex.slice(i + 4, i + 6), 16);
             const origFunc = parseInt(baseHex.slice(i + 6, i + 8), 16);
 
-            const func = slotMap[`${dev}_${act}`] !== undefined ? slotMap[`${dev}_${act}`] : origFunc;
+            const key = `${dev}_${btn}_${act}`;
+            const func = slotMap[key] !== undefined ? slotMap[key] : origFunc;
 
             hex += dev.toString(16).padStart(2, '0');
             hex += btn.toString(16).padStart(2, '0');

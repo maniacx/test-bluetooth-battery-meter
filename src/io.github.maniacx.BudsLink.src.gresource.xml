@@ -232,6 +232,7 @@
         <file>lib/devices/opoBuds/opoBudsDevice.js</file>
         <file>lib/devices/opoBuds/opoBudsSocket.js</file>
         <file>lib/devices/opoBuds/deviceConfigs/RealmeBudsAir7.js</file>
+        <file>lib/devices/opoBuds/deviceConfigs/RealmeBudsWireless5ANC.js</file>
         <file>preferences/devices/opoBuds/configureWindow.js</file>
     </gresource>
 </gresources>

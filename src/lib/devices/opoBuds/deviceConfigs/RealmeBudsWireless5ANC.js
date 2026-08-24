@@ -1,12 +1,12 @@
 'use strict';
 
 export default {
-    modelId: '064812',
-    name: 'Realme Buds Air 7',
-    pattern: /^realme Buds Air\s*7$/i,
+    modelId: '051412',
+    name: 'Realme Buds Wireless 5 ANC',
+    pattern: /^realme Buds Wireless\s*5(\s*ANC)?$/i,
 
-    batteryLR: true,
-    batteryCase: true,
+    batteryLR: false,
+    batteryCase: false,
 
     eqPreset: {
         original_sound: 0x00,
@@ -28,29 +28,26 @@ export default {
         },
     },
 
-    inEarDetection: true,
     lowLatencyMode: true,
     dualConnection: true,
     windNoiseReduction: true,
     volumeEnhancer: true,
-    spatialAudio: true,
-    highResAudio: true,
     dynamicBass: true,
+    spatialAudio: true,
     autoAnswer: true,
     ring: true,
 
     gestureOptions: {
-        default: '02010100020102010201030602010408020106000101010001010201010103060101040801010600',
+        default: '0101010101010206010103050101040301040108',
         slots: [
-            {group: 'left',  device: 0x01, buttonId: 0x01, type: 'double'},
-            {group: 'left',  device: 0x01, buttonId: 0x01, type: 'triple'},
-            {group: 'left',  device: 0x01, buttonId: 0x01, type: 'action-hold'},
-            {group: 'right', device: 0x02, buttonId: 0x01, type: 'double'},
-            {group: 'right', device: 0x02, buttonId: 0x01, type: 'triple'},
-            {group: 'right', device: 0x02, buttonId: 0x01, type: 'action-hold'},
+            {group: 'single', device: 0x01, buttonId: 0x01, type: 'double'},
+            {group: 'single', device: 0x01, buttonId: 0x01, type: 'triple'},
+            {group: 'single', device: 0x01, buttonId: 0x01, type: 'action-hold'},
+            {group: 'single', device: 0x01, buttonId: 0x04, type: 'single'},
         ],
         mapping: {
             gestureTypes: {
+                'single': 0x01,
                 'double': 0x02,
                 'triple': 0x03,
                 'action-hold': 0x04,
@@ -59,7 +56,7 @@ export default {
                 'none': [0x00],
                 'play-pause': [0x01],
                 'skip-back': [0x02],
-                'volume-up': [0x03],
+                'device-switch': [0x03],
                 'volume-down': [0x04],
                 'game-mode': [0x05],
                 'skip-forward': [0x06],
@@ -68,40 +65,47 @@ export default {
             },
         },
         gestures: {
-            'double': {
-                type: 'tap',
+            'single': {
+                type: 'press',
                 actions: [
-                    'play-pause',
+                    'noise-control',
+                    'none',
+                ],
+            },
+            'double': {
+                type: 'press',
+                actions: [
                     'skip-forward',
+                    'skip-back',
+                    'play-pause',
                     'voice-assistant',
+                    'game-mode',
                     'none',
                 ],
             },
             'triple': {
-                type: 'tap',
+                type: 'press',
                 actions: [
+                    'game-mode',
                     'skip-forward',
                     'skip-back',
-                    'volume-up',
-                    'volume-down',
                     'voice-assistant',
-                    'game-mode',
                     'none',
                 ],
             },
             'action-hold': {
                 type: 'hold',
                 actions: [
-                    'noise-control',
+                    'device-switch',
                     'voice-assistant',
                     'game-mode',
+                    'noise-control',
                     'none',
                 ],
             },
         },
     },
 
-    albumArtIcon: 'earbuds-stem',
-    budsIcon: 'earbuds-stem',
-    case: 'case-round',
+    albumArtIcon: 'earbuds-neckband',
+    budsIcon: 'earbuds-neckband',
 };
