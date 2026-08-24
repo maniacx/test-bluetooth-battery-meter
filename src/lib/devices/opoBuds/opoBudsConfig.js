@@ -1,0 +1,93 @@
+'use strict';
+
+import RealmeBudsAir7 from './deviceConfigs/RealmeBudsAir7.js';
+
+export const OpoBudsModelList = [
+    RealmeBudsAir7,
+];
+
+export const Cmd = {
+    HANDSHAKE: 0x0100,
+    HANDSHAKE_RSP: 0x8100,
+
+    PRODUCT_ID: 0x0103,
+    PRODUCT_ID_RSP: 0x8103,
+
+    VERSION: 0x0105,
+    VERSION_RSP: 0x8105,
+
+    BATTERY: 0x0106,
+    BATTERY_RSP: 0x8106,
+
+    KEY_FUNCTION: 0x0108,
+    KEY_FUNCTION_RSP: 0x8108,
+
+    ANC: 0x010C,
+    ANC_RSP: 0x810C,
+
+    FEATURE_SWITCH: 0x010D,
+    FEATURE_SWITCH_RSP: 0x810D,
+
+    EQ: 0x010F,
+    EQ_RSP: 0x810F,
+
+    GET_NOTIFICATION_CAPABILITY: 0x0200,
+    GET_NOTIFICATION_CAPABILITY_RSP: 0x8200,
+
+    NOTIFICATION_EVENT: 0x0204,
+
+    REGISTER_NOTIFICATION: 0x0205,
+    REGISTER_NOTIFICATION_RSP: 0x8205,
+
+    FIND_BUDS: 0x0400,
+    FIND_BUDS_RSP: 0x8400,
+
+    SET_KEY_FUNCTION: 0x0401,
+    SET_KEY_FUNCTION_RSP: 0x8401,
+
+    SET_FEATURE_SWITCH: 0x0403,
+    SET_FEATURE_SWITCH_RSP: 0x8403,
+
+    SET_ANC: 0x0404,
+    SET_ANC_RSP: 0x8404,
+
+    SET_ANC_CYCLE: 0x0402,
+    SET_ANC_CYCLE_RSP: 0x8402,
+
+    SET_EQ: 0x0406,
+    SET_EQ_RSP: 0x8406,
+
+    SET_SPATIAL_AUDIO: 0x0422,
+    SET_SPATIAL_AUDIO_RSP: 0x8422,
+
+    FEATURE_EVENT: 0x0503,
+    EQ_NOTIFY: 0x0504,
+    SPATIAL_NOTIFY: 0x0510,
+};
+
+export const FeatureId = {
+    IN_EAR: 0x04,
+    GAME_MODE: 0x06,
+    WIND_NOISE: 0x08,
+    VOLUME_ENHANCER: 0x09,
+    DUAL_DEVICE: 0x11,
+    HIGH_RES: 0x18,
+    DYNAMIC_BASS: 0x1A,
+    SPATIAL: 0x1B,
+    AUTO_ANSWER: 0x1D,
+};
+
+export const EventCode = {
+    BATTERY: 0x01,
+    EARBUDS_STATUS: 0x02,
+    ANC_MODE: 0x03,
+    GAME_MODE: 0x05,
+    MULTI_CONNECT: 0x06,
+    USER_INTERACTION: 0xF1,
+};
+
+export const BatteryComponent = {
+    LEFT: 1,
+    RIGHT: 2,
+    CASE: 3,
+};

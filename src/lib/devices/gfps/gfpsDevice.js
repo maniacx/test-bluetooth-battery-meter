@@ -17,6 +17,10 @@ export function isGfps(bluezDeviceProxy, uuids) {
     // Bypass true Google Pixel Buds so that GoogleBudsDevice (libmaestro) handles them
     if (uuids.includes('25e97ff7-24ce-4c4c-8951-f764a708f7b5'))
         return {supported: 'no', bluezProps};
+    // Bypass Oppo / Realme devices so that OpoBudsDevice handles them
+    if (uuids.some(u => u.toLowerCase() === '0000079a-d102-11e1-9b23-00025b00a5a5' ||
+                        u.toLowerCase() === '00001107-d102-11e1-9b23-00025b00a5a5'))
+        return {supported: 'no', bluezProps};
     const supported = uuids.includes(GfpsUUID) ? 'yes' : 'no';
     return {supported, bluezProps};
 }

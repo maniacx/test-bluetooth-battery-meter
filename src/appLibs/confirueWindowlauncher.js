@@ -8,6 +8,7 @@ import * as RedmiBuds from '../preferences/devices/redmiBuds/configureWindow.js'
 import * as SenhBuds from '../preferences/devices/senhBuds/configureWindow.js';
 import * as BoseBuds from '../preferences/devices/boseBuds/configureWindow.js';
 import * as EdifierBuds from '../preferences/devices/edifierBuds/configureWindow.js';
+import * as OpoBuds from '../preferences/devices/opoBuds/configureWindow.js';
 import * as Gfps from '../preferences/devices/gfps/configureWindow.js';
 
 let _settings = null;
@@ -72,6 +73,10 @@ export function createConfigureWindow({
             Prefs = EdifierBuds;
             schemaKey = 'edifier-buds-list';
             break;
+        case 'opoBuds':
+            Prefs = OpoBuds;
+            schemaKey = 'opo-buds-list';
+            break;
         case 'gfps':
             Prefs = Gfps;
             schemaKey = 'gfps-list';
@@ -84,7 +89,7 @@ export function createConfigureWindow({
         return null;
 
     const list = _settings.get_strv(schemaKey).map(JSON.parse);
-    const entry = list.find(e => e.path === devicePath);
+    const entry = list.find(e => e.path === devicePath || e['device-path'] === devicePath);
     if (!entry)
         return null;
 
