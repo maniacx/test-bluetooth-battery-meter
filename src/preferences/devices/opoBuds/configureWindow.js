@@ -385,6 +385,7 @@ export const ConfigureWindow = GObject.registerClass({
             'volume-up': _('Volume Up'),
             'volume-down': _('Volume Down'),
             'voice-assistant': _('Voice Assistant'),
+            'voice-assistant-hold': _('Voice Assistant'),
             'noise-control': _('Noise Control'),
             'game-mode': _('Game Mode Toggle'),
             'device-switch': _('Switch Device / Voice Assistant'),
