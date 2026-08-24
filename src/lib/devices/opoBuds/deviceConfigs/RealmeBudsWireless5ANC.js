@@ -44,7 +44,6 @@ export default {
             {group: 'mfb', device: 0x01, buttonId: 0x01, type: 'double'},
             {group: 'mfb', device: 0x01, buttonId: 0x01, type: 'triple'},
             {group: 'mfb', device: 0x01, buttonId: 0x01, type: 'action-hold'},
-            {group: 'anc', device: 0x01, buttonId: 0x04, type: 'anc-single'},
         ],
         mapping: {
             gestureTypes: {
@@ -52,7 +51,6 @@ export default {
                 'double': 0x02,
                 'triple': 0x03,
                 'action-hold': 0x04,
-                'anc-single': 0x01,
             },
             actions: {
                 'none': [0x00],
@@ -60,8 +58,8 @@ export default {
                 'skip-forward': [0x06],
                 'skip-back': [0x05],
                 'voice-assistant': [0x04],
+                'voice-assistant-hold': [0x03],
                 'game-mode': [0x11],
-                'noise-control': [0x08],
             },
         },
         gestures: {
@@ -101,18 +99,12 @@ export default {
             'action-hold': {
                 type: 'hold',
                 actions: [
+                    'voice-assistant-hold',
+                    'voice-assistant',
                     'play-pause',
                     'skip-forward',
                     'skip-back',
-                    'voice-assistant',
                     'game-mode',
-                    'none',
-                ],
-            },
-            'anc-single': {
-                type: 'press',
-                actions: [
-                    'noise-control',
                     'none',
                 ],
             },

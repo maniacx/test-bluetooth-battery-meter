@@ -290,9 +290,12 @@ export const OpoBudsSocket = GObject.registerClass({
 
             case Cmd.KEY_FUNCTION_RSP:
             case Cmd.SET_KEY_FUNCTION_RSP:
-            case 0x0501:
             case 0x0508:
                 this._parseGestures(payload);
+                break;
+
+            case 0x0501:
+                this._getGestures();
                 break;
 
             case Cmd.NOTIFICATION_EVENT:
@@ -462,6 +465,20 @@ export const OpoBudsSocket = GObject.registerClass({
 
             case EventCode.EARBUDS_STATUS:
                 this._log.info('Received Earbuds in-ear status event');
+                break;
+
+            case EventCode.USER_INTERACTION:
+            case 0xF1:
+                if (eventData.length >= 4) {
+                    const dev = eventData[0];
+                    const btn = eventData[1];
+                    const act = eventData[2];
+                    const func = eventData[3];
+                    this._log.info(`Live button event: dev=${dev} btn=${btn} act=${act} func=${func}`);
+                    this._callbacks?.updateSingleGesture?.(dev, btn, act, func);
+                } else {
+                    this._getGestures();
+                }
                 break;
         }
     }
