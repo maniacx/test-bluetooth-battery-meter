@@ -391,10 +391,11 @@ export const ConfigureWindow = GObject.registerClass({
         };
 
         const gestureSlotNames = {
-            'single': _('Single Press'),
-            'double': _('Double Press / Tap'),
-            'triple': _('Triple Press / Tap'),
-            'action-hold': _('Press &amp; Hold / Touch &amp; Hold'),
+            'single': _('Single-tap'),
+            'double': _('Double-tap'),
+            'triple': _('Triple-tap'),
+            'action-hold': _('Touch &amp; Hold'),
+            'anc-single': _('Single-tap'),
             'double-action-hold': _('Double Tap &amp; Hold'),
         };
 
@@ -428,14 +429,7 @@ export const ConfigureWindow = GObject.registerClass({
                 const slotKey = `${slot.device}_${btnId}_${gesturesConfig.mapping.gestureTypes[slot.type]}`;
                 const currentFuncCode = currentSlots[slotKey] !== undefined ? currentSlots[slotKey] : values[0];
 
-                let rowTitle = gestureSlotNames[slot.type] ?? slot.type;
-                if (slot.buttonId === 0x04)
-                    rowTitle = _('ANC Button: Single Press');
-                else if (slot.group === 'single' && slot.buttonId === 0x01) {
-                    if (slot.type === 'double') rowTitle = _('Double Press (MFB)');
-                    else if (slot.type === 'triple') rowTitle = _('Triple Press (MFB)');
-                    else if (slot.type === 'action-hold') rowTitle = _('Press &amp; Hold (MFB)');
-                }
+                const rowTitle = gestureSlotNames[slot.type] ?? slot.type;
 
                 const dropdown = new DropDownRowWidget({
                     title: rowTitle,
