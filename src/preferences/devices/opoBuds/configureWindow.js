@@ -91,65 +91,61 @@ export const ConfigureWindow = GObject.registerClass({
         this._addMiscSetting();
         this._addGestureControls();
 
+        this._isUpdatingUI = false;
+
         this._settingsHandlerId = this._settings.connect('changed::opo-buds-list', () => {
+            if (this._isUpdatingUI)
+                return;
+
             const list = this._settings.get_strv('opo-buds-list').map(JSON.parse);
             const item = list.find(d => d.path === this._devicePath || d['device-path'] === this._devicePath);
             if (!item)
                 return;
 
-            this._settingsItems = item;
+            this._isUpdatingUI = true;
+            try {
+                this._settingsItems = item;
 
-            if (this._modelData.eqPreset && this._eqPresetDropdown)
-                this._eqPresetDropdown.selected_item = this._settingsItems['eq-preset'];
+                if (this._modelData.eqPreset && this._eqPresetDropdown)
+                    this._eqPresetDropdown.selected_item = this._settingsItems['eq-preset'];
 
-            if (this._modelData.dynamicBass && this._dynamicBassSwitch)
-                this._dynamicBassSwitch.active = this._settingsItems['dynamic-bass'] ?? false;
+                if (this._modelData.dynamicBass && this._dynamicBassSwitch)
+                    this._dynamicBassSwitch.active = this._settingsItems['dynamic-bass'] ?? false;
 
-            if (this._modelData.spatialAudio && this._spatialAudioSwitch)
-                this._spatialAudioSwitch.active = this._settingsItems['spatial'] ?? false;
+                if (this._modelData.spatialAudio && this._spatialAudioSwitch)
+                    this._spatialAudioSwitch.active = this._settingsItems['spatial'] ?? false;
 
-            if (this._modelData.volumeEnhancer && this._volumeEnhancerSwitch)
-                this._volumeEnhancerSwitch.active = this._settingsItems['volume-enhancer'] ?? false;
+                if (this._modelData.volumeEnhancer && this._volumeEnhancerSwitch)
+                    this._volumeEnhancerSwitch.active = this._settingsItems['volume-enhancer'] ?? false;
 
-            if (this._modelData.highResAudio && this._highResSwitch)
-                this._highResSwitch.active = this._settingsItems['high-res'] ?? false;
+                if (this._modelData.highResAudio && this._highResSwitch)
+                    this._highResSwitch.active = this._settingsItems['high-res'] ?? false;
 
-            if (this._modelData.windNoiseReduction && this._windNoiseSwitch)
-                this._windNoiseSwitch.active = this._settingsItems['wind-noise'] ?? false;
+                if (this._modelData.windNoiseReduction && this._windNoiseSwitch)
+                    this._windNoiseSwitch.active = this._settingsItems['wind-noise'] ?? false;
 
-            if (this._modelData.lowLatencyMode && this._lowLatencySwitch)
-                this._lowLatencySwitch.active = this._settingsItems['lowlatency'] ?? false;
+                if (this._modelData.lowLatencyMode && this._lowLatencySwitch)
+                    this._lowLatencySwitch.active = this._settingsItems['lowlatency'] ?? false;
 
-            if (this._modelData.inEarDetection && this._inEarSwitch)
-                this._inEarSwitch.active = this._settingsItems['inear-enable'] ?? false;
+                if (this._modelData.inEarDetection && this._inEarSwitch)
+                    this._inEarSwitch.active = this._settingsItems['inear-enable'] ?? false;
 
-            if (this._modelData.autoAnswer && this._autoAnswerSwitch)
-                this._autoAnswerSwitch.active = this._settingsItems['auto-answer'] ?? false;
+                if (this._modelData.autoAnswer && this._autoAnswerSwitch)
+                    this._autoAnswerSwitch.active = this._settingsItems['auto-answer'] ?? false;
 
-            if (this._modelData.findMyPhone && this._findPhoneSwitch)
-                this._findPhoneSwitch.active = this._settingsItems['find-phone'] ?? false;
+                if (this._modelData.findMyPhone && this._findPhoneSwitch)
+                    this._findPhoneSwitch.active = this._settingsItems['find-phone'] ?? false;
 
-            if (this._modelData.gestureOptions && this._gestureDropdowns) {
-                const gesturesHex = this._settingsItems['gestures'] ?? this._modelData.gestureOptions.default;
-                const slots = this._decodeGestures(gesturesHex);
-                Object.entries(this._gestureDropdowns).forEach(([slotKey, dropdown]) => {
-                    if (slots[slotKey] !== undefined && dropdown.selected_item !== slots[slotKey]) {
-                        dropdown.selected_item = slots[slotKey];
-                        if (this._ncCycleSwitches?.ncSwitch) {
-                            const isNC = (slots[slotKey] === 0x08);
-                            this._ncCycleSwitches.ncSwitch.visible = isNC;
-                            this._ncCycleSwitches.transSwitch.visible = isNC;
-                            this._ncCycleSwitches.offSwitch.visible = isNC;
-                        }
-                    }
-                });
-
-                if (this._ncCycleSwitches?.ncSwitch) {
-                    const mask = this._settingsItems['nc-cycle-mask'] ?? 0x0B;
-                    this._ncCycleSwitches.ncSwitch.active = (mask & 0x08) !== 0;
-                    this._ncCycleSwitches.transSwitch.active = (mask & 0x02) !== 0;
-                    this._ncCycleSwitches.offSwitch.active = (mask & 0x01) !== 0;
+                if (this._modelData.gestureOptions && this._gestureDropdowns) {
+                    const gesturesHex = this._settingsItems['gestures'] ?? this._modelData.gestureOptions.default;
+                    const slots = this._decodeGestures(gesturesHex);
+                    Object.entries(this._gestureDropdowns).forEach(([slotKey, dropdown]) => {
+                        if (slots[slotKey] !== undefined && dropdown.selected_item !== slots[slotKey])
+                            dropdown.selected_item = slots[slotKey];
+                    });
                 }
+            } finally {
+                this._isUpdatingUI = false;
             }
         });
 
@@ -442,7 +438,6 @@ export const ConfigureWindow = GObject.registerClass({
 
         const currentGesturesHex = this._settingsItems['gestures'] ?? gesturesConfig.default;
         const currentSlots = this._decodeGestures(currentGesturesHex);
-        const currentMask = this._settingsItems['nc-cycle-mask'] ?? 0x0B;
 
         const groups = [...new Set(gesturesConfig.slots.map(s => s.group))];
 
@@ -469,7 +464,6 @@ export const ConfigureWindow = GObject.registerClass({
                 const btnId = slot.buttonId ?? 0x01;
                 const slotKey = `${slot.device}_${btnId}_${gesturesConfig.mapping.gestureTypes[slot.type]}`;
                 const currentFuncCode = currentSlots[slotKey] !== undefined ? currentSlots[slotKey] : values[0];
-
                 const rowTitle = gestureSlotNames[slot.type] ?? slot.type;
 
                 const dropdown = new DropDownRowWidget({
@@ -480,83 +474,16 @@ export const ConfigureWindow = GObject.registerClass({
                 });
 
                 this._gestureDropdowns[slotKey] = dropdown;
+                dropdown.connect('notify::selected-item', () => {
+                    if (this._isUpdatingUI)
+                        return;
+
+                    currentSlots[slotKey] = dropdown.selected_item;
+                    const newHex = this._encodeGestures(currentSlots, currentGesturesHex);
+                    this._updateGsettings('gestures', newHex);
+                });
+
                 groupExpander.add_row(dropdown);
-
-                if (allowedActions.includes('noise-control')) {
-                    const ncSwitch = new Adw.SwitchRow({
-                        title: _('Cycle: Noise Cancellation'),
-                        subtitle: _('Include Noise Cancellation mode in cycle'),
-                        active: (currentMask & 0x08) !== 0,
-                    });
-                    ncSwitch.add_prefix(new Gtk.Image({icon_name: 'bbm-anc-on-symbolic'}));
-
-                    const transSwitch = new Adw.SwitchRow({
-                        title: _('Cycle: Transparency'),
-                        subtitle: _('Include Transparency mode in cycle'),
-                        active: (currentMask & 0x02) !== 0,
-                    });
-                    transSwitch.add_prefix(new Gtk.Image({icon_name: 'bbm-transperancy-symbolic'}));
-
-                    const offSwitch = new Adw.SwitchRow({
-                        title: _('Cycle: Off / Normal'),
-                        subtitle: _('Include Normal (Off) mode in cycle'),
-                        active: (currentMask & 0x01) !== 0,
-                    });
-                    offSwitch.add_prefix(new Gtk.Image({icon_name: 'bbm-anc-off-symbolic'}));
-
-                    this._ncCycleSwitches = { ncSwitch, transSwitch, offSwitch };
-
-                    const isNcVisible = (currentFuncCode === 0x08);
-                    ncSwitch.visible = isNcVisible;
-                    transSwitch.visible = isNcVisible;
-                    offSwitch.visible = isNcVisible;
-
-                    let isUpdatingCycle = false;
-                    const updateCycleMask = (changedSwitch) => {
-                        if (isUpdatingCycle)
-                            return;
-
-                        let mask = 0;
-                        if (offSwitch.active) mask |= 0x01;
-                        if (transSwitch.active) mask |= 0x02;
-                        if (ncSwitch.active) mask |= 0x08;
-
-                        const count = (offSwitch.active ? 1 : 0) + (transSwitch.active ? 1 : 0) + (ncSwitch.active ? 1 : 0);
-                        if (count < 2) {
-                            isUpdatingCycle = true;
-                            changedSwitch.active = true;
-                            isUpdatingCycle = false;
-                            return;
-                        }
-
-                        this._updateGsettings('nc-cycle-mask', mask);
-                    };
-
-                    ncSwitch.connect('notify::active', () => updateCycleMask(ncSwitch));
-                    transSwitch.connect('notify::active', () => updateCycleMask(transSwitch));
-                    offSwitch.connect('notify::active', () => updateCycleMask(offSwitch));
-
-                    dropdown.connect('notify::selected-item', () => {
-                        currentSlots[slotKey] = dropdown.selected_item;
-                        const newHex = this._encodeGestures(currentSlots, currentGesturesHex);
-                        this._updateGsettings('gestures', newHex);
-
-                        const isNC = (dropdown.selected_item === 0x08);
-                        ncSwitch.visible = isNC;
-                        transSwitch.visible = isNC;
-                        offSwitch.visible = isNC;
-                    });
-
-                    groupExpander.add_row(ncSwitch);
-                    groupExpander.add_row(transSwitch);
-                    groupExpander.add_row(offSwitch);
-                } else {
-                    dropdown.connect('notify::selected-item', () => {
-                        currentSlots[slotKey] = dropdown.selected_item;
-                        const newHex = this._encodeGestures(currentSlots, currentGesturesHex);
-                        this._updateGsettings('gestures', newHex);
-                    });
-                }
             });
 
             gestureGroup.add(groupExpander);
@@ -576,10 +503,8 @@ export const ConfigureWindow = GObject.registerClass({
                 return _('Button Controls');
             case 'mfb':
                 return _('Multi-Function Button');
-            case 'anc':
-                return _('Noise Control Button');
             default:
-                return _('Button &amp; Gesture Controls');
+                return _('Button & Gesture Controls');
         }
     }
 

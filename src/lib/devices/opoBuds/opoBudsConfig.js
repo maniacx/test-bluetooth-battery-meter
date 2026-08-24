@@ -53,9 +53,6 @@ export const Cmd = {
     SET_ANC: 0x0404,
     SET_ANC_RSP: 0x8404,
 
-    SET_ANC_CYCLE: 0x0402,
-    SET_ANC_CYCLE_RSP: 0x8402,
-
     SET_EQ: 0x0406,
     SET_EQ_RSP: 0x8406,
 

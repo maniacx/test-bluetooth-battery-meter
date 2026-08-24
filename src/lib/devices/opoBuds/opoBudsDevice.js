@@ -63,6 +63,7 @@ export const OpoBudsDevice = GObject.registerClass({
             updateFindPhone: this.updateFindPhone.bind(this),
             updateEqPreset: this.updateEqPreset.bind(this),
             updateGestures: this.updateGestures.bind(this),
+            updateSingleGesture: this.updateSingleGesture.bind(this),
         };
 
         const profile = {type: DeviceTypeOpoBuds, uuid: OpoBudsUUIDs[0]};
@@ -164,7 +165,6 @@ export const OpoBudsDevice = GObject.registerClass({
 
             ...this._modelData.gestureOptions && {
                 'gestures': this._modelData.gestureOptions.default,
-                'nc-cycle-mask': 0x0B,
             },
         };
     }
@@ -314,12 +314,6 @@ export const OpoBudsDevice = GObject.registerClass({
                 if (this._gestures !== gestures) {
                     this._gestures = gestures;
                     this._opoBudsSocket?.setGestures(gestures);
-                }
-
-                const ncMask = this._settingsItems['nc-cycle-mask'];
-                if (this._ncCycleMask !== ncMask && ncMask !== undefined) {
-                    this._ncCycleMask = ncMask;
-                    this._opoBudsSocket?.setNoiseControlCycle(ncMask);
                 }
             }
 
@@ -674,6 +668,43 @@ export const OpoBudsDevice = GObject.registerClass({
         if (this._settingsItems) {
             this._settingsItems['gestures'] = this._gestures;
             this._updateGsettings();
+        }
+    }
+
+    updateSingleGesture(dev, btn, act, func) {
+        if (!this._settingsItems || !this._settingsItems['gestures']) {
+            this._opoBudsSocket?._getGestures();
+            return;
+        }
+
+        const devHex = dev.toString(16).padStart(2, '0');
+        const btnHex = btn.toString(16).padStart(2, '0');
+        const actHex = act.toString(16).padStart(2, '0');
+        const funcHex = func.toString(16).padStart(2, '0');
+
+        const hex = this._settingsItems['gestures'];
+        let updated = false;
+        let newHex = '';
+
+        for (let i = 0; i < hex.length; i += 8) {
+            const chunkDev = hex.slice(i, i + 2);
+            const chunkBtn = hex.slice(i + 2, i + 4);
+            const chunkAct = hex.slice(i + 4, i + 6);
+
+            if (chunkDev === devHex && chunkBtn === btnHex && chunkAct === actHex) {
+                newHex += chunkDev + chunkBtn + chunkAct + funcHex;
+                updated = true;
+            } else {
+                newHex += hex.slice(i, i + 8);
+            }
+        }
+
+        if (updated) {
+            this._gestures = newHex;
+            this._settingsItems['gestures'] = newHex;
+            this._updateGsettings();
+        } else {
+            this._opoBudsSocket?._getGestures();
         }
     }
 
