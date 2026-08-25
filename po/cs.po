@@ -8,14 +8,15 @@ msgstr ""
 "Project-Id-Version: BudsLink\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-08-20 17:29-0600\n"
-"PO-Revision-Date: 2026-08-22 20:12-0700\n"
-"Last-Translator: Pavel Borecki\n"
+"PO-Revision-Date: 2026-08-25 11:32+0000\n"
+"Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"Plural-Forms: nplurals=3; plural=((n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2);\n"
+"X-Generator: Weblate 2026.9.dev0\n"
 
 #: src/app.js:190 src/appLibs/widgets/deviceRow.js:56
 msgid "BudsLink"
@@ -149,7 +150,7 @@ msgstr "Vypnuto"
 
 #: src/appLibs/widgets/settingsButton.js:364
 msgid "GNOME Extension"
-msgstr "Rozšířezní pro GNOME"
+msgstr "Rozšíření pro GNOME"
 
 #: src/appLibs/widgets/settingsButton.js:370
 msgid "Plasma Widget"
@@ -470,7 +471,7 @@ msgstr "Přehrávání ovládáno aplikací výrobce"
 #: src/preferences/devices/senhBuds/configureWindow.js:589
 #: src/preferences/devices/boseBuds/configureWindow.js:406
 msgid "Automatically Answer Calls When Worn"
-msgstr "Když nošeny, automaticky zvedat hovory"
+msgstr "Když nošeno, automaticky zvedat hovory"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:601
 msgid "Pause Media When Transparency Mode Is Enabled"
@@ -530,7 +531,7 @@ msgstr "Výchozí chování"
 msgid "Resume with both earbuds, Pause if any removed"
 msgstr ""
 "Pokračovat v přehrávání při obou sluchátkách v uších, pozastavit pokud "
-"jakékoli z nich vyjmuto"
+"jakékoli z nich vyndáno"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:646
 #: src/preferences/devices/galaxyBuds/configureWindow.js:121
@@ -563,8 +564,8 @@ msgstr "Zvolte chování přehrávání pro zjišťování nasazení na hlavě"
 #: src/preferences/devices/airpods/configureWindow.js:120
 msgid "Automatically pause or resume playback based on wearing detection."
 msgstr ""
-"Automaticky pozastavovat nebo pokračovat v přehrávání na základě detekce "
-"nošení"
+"Automaticky pozastavovat nebo pokračovat v přehrávání na základě zjišťování "
+"nošení."
 
 #: src/preferences/devices/senhBuds/configureWindow.js:692
 #: src/preferences/devices/boseBuds/configureWindow.js:485
@@ -579,7 +580,7 @@ msgstr "Okolní zvuky v průběhu hovorů"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:721
 msgid "Comfort Calls"
-msgstr "Komvortní volání"
+msgstr "Komfortní volání"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:736
 #: src/preferences/devices/sony/configureWindow.js:613
@@ -591,7 +592,7 @@ msgstr "Správa připojení"
 #: src/preferences/devices/sony/configureWindow.js:154
 #: src/lib/devices/sony/sonyDevice.js:197
 msgid "Standard"
-msgstr "Standarní"
+msgstr "Standartní"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:216
 #: src/preferences/devices/nothingBuds/configureWindow.js:218
@@ -712,7 +713,7 @@ msgstr "Potlačování hluku"
 #: src/preferences/devices/redmiBuds/configureWindow.js:375
 #: src/preferences/devices/nothingBuds/configureWindow.js:419
 msgid "Noise Control Cycle: "
-msgstr "Cyklus zvládání hludku: "
+msgstr "Cyklovat zvládání hluku: "
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:377
 #: src/preferences/devices/nothingBuds/configureWindow.js:421
@@ -747,7 +748,7 @@ msgstr "Trojité klepnutí"
 #: src/preferences/devices/redmiBuds/configureWindow.js:402
 #: src/preferences/devices/nothingBuds/configureWindow.js:444
 msgid "Tap and Hold"
-msgstr "Klepnutí a držení"
+msgstr "Klepnutí a podržení"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:404
 #: src/preferences/devices/nothingBuds/configureWindow.js:447
@@ -800,7 +801,7 @@ msgstr "Trojité roztažení"
 #: src/preferences/devices/nothingBuds/configureWindow.js:456
 #: src/preferences/devices/boseBuds/configureWindow.js:689
 msgid "Pinch and Hold"
-msgstr "Roztažení a držení"
+msgstr "Roztažení a podržení"
 
 #: src/preferences/devices/redmiBuds/configureWindow.js:414
 msgid "Swipe"
@@ -977,7 +978,7 @@ msgstr "Zapnout zjišťování zda vloženo do ucha"
 #: src/preferences/devices/nothingBuds/configureWindow.js:445
 #: src/preferences/devices/boseBuds/configureWindow.js:678
 msgid "Double Tap and Hold"
-msgstr "Dvojité klepnutí a držení"
+msgstr "Dvojité klepnutí a podržení"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:451
 #: src/preferences/devices/nothingBuds/configureWindow.js:466
@@ -988,7 +989,7 @@ msgstr "Dvojité stisknutí a podržení"
 #: src/preferences/devices/nothingBuds/configureWindow.js:457
 #: src/preferences/devices/boseBuds/configureWindow.js:690
 msgid "Double Pinch and Hold"
-msgstr "Dvojité roztažení a držení"
+msgstr "Dvojité roztažení a podržení"
 
 #: src/preferences/devices/nothingBuds/configureWindow.js:460
 msgid "Slide to Adjust"
@@ -1122,12 +1123,12 @@ msgstr "Ovládání médií (roztažení a přejetí)"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:339
 msgid "Enable Touch Controls "
-msgstr "Zapnout dotykové ovládání"
+msgstr "Zapnout dotykové ovládání "
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:395
 #: src/preferences/devices/boseBuds/configureWindow.js:677
 msgid "Touch and Hold"
-msgstr "Klepnutí a držení"
+msgstr "Klepnutí a podržení"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:414
 msgid "Pinch to Answer Call or End Call"
@@ -1139,11 +1140,11 @@ msgstr "Dvojité klepnutí pro zvednutí nebo ukončení hovoru"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:429
 msgid "Pinch and Hold to Decline Call"
-msgstr "Roztažení a držení pro odmítnutí hovoru"
+msgstr "Roztažení a podržení pro odmítnutí hovoru"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:430
 msgid "Touch and Hold to Decline Call"
-msgstr "Klepnutí a držení pro odmítnutí hovoru"
+msgstr "Klepnutí a podržení pro odmítnutí hovoru"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:466
 msgid "Quick Ambient Sound"
@@ -1165,19 +1166,19 @@ msgstr "ANC"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:487
 msgid "Left Earbud Pinch and Hold Function"
-msgstr "Funkce roztažení a držení na levém sluchátku"
+msgstr "Funkce roztažení a podržení na levém sluchátku"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:488
 msgid "Left Earbud Touch and Hold Function"
-msgstr "Funkce klepnutí a držení na levém sluchátku"
+msgstr "Funkce klepnutí a podržení na levém sluchátku"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:491
 msgid "Right Earbud Pinch and Hold Function"
-msgstr "Funkce roztažení a držení na pravém sluchátku"
+msgstr "Funkce roztažení a podržení na pravém sluchátku"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:492
 msgid "Right Earbud Touch and Hold Function"
-msgstr "Funkce klepnutí a držení na pravém sluchátku"
+msgstr "Funkce klepnutí a podržení na pravém sluchátku"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:532
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:142
@@ -1200,51 +1201,51 @@ msgstr "Vyberte libovolné dva přepínače"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:551
 msgid "Pinch and Hold Cycle for Left Earbud"
-msgstr "Cyklovat roztažením a držením pro levé sluchátko"
+msgstr "Cyklovat roztažením a podržením pro levé sluchátko"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:552
 msgid "Pinch and hold cycles between modes (Left)"
-msgstr "Roztažení a držení cykluje mezi režimy (Levé)"
+msgstr "Roztažení a podržení cykluje mezi režimy (Levé)"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:553
 msgid "Pinch and Hold Cycle for Right Earbud"
-msgstr "Cyklovat roztažením a držením pro pravé sluchátko"
+msgstr "Cyklovat roztažením a podržením pro pravé sluchátko"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:554
 msgid "Pinch and hold cycles between modes (Right)"
-msgstr "Roztažení a držení cykluje mezi režim (pravé)"
+msgstr "Roztažení a podržení cykluje mezi režim (pravé)"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:556
 msgid "Touch and Hold Cycle for Left Earbud"
-msgstr "Cyklovat klepnutím a držením pro levé sluchátko"
+msgstr "Cyklovat klepnutím a podržením pro levé sluchátko"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:557
 msgid "Touch and hold cycles between modes (Left)"
-msgstr "Klepnutí a držení cykluje mezi režimy (levé)"
+msgstr "Klepnutí a podržení cykluje mezi režimy (levé)"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:558
 msgid "Touch and Hold Cycle for Right Earbud"
-msgstr "Cyklovat klepnutím a držením pro pravé sluchátko"
+msgstr "Cyklovat klepnutím a podržením pro pravé sluchátko"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:559
 msgid "Touch and hold cycles between modes (Right)"
-msgstr "Klepnutí a držení cykluje mezi režimy (pravé)"
+msgstr "Klepnutí a podržení cykluje mezi režimy (pravé)"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:562
 msgid "Pinch and Hold Cycle"
-msgstr "Cyklovat roztažením a držením"
+msgstr "Cyklovat roztažením a podržením"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:563
 msgid "Pinch and hold cycles between modes"
-msgstr "Roztažení a držení cykluje mezi režimy"
+msgstr "Roztažení a podržení cykluje mezi režimy"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:565
 msgid "Touch and Hold Cycle"
-msgstr "Cyklovat klepnutím a držením"
+msgstr "Cyklovat klepnutím a podržením"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:566
 msgid "Touch and hold cycles between modes"
-msgstr "Klepnutí a držení cykluje mezi režimy"
+msgstr "Klepnutí a podržení cykluje mezi režimy"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:636
 msgid "Noise Controls With One Earbud"
@@ -1287,7 +1288,7 @@ msgstr "Lehké basy"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:86
 msgid "Vocal boost"
-msgstr "Posílení hlasů"
+msgstr "Posílení vokálů"
 
 #: src/preferences/devices/googleBuds/configureWindow.js:87
 msgid "Clarity"
@@ -1323,7 +1324,7 @@ msgstr "Zjišťování nasazení v uchu"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:85
 msgid "Let the earbuds detect when they are worn"
-msgstr "Nechat slucháátka zjišťovat, kdy jsou nasazená"
+msgstr "Nechat sluchátka zjišťovat, kdy jsou nasazená"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:94
 msgid "Auto Pause"
@@ -1336,11 +1337,11 @@ msgstr "Ovládá přehrávání média pomocí zjišťování zda nasazeno v uch
 #: src/preferences/devices/edifierBuds/configureWindow.js:97
 #: src/preferences/devices/boseBuds/configureWindow.js:838
 msgid "Disabled"
-msgstr "Vypnuto"
+msgstr "Zakázáno"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:98
 msgid "Pause when both removed"
-msgstr "Pozastavit, pokud sudnány obě"
+msgstr "Pozastavit, pokud sundány obě"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:99
 msgid "Pause when either removed"
@@ -1418,7 +1419,7 @@ msgstr "Nenastaveno"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:799
 msgid "Hear Battery Level"
-msgstr "Slyšet stupeń nabití"
+msgstr "Slyšet stupeň nabití"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:805
 msgid "Increase Noise Cancellation"
@@ -1524,7 +1525,7 @@ msgstr "Odebrat"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:283
 msgid "Rename Mode?"
-msgstr "Přejmenovat režim"
+msgstr "Přejmenovat režim?"
 
 #: src/preferences/devices/boseBuds/modesGroupWidget.js:284
 #, javascript-format
@@ -1757,7 +1758,7 @@ msgstr "Hlasová notifikace"
 
 #: src/preferences/devices/sony/configureWindow.js:397
 msgid "Enable voice notification"
-msgstr "Zpanout zvukovou notifikaci"
+msgstr "Zapnout zvukovou notifikaci"
 
 #: src/preferences/devices/sony/configureWindow.js:415
 msgid "Voice Notification Volume"
@@ -1810,8 +1811,8 @@ msgstr "Pozastavit, pokud zařízení není nošeno"
 #: src/preferences/devices/airpods/configureWindow.js:141
 msgid "Pause playback when the device is removed,resume when it is put back on"
 msgstr ""
-"Pozastavit přehrávání pokud je zařízení sundáno, pokračovat pokud je opěť "
-"nasazeno."
+"Pozastavit přehrávání pokud je zařízení sundáno, pokračovat pokud je opět "
+"nasazeno"
 
 #: src/preferences/devices/airpods/configureWindow.js:160
 msgid "Conversation awareness volume limit"
@@ -1839,8 +1840,8 @@ msgid ""
 "disabled. Disabling listening modes also turns off Hearing Aid features and "
 "reduces power usage."
 msgstr ""
-"Umožňuje zcela vypnout režimy potlačován hluku, transparentnosti a "
-"přizpůsbivosti. Vypnutí režimů naslouchání také vypne funkce sluchové "
+"Umožňuje zcela vypnout režimy potlačování hluku, transparentnosti a "
+"přizpůsobivosti. Vypnutí režimů naslouchání také vypne funkce sluchové "
 "pomůcky a sníží spotřebu energie."
 
 #: src/preferences/devices/airpods/configureWindow.js:230
@@ -1855,11 +1856,11 @@ msgstr "Transparentnost"
 
 #: src/preferences/devices/airpods/configureWindow.js:252
 msgid "Press and Hold Cycle"
-msgstr "Cyklovat stisknutím a držením"
+msgstr "Cyklovat stisknutím a podržením"
 
 #: src/preferences/devices/airpods/configureWindow.js:255
 msgid "Press and hold cycles between"
-msgstr "Stisknutí a držení cykluje mezi"
+msgstr "Stisknutí a podržení cykluje mezi"
 
 #: src/preferences/devices/airpods/configureWindow.js:256
 msgid "Settings don’t reflect current state"
@@ -1947,11 +1948,11 @@ msgstr "Nejkratší"
 
 #: src/preferences/devices/airpods/configureWindow.js:377
 msgid "Press and Hold Duration"
-msgstr "Doba trvání stisknutí a držení"
+msgstr "Doba trvání stisknutí a podržení"
 
 #: src/preferences/devices/airpods/configureWindow.js:378
 msgid "Set how long you need to press and hold before an action occurs"
-msgstr "Nastavte jak dlouho je třeba stisknout a držet než nastane akce"
+msgstr "Nastavte jak dlouho je třeba stisknout a podržet než nastane akce"
 
 #: src/preferences/widgets/ringMyBudsRow.js:22
 msgid "Find my earbuds"
@@ -2060,7 +2061,7 @@ msgstr "Pásmo %d"
 
 #: src/preferences/widgets/peqRowWidget.js:1118
 msgid "Remove Band?"
-msgstr "Odebrat pásmo"
+msgstr "Odebrat pásmo?"
 
 #: src/preferences/widgets/peqRowWidget.js:1119
 #, javascript-format
@@ -2274,7 +2275,7 @@ msgid ""
 msgstr ""
 "Jiná aplikace nebo relace právě používá Bluetooth soket/profil na %s. "
 "Zavřete jinou aplikaci, používající toto zařízení a poté tuto aplikaci "
-"restartujte"
+"restartuje."
 
 #~ msgid "Copyright © 2026 maniacx@github.com"
 #~ msgstr "Autorská práva © 2026 maniacx@github.com"
