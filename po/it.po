@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: BudsLink\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-20 17:29-0600\n"
+"POT-Creation-Date: 2026-08-25 13:30-0600\n"
 "PO-Revision-Date: 2026-08-23 08:45+0200\n"
 "Last-Translator: Albano Battistella\n"
 "Language-Team: italian\n"
@@ -253,7 +253,8 @@ msgstr "Rock"
 msgid "Pop"
 msgstr "Pop"
 
-##: src/preferences/devices/senhBuds/configureWindow.js:265
+# #: src/preferences/devices/senhBuds/configureWindow.js:265
+#: src/preferences/devices/senhBuds/configureWindow.js:265
 msgid "Dance"
 msgstr "Dance"
 
@@ -474,7 +475,8 @@ msgstr "Rispondi automaticamente alle chiamate quando indossati"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:601
 msgid "Pause Media When Transparency Mode Is Enabled"
-msgstr "Sospendi contenuti multimediali quando la modalità trasparenza è attiva"
+msgstr ""
+"Sospendi contenuti multimediali quando la modalità trasparenza è attiva"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:613
 #: src/preferences/devices/boseBuds/configureWindow.js:562
@@ -543,10 +545,12 @@ msgstr "Riprendi con qualsiasi auricolare, metti in pausa se rimuovi entrambi"
 msgid "Resume when worn"
 msgstr "Riprendi quando indossati"
 
-##: src/preferences/devices/senhBuds/configureWindow.js:653
+# #: src/preferences/devices/senhBuds/configureWindow.js:653
+#: src/preferences/devices/senhBuds/configureWindow.js:653
 #: src/preferences/devices/boseBuds/configureWindow.js:444
 msgid "Choose playback behavior for in-ear detection"
-msgstr "Scegli il comportamento della riproduzione per il rilevamento intraauricolare"
+msgstr ""
+"Scegli il comportamento della riproduzione per il rilevamento intraauricolare"
 
 #: src/preferences/devices/senhBuds/configureWindow.js:654
 #: src/preferences/devices/boseBuds/configureWindow.js:445
@@ -1051,7 +1055,8 @@ msgstr "Spazio essenziale"
 #: src/preferences/devices/galaxyBuds/configureWindow.js:125
 #: src/preferences/devices/airpods/configureWindow.js:119
 msgid "Choose playback behavior for Ear detection"
-msgstr "Scegli il comportamento della riproduzione per il rilevamento dell'orecchio"
+msgstr ""
+"Scegli il comportamento della riproduzione per il rilevamento dell'orecchio"
 
 #: src/preferences/devices/galaxyBuds/configureWindow.js:249
 msgid "Voice detection"
@@ -1327,7 +1332,8 @@ msgstr "Pausa automatica"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:95
 msgid "Control media playback using in-ear detection"
-msgstr "Controlla la riproduzione multimediale tramite il rilevamento intraauricolare"
+msgstr ""
+"Controlla la riproduzione multimediale tramite il rilevamento intraauricolare"
 
 #: src/preferences/devices/edifierBuds/configureWindow.js:97
 #: src/preferences/devices/boseBuds/configureWindow.js:838
@@ -1356,7 +1362,9 @@ msgstr "Riduzione alti"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:417
 msgid "Automatically switch to Transparency mode when an earbud is removed"
-msgstr "Passa automaticamente alla modalità Trasparenza quando viene rimosso un auricolare"
+msgstr ""
+"Passa automaticamente alla modalità Trasparenza quando viene rimosso un "
+"auricolare"
 
 #: src/preferences/devices/boseBuds/configureWindow.js:491
 msgid "Medium"
@@ -2011,6 +2019,14 @@ msgstr "Filtro passa-basso"
 msgid "High Pass Filter"
 msgstr "Filtro passa-alto"
 
+#: src/preferences/widgets/peqRowWidget.js:634
+msgid "Low Shelf Filter"
+msgstr ""
+
+#: src/preferences/widgets/peqRowWidget.js:635
+msgid "High Shelf Filter"
+msgstr ""
+
 #: src/preferences/widgets/peqRowWidget.js:641
 msgid "Frequency"
 msgstr "Frequenza"
@@ -2126,7 +2142,8 @@ msgstr "Limite di connessioni raggiunto"
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:300
 msgid "Disconnect another device before connecting this device."
-msgstr "Disconnetti un altro dispositivo prima di connettere questo dispositivo."
+msgstr ""
+"Disconnetti un altro dispositivo prima di connettere questo dispositivo."
 
 #: src/preferences/widgets/deviceMgmtRowWidget.js:303
 msgid "OK"
