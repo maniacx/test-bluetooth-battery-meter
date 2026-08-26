@@ -71,7 +71,7 @@ const ModeEditDialog = GObject.registerClass({
         this.favoriteButton.connect('toggled', () => this._updateFavoriteButton());
         deleteButton.connect('clicked', () => this._confirmRemoveMode());
         deleteButton.sensitive = !this._isPreset;
-        deleteButton.tooltip_text = this._isPreset ? _('Preset modes cannot be deleted.')
+        deleteButton.tooltip_text = this._isPreset ? _('Preset modes cannot be deleted')
             : _('Delete');
 
         box.append(this.addToggleButton);
@@ -174,7 +174,7 @@ const ModeEditDialog = GObject.registerClass({
 
         if (modelData.audioModes.spatialMode) {
             const spatialGroup = new Adw.PreferencesGroup({
-                title: _('Spatial Audio'),
+                title: _('Immersive Audio'),
             });
 
             this._spatialRow = new DropDownRowWidget({
@@ -507,7 +507,7 @@ const ModeRow = GObject.registerClass({
                 this.dialog.addToggleButton.active = true;
                 this.addToggleButton.active = true;
                 this.updatingProgrammatically = false;
-                const txt = _('At least 2 modes must be selected.');
+                const txt = _('At least 2 modes must be selected');
 
                 if (this.dialogPresented)
                     this.dialog.showToast(txt);
@@ -548,7 +548,7 @@ const ModeRow = GObject.registerClass({
                     this.favoriteButton.active = false;
                     this.updatingProgrammatically = false;
 
-                    const txt = _('Maximum favorites limit reached.');
+                    const txt = _('Maximum favorites limit reached');
 
                     if (this.dialogPresented)
                         this.dialog.showToast(txt);

@@ -122,7 +122,7 @@ export const ConfigureWindow = GObject.registerClass({
         ];
 
         this._inEarDropdown = new RadioButtonRowWidget({
-            title: _('Choose playback behavior for Ear detection'),
+            title: _('Choose Playback Behavior for Ear Detection'),
             subtitle: _('Automatically pause or resume playback ' +
                 'based on wearing detection.'),
             options: inEarOptions,
@@ -291,6 +291,7 @@ export const ConfigureWindow = GObject.registerClass({
 
         this._eqPresetDropdown = new DropDownRowWidget({
             title: _('Equalizer Preset'),
+            subtitle: _('Change the sound signature'),
             options: eqPresets,
             values: eqPresetValues,
             initialValue: EqPresets.Off,
@@ -535,16 +536,7 @@ export const ConfigureWindow = GObject.registerClass({
         let rowTitle = '';
         let groupTitleL = '';
         let rowTitleL = '';
-        let rowSubtitle = '';
-        let maxRequired = 1;
-
-        if (this._features.noiseTouchAndHoldNewVersion) {
-            rowSubtitle = '';
-            maxRequired = 1;
-        } else {
-            rowSubtitle = _('Select any two toggles');
-            maxRequired = 2;
-        }
+        const rowSubtitle = '';
 
         if (this._features.noiseControlModeDualSide) {
             if (this._features.advancedTouchIsPinch) {
@@ -575,7 +567,7 @@ export const ConfigureWindow = GObject.registerClass({
                 items,
                 applyBtnName: _('Apply'),
                 initialValue: this._settingsItems['nc-cycle-left'],
-                minRequired: maxRequired,
+                minRequired: 2,
             });
 
             this._ncCycleLeft.compact_mode = this._isCompactMode;
@@ -597,7 +589,7 @@ export const ConfigureWindow = GObject.registerClass({
             items,
             applyBtnName: _('Apply'),
             initialValue: this._settingsItems['nc-cycle-right'],
-            minRequired: maxRequired,
+            minRequired: 2,
         });
 
         this._ncCycleRight.compact_mode = this._isCompactMode;

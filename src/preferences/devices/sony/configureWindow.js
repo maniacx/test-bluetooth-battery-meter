@@ -214,7 +214,7 @@ export const ConfigureWindow = GObject.registerClass({
                 _('Excited'),
                 _('Mellow'),
                 _('Relaxed'),
-                _('Vocal'),
+                _('Vocals'),
                 _('Treble Boost'),
                 _('Bass Boost'),
                 _('Speech'),
@@ -240,6 +240,7 @@ export const ConfigureWindow = GObject.registerClass({
 
             this._eqPresetDropdown = new DropDownRowWidget({
                 title: _('Equalizer Preset'),
+                subtitle: _('Change the sound signature'),
                 options: eqPresets,
                 values: this._eqPresetValues,
                 initialValue: this._settingsItems['eq-preset'],
@@ -389,12 +390,12 @@ export const ConfigureWindow = GObject.registerClass({
 
         if (modelData.voiceNotifications) {
             const voiceNotificationsGroup = new Adw.PreferencesGroup({
-                title: _('Notification'),
+                title: _('Voice Prompt Settings'),
             });
 
             this._voiceNotificationsSwitchRow = new Adw.SwitchRow({
-                title: _('Voice Notification'),
-                subtitle: _('Enable voice notification'),
+                title: _('Voice Prompt'),
+                subtitle: _('Enable voice prompts for guidance and status updates'),
             });
 
             this._voiceNotificationsSwitchRow.active = this._settingsItems['voice-noti'];
@@ -412,7 +413,8 @@ export const ConfigureWindow = GObject.registerClass({
 
             if (modelData.voiceNotificationsVolume) {
                 this._voiceNotificationsVolume = new SliderRowWidget({
-                    rowTitle: _('Voice Notification Volume'),
+                    rowTitle: _('Voice Prompt Volume'),
+                    rowSubtitle: _('Adjust the volume of voice prompts'),
                     marks: [
                         {mark: -2, label: _('-2')},
                         {mark: -1, label: _('-1')},
@@ -437,7 +439,7 @@ export const ConfigureWindow = GObject.registerClass({
 
         if (modelData.pauseWhenTakenOff || modelData.automaticPowerOffWhenTakenOff) {
             this._headsetTakenOffGroup = new Adw.PreferencesGroup({
-                title: _('Headset Take off'),
+                title: _('Headset Take Off'),
             });
             page.add(this._headsetTakenOffGroup);
         }
@@ -458,8 +460,8 @@ export const ConfigureWindow = GObject.registerClass({
 
         if (modelData.automaticPowerOffWhenTakenOff) {
             this._autoPowerOffSwitch = new Adw.SwitchRow({
-                title: _('Automatically Power Off'),
-                subtitle: _('Automatically power off when not worn.'),
+                title: _('Automatic Power Off'),
+                subtitle: _('Automatically power off when not worn'),
             });
 
             this._autoPowerOffSwitch.connect('notify::active', () => {
@@ -488,7 +490,7 @@ export const ConfigureWindow = GObject.registerClass({
                 ];
 
                 this._autoPowerOffDropdown = new DropDownRowWidget({
-                    title: _('Automatically Power Off When Not Worn'),
+                    title: _('Automatic Power Off Duration'),
                     options: this._autoPowerOffLabels,
                     values: this._autoPowerOffValues,
                     initialValue: this._settingsItems['auto-power-time'],

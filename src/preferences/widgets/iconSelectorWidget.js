@@ -100,7 +100,7 @@ export const IconSelectorWidget = GObject.registerClass({
             infoBox.append(box);
         };
 
-        addInfo(_('Mac Address'), mac);
+        addInfo(_('MAC Address'), mac);
 
         if (fw)
             addInfo(_('Firmware Version'), fw);

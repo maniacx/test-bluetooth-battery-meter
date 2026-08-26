@@ -456,10 +456,12 @@ export const DeviceManagementRow = GObject.registerClass({
         };
 
         const _ = gtxt;
-        this.title = _('Allow Connections to Multiple Devices');
         this.gtxt = gtxt;
         this.deviceArr = deviceArr.map(device => ({...device}));
         this._active = false;
+
+        this.title = this.config.hasMultipointSwitch ? _('Allow Connections to Multiple Devices')
+            : _('Manage Device Connections');
 
         const box = new Gtk.Box({
             orientation: Gtk.Orientation.HORIZONTAL,

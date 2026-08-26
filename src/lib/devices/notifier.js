@@ -22,35 +22,38 @@ export class Notifier {
     notifyProfileRegisteredError(type) {
         let label;
         if (type === DeviceTypeAirpods)
-            label = _('AirPods / Beats Bluetooth audio devices');
+            label = _('AirPods / Beats');
         else if (type === DeviceTypeSonyV1 || type === DeviceTypeSonyV2)
-            label = _('Sony Bluetooth audio devices');
+            label = _('Sony');
         else if (type === DeviceTypeGalaxyLegacy || type === DeviceTypeGalaxyBuds)
-            label = _('Samsung Galaxy Bluetooth audio devices');
+            label = _('Samsung Galaxy');
         else if (type === DeviceTypeNothingBuds)
-            label = _('Nothing / CMF Bluetooth audio devices');
+            label = _('Nothing / CMF');
         else if (type === DeviceTypeGoogleBuds)
-            label = _('Google Pixel Buds Bluetooth audio devices');
+            label = _('Google Pixel Buds');
         else if (type === DeviceTypeRedmiBuds)
-            label = _('Redmi / Xiaomi Bluetooth audio devices');
+            label = _('Redmi / Xiaomi');
         else if (type === DeviceTypeSenhBuds)
-            label = _('Sennheiser Bluetooth audio devices');
+            label = _('Sennheiser');
         else if (type === DeviceTypeBoseBuds)
-            label = _('Bose Bluetooth audio devices');
+            label = _('Bose');
         else if (type === DeviceTypeEdifierBuds)
-            label = _('Edifier Bluetooth audio devices');
+            label = _('Edifier');
         else if (type === DeviceTypeGfps)
-            label = _('Google Fast Pair Bluetooth audio devices');
+            label = _('Google Fast Pair');
         else
             label = type;
 
         const notification = new Gio.Notification();
 
-        const title = _('Could not access advanced features for %s.').replace('%s', label);
+        const title = _('Could not access advanced features for %s Bluetooth audio devices.')
+            .replace('%s', label);
 
         const body = _(
-            'Another app or session is already using the Bluetooth socket/profile on %s. ' +
-            'Close any other apps using this device, then restart this app.').replace('%s', label);
+            'Another app or session is already using the Bluetooth socket/profile for %s ' +
+            'Bluetooth audio devices. Close any other apps using this device, ' +
+            'then restart this app.'
+        ).replace('%s', label);
 
         notification.set_title(title);
         notification.set_body(body);

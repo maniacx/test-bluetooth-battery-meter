@@ -116,6 +116,7 @@ export const ConfigureWindow = GObject.registerClass({
         this._addSoundSettings();
         this._addCallsSetting();
         this._addInEarSettings();
+        this._addMiscSetting();
         this._addDevMgmtSetting();
 
         const settingSignalId = this._settings.connect('changed::senh-buds-list', () => {
@@ -239,7 +240,8 @@ export const ConfigureWindow = GObject.registerClass({
             const audioModeValues  = audioModeDesc.map(d => d.value);
 
             this._audioModeDropdown = new DropDownRowWidget({
-                title: _('Audio Mode'),
+                title: _('Sound Customization'),
+                subtitle: _('Customize your listening experience'),
                 options: audioModeOptions,
                 values: audioModeValues,
                 initialValue: this._settingsItems['audio-mode'],
@@ -291,6 +293,7 @@ export const ConfigureWindow = GObject.registerClass({
 
             this._eqPresetDropdown = new DropDownRowWidget({
                 title: _('Equalizer Preset'),
+                subtitle: _('Change the sound signature'),
                 options: presetOptions,
                 values: presetValues,
                 initialValue: this._settingsItems['eq-preset'],
@@ -361,7 +364,10 @@ export const ConfigureWindow = GObject.registerClass({
         }
 
         if (this._modelData.eq?.bassBoost) {
-            this._bassBoostSwitch = new Adw.SwitchRow({title: _('Enable Bass Boost')});
+            this._bassBoostSwitch = new Adw.SwitchRow({
+                title: _('Bass Enhancement'),
+                subtitle: _('Enhances bass in real time'),
+            });
 
             this._bassBoostSwitch.active = this._settingsItems['bass-boost'];
 
@@ -449,6 +455,7 @@ export const ConfigureWindow = GObject.registerClass({
 
             this._crossfeedDropdown = new DropDownRowWidget({
                 title: _('Crossfeed'),
+                subtitle: _('Blend channels for natural sound'),
                 options: crossfeedOptions,
                 values: crossfeedValues,
                 initialValue: this._settingsItems['crossfeed'],
@@ -559,9 +566,10 @@ export const ConfigureWindow = GObject.registerClass({
         this._page.add(inEarGroup);
 
         if (this._modelData.inEarDetection) {
-            const inEarTitle = this._modelData.earbuds ? _('Enable In-Ear Detection')
-                : _('Enable On Head Detection');
-            this._inEarDetectionSwitch = new Adw.SwitchRow({title: inEarTitle});
+            this._inEarDetectionSwitch = new Adw.SwitchRow({
+                title: this._modelData.earbuds ? _('In-Ear Detection') : _('On Head Detection'),
+                subtitle: _('Enable features based on wearing detection'),
+            });
             this._inEarDetectionSwitch.active = this._settingsItems['in-ear-setting'];
             this._inEarDetectionSwitch.connect('notify::active', () => {
                 this._updateGsettings('in-ear-setting', this._inEarDetectionSwitch.active);
@@ -585,27 +593,16 @@ export const ConfigureWindow = GObject.registerClass({
         }
 
         if (this._modelData.autoAnswer) {
-            this._autoAnswerSwitch =
-                new Adw.SwitchRow({title: _('Automatically Answer Calls When Worn')});
-
+            this._autoAnswerSwitch = new Adw.SwitchRow({
+                title: _('Answer Calls Automatically'),
+                subtitle: _('Answer calls when the earbuds are worn'),
+            });
             this._autoAnswerSwitch.active = this._settingsItems['autoanswer'];
             this._autoAnswerSwitch.connect('notify::active', () => {
                 this._updateGsettings('autoanswer', this._autoAnswerSwitch.active);
             });
 
             inEarGroup.add(this._autoAnswerSwitch);
-        }
-
-        if (this._modelData.transPause) {
-            this._transPauseSwitch =
-                new Adw.SwitchRow({title: _('Pause Media When Transparency Mode Is Enabled')});
-
-            this._transPauseSwitch.active = this._settingsItems['trans-pause'];
-            this._transPauseSwitch.connect('notify::active', () => {
-                this._updateGsettings('trans-pause', this._transPauseSwitch.active);
-            });
-
-            inEarGroup.add(this._transPauseSwitch);
         }
 
         if (this._modelData.autoPowerOff) {
@@ -621,7 +618,8 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             this._autoPowerOffDropdown = new DropDownRowWidget({
-                title: _('Automatically Power Off When Not Worn'),
+                title: _('Automatic Power Off'),
+                subtitle: _('Automatically power off when not worn'),
                 options,
                 values: this._modelData.autoPowerOff,
                 initialValue: this._settingsItems['auto-power'],
@@ -650,13 +648,13 @@ export const ConfigureWindow = GObject.registerClass({
             ];
 
             const inEarTitle = this._modelData.type === 'earbuds'
-                ? _('Choose playback behavior for in-ear detection')
-                : _('Choose playback behavior for on-head detection');
+                ? _('Choose Playback Behavior for In-Ear Detection')
+                : _('Choose Playback Behavior for On-Head Detection');
 
             this._inEarDropdown = new RadioButtonRowWidget({
                 title: inEarTitle,
                 subtitle: _('Automatically pause or resume playback ' +
-                'based on wearing detection.'),
+                    'based on wearing detection.'),
                 options: inEarOptions,
                 initialValue: this._settingsItems['wear-detection-mode'],
             });
@@ -678,7 +676,6 @@ export const ConfigureWindow = GObject.registerClass({
 
         this._smartPauseSwitch?.set_sensitive(sensitive);
         this._autoAnswerSwitch?.set_sensitive(sensitive);
-        this._transPauseSwitch?.set_sensitive(sensitive);
         this._autoPowerOffDropdown?.set_sensitive(sensitive);
         this._inEarDropdown?.set_sensitive(sensitive);
     }
@@ -702,6 +699,7 @@ export const ConfigureWindow = GObject.registerClass({
 
             this._sideToneSlider = new SliderRowWidget({
                 rowTitle: _('Ambient Sound During Calls'),
+                rowSubtitle: _('Adjust your voice feedback level'),
                 range: [0, maxLevel, 1],
                 marks,
                 initialValue: this._settingsItems['side-tone'],
@@ -718,12 +716,38 @@ export const ConfigureWindow = GObject.registerClass({
         }
 
         if (this._modelData.comfortCalls) {
-            this._comfortCallsSwitch = new Adw.SwitchRow({title: _('Comfort Calls')});
+            this._comfortCallsSwitch = new Adw.SwitchRow({
+                title: _('Comfort Calls'),
+                subtitle: _('Make phone calls sound more natural'),
+            });
             this._comfortCallsSwitch.active = this._settingsItems['comfort-call'];
             this._comfortCallsSwitch.connect('notify::active', () => {
                 this._updateGsettings('comfort-call', this._comfortCallsSwitch.active);
             });
             callGroup.add(this._comfortCallsSwitch);
+        }
+    }
+
+    _addMiscSetting() {
+        let miscGroup;
+        const _ = this._gettext;
+
+        if (this._modelData.transPause) {
+            miscGroup = new Adw.PreferencesGroup({title: _('Additional Settings')});
+            this._page.add(miscGroup);
+        }
+
+        if (this._modelData.transPause) {
+            this._transPauseSwitch = new Adw.SwitchRow({
+                title: _('Pause Media in Transparency Mode'),
+                subtitle: _('Automatically pause media when transparency mode is enabled'),
+            });
+            this._transPauseSwitch.active = this._settingsItems['trans-pause'];
+            this._transPauseSwitch.connect('notify::active', () => {
+                this._updateGsettings('trans-pause', this._transPauseSwitch.active);
+            });
+
+            miscGroup.add(this._transPauseSwitch);
         }
     }
 

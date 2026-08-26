@@ -426,7 +426,7 @@ export const NothingBudsDevice = GObject.registerClass({
 
         if (this._modelData.personalizeAnc) {
             this._config.optionsBox1.push('check-button');
-            this._config.box1CheckButton = [_('Personalised ANC')];
+            this._config.box1CheckButton = [_('Personalized ANC')];
         }
     }
 

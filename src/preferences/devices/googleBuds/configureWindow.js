@@ -80,12 +80,12 @@ export const ConfigureWindow = GObject.registerClass({
 
         const presetLabels = {
             [EqPreset.DEFAULT]: _('Default'),
-            [EqPreset.HEAVY_BASS]: _('Heavy bass'),
-            [EqPreset.LIGHT_BASS]: _('Light bass'),
+            [EqPreset.HEAVY_BASS]: _('Bass Boost'),
+            [EqPreset.LIGHT_BASS]: _('Bass Reducer'),
             [EqPreset.BALANCED]: _('Balanced'),
-            [EqPreset.VOCAL_BOOST]: _('Vocal boost'),
+            [EqPreset.VOCAL_BOOST]: _('Vocal Boost'),
             [EqPreset.CLARITY]: _('Clarity'),
-            [EqPreset.LAST_SAVED]: _('Last saved'),
+            [EqPreset.LAST_SAVED]: _('Last Saved'),
             [EqPreset.CUSTOM]: _('Custom'),
         };
         const presetValues = [

@@ -6,7 +6,6 @@ import {
     supportedAudioSingleIcons, supportedCaseIcons
 } from '../../../lib/widgets/iconGroups.js';
 import {IconSelectorWidget} from './../../widgets/iconSelectorWidget.js';
-import {DropDownRowWidget} from './../../widgets/dropDownRowWidget.js';
 
 export const ConfigureWindow = GObject.registerClass({
     GTypeName: 'BudsLink_EdifierBudsConfigureWindow',
@@ -70,7 +69,7 @@ export const ConfigureWindow = GObject.registerClass({
         if ('game-mode' in this._settingsItems) {
             this._gameModeSwitch = new Adw.SwitchRow({
                 title: _('Game Mode'),
-                subtitle: _('Reduce audio latency while gaming'),
+                subtitle: _('Reduces latency and enhances in-game audio'),
             });
             this._gameModeSwitch.active = this._settingsItems['game-mode'];
             this._gameModeSwitch.connect('notify::active', () => {
@@ -82,31 +81,13 @@ export const ConfigureWindow = GObject.registerClass({
         if ('in-ear-setting' in this._settingsItems) {
             this._inEarSwitch = new Adw.SwitchRow({
                 title: _('In-Ear Detection'),
-                subtitle: _('Let the earbuds detect when they are worn'),
+                subtitle: _('Enable features based on wearing detection'),
             });
             this._inEarSwitch.active = this._settingsItems['in-ear-setting'];
             this._inEarSwitch.connect('notify::active', () => {
                 this._updateGsettings('in-ear-setting', this._inEarSwitch.active);
             });
             settingsGroup.add(this._inEarSwitch);
-
-            this._wearModeDropdown = new DropDownRowWidget({
-                title: _('Auto Pause'),
-                subtitle: _('Control media playback using in-ear detection'),
-                options: [
-                    _('Disabled'),
-                    _('Pause when both removed'),
-                    _('Pause when either removed'),
-                ],
-                values: [0, 1, 2],
-                initialValue: this._settingsItems['wear-detection-mode'] ?? 1,
-            });
-
-            this._wearModeDropdown.connect('notify::selected-item', () => {
-                this._updateGsettings('wear-detection-mode',
-                    this._wearModeDropdown.selected_item);
-            });
-            settingsGroup.add(this._wearModeDropdown);
         }
 
         const settingSignalId = this._settings.connect('changed::edifier-buds-list', () => {

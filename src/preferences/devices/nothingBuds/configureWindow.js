@@ -129,7 +129,6 @@ export const ConfigureWindow = GObject.registerClass({
         this._page.add(iconSelector);
 
         this._addEq();
-        this._addBassEnhance();
         this._addSpatialAudio();
         this._addMiscSetting();
         this._addGestureControls();
@@ -208,21 +207,21 @@ export const ConfigureWindow = GObject.registerClass({
 
         const _ = this._gettext;
 
-        const eqGroup = new Adw.PreferencesGroup({title: _('Equalizer')});
+        const eqGroup = new Adw.PreferencesGroup({title: _('Sound Settings')});
         this._page.add(eqGroup);
 
         const presetObj = this._modelData.eqPreset;
 
         const presetLabels = {
             balanced: _('Balanced'),
-            voice: _('Voice'),
-            more_treble: _('More Treble'),
-            more_bass: _('More Bass'),
+            voice: _('Vocals'),
+            more_treble: _('Treble Boost'),
+            more_bass: _('Bass Boost'),
             dirac: _('Dirac'),
             rock: _('Rock'),
             electronic: _('Electronic'),
             pop: _('Pop'),
-            enhance_vocals: _('Enhance Vocals'),
+            enhance_vocals: _('Vocal Boost'),
             classical: _('Classical'),
             custom: _('Custom'),
         };
@@ -242,6 +241,7 @@ export const ConfigureWindow = GObject.registerClass({
 
         this._eqPresetDropdown = new DropDownRowWidget({
             title: _('Equalizer Preset'),
+            subtitle: _('Change the sound signature'),
             options,
             values: presetValues,
             initialValue: this._settingsItems['eq-preset'],
@@ -274,18 +274,20 @@ export const ConfigureWindow = GObject.registerClass({
         });
 
         this._eqPresetDropdown.connect('button-clicked', () => this._eq.present(this));
+
+        this._addBassEnhance(eqGroup);
     }
 
-    _addBassEnhance() {
+    _addBassEnhance(eqGroup) {
         if (!this._modelData?.bassEnhanceLevel)
             return;
 
         const _ = this._gettext;
 
-        const bassEnhanceGroup = new Adw.PreferencesGroup({title: _('Bass Boost')});
-        this._page.add(bassEnhanceGroup);
-
-        this._bassEnhanceSwitch = new Adw.SwitchRow({title: _('Enable Bass Boost')});
+        this._bassEnhanceSwitch = new Adw.SwitchRow({
+            title: _('Bass Enhancement'),
+            subtitle: _('Enhances bass in real time'),
+        });
 
         this._bassEnhanceSwitch.active = this._settingsItems['bass-enable'];
 
@@ -293,11 +295,10 @@ export const ConfigureWindow = GObject.registerClass({
             this._updateGsettings('bass-enable', this._bassEnhanceSwitch.active);
         });
 
-        bassEnhanceGroup.add(this._bassEnhanceSwitch);
-
+        eqGroup.add(this._bassEnhanceSwitch);
 
         this._baseLevel = new SliderRowWidget({
-            rowTitle: _('Bass Boost Level'),
+            rowTitle: _('Bass Enhancement Level'),
             range: [1, 5, 1],
             marks: [
                 {mark: 1, label: _('-')},
@@ -316,7 +317,7 @@ export const ConfigureWindow = GObject.registerClass({
             this._updateGsettings('bass-level', this._baseLevel.value);
         });
 
-        bassEnhanceGroup.add(this._baseLevel);
+        eqGroup.add(this._baseLevel);
 
         this._bassEnhanceSwitch.bind_property(
             'active',
@@ -332,10 +333,13 @@ export const ConfigureWindow = GObject.registerClass({
 
         const _ = this._gettext;
 
-        const spatialAudioGroup = new Adw.PreferencesGroup({title: _('Spatial Audio')});
+        const spatialAudioGroup = new Adw.PreferencesGroup({title: _('Immersive Audio')});
         this._page.add(spatialAudioGroup);
 
-        this._spatialAudioSwitch = new Adw.SwitchRow({title: _('Enable Spatial Audio')});
+        this._spatialAudioSwitch = new Adw.SwitchRow({
+            title: _('Spatial Audio'),
+            subtitle: _('Add depth for a more immersive experience'),
+        });
 
         this._spatialAudioSwitch.active = this._settingsItems['spatial'];
 
@@ -357,7 +361,10 @@ export const ConfigureWindow = GObject.registerClass({
         }
 
         if (this._modelData?.lowLatencyMode) {
-            this._lowLatencySwitch = new Adw.SwitchRow({title: _('Enable low latency mode')});
+            this._lowLatencySwitch = new Adw.SwitchRow({
+                title: _('Game Mode'),
+                subtitle: _('Reduces latency and enhances in-game audio'),
+            });
 
             this._lowLatencySwitch.active = this._settingsItems['lowlatency'];
 
@@ -370,7 +377,8 @@ export const ConfigureWindow = GObject.registerClass({
 
         if (this._modelData?.inEarDetection) {
             this._inEarSwitch = new Adw.SwitchRow({
-                title: _('Enable in ear detection'),
+                title: _('In-Ear Detection'),
+                subtitle: _('Enable features based on wearing detection'),
             });
 
             this._inEarSwitch.active = this._settingsItems['inear-enable'];
@@ -667,7 +675,7 @@ export const ConfigureWindow = GObject.registerClass({
                 return _('Equalizer Preset');
 
             case 'super-mic':
-                return _('Walkie Takie');
+                return _('Walkie-Talkie');
 
             case 'ultra-bass':
                 return _('Bass');

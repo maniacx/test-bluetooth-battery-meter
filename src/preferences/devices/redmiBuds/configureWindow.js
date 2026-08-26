@@ -213,17 +213,17 @@ export const ConfigureWindow = GObject.registerClass({
 
         const presetLabels = {
             standard: _('Standard'),
-            voice: _('Voice'),
-            base: _('More Bass'),
-            treble: _('More Treble'),
+            voice: _('Vocals'),
+            base: _('Bass Boost'),
+            treble: _('Treble Boost'),
             boostVolume: _('Volume Boost'),
             custom: _('Custom'),
             classic: _('Classic'),
             legendary: _('Audiophile'),
-            soothingboost: _('Decrease bass'),
+            soothingboost: _('Bass Reducer'),
             harman: _('Harman EFX'),
             harmanmaster: _('Harman Master'),
-            standard2: _('Standard 2'),
+            standard2: _('Standard'),
             outdoor: _('Outdoor'),
             underwater: _('Underwater'),
             balanced: _('Balanced'),
@@ -244,6 +244,7 @@ export const ConfigureWindow = GObject.registerClass({
 
         this._eqPresetDropdown = new DropDownRowWidget({
             title: _('Equalizer Preset'),
+            subtitle: _('Change the sound signature'),
             options,
             values: presetValues,
             initialValue: this._settingsItems['eq-preset'],
@@ -307,7 +308,8 @@ export const ConfigureWindow = GObject.registerClass({
 
         if (this._modelData.autoAnswer) {
             this._autoAwnswerSwitch = new Adw.SwitchRow({
-                title: _('Automatically answer phone calls'),
+                title: _('Answer Calls Automatically'),
+                subtitle: _('Answer calls when the earbuds are worn'),
             });
 
             this._autoAwnswerSwitch.active = this._settingsItems['auto-answer'];
@@ -322,6 +324,7 @@ export const ConfigureWindow = GObject.registerClass({
         if (this._modelData.adaptiveSound) {
             this._adaptiveSoundSwitch = new Adw.SwitchRow({
                 title: _('Adaptive Sound'),
+                subtitle: _('Automatically adjust sound to your ear shape'),
             });
 
             this._adaptiveSoundSwitch.active = this._settingsItems['adapt-sound'];
@@ -335,7 +338,8 @@ export const ConfigureWindow = GObject.registerClass({
 
         if (this._modelData.lowLatencyMode) {
             this._lowLatencySwitch = new Adw.SwitchRow({
-                title: _('Enable low latency mode'),
+                title: _('Game Mode'),
+                subtitle: _('Reduces latency and enhances in-game audio'),
             });
 
             this._lowLatencySwitch.active = this._settingsItems['low-latency'];

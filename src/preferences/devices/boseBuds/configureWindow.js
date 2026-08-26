@@ -116,6 +116,7 @@ export const ConfigureWindow = GObject.registerClass({
         this._addCallsSetting();
         this._addInEarSettings();
         this._addVoicePrompt();
+        this._addConnectionManagement();
         this._addMiscSetting();
         this._addGestureControls();
 
@@ -173,8 +174,10 @@ export const ConfigureWindow = GObject.registerClass({
             if (this._modelData.voicePrompt && !this._voicePromptSwitch)
                 this._addVoicePrompt();
 
-            if (this._voicePromptSwitch)
+            if (this._voicePromptSwitch) {
                 this._voicePromptSwitch.active = this._settingsItems['voice-enabled'];
+                this._updateVoicePromptSensitivity();
+            }
 
             if (this._voicePrompDropdown)
                 this._voicePrompDropdown.selected_item = this._settingsItems['voice-prompt'];
@@ -308,6 +311,7 @@ export const ConfigureWindow = GObject.registerClass({
 
             this._eqPresetDropdown = new DropDownRowWidget({
                 title: _('Equalizer Preset'),
+                subtitle: _('Change the sound signature'),
                 options: presetOptions,
                 values: presetValues,
                 initialValue: this._settingsItems['eq-preset'],
@@ -375,10 +379,10 @@ export const ConfigureWindow = GObject.registerClass({
         this._page.add(inEarGroup);
 
         if (this._modelData.inEarSettings) {
-            const inEarTitle = this._modelData.earbuds ? _('Enable In-Ear Detection')
-                : _('Enable On Head Detection');
-
-            this._inEarSettingsSwitch = new Adw.SwitchRow({title: inEarTitle});
+            this._inEarDetectionSwitch = new Adw.SwitchRow({
+                title: this._modelData.earbuds ? _('In-Ear Detection') : _('On Head Detection'),
+                subtitle: _('Enable features based on wearing detection'),
+            });
             this._inEarSettingsSwitch.active = this._settingsItems['in-ear'];
             this._inEarSettingsSwitch.connect('notify::active', () => {
                 this._updateGsettings('in-ear', this._inEarSettingsSwitch.active);
@@ -402,9 +406,10 @@ export const ConfigureWindow = GObject.registerClass({
         }
 
         if (this._modelData.autoAnswer) {
-            this._autoAnswerSwitch =
-                new Adw.SwitchRow({title: _('Automatically Answer Calls When Worn')});
-
+            this._autoAnswerSwitch = new Adw.SwitchRow({
+                title: _('Answer Calls Automatically'),
+                subtitle: _('Answer calls when the earbuds are worn'),
+            });
             this._autoAnswerSwitch.active = this._settingsItems['auto-answer'];
             this._autoAnswerSwitch.connect('notify::active', () => {
                 this._updateGsettings('auto-answer', this._autoAnswerSwitch.active);
@@ -414,8 +419,10 @@ export const ConfigureWindow = GObject.registerClass({
         }
 
         if (this._modelData.autoTransparency) {
-            const title = _('Automatically switch to Transparency mode when an earbud is removed');
-            this._autoTransparencySwitch =  new Adw.SwitchRow({title});
+            this._autoTransparencySwitch =  new Adw.SwitchRow({
+                title: _('Automatic Transparency Mode'),
+                subtitle: _('Switch to Transparency mode when an earbud is removed'),
+            });
 
             this._autoTransparencySwitch.active = this._settingsItems['auto-transp'];
             this._autoTransparencySwitch.connect('notify::active', () => {
@@ -441,13 +448,13 @@ export const ConfigureWindow = GObject.registerClass({
             ];
 
             const inEarTitle = this._modelData.type === 'earbuds'
-                ? _('Choose playback behavior for in-ear detection')
-                : _('Choose playback behavior for on-head detection');
+                ? _('Choose Playback Behavior for In-Ear Detection')
+                : _('Choose Playback Behavior for On-Head Detection');
 
             this._inEarDropdown = new RadioButtonRowWidget({
                 title: inEarTitle,
                 subtitle: _('Automatically pause or resume playback ' +
-                'based on wearing detection.'),
+                    'based on wearing detection.'),
                 options: inEarOptions,
                 initialValue: this._settingsItems['wear-detection-mode'],
             });
@@ -497,6 +504,7 @@ export const ConfigureWindow = GObject.registerClass({
 
         this._sideToneDropdown = new DropDownRowWidget({
             title: _('Ambient Sound During Calls'),
+            subtitle: _('Adjust your voice feedback level'),
             options,
             values,
             initialValue: this._settingsItems['side-tone'],
@@ -509,14 +517,14 @@ export const ConfigureWindow = GObject.registerClass({
         callGroup.add(this._sideToneDropdown);
     }
 
-    _addMiscSetting() {
-        if (!this._modelData.dualConnection && !this._modelData.automaticPowerOffTimer)
+    _addConnectionManagement() {
+        if (!this._modelData.dualConnection)
             return;
 
         const _ = this._gettext;
 
-        const miscGroup = new Adw.PreferencesGroup({title: _('Additional Settings')});
-        this._page.add(miscGroup);
+        const devMgmtGroup = new Adw.PreferencesGroup({title: _('Connection Management')});
+        this._page.add(devMgmtGroup);
 
         if (this._modelData.dualConnection) {
             const deviceManagementConfig = {
@@ -554,8 +562,18 @@ export const ConfigureWindow = GObject.registerClass({
                 this._updateGsettings('dev-mgmt-action', data);
             });
 
-            miscGroup.add(this._dualConnSwitch);
+            devMgmtGroup.add(this._dualConnSwitch);
         }
+    }
+
+    _addMiscSetting() {
+        if (!this._modelData.automaticPowerOffTimer)
+            return;
+
+        const _ = this._gettext;
+
+        const miscGroup = new Adw.PreferencesGroup({title: _('Additional Settings')});
+        this._page.add(miscGroup);
 
         if (this._modelData.automaticPowerOffTimer) {
             const autoPowerOffLabelsMap = {
@@ -572,7 +590,8 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             this._autoPowerOffDropdown = new DropDownRowWidget({
-                title: _('Automatic Power Off'),
+                title: _('Automatic Power Off Duration'),
+                subtitle: _('Automatically power off when not worn'),
                 options: autoPowerOffLabels,
                 values: this._modelData.automaticPowerOffTimer,
                 initialValue: this._settingsItems['auto-power'],
@@ -594,7 +613,7 @@ export const ConfigureWindow = GObject.registerClass({
 
         if (!this._promptGroup) {
             this._promptGroup = new Adw.PreferencesGroup({
-                title: _('Voice Prompts'),
+                title: _('Voice Prompt Settings'),
                 visible: false,
             });
             this._page.add(this._promptGroup);
@@ -609,11 +628,15 @@ export const ConfigureWindow = GObject.registerClass({
         if (currentVoicePrompt === 0xFF)
             return;
 
-        this._voicePromptSwitch = new Adw.SwitchRow({title: _('Enable Voice Prompts')});
+        this._voicePromptSwitch = new Adw.SwitchRow({
+            title: _('Voice Prompts'),
+            subtitle: _('Enable voice prompts for guidance and status updates'),
+        });
         this._voicePromptSwitch.active = this._settingsItems['voice-enabled'];
 
         this._voicePromptSwitch.connect('notify::active', () => {
             this._updateGsettings('voice-enabled', this._voicePromptSwitch.active);
+            this._updateVoicePromptSensitivity();
         });
 
         this._promptGroup.add(this._voicePromptSwitch);
@@ -636,6 +659,7 @@ export const ConfigureWindow = GObject.registerClass({
 
         this._voicePrompDropdown = new DropDownRowWidget({
             title: _('Prompt Language'),
+            subtitle: _('Select the language for voice prompts'),
             options: voicePromptLabels,
             values: voicePromptValues,
             initialValue: this._settingsItems['voice-prompt'],
@@ -649,6 +673,7 @@ export const ConfigureWindow = GObject.registerClass({
 
         this._battVoiceSwitch = new Adw.SwitchRow({
             title: _('Announce Battery Level at Startup'),
+            subtitle: _('Announce the battery level when powered on'),
             visible: this._settingsItems['vobat-sup'],
         });
 
@@ -661,6 +686,16 @@ export const ConfigureWindow = GObject.registerClass({
         this._promptGroup.add(this._battVoiceSwitch);
 
         this._promptGroup.visible = true;
+    }
+
+    _updateVoicePromptSensitivity() {
+        const enabled = this._voicePromptSwitch?.active;
+
+        if (this._voicePrompDropdown)
+            this._voicePrompDropdown.sensitive = enabled;
+
+        if (this._battVoiceSwitch)
+            this._battVoiceSwitch.sensitive = enabled;
     }
 
     _addGestureControls() {

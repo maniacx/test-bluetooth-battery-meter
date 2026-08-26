@@ -116,7 +116,7 @@ export const  ConfigureWindow = GObject.registerClass({
         ];
 
         this._inEarDropdown = new RadioButtonRowWidget({
-            title: _('Choose playback behavior for Ear detection'),
+            title: _('Choose Playback Behavior for In-Ear Detection'),
             subtitle: _('Automatically pause or resume playback ' +
                 'based on wearing detection.'),
             options: inEarOptions,
@@ -137,9 +137,8 @@ export const  ConfigureWindow = GObject.registerClass({
             });
 
             this._awarenessSwitchRow = new Adw.SwitchRow({
-                title: _('Pause when device is not worn'),
-                subtitle: _('Pause playback when the device is removed,' +
-                    'resume when it is put back on'),
+                title: _('Lower volume during conversation awareness'),
+                subtitle: _('Automatically lower the volume when conversation awareness is active'),
             });
 
             this._awarenessSwitchRow.active = this._settingsItems['ca-volume-enabled'];
@@ -285,7 +284,7 @@ export const  ConfigureWindow = GObject.registerClass({
 
             this._toneWidget = new SliderRowWidget({
                 rowTitle: _('Tone Volume'),
-                rowSubtitle: _('Adjust the tone volume of sound effects played by AirPods'),
+                rowSubtitle: _('Adjust the volume of audio cues'),
                 marks: [
                     {mark: 0, label: _('15%')},
                     {mark: 77, label: _('100%')},
