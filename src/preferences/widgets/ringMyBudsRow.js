@@ -18,12 +18,19 @@ export const RingMyBudsRow = GObject.registerClass({
         ),
     },
 }, class RingMyBudsRow extends Adw.ActionRow {
-    _init(_, params = {}) {
-        const {title = _('Find my earbuds'), dual = false, ...args} = params;
-        super._init({title, ...args});
+    _init(_, config = {}) {
+        super._init();
 
         this._gettext = _;
-        this._dual = dual;
+
+        const {
+            dual = false,
+            title = _('Find my earbuds'),
+            subtitle = _('Ring your earbuds to locate them'),
+        } = config;
+
+        this.title = title;
+        this.subtitle = subtitle;
 
         this._status = 'stopped';
         this._statusLeft = 'stopped';
