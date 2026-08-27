@@ -2,7 +2,7 @@
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 
-import {createLogger, getDeviceIdentifier} from '../logger.js';
+import {createLogger, getDeviceIdentifier, hexBytes} from '../logger.js';
 import {SocketHandler} from '../socketByProfile.js';
 import {
     OpoBudsModelList, Cmd, FeatureId, EventCode, BatteryComponent
@@ -396,12 +396,12 @@ export const OpoBudsSocket = GObject.registerClass({
             return;
 
         const modeByte = payload[payload.length - 1];
-        this._log.info(`Parsed ANC mode byte: 0x${modeByte.toString(16)}`);
+        this._log.info(`Parsed ANC mode byte: ${hexBytes(modeByte)}`);
         this._callbacks?.updateNoiseControl?.(modeByte);
     }
 
     setNoiseControl(modeByte) {
-        this._log.info(`Set ANC mode byte: 0x${modeByte.toString(16)}`);
+        this._log.info(`Set ANC mode byte: ${hexBytes(modeByte)}`);
         const payload =  [0x01, 0x01, modeByte];
         this._queuePacket(Cmd.SET_ANC, payload, 'Set ANC Mode');
     }
@@ -570,7 +570,7 @@ export const OpoBudsSocket = GObject.registerClass({
     }
 
     setNoiseControlCycle(maskByte) {
-        this._log.info(`Set ANC cycle mask byte: 0x${maskByte.toString(16)}`);
+        this._log.info(`Set ANC cycle mask byte: ${hexBytes(maskByte)}`);
         const payload = [0x01, maskByte];
         this._queuePacket(Cmd.SET_ANC_CYCLE, payload, 'Set ANC Cycle Mask');
     }
