@@ -76,14 +76,28 @@ export const OpoBudsDevice = GObject.registerClass({
 
     modelIntialized(modelData) {
         this._modelData = modelData;
-        this._log.info(`Model Initialized: ${modelData.name}`);
+
+        this._log.info(`Configuration: ${JSON.stringify(this._modelData, null, 2)}`);
 
         this._commonIcon = this._modelData.budsIcon ?? 'earbuds-stem';
         if (this._modelData.batteryCase)
             this._caseIcon = `${this._modelData.case ?? 'case-round'}`;
 
         this._createDefaultSettings();
-        this._loadGsettings();
+
+        const devicesList = this._settings.get_strv('opo-buds-list').map(JSON.parse);
+
+        if (devicesList.length === 0 ||
+                !devicesList.some(device => device.path === this._devicePath)) {
+            this._addPropsToSettings(devicesList);
+        } else {
+            validateProperties(this._settings, 'opo-buds-list', devicesList,
+                this._defaultsDeviceSettings, this._devicePath);
+        }
+
+        this._updateInitialValues();
+        this._monitorOpoBudsListGsettings();
+
         this._updateIcons();
         this._updateAncConfig();
 
@@ -164,32 +178,62 @@ export const OpoBudsDevice = GObject.registerClass({
         };
     }
 
-    _loadGsettings() {
-        if (!this._settings)
+    _updateInitialValues() {
+        const devicesList = this._settings.get_strv('opo-buds-list').map(JSON.parse);
+        const index = devicesList.findIndex(item => item.path === this._devicePath);
+        if (index === -1)
             return;
 
-        const devicesList = this._settings.get_strv('opo-buds-list').map(JSON.parse);
-        const existingPathIndex = devicesList.findIndex(item => item.path === this._devicePath);
+        this._settingsItems = devicesList[index];
 
-        if (existingPathIndex === -1) {
-            devicesList.push(this._defaultsDeviceSettings);
-            this._settingsItems = this._defaultsDeviceSettings;
-            this._ignoreGsettingsChange = true;
-            this._settings.set_strv('opo-buds-list', devicesList.map(JSON.stringify));
-            this._ignoreGsettingsChange = false;
-        } else {
-            this._settingsItems = devicesList[existingPathIndex];
-            validateProperties(this._settings, 'opo-buds-list', devicesList,
-                this._defaultsDeviceSettings, this._devicePath);
-        }
+        this._commonIcon = this._settingsItems['icon'];
 
-        this._commonIcon = this._settingsItems['icon'] ?? this._modelData?.budsIcon ??
-            'earbuds-stem';
+        if (this._modelData.batteryCase)
+            this._caseIcon = this._settingsItems['case'];
 
-        if (this._modelData?.batteryCase)
-            this._caseIcon = this._settingsItems['case'] ?? this._modelData?.case ?? 'case-round';
+        if (this._modelData.eqPreset)
+            this._eqPreset = this._settingsItems['eq-preset'];
 
-        this._monitorOpoBudsListGsettings();
+        if (this._modelData.inEarDetection)
+            this._inEar = this._settingsItems['inear-enable'];
+
+        if (this._modelData.lowLatencyMode)
+            this._lowlatency = this._settingsItems['lowlatency'];
+
+        if (this._modelData.dualConnection)
+            this._dualConnection = this._settingsItems['dual-connection'];
+
+        if (this._modelData.windNoiseReduction)
+            this._windNoise = this._settingsItems['wind-noise'];
+
+        if (this._modelData.volumeEnhancer)
+            this._volumeEnhancer = this._settingsItems['volume-enhancer'];
+
+        if (this._modelData.spatialAudio)
+            this._spatial = this._settingsItems['spatial'];
+
+        if (this._modelData.highResAudio)
+            this._highRes = this._settingsItems['high-res'];
+
+        if (this._modelData.dynamicBass)
+            this._dynamicBass = this._settingsItems['dynamic-bass'];
+
+        if (this._modelData.autoAnswer)
+            this._autoAnswer = this._settingsItems['auto-answer'];
+
+        if (this._modelData.findMyPhone)
+            this._findPhone = this._settingsItems['find-phone'];
+
+        if (this._modelData.gestureOptions)
+            this._gestures = this._settingsItems['gestures'];
+
+        if (this._modelData.ring)
+            this._ringState = this._settingsItems['ring-state'];
+    }
+
+    _addPropsToSettings(devicesList) {
+        devicesList.push(this._defaultsDeviceSettings);
+        this._settings.set_strv('opo-buds-list', devicesList.map(JSON.stringify));
     }
 
     _monitorOpoBudsListGsettings() {
@@ -324,20 +368,26 @@ export const OpoBudsDevice = GObject.registerClass({
         });
     }
 
-    _updateGsettings() {
-        if (!this._settings || !this._settingsItems)
-            return;
+    _monitorOpoBudsListGsettings() {
+        this._settingsHandlerId = this._settings?.connect('changed::opo-buds-list', () => {
+            if (this._ignoreGsettingsChange)
+                return;
 
+            this._updateGsettings();
+        });
+    }
+
+    _updateGsettings() {
         this._ignoreGsettingsChange = true;
+
         const currentList = this._settings.get_strv('opo-buds-list').map(JSON.parse);
         const index = currentList.findIndex(d => d.path === this._devicePath);
 
-        if (index !== -1)
+        if (index !== -1) {
             currentList[index] = this._settingsItems;
-        else
-            currentList.push(this._settingsItems);
+            this._settings.set_strv('opo-buds-list', currentList.map(JSON.stringify));
+        }
 
-        this._settings.set_strv('opo-buds-list', currentList.map(JSON.stringify));
         this._ignoreGsettingsChange = false;
     }
 
