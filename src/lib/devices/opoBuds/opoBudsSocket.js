@@ -252,11 +252,10 @@ export const OpoBudsSocket = GObject.registerClass({
                 break;
 
             case Cmd.KEY_FUNCTION_RSP:
-            case Cmd.SET_KEY_FUNCTION_RSP:
-            case 0x0508:
                 this._parseGestures(payload);
                 break;
 
+            case Cmd.KEY_FUNCTION_NOTIFY:
             case 0x0501:
                 this._getGestures();
                 break;
@@ -553,7 +552,11 @@ export const OpoBudsSocket = GObject.registerClass({
             startIdx = 1;
 
         const count = payload[startIdx - 1];
-        const slotsBytes = payload.slice(startIdx, startIdx + count * 4);
+        const needed = count * 4;
+        if (count < 1 || count > 16 || payload.length < startIdx + needed)
+            return;
+
+        const slotsBytes = payload.slice(startIdx, startIdx + needed);
         const hex = Array.from(slotsBytes).map(b => b.toString(16).padStart(2, '0')).join('');
         this._log.info(`Parsed gestures hex: ${hex}`);
         this._callbacks?.updateGestures?.(hex);

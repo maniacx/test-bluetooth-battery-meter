@@ -64,6 +64,7 @@ export const Cmd = {
 
     FEATURE_EVENT: 0x0503,
     EQ_NOTIFY: 0x0504,
+    KEY_FUNCTION_NOTIFY: 0x0508,
     SPATIAL_NOTIFY: 0x0510,
 };
 
