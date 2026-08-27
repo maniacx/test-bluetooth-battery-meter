@@ -1,0 +1,665 @@
+==============================================================================
+BudsLink runtime.log — AFTER FIX (opo-revised + local commits)
+==============================================================================
+
+Device: Realme Buds Air 7
+Product ID: 0x064812
+Firmware: 1.1.0.62
+Driver: opoBuds (RFCOMM UUID 0000079a-d102-11e1-9b23-00025b00a5a5)
+Log source: ~/.var/app/io.github.maniacx.BudsLink/.local/state/log/runtime.log
+Exported: 2026-08-27 17:54
+
+Build: opo-revised + 5 local commits, Flatpak user rebuild (~06:02 UTC session).
+Commits (on opo-revised, not yet pushed when captured):
+  - SET_ANC_CYCLE opcode
+  - ANC as byte arrays in device configs
+  - Single-slot gesture SET + ANC encode fix
+  - Restore GSettings → socket apply (delete duplicate watcher)
+  - Placeholder gestures from slot map
+
+Session: 2026-08-27 06:02–06:04 UTC
+
+Markers proving fixed build:
+  - Configuration uses "off": [1] arrays, no default gesture hex
+  - Set EQ Preset 0–3 with ACK 00
+  - Set Dynamic Bass / Spatial / Volume Enhancer / Game mode / etc.
+  - Set gesture slot (single 4-byte SET on 0x0401) with ACK 00
+  - Set Find Buds, Auto Answer, In-ear detection
+
+Note: EQ notify 0x0508 briefly mis-parsed as gestures (fixed later in
+commit 678f364 — not in this log capture).
+
+------------------------------------------------------------------------------
+
+[2026-08-27T06:02:29.174Z] INF: [EnhancedDeviceSupportManager] Creating enhanced device path=/org/bluez/hci0/dev_XX_XX_XX_XX_XX_XX type=opoBuds
+
+[2026-08-27T06:02:29.174Z] INF: [OpoBudsDevice-XX] ------------------- OpoBudsDevice init -------------------
+
+[2026-08-27T06:02:29.174Z] INF: [OpoBudsSocket-XX] OpoBudsSocket init
+
+[2026-08-27T06:02:29.174Z] INF: [ProfileManager] Registering profile opoBuds
+
+[2026-08-27T06:02:29.178Z] INF: [ProfileManager] ConnectProfile Failed for 0000079a-d102-11e1-9b23-00025b00a5a5 on /org/bluez/hci0/dev_XX_XX_XX_XX_XX_XX. Gio.IOErrorEnum: GDBus.Error:org.bluez.Error.InProgress: br-connection-busy
+
+[2026-08-27T06:02:29.568Z] INF: [ProfileManager] Profile NewConnection opoBuds
+
+[2026-08-27T06:02:29.568Z] INF: [SocketHandler-OpoBudsSocket-XX] Starting socket with fd: 33
+
+[2026-08-27T06:02:29.569Z] INF: [OpoBudsSocket-XX] Starting post connect initialization
+
+[2026-08-27T06:02:29.569Z] INF: [OpoBudsSocket-XX] Handshake
+
+[2026-08-27T06:02:29.569Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 00 01 01 00 00
+
+[2026-08-27T06:02:29.678Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 00 81 01 08 00 00 bf 0f 5a e6 65 9c 40
+
+[2026-08-27T06:02:29.678Z] INF: [OpoBudsSocket-XX] Query Notification Capabilities
+
+[2026-08-27T06:02:29.678Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 00 02 02 00 00
+
+[2026-08-27T06:02:29.744Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 00 82 02 04 00 00 02 02 01
+
+[2026-08-27T06:02:29.745Z] INF: [OpoBudsSocket-XX] Subscribe Broadcast Events
+
+[2026-08-27T06:02:29.745Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 14 00 00 05 02 03 0d 00 0c 01 02 03 04 05 06 0d 0e 0f 10 f1 f2
+
+[2026-08-27T06:02:30.179Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 2a 08 00 01 03 01 64 02 64 03 00
+
+[2026-08-27T06:02:30.217Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 2b 08 00 02 03 01 03 02 03 03 04
+
+[2026-08-27T06:02:30.218Z] INF: [OpoBudsSocket-XX] Received Earbuds in-ear status event
+
+[2026-08-27T06:02:30.245Z] INF: [OpoBudsSocket-XX] Response Timeout seq: 3
+
+[2026-08-27T06:02:30.245Z] INF: [OpoBudsSocket-XX] Query Product ID
+
+[2026-08-27T06:02:30.246Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 03 01 04 00 00
+
+[2026-08-27T06:02:30.307Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 03 81 04 04 00 00 12 48 06
+
+[2026-08-27T06:02:30.307Z] INF: [OpoBudsSocket-XX] Query Version
+
+[2026-08-27T06:02:30.308Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 05 01 05 00 00
+
+[2026-08-27T06:02:30.308Z] INF: [OpoBudsSocket-XX] Received Product ID: 0x064812
+
+[2026-08-27T06:02:30.308Z] INF: [OpoBudsSocket-XX] OpoBuds Model Initialized: Realme Buds Air 7
+
+[2026-08-27T06:02:30.308Z] INF: [OpoBudsDevice-XX] Configuration: {
+  "modelId": "064812",
+  "name": "Realme Buds Air 7",
+  "batteryLR": true,
+  "batteryCase": true,
+  "eqPreset": {
+    "original_sound": 0,
+    "deep_bass": 1,
+    "serenade": 2,
+    "clear_bass": 3
+  },
+  "noiseControl": {
+    "off": [
+      1
+    ],
+    "transparency": {
+      "levels": {
+        "regular": [
+          2
+        ]
+      }
+    },
+    "noiseCancellation": {
+      "levels": {
+        "smart": [
+          32
+        ],
+        "mild": [
+          4
+        ],
+        "moderate": [
+          16
+        ],
+        "deep": [
+          8
+        ]
+      }
+    }
+  },
+  "inEarDetection": true,
+  "lowLatencyMode": true,
+  "dualConnection": true,
+  "windNoiseReduction": true,
+  "volumeEnhancer": true,
+  "spatialAudio": true,
+  "highResAudio": true,
+  "dynamicBass": true,
+  "autoAnswer": true,
+  "ring": true,
+  "gestureOptions": {
+    "slots": [
+      {
+        "group": "left",
+        "device": 1,
+        "buttonId": 1,
+        "type": "double"
+      },
+      {
+        "group": "left",
+        "device": 1,
+        "buttonId": 1,
+        "type": "triple"
+      },
+      {
+        "group": "left",
+        "device": 1,
+        "buttonId": 1,
+        "type": "action-hold"
+      },
+      {
+        "group": "right",
+        "device": 2,
+        "buttonId": 1,
+        "type": "double"
+      },
+      {
+        "group": "right",
+        "device": 2,
+        "buttonId": 1,
+        "type": "triple"
+      },
+      {
+        "group": "right",
+        "device": 2,
+        "buttonId": 1,
+        "type": "action-hold"
+      }
+    ],
+    "mapping": {
+      "gestureTypes": {
+        "double": 2,
+        "triple": 3,
+        "action-hold": 4
+      },
+      "actions": {
+        "none": [
+          0
+        ],
+        "play-pause": [
+          1
+        ],
+        "skip-back": [
+          2
+        ],
+        "volume-up": [
+          3
+        ],
+        "volume-down": [
+          4
+        ],
+        "game-mode": [
+          5
+        ],
+        "skip-forward": [
+          6
+        ],
+        "voice-assistant": [
+          7
+        ],
+        "noise-control": [
+          8
+        ]
+      }
+    },
+    "gestures": {
+      "double": {
+        "type": "tap",
+        "actions": [
+          "play-pause",
+          "skip-forward",
+          "voice-assistant",
+          "none"
+        ]
+      },
+      "triple": {
+        "type": "tap",
+        "actions": [
+          "skip-forward",
+          "skip-back",
+          "volume-up",
+          "volume-down",
+          "voice-assistant",
+          "game-mode",
+          "none"
+        ]
+      },
+      "action-hold": {
+        "type": "hold",
+        "actions": [
+          "noise-control",
+          "voice-assistant",
+          "game-mode",
+          "none"
+        ]
+      }
+    }
+  },
+  "albumArtIcon": "earbuds-stem",
+  "budsIcon": "earbuds-stem",
+  "case": "case-round"
+}
+
+[2026-08-27T06:02:30.314Z] INF: [DbusService] Device added: /io/github/maniacx/BudsLink/Devices/hci0/dev_XX_XX_XX_XX_XX_XX
+
+[2026-08-27T06:02:30.367Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 64 00 00 05 81 05 5d 00 00 09 31 2c 31 2c 31 31 31 2c 31 2c 32 2c 31 2e 31 2e 30 2e 36 32 2c 31 2c 33 2c 31 2e 31 2e 30 2e 36 32 2c 32 2c 31 2c 31 31 31 2c 32 2c 32 2c 31 2e 31 2e 30 2e 36 32 2c 32 2c 33 2c 31 2e 31 2e 30 2e 36 32 2c 33 2c 31 2c 31 31 31 2c 33 2c 32 2c 30 38 38 2c 33 2c 33 2c 30 38 38
+
+[2026-08-27T06:02:30.368Z] INF: [OpoBudsSocket-XX] Query Battery
+
+[2026-08-27T06:02:30.368Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 06 01 06 00 00
+
+[2026-08-27T06:02:30.368Z] INF: [OpoBudsSocket-XX] Firmware string: 1,1,111,1,2,1.1.0.62,1,3,1.1.0.62,2,1,111,2,2,1.1.0.62,2,3,1.1.0.62,3,1,111,3,2,088,3,3,088
+
+[2026-08-27T06:02:30.465Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 06 81 06 08 00 00 03 01 64 02 64 03 00
+
+[2026-08-27T06:02:30.465Z] INF: [OpoBudsSocket-XX] Query ANC
+
+[2026-08-27T06:02:30.466Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 09 00 00 0c 01 07 02 00 01 01
+
+[2026-08-27T06:02:30.533Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 0c 81 07 04 00 00 01 01 01
+
+[2026-08-27T06:02:30.533Z] INF: [OpoBudsSocket-XX] Query Features
+
+[2026-08-27T06:02:30.534Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 12 00 00 0d 01 08 0b 00 0a 04 06 11 1a 09 1b 18 1d 08 26
+
+[2026-08-27T06:02:30.534Z] INF: [OpoBudsSocket-XX] Parsed ANC mode byte: 0x01
+
+[2026-08-27T06:02:30.570Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 1d 00 00 0d 81 08 16 00 00 0a 04 00 06 00 11 01 1a 00 09 00 1b 00 18 01 1d 00 08 00 26 00
+
+[2026-08-27T06:02:30.571Z] INF: [OpoBudsSocket-XX] Query EQ Preset
+
+[2026-08-27T06:02:30.571Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 0f 01 09 00 00
+
+[2026-08-27T06:02:30.638Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 09 00 00 0f 81 09 02 00 00 00
+
+[2026-08-27T06:02:30.638Z] INF: [OpoBudsSocket-XX] Query Key Functions
+
+[2026-08-27T06:02:30.639Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0a 00 00 08 01 0a 03 00 02 01 02
+
+[2026-08-27T06:02:30.639Z] INF: [OpoBudsSocket-XX] Parsed EQ preset: 0
+
+[2026-08-27T06:02:30.676Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 31 00 00 08 81 0a 2a 00 00 0a 02 01 01 00 02 01 02 01 02 01 03 06 02 01 04 08 02 01 06 00 01 01 01 00 01 01 02 01 01 01 03 06 01 01 04 08 01 01 06 00
+
+[2026-08-27T06:02:30.677Z] INF: [OpoBudsSocket-XX] Parsed gestures hex: 02010100020102010201030602010408020106000101010001010201010103060101040801010600
+
+[2026-08-27T06:02:34.699Z] INF: [OpoBudsSocket-XX] Set ANC mode bytes: 02
+
+[2026-08-27T06:02:34.699Z] INF: [OpoBudsSocket-XX] Set ANC Mode
+
+[2026-08-27T06:02:34.699Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0a 00 00 04 04 0b 03 00 01 01 02
+
+[2026-08-27T06:02:34.801Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 04 84 0b 01 00 00
+
+[2026-08-27T06:02:34.838Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 2c 04 00 03 01 01 02
+
+[2026-08-27T06:02:36.274Z] INF: [OpoBudsSocket-XX] Set ANC mode bytes: 01
+
+[2026-08-27T06:02:36.274Z] INF: [OpoBudsSocket-XX] Set ANC Mode
+
+[2026-08-27T06:02:36.275Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0a 00 00 04 04 0c 03 00 01 01 01
+
+[2026-08-27T06:02:36.322Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 04 84 0c 01 00 00
+
+[2026-08-27T06:02:36.360Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 2d 04 00 03 01 01 01
+
+[2026-08-27T06:02:38.487Z] INF: [OpoBudsSocket-XX] Set ANC mode bytes: 20
+
+[2026-08-27T06:02:38.487Z] INF: [OpoBudsSocket-XX] Set ANC Mode
+
+[2026-08-27T06:02:38.487Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0a 00 00 04 04 0d 03 00 01 01 20
+
+[2026-08-27T06:02:38.579Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 04 84 0d 01 00 00
+
+[2026-08-27T06:02:38.632Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 2e 04 00 03 01 01 20 aa 0b 00 00 04 02 2e 04 00 03 04 01 10
+
+[2026-08-27T06:02:38.633Z] INF: [OpoBudsSocket-XX] Set ANC mode bytes: 20
+
+[2026-08-27T06:02:38.633Z] INF: [OpoBudsSocket-XX] Set ANC Mode
+
+[2026-08-27T06:02:38.633Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0a 00 00 04 04 0e 03 00 01 01 20
+
+[2026-08-27T06:02:38.708Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 04 84 0e 01 00 00
+
+[2026-08-27T06:02:38.737Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 2f 04 00 03 01 01 20
+
+[2026-08-27T06:02:38.774Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 2f 04 00 03 04 01 10
+
+[2026-08-27T06:02:42.222Z] INF: [OpoBudsSocket-XX] Set ANC mode bytes: 02
+
+[2026-08-27T06:02:42.222Z] INF: [OpoBudsSocket-XX] Set ANC Mode
+
+[2026-08-27T06:02:42.223Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0a 00 00 04 04 0f 03 00 01 01 02
+
+[2026-08-27T06:02:42.308Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 04 84 0f 01 00 00
+
+[2026-08-27T06:02:42.345Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 30 04 00 03 01 01 02
+
+[2026-08-27T06:02:47.488Z] INF: [OpoBudsSocket-XX] Set EQ Preset: 1
+
+[2026-08-27T06:02:47.489Z] INF: [OpoBudsSocket-XX] Set EQ Preset
+
+[2026-08-27T06:02:47.489Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 08 00 00 06 04 10 01 00 01
+
+[2026-08-27T06:02:47.542Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 06 84 10 01 00 00
+
+[2026-08-27T06:02:47.574Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 04 05 31 01 00 01
+
+[2026-08-27T06:02:47.575Z] INF: [OpoBudsSocket-XX] Parsed EQ preset: 1
+
+[2026-08-27T06:02:47.582Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 08 05 32 04 00 fb 05 00 01
+
+[2026-08-27T06:02:47.582Z] INF: [OpoBudsSocket-XX] Parsed gestures hex: 050001
+
+[2026-08-27T06:02:50.317Z] INF: [OpoBudsSocket-XX] Set EQ Preset: 2
+
+[2026-08-27T06:02:50.317Z] INF: [OpoBudsSocket-XX] Set EQ Preset
+
+[2026-08-27T06:02:50.318Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 08 00 00 06 04 11 01 00 02
+
+[2026-08-27T06:02:50.377Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 06 84 11 01 00 00 aa 08 00 00 04 05 33 01 00 02
+
+[2026-08-27T06:02:50.378Z] INF: [OpoBudsSocket-XX] Parsed EQ preset: 2
+
+[2026-08-27T06:02:50.395Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 08 05 34 04 00 fb 05 00 01
+
+[2026-08-27T06:02:50.395Z] INF: [OpoBudsSocket-XX] Parsed gestures hex: 050001
+
+[2026-08-27T06:02:52.461Z] INF: [OpoBudsSocket-XX] Set EQ Preset: 3
+
+[2026-08-27T06:02:52.461Z] INF: [OpoBudsSocket-XX] Set EQ Preset
+
+[2026-08-27T06:02:52.461Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 08 00 00 06 04 12 01 00 03
+
+[2026-08-27T06:02:52.510Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 06 84 12 01 00 00
+
+[2026-08-27T06:02:52.512Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 04 05 35 01 00 03
+
+[2026-08-27T06:02:52.512Z] INF: [OpoBudsSocket-XX] Parsed EQ preset: 3
+
+[2026-08-27T06:02:52.518Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 08 05 36 04 00 fb 05 00 01
+
+[2026-08-27T06:02:52.518Z] INF: [OpoBudsSocket-XX] Parsed gestures hex: 050001
+
+[2026-08-27T06:02:53.945Z] INF: [OpoBudsSocket-XX] Set EQ Preset: 0
+
+[2026-08-27T06:02:53.945Z] INF: [OpoBudsSocket-XX] Set EQ Preset
+
+[2026-08-27T06:02:53.945Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 08 00 00 06 04 13 01 00 00
+
+[2026-08-27T06:02:53.984Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 06 84 13 01 00 00 aa 08 00 00 04 05 37 01 00 00
+
+[2026-08-27T06:02:53.984Z] INF: [OpoBudsSocket-XX] Parsed EQ preset: 0
+
+[2026-08-27T06:02:53.999Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 08 05 38 04 00 fb 05 00 01
+
+[2026-08-27T06:02:54.000Z] INF: [OpoBudsSocket-XX] Parsed gestures hex: 050001
+
+[2026-08-27T06:02:55.994Z] INF: [OpoBudsSocket-XX] Set Dynamic Bass: true
+
+[2026-08-27T06:02:55.994Z] INF: [OpoBudsSocket-XX] Set Dynamic Bass
+
+[2026-08-27T06:02:55.994Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 09 00 00 03 04 14 02 00 1d 01
+
+[2026-08-27T06:02:56.045Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 03 84 14 01 00 00
+
+[2026-08-27T06:02:57.035Z] INF: [OpoBudsSocket-XX] Set Dynamic Bass: false
+
+[2026-08-27T06:02:57.035Z] INF: [OpoBudsSocket-XX] Set Dynamic Bass
+
+[2026-08-27T06:02:57.036Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 09 00 00 03 04 15 02 00 1d 00
+
+[2026-08-27T06:02:57.097Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 03 84 15 01 00 00
+
+[2026-08-27T06:02:57.872Z] INF: [OpoBudsSocket-XX] Set Spatial Audio: true
+
+[2026-08-27T06:02:57.872Z] INF: [OpoBudsSocket-XX] Set Spatial Audio
+
+[2026-08-27T06:02:57.873Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 09 00 00 03 04 16 02 00 1b 01
+
+[2026-08-27T06:02:57.916Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 03 84 16 01 00 00
+
+[2026-08-27T06:02:59.127Z] INF: [OpoBudsSocket-XX] Set Spatial Audio: false
+
+[2026-08-27T06:02:59.127Z] INF: [OpoBudsSocket-XX] Set Spatial Audio
+
+[2026-08-27T06:02:59.127Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 09 00 00 03 04 17 02 00 1b 00
+
+[2026-08-27T06:02:59.194Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 03 84 17 01 00 00
+
+[2026-08-27T06:03:00.055Z] INF: [OpoBudsSocket-XX] Set Volume Enhancer: true
+
+[2026-08-27T06:03:00.055Z] INF: [OpoBudsSocket-XX] Set Volume Enhancer
+
+[2026-08-27T06:03:00.055Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 09 00 00 03 04 18 02 00 09 01
+
+[2026-08-27T06:03:00.104Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 03 84 18 01 00 00
+
+[2026-08-27T06:03:00.121Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 3e 04 00 03 01 01 02
+
+[2026-08-27T06:03:01.001Z] INF: [OpoBudsSocket-XX] Set Volume Enhancer: false
+
+[2026-08-27T06:03:01.002Z] INF: [OpoBudsSocket-XX] Set Volume Enhancer
+
+[2026-08-27T06:03:01.002Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 09 00 00 03 04 19 02 00 09 00
+
+[2026-08-27T06:03:01.050Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 03 84 19 01 00 00
+
+[2026-08-27T06:03:01.066Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 40 04 00 03 01 01 02
+
+[2026-08-27T06:03:02.043Z] INF: [OpoBudsSocket-XX] Set Volume Enhancer: true
+
+[2026-08-27T06:03:02.044Z] INF: [OpoBudsSocket-XX] Set Volume Enhancer
+
+[2026-08-27T06:03:02.044Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 09 00 00 03 04 1a 02 00 09 01
+
+[2026-08-27T06:03:02.099Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 03 84 1a 01 00 00
+
+[2026-08-27T06:03:02.101Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 42 04 00 03 01 01 02
+
+[2026-08-27T06:03:04.007Z] INF: [OpoBudsSocket-XX] Set Volume Enhancer: false
+
+[2026-08-27T06:03:04.007Z] INF: [OpoBudsSocket-XX] Set Volume Enhancer
+
+[2026-08-27T06:03:04.007Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 09 00 00 03 04 1b 02 00 09 00
+
+[2026-08-27T06:03:04.041Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 03 84 1b 01 00 00
+
+[2026-08-27T06:03:04.060Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 44 04 00 03 01 01 02
+
+[2026-08-27T06:03:06.896Z] INF: [OpoBudsSocket-XX] Set Wind Noise: true
+
+[2026-08-27T06:03:06.896Z] INF: [OpoBudsSocket-XX] Set Wind Noise
+
+[2026-08-27T06:03:06.896Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 09 00 00 03 04 1c 02 00 1a 01
+
+[2026-08-27T06:03:06.953Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 03 84 1c 01 00 00
+
+[2026-08-27T06:03:11.825Z] INF: [OpoBudsSocket-XX] Set Wind Noise: false
+
+[2026-08-27T06:03:11.825Z] INF: [OpoBudsSocket-XX] Set Wind Noise
+
+[2026-08-27T06:03:11.826Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 09 00 00 03 04 1d 02 00 1a 00
+
+[2026-08-27T06:03:11.920Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 03 84 1d 01 00 00
+
+[2026-08-27T06:03:13.394Z] INF: [OpoBudsSocket-XX] Set Low Latency Game Mode: true
+
+[2026-08-27T06:03:13.394Z] INF: [OpoBudsSocket-XX] Set Game Mode
+
+[2026-08-27T06:03:13.394Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 09 00 00 03 04 1e 02 00 06 01
+
+[2026-08-27T06:03:13.477Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 09 00 00 04 02 47 02 00 05 01 aa 08 00 00 03 84 1e 01 00 00
+
+[2026-08-27T06:03:15.449Z] INF: [OpoBudsSocket-XX] Set Low Latency Game Mode: false
+
+[2026-08-27T06:03:15.449Z] INF: [OpoBudsSocket-XX] Set Game Mode
+
+[2026-08-27T06:03:15.449Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 09 00 00 03 04 1f 02 00 06 00
+
+[2026-08-27T06:03:15.556Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 09 00 00 04 02 49 02 00 05 00 aa 08 00 00 03 84 1f 01 00 00
+
+[2026-08-27T06:03:18.101Z] INF: [OpoBudsSocket-XX] Set In-Ear Detection: true
+
+[2026-08-27T06:03:18.101Z] INF: [OpoBudsSocket-XX] Set In-Ear Detection
+
+[2026-08-27T06:03:18.102Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 09 00 00 03 04 20 02 00 04 01
+
+[2026-08-27T06:03:18.165Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 03 84 20 01 00 00
+
+[2026-08-27T06:03:19.387Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 4c 08 00 01 03 01 64 02 64 03 00
+
+[2026-08-27T06:03:24.037Z] INF: [OpoBudsSocket-XX] Set Auto Answer: true
+
+[2026-08-27T06:03:24.037Z] INF: [OpoBudsSocket-XX] Set Auto Answer
+
+[2026-08-27T06:03:24.038Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 09 00 00 03 04 21 02 00 08 01
+
+[2026-08-27T06:03:24.082Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 03 84 21 01 00 00
+
+[2026-08-27T06:03:29.594Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 4e 04 00 03 01 01 01
+
+[2026-08-27T06:03:30.628Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 4f 08 00 01 03 01 64 02 64 03 00
+
+[2026-08-27T06:03:30.630Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 50 08 00 02 03 01 01 02 01 03 04
+
+[2026-08-27T06:03:30.630Z] INF: [OpoBudsSocket-XX] Received Earbuds in-ear status event
+
+[2026-08-27T06:03:31.446Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 51 04 00 03 01 01 01
+
+[2026-08-27T06:03:34.527Z] INF: [OpoBudsSocket-XX] Set Find Buds: true
+
+[2026-08-27T06:03:34.527Z] INF: [OpoBudsSocket-XX] Set Find Buds
+
+[2026-08-27T06:03:34.527Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 08 00 00 00 04 22 01 00 01
+
+[2026-08-27T06:03:34.568Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 00 84 22 01 00 00
+
+[2026-08-27T06:03:38.021Z] INF: [OpoBudsSocket-XX] Set Find Buds: false
+
+[2026-08-27T06:03:38.021Z] INF: [OpoBudsSocket-XX] Set Find Buds
+
+[2026-08-27T06:03:38.022Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 08 00 00 00 04 23 01 00 00
+
+[2026-08-27T06:03:38.114Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 00 84 23 01 00 00
+
+[2026-08-27T06:03:39.374Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 52 08 00 01 03 01 64 02 64 03 00
+
+[2026-08-27T06:03:39.411Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 53 08 00 01 03 01 64 02 64 03 00
+
+[2026-08-27T06:03:43.836Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 54 08 00 01 03 01 64 02 64 03 00
+
+[2026-08-27T06:03:43.888Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 55 08 00 02 03 01 03 02 03 03 04
+
+[2026-08-27T06:03:43.889Z] INF: [OpoBudsSocket-XX] Received Earbuds in-ear status event
+
+[2026-08-27T06:03:44.799Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 56 04 00 03 01 01 02
+
+[2026-08-27T06:03:50.208Z] INF: [OpoBudsSocket-XX] Set gesture slot: dev=0x01 btn=0x01 type=0x02 action=0x06
+
+[2026-08-27T06:03:50.208Z] INF: [OpoBudsSocket-XX] Set Key Function
+
+[2026-08-27T06:03:50.209Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0b 00 00 01 04 24 04 00 01 01 02 06
+
+[2026-08-27T06:03:50.263Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 01 84 24 01 00 00
+
+[2026-08-27T06:03:51.424Z] INF: [OpoBudsSocket-XX] Set gesture slot: dev=0x01 btn=0x01 type=0x02 action=0x01
+
+[2026-08-27T06:03:51.424Z] INF: [OpoBudsSocket-XX] Set Key Function
+
+[2026-08-27T06:03:51.424Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0b 00 00 01 04 25 04 00 01 01 02 01
+
+[2026-08-27T06:03:51.455Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 01 84 25 01 00 00
+
+[2026-08-27T06:03:53.246Z] INF: [OpoBudsSocket-XX] Set gesture slot: dev=0x01 btn=0x01 type=0x03 action=0x02
+
+[2026-08-27T06:03:53.246Z] INF: [OpoBudsSocket-XX] Set Key Function
+
+[2026-08-27T06:03:53.247Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0b 00 00 01 04 26 04 00 01 01 03 02
+
+[2026-08-27T06:03:53.286Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 01 84 26 01 00 00
+
+[2026-08-27T06:03:54.732Z] INF: [OpoBudsSocket-XX] Set gesture slot: dev=0x01 btn=0x01 type=0x03 action=0x06
+
+[2026-08-27T06:03:54.732Z] INF: [OpoBudsSocket-XX] Set Key Function
+
+[2026-08-27T06:03:54.732Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0b 00 00 01 04 27 04 00 01 01 03 06
+
+[2026-08-27T06:03:54.756Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 01 84 27 01 00 00
+
+[2026-08-27T06:03:56.351Z] INF: [OpoBudsSocket-XX] Set gesture slot: dev=0x01 btn=0x01 type=0x04 action=0x07
+
+[2026-08-27T06:03:56.351Z] INF: [OpoBudsSocket-XX] Set Key Function
+
+[2026-08-27T06:03:56.351Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0b 00 00 01 04 28 04 00 01 01 04 07
+
+[2026-08-27T06:03:56.401Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 01 84 28 01 00 00
+
+[2026-08-27T06:03:57.447Z] INF: [OpoBudsSocket-XX] Set gesture slot: dev=0x01 btn=0x01 type=0x04 action=0x08
+
+[2026-08-27T06:03:57.447Z] INF: [OpoBudsSocket-XX] Set Key Function
+
+[2026-08-27T06:03:57.447Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0b 00 00 01 04 29 04 00 01 01 04 08
+
+[2026-08-27T06:03:57.471Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 01 84 29 01 00 00
+
+[2026-08-27T06:04:01.669Z] INF: [OpoBudsSocket-XX] Set gesture slot: dev=0x02 btn=0x01 type=0x02 action=0x06
+
+[2026-08-27T06:04:01.669Z] INF: [OpoBudsSocket-XX] Set Key Function
+
+[2026-08-27T06:04:01.670Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0b 00 00 01 04 2a 04 00 02 01 02 06
+
+[2026-08-27T06:04:01.723Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 01 84 2a 01 00 00
+
+[2026-08-27T06:04:02.748Z] INF: [OpoBudsSocket-XX] Set gesture slot: dev=0x02 btn=0x01 type=0x02 action=0x01
+
+[2026-08-27T06:04:02.748Z] INF: [OpoBudsSocket-XX] Set Key Function
+
+[2026-08-27T06:04:02.749Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0b 00 00 01 04 2b 04 00 02 01 02 01
+
+[2026-08-27T06:04:02.773Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 01 84 2b 01 00 00
+
+[2026-08-27T06:04:04.061Z] INF: [OpoBudsSocket-XX] Set gesture slot: dev=0x02 btn=0x01 type=0x03 action=0x02
+
+[2026-08-27T06:04:04.061Z] INF: [OpoBudsSocket-XX] Set Key Function
+
+[2026-08-27T06:04:04.062Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0b 00 00 01 04 2c 04 00 02 01 03 02
+
+[2026-08-27T06:04:04.085Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 01 84 2c 01 00 00
+
+[2026-08-27T06:04:05.323Z] INF: [OpoBudsSocket-XX] Set gesture slot: dev=0x02 btn=0x01 type=0x03 action=0x06
+
+[2026-08-27T06:04:05.323Z] INF: [OpoBudsSocket-XX] Set Key Function
+
+[2026-08-27T06:04:05.323Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0b 00 00 01 04 2d 04 00 02 01 03 06
+
+[2026-08-27T06:04:05.384Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 01 84 2d 01 00 00
+
+[2026-08-27T06:04:08.119Z] INF: [OpoBudsSocket-XX] Set gesture slot: dev=0x02 btn=0x01 type=0x04 action=0x07
+
+[2026-08-27T06:04:08.119Z] INF: [OpoBudsSocket-XX] Set Key Function
+
+[2026-08-27T06:04:08.120Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0b 00 00 01 04 2e 04 00 02 01 04 07
+
+[2026-08-27T06:04:08.180Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 01 84 2e 01 00 00
+
+[2026-08-27T06:04:09.192Z] INF: [OpoBudsSocket-XX] Set gesture slot: dev=0x02 btn=0x01 type=0x04 action=0x08
+
+[2026-08-27T06:04:09.192Z] INF: [OpoBudsSocket-XX] Set Key Function
+
+[2026-08-27T06:04:09.192Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0b 00 00 01 04 2f 04 00 02 01 04 08
+
+[2026-08-27T06:04:09.264Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 01 84 2f 01 00 00
+
+[2026-08-27T06:04:11.958Z] INF: [Main] window close requested
+
+[2026-08-27T06:04:11.963Z] INF: [SocketHandler-OpoBudsSocket-XX] Destroying socket
+
+[2026-08-27T06:04:11.965Z] ERR: [SocketHandler-OpoBudsSocket-XX] SocketHandler Disconnected Gio.IOErrorEnum: Operation was cancelled
+

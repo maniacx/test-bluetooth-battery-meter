@@ -1,0 +1,657 @@
+==============================================================================
+BudsLink runtime.log — BEFORE FIX (stock upstream/opo-revised)
+==============================================================================
+
+Device: Realme Buds Air 7
+Product ID: 0x064812
+Firmware: 1.1.0.62
+Driver: opoBuds (RFCOMM UUID 0000079a-d102-11e1-9b23-00025b00a5a5)
+Log source: ~/.var/app/io.github.maniacx.BudsLink/.local/state/log/runtime.log
+Exported: 2026-08-27 17:54
+
+Build: maniacx opo-revised as shipped (no local commits).
+Sessions included:
+  - 2026-08-27 05:22 UTC — connect + ANC quick-menu only
+  - 2026-08-27 05:59 UTC — connect + reads; prefs did NOT send EQ/features/gestures
+
+Markers proving unfixed build:
+  - Configuration dump uses noiseControl "byte": N (not arrays)
+  - gestureOptions.default hex present in config
+  - No "Set EQ Preset" / "Set Dynamic Bass" / "Set gesture slot" lines
+  - Only "Set ANC Mode" from quick menu works
+
+Known issue: duplicate _monitorOpoBudsListGsettings overwrote GSettings
+instead of applying changes to the socket.
+
+------------------------------------------------------------------------------
+
+[2026-08-27T05:22:07.404Z] INF: [EnhancedDeviceSupportManager] Creating enhanced device path=/org/bluez/hci0/dev_XX_XX_XX_XX_XX_XX type=opoBuds
+
+[2026-08-27T05:22:07.405Z] INF: [OpoBudsDevice-XX] ------------------- OpoBudsDevice init -------------------
+
+[2026-08-27T05:22:07.405Z] INF: [OpoBudsSocket-XX] OpoBudsSocket init
+
+[2026-08-27T05:22:07.405Z] INF: [ProfileManager] Registering profile opoBuds
+
+[2026-08-27T05:22:07.411Z] INF: [ProfileManager] ConnectProfile Failed for 0000079a-d102-11e1-9b23-00025b00a5a5 on /org/bluez/hci0/dev_XX_XX_XX_XX_XX_XX. Gio.IOErrorEnum: GDBus.Error:org.bluez.Error.InProgress: br-connection-busy
+
+[2026-08-27T05:22:07.494Z] INF: [ProfileManager] Profile NewConnection opoBuds
+
+[2026-08-27T05:22:07.496Z] INF: [SocketHandler-OpoBudsSocket-XX] Starting socket with fd: 34
+
+[2026-08-27T05:22:07.497Z] INF: [OpoBudsSocket-XX] Starting post connect initialization
+
+[2026-08-27T05:22:07.497Z] INF: [OpoBudsSocket-XX] Handshake
+
+[2026-08-27T05:22:07.497Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 00 01 01 00 00
+
+[2026-08-27T05:22:07.545Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 00 81 01 08 00 00 bf 0f 5a e6 65 9c 40
+
+[2026-08-27T05:22:07.545Z] INF: [OpoBudsSocket-XX] Query Notification Capabilities
+
+[2026-08-27T05:22:07.545Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 00 02 02 00 00
+
+[2026-08-27T05:22:07.569Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 00 82 02 04 00 00 02 02 01
+
+[2026-08-27T05:22:07.569Z] INF: [OpoBudsSocket-XX] Subscribe Broadcast Events
+
+[2026-08-27T05:22:07.570Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 14 00 00 05 02 03 0d 00 0c 01 02 03 04 05 06 0d 0e 0f 10 f1 f2
+
+[2026-08-27T05:22:08.047Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 13 08 00 01 03 01 64 02 64 03 00
+
+[2026-08-27T05:22:08.054Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 14 08 00 02 03 01 03 02 03 03 04
+
+[2026-08-27T05:22:08.055Z] INF: [OpoBudsSocket-XX] Received Earbuds in-ear status event
+
+[2026-08-27T05:22:08.070Z] INF: [OpoBudsSocket-XX] Response Timeout seq: 3
+
+[2026-08-27T05:22:08.070Z] INF: [OpoBudsSocket-XX] Query Product ID
+
+[2026-08-27T05:22:08.070Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 03 01 04 00 00
+
+[2026-08-27T05:22:08.144Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 03 81 04 04 00 00 12 48 06
+
+[2026-08-27T05:22:08.145Z] INF: [OpoBudsSocket-XX] Query Version
+
+[2026-08-27T05:22:08.145Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 05 01 05 00 00
+
+[2026-08-27T05:22:08.145Z] INF: [OpoBudsSocket-XX] Received Product ID: 0x064812
+
+[2026-08-27T05:22:08.145Z] INF: [OpoBudsSocket-XX] OpoBuds Model Initialized: Realme Buds Air 7
+
+[2026-08-27T05:22:08.145Z] INF: [OpoBudsDevice-XX] Configuration: {
+  "modelId": "064812",
+  "name": "Realme Buds Air 7",
+  "batteryLR": true,
+  "batteryCase": true,
+  "eqPreset": {
+    "original_sound": 0,
+    "deep_bass": 1,
+    "serenade": 2,
+    "clear_bass": 3
+  },
+  "noiseControl": {
+    "off": {
+      "byte": 1
+    },
+    "transparency": {
+      "byte": 2
+    },
+    "noiseCancellation": {
+      "levels": {
+        "smart": 32,
+        "mild": 4,
+        "moderate": 16,
+        "deep": 8
+      }
+    }
+  },
+  "inEarDetection": true,
+  "lowLatencyMode": true,
+  "dualConnection": true,
+  "windNoiseReduction": true,
+  "volumeEnhancer": true,
+  "spatialAudio": true,
+  "highResAudio": true,
+  "dynamicBass": true,
+  "autoAnswer": true,
+  "ring": true,
+  "gestureOptions": {
+    "default": "02010100020102010201030602010408020106000101010001010201010103060101040801010600",
+    "slots": [
+      {
+        "group": "left",
+        "device": 1,
+        "buttonId": 1,
+        "type": "double"
+      },
+      {
+        "group": "left",
+        "device": 1,
+        "buttonId": 1,
+        "type": "triple"
+      },
+      {
+        "group": "left",
+        "device": 1,
+        "buttonId": 1,
+        "type": "action-hold"
+      },
+      {
+        "group": "right",
+        "device": 2,
+        "buttonId": 1,
+        "type": "double"
+      },
+      {
+        "group": "right",
+        "device": 2,
+        "buttonId": 1,
+        "type": "triple"
+      },
+      {
+        "group": "right",
+        "device": 2,
+        "buttonId": 1,
+        "type": "action-hold"
+      }
+    ],
+    "mapping": {
+      "gestureTypes": {
+        "double": 2,
+        "triple": 3,
+        "action-hold": 4
+      },
+      "actions": {
+        "none": [
+          0
+        ],
+        "play-pause": [
+          1
+        ],
+        "skip-back": [
+          2
+        ],
+        "volume-up": [
+          3
+        ],
+        "volume-down": [
+          4
+        ],
+        "game-mode": [
+          5
+        ],
+        "skip-forward": [
+          6
+        ],
+        "voice-assistant": [
+          7
+        ],
+        "noise-control": [
+          8
+        ]
+      }
+    },
+    "gestures": {
+      "double": {
+        "type": "tap",
+        "actions": [
+          "play-pause",
+          "skip-forward",
+          "voice-assistant",
+          "none"
+        ]
+      },
+      "triple": {
+        "type": "tap",
+        "actions": [
+          "skip-forward",
+          "skip-back",
+          "volume-up",
+          "volume-down",
+          "voice-assistant",
+          "game-mode",
+          "none"
+        ]
+      },
+      "action-hold": {
+        "type": "hold",
+        "actions": [
+          "noise-control",
+          "voice-assistant",
+          "game-mode",
+          "none"
+        ]
+      }
+    }
+  },
+  "albumArtIcon": "earbuds-stem",
+  "budsIcon": "earbuds-stem",
+  "case": "case-round"
+}
+
+[2026-08-27T05:22:08.152Z] INF: [DbusService] Device added: /io/github/maniacx/BudsLink/Devices/hci0/dev_XX_XX_XX_XX_XX_XX
+
+[2026-08-27T05:22:08.237Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 64 00 00 05 81 05 5d 00 00 09 31 2c 31 2c 31 31 31 2c 31 2c 32 2c 31 2e 31 2e 30 2e 36 32 2c 31 2c 33 2c 31 2e 31 2e 30 2e 36 32 2c 32 2c 31 2c 31 31 31 2c 32 2c 32 2c 31 2e 31 2e 30 2e 36 32 2c 32 2c 33 2c 31 2e 31 2e 30 2e 36 32 2c 33 2c 31 2c 31 31 31 2c 33 2c 32 2c 30 38 38 2c 33 2c 33 2c 30 38 38
+
+[2026-08-27T05:22:08.237Z] INF: [OpoBudsSocket-XX] Query Battery
+
+[2026-08-27T05:22:08.237Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 06 01 06 00 00
+
+[2026-08-27T05:22:08.238Z] INF: [OpoBudsSocket-XX] Firmware string: 1,1,111,1,2,1.1.0.62,1,3,1.1.0.62,2,1,111,2,2,1.1.0.62,2,3,1.1.0.62,3,1,111,3,2,088,3,3,088
+
+[2026-08-27T05:22:08.347Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 06 81 06 08 00 00 03 01 64 02 64 03 00
+
+[2026-08-27T05:22:08.347Z] INF: [OpoBudsSocket-XX] Query ANC
+
+[2026-08-27T05:22:08.348Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 09 00 00 0c 01 07 02 00 01 01
+
+[2026-08-27T05:22:08.433Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 0c 81 07 04 00 00 01 01 20
+
+[2026-08-27T05:22:08.433Z] INF: [OpoBudsSocket-XX] Query Features
+
+[2026-08-27T05:22:08.434Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 12 00 00 0d 01 08 0b 00 0a 04 06 11 1a 09 1b 18 1d 08 26
+
+[2026-08-27T05:22:08.434Z] INF: [OpoBudsSocket-XX] Parsed ANC mode byte: 0x20
+
+[2026-08-27T05:22:08.434Z] INF: [OpoBudsSocket-XX] Set ANC mode byte: 0x20
+
+[2026-08-27T05:22:08.439Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 15 04 00 03 01 01 20
+
+[2026-08-27T05:22:08.447Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 15 04 00 03 04 01 10
+
+[2026-08-27T05:22:08.534Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 1d 00 00 0d 81 08 16 00 00 0a 04 00 06 00 11 01 1a 00 09 00 1b 00 18 01 1d 00 08 00 26 00
+
+[2026-08-27T05:22:08.535Z] INF: [OpoBudsSocket-XX] Query EQ Preset
+
+[2026-08-27T05:22:08.535Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 0f 01 09 00 00
+
+[2026-08-27T05:22:08.662Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 09 00 00 0f 81 09 02 00 00 00
+
+[2026-08-27T05:22:08.662Z] INF: [OpoBudsSocket-XX] Query Key Functions
+
+[2026-08-27T05:22:08.662Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0a 00 00 08 01 0a 03 00 02 01 02
+
+[2026-08-27T05:22:08.663Z] INF: [OpoBudsSocket-XX] Parsed EQ preset: 0
+
+[2026-08-27T05:22:08.775Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 31 00 00 08 81 0a 2a 00 00 0a 02 01 01 00 02 01 02 01 02 01 03 06 02 01 04 08 02 01 06 00 01 01 01 00 01 01 02 01 01 01 03 06 01 01 04 08 01 01 06 00
+
+[2026-08-27T05:22:08.775Z] INF: [OpoBudsSocket-XX] Set ANC Mode
+
+[2026-08-27T05:22:08.776Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0a 00 00 04 04 0b 03 00 01 01 20
+
+[2026-08-27T05:22:08.776Z] INF: [OpoBudsSocket-XX] Parsed gestures hex: 02010100020102010201030602010408020106000101010001010201010103060101040801010600
+
+[2026-08-27T05:22:08.889Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 04 84 0b 01 00 00
+
+[2026-08-27T05:22:08.942Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 16 04 00 03 01 01 20 aa 0b 00 00 04 02 16 04 00 03 04 01 10
+
+[2026-08-27T05:22:10.774Z] INF: [OpoBudsSocket-XX] Set ANC mode byte: 0x01
+
+[2026-08-27T05:22:10.774Z] INF: [OpoBudsSocket-XX] Set ANC Mode
+
+[2026-08-27T05:22:10.774Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0a 00 00 04 04 0c 03 00 01 01 01
+
+[2026-08-27T05:22:10.816Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 04 84 0c 01 00 00
+
+[2026-08-27T05:22:10.854Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 17 04 00 03 01 01 01
+
+[2026-08-27T05:22:12.462Z] INF: [OpoBudsSocket-XX] Set ANC mode byte: 0x02
+
+[2026-08-27T05:22:12.463Z] INF: [OpoBudsSocket-XX] Set ANC Mode
+
+[2026-08-27T05:22:12.463Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0a 00 00 04 04 0d 03 00 01 01 02
+
+[2026-08-27T05:22:12.547Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 04 84 0d 01 00 00
+
+[2026-08-27T05:22:12.584Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 18 04 00 03 01 01 02
+
+[2026-08-27T05:22:14.186Z] INF: [OpoBudsSocket-XX] Set ANC mode byte: 0x20
+
+[2026-08-27T05:22:14.186Z] INF: [OpoBudsSocket-XX] Set ANC Mode
+
+[2026-08-27T05:22:14.187Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0a 00 00 04 04 0e 03 00 01 01 20
+
+[2026-08-27T05:22:14.243Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 04 84 0e 01 00 00
+
+[2026-08-27T05:22:14.317Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 19 04 00 03 01 01 20
+
+[2026-08-27T05:22:14.348Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 19 04 00 03 04 01 10
+
+[2026-08-27T05:22:19.519Z] INF: [OpoBudsSocket-XX] Set ANC mode byte: 0x02
+
+[2026-08-27T05:22:19.519Z] INF: [OpoBudsSocket-XX] Set ANC Mode
+
+[2026-08-27T05:22:19.520Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0a 00 00 04 04 0f 03 00 01 01 02
+
+[2026-08-27T05:22:19.591Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 04 84 0f 01 00 00
+
+[2026-08-27T05:22:19.621Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 1a 04 00 03 01 01 02
+
+[2026-08-27T05:23:03.118Z] INF: [Main] window close requested
+
+[2026-08-27T05:23:03.120Z] INF: [SocketHandler-OpoBudsSocket-XX] Destroying socket
+
+[2026-08-27T05:23:03.122Z] ERR: [SocketHandler-OpoBudsSocket-XX] SocketHandler Disconnected Gio.IOErrorEnum: Operation was cancelled
+
+[2026-08-27T05:59:14.221Z] INF: [EnhancedDeviceSupportManager] Creating enhanced device path=/org/bluez/hci0/dev_XX_XX_XX_XX_XX_XX type=opoBuds
+
+[2026-08-27T05:59:14.221Z] INF: [OpoBudsDevice-XX] ------------------- OpoBudsDevice init -------------------
+
+[2026-08-27T05:59:14.222Z] INF: [OpoBudsSocket-XX] OpoBudsSocket init
+
+[2026-08-27T05:59:14.222Z] INF: [ProfileManager] Registering profile opoBuds
+
+[2026-08-27T05:59:14.226Z] INF: [ProfileManager] ConnectProfile Failed for 0000079a-d102-11e1-9b23-00025b00a5a5 on /org/bluez/hci0/dev_XX_XX_XX_XX_XX_XX. Gio.IOErrorEnum: GDBus.Error:org.bluez.Error.InProgress: br-connection-busy
+
+[2026-08-27T05:59:14.727Z] INF: [ProfileManager] ConnectProfile Failed for 0000079a-d102-11e1-9b23-00025b00a5a5 on /org/bluez/hci0/dev_XX_XX_XX_XX_XX_XX. Gio.IOErrorEnum: GDBus.Error:org.bluez.Error.InProgress: br-connection-busy
+
+[2026-08-27T05:59:14.730Z] INF: [ProfileManager] Profile NewConnection opoBuds
+
+[2026-08-27T05:59:14.730Z] INF: [SocketHandler-OpoBudsSocket-XX] Starting socket with fd: 34
+
+[2026-08-27T05:59:14.731Z] INF: [OpoBudsSocket-XX] Starting post connect initialization
+
+[2026-08-27T05:59:14.731Z] INF: [OpoBudsSocket-XX] Handshake
+
+[2026-08-27T05:59:14.732Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 00 01 01 00 00
+
+[2026-08-27T05:59:14.842Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 00 81 01 08 00 00 bf 0f 5a e6 65 9c 40
+
+[2026-08-27T05:59:14.842Z] INF: [OpoBudsSocket-XX] Query Notification Capabilities
+
+[2026-08-27T05:59:14.843Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 00 02 02 00 00
+
+[2026-08-27T05:59:14.908Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 00 82 02 04 00 00 02 02 01
+
+[2026-08-27T05:59:14.909Z] INF: [OpoBudsSocket-XX] Subscribe Broadcast Events
+
+[2026-08-27T05:59:14.909Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 14 00 00 05 02 03 0d 00 0c 01 02 03 04 05 06 0d 0e 0f 10 f1 f2
+
+[2026-08-27T05:59:15.344Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 1a 08 00 01 03 01 64 02 64 03 00
+
+[2026-08-27T05:59:15.380Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 1b 08 00 02 03 01 01 02 01 03 04
+
+[2026-08-27T05:59:15.381Z] INF: [OpoBudsSocket-XX] Received Earbuds in-ear status event
+
+[2026-08-27T05:59:15.410Z] INF: [OpoBudsSocket-XX] Response Timeout seq: 3
+
+[2026-08-27T05:59:15.410Z] INF: [OpoBudsSocket-XX] Query Product ID
+
+[2026-08-27T05:59:15.411Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 03 01 04 00 00
+
+[2026-08-27T05:59:15.448Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 03 81 04 04 00 00 12 48 06
+
+[2026-08-27T05:59:15.448Z] INF: [OpoBudsSocket-XX] Query Version
+
+[2026-08-27T05:59:15.448Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 05 01 05 00 00
+
+[2026-08-27T05:59:15.449Z] INF: [OpoBudsSocket-XX] Received Product ID: 0x064812
+
+[2026-08-27T05:59:15.449Z] INF: [OpoBudsSocket-XX] OpoBuds Model Initialized: Realme Buds Air 7
+
+[2026-08-27T05:59:15.449Z] INF: [OpoBudsDevice-XX] Configuration: {
+  "modelId": "064812",
+  "name": "Realme Buds Air 7",
+  "batteryLR": true,
+  "batteryCase": true,
+  "eqPreset": {
+    "original_sound": 0,
+    "deep_bass": 1,
+    "serenade": 2,
+    "clear_bass": 3
+  },
+  "noiseControl": {
+    "off": {
+      "byte": 1
+    },
+    "transparency": {
+      "byte": 2
+    },
+    "noiseCancellation": {
+      "levels": {
+        "smart": 32,
+        "mild": 4,
+        "moderate": 16,
+        "deep": 8
+      }
+    }
+  },
+  "inEarDetection": true,
+  "lowLatencyMode": true,
+  "dualConnection": true,
+  "windNoiseReduction": true,
+  "volumeEnhancer": true,
+  "spatialAudio": true,
+  "highResAudio": true,
+  "dynamicBass": true,
+  "autoAnswer": true,
+  "ring": true,
+  "gestureOptions": {
+    "default": "02010100020102010201030602010408020106000101010001010201010103060101040801010600",
+    "slots": [
+      {
+        "group": "left",
+        "device": 1,
+        "buttonId": 1,
+        "type": "double"
+      },
+      {
+        "group": "left",
+        "device": 1,
+        "buttonId": 1,
+        "type": "triple"
+      },
+      {
+        "group": "left",
+        "device": 1,
+        "buttonId": 1,
+        "type": "action-hold"
+      },
+      {
+        "group": "right",
+        "device": 2,
+        "buttonId": 1,
+        "type": "double"
+      },
+      {
+        "group": "right",
+        "device": 2,
+        "buttonId": 1,
+        "type": "triple"
+      },
+      {
+        "group": "right",
+        "device": 2,
+        "buttonId": 1,
+        "type": "action-hold"
+      }
+    ],
+    "mapping": {
+      "gestureTypes": {
+        "double": 2,
+        "triple": 3,
+        "action-hold": 4
+      },
+      "actions": {
+        "none": [
+          0
+        ],
+        "play-pause": [
+          1
+        ],
+        "skip-back": [
+          2
+        ],
+        "volume-up": [
+          3
+        ],
+        "volume-down": [
+          4
+        ],
+        "game-mode": [
+          5
+        ],
+        "skip-forward": [
+          6
+        ],
+        "voice-assistant": [
+          7
+        ],
+        "noise-control": [
+          8
+        ]
+      }
+    },
+    "gestures": {
+      "double": {
+        "type": "tap",
+        "actions": [
+          "play-pause",
+          "skip-forward",
+          "voice-assistant",
+          "none"
+        ]
+      },
+      "triple": {
+        "type": "tap",
+        "actions": [
+          "skip-forward",
+          "skip-back",
+          "volume-up",
+          "volume-down",
+          "voice-assistant",
+          "game-mode",
+          "none"
+        ]
+      },
+      "action-hold": {
+        "type": "hold",
+        "actions": [
+          "noise-control",
+          "voice-assistant",
+          "game-mode",
+          "none"
+        ]
+      }
+    }
+  },
+  "albumArtIcon": "earbuds-stem",
+  "budsIcon": "earbuds-stem",
+  "case": "case-round"
+}
+
+[2026-08-27T05:59:15.460Z] INF: [DbusService] Device added: /io/github/maniacx/BudsLink/Devices/hci0/dev_XX_XX_XX_XX_XX_XX
+
+[2026-08-27T05:59:15.523Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 64 00 00 05 81 05 5d 00 00 09 31 2c 31 2c 31 31 31 2c 31 2c 32 2c 31 2e 31 2e 30 2e 36 32 2c 31 2c 33 2c 31 2e 31 2e 30 2e 36 32 2c 32 2c 31 2c 31 31 31 2c 32 2c 32 2c 31 2e 31 2e 30 2e 36 32 2c 32 2c 33 2c 31 2e 31 2e 30 2e 36 32 2c 33 2c 31 2c 31 31 31 2c 33 2c 32 2c 30 38 38 2c 33 2c 33 2c 30 38 38
+
+[2026-08-27T05:59:15.523Z] INF: [OpoBudsSocket-XX] Query Battery
+
+[2026-08-27T05:59:15.523Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 06 01 06 00 00
+
+[2026-08-27T05:59:15.523Z] INF: [OpoBudsSocket-XX] Firmware string: 1,1,111,1,2,1.1.0.62,1,3,1.1.0.62,2,1,111,2,2,1.1.0.62,2,3,1.1.0.62,3,1,111,3,2,088,3,3,088
+
+[2026-08-27T05:59:15.709Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 06 81 06 08 00 00 03 01 64 02 64 03 00
+
+[2026-08-27T05:59:15.709Z] INF: [OpoBudsSocket-XX] Query ANC
+
+[2026-08-27T05:59:15.710Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 09 00 00 0c 01 07 02 00 01 01
+
+[2026-08-27T05:59:15.769Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 0c 81 07 04 00 00 01 01 01
+
+[2026-08-27T05:59:15.769Z] INF: [OpoBudsSocket-XX] Query Features
+
+[2026-08-27T05:59:15.770Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 12 00 00 0d 01 08 0b 00 0a 04 06 11 1a 09 1b 18 1d 08 26
+
+[2026-08-27T05:59:15.770Z] INF: [OpoBudsSocket-XX] Parsed ANC mode byte: 0x01
+
+[2026-08-27T05:59:15.838Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 1d 00 00 0d 81 08 16 00 00 0a 04 00 06 00 11 01 1a 00 09 00 1b 00 18 01 1d 00 08 00 26 00
+
+[2026-08-27T05:59:15.839Z] INF: [OpoBudsSocket-XX] Query EQ Preset
+
+[2026-08-27T05:59:15.839Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 07 00 00 0f 01 09 00 00
+
+[2026-08-27T05:59:15.904Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 09 00 00 0f 81 09 02 00 00 00
+
+[2026-08-27T05:59:15.904Z] INF: [OpoBudsSocket-XX] Query Key Functions
+
+[2026-08-27T05:59:15.904Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0a 00 00 08 01 0a 03 00 02 01 02
+
+[2026-08-27T05:59:15.905Z] INF: [OpoBudsSocket-XX] Parsed EQ preset: 0
+
+[2026-08-27T05:59:16.012Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 31 00 00 08 81 0a 2a 00 00 0a 02 01 01 00 02 01 02 01 02 01 03 06 02 01 04 08 02 01 06 00 01 01 01 00 01 01 02 01 01 01 03 06 01 01 04 08 01 01 06 00
+
+[2026-08-27T05:59:16.012Z] INF: [OpoBudsSocket-XX] Parsed gestures hex: 02010100020102010201030602010408020106000101010001010201010103060101040801010600
+
+[2026-08-27T05:59:17.600Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 1c 08 00 01 03 01 64 02 64 03 00
+
+[2026-08-27T05:59:17.639Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 1d 08 00 02 03 01 01 02 03 03 04
+
+[2026-08-27T05:59:17.639Z] INF: [OpoBudsSocket-XX] Received Earbuds in-ear status event
+
+[2026-08-27T05:59:18.846Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 1f 04 00 03 01 01 20
+
+[2026-08-27T05:59:18.847Z] INF: [OpoBudsSocket-XX] Set ANC mode byte: 0x20
+
+[2026-08-27T05:59:18.847Z] INF: [OpoBudsSocket-XX] Set ANC Mode
+
+[2026-08-27T05:59:18.847Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0a 00 00 04 04 0b 03 00 01 01 20
+
+[2026-08-27T05:59:18.937Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 04 84 0b 01 00 00
+
+[2026-08-27T05:59:19.002Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 20 04 00 03 01 01 20
+
+[2026-08-27T05:59:19.039Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 20 04 00 03 04 01 10
+
+[2026-08-27T05:59:19.384Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 21 08 00 01 03 01 64 02 64 03 00 aa 0f 00 00 04 02 22 08 00 02 03 01 01 02 03 03 04
+
+[2026-08-27T05:59:19.385Z] INF: [OpoBudsSocket-XX] Received Earbuds in-ear status event
+
+[2026-08-27T05:59:20.803Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 23 08 00 01 03 01 64 02 64 03 00
+
+[2026-08-27T05:59:20.839Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 24 08 00 02 03 01 03 02 03 03 04
+
+[2026-08-27T05:59:20.840Z] INF: [OpoBudsSocket-XX] Received Earbuds in-ear status event
+
+[2026-08-27T05:59:22.297Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 25 04 00 03 01 01 02
+
+[2026-08-27T05:59:23.950Z] INF: [OpoBudsSocket-XX] Set ANC mode byte: 0x20
+
+[2026-08-27T05:59:23.950Z] INF: [OpoBudsSocket-XX] Set ANC Mode
+
+[2026-08-27T05:59:23.951Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0a 00 00 04 04 0c 03 00 01 01 20
+
+[2026-08-27T05:59:24.004Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 04 84 0c 01 00 00
+
+[2026-08-27T05:59:24.041Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 26 04 00 03 01 01 20
+
+[2026-08-27T05:59:24.043Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 26 04 00 03 04 01 10
+
+[2026-08-27T05:59:26.994Z] INF: [OpoBudsSocket-XX] Set ANC mode byte: 0x02
+
+[2026-08-27T05:59:26.994Z] INF: [OpoBudsSocket-XX] Set ANC Mode
+
+[2026-08-27T05:59:26.994Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0a 00 00 04 04 0d 03 00 01 01 02
+
+[2026-08-27T05:59:27.050Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 04 84 0d 01 00 00
+
+[2026-08-27T05:59:27.086Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 27 04 00 03 01 01 02
+
+[2026-08-27T05:59:30.023Z] INF: [OpoBudsSocket-XX] Set ANC mode byte: 0x01
+
+[2026-08-27T05:59:30.024Z] INF: [OpoBudsSocket-XX] Set ANC Mode
+
+[2026-08-27T05:59:30.024Z] BYT: [SocketHandler-OpoBudsSocket-XX] ➡ Sent aa 0a 00 00 04 04 0e 03 00 01 01 01
+
+[2026-08-27T05:59:30.079Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 08 00 00 04 84 0e 01 00 00
+
+[2026-08-27T05:59:30.112Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0b 00 00 04 02 28 04 00 03 01 01 01
+
+[2026-08-27T05:59:38.623Z] BYT: [SocketHandler-OpoBudsSocket-XX] ⬅ Received: aa 0f 00 00 04 02 29 08 00 01 03 01 64 02 64 03 00
+
+[2026-08-27T05:59:43.456Z] INF: [Main] window close requested
+
+[2026-08-27T05:59:43.460Z] INF: [SocketHandler-OpoBudsSocket-XX] Destroying socket
+
+[2026-08-27T05:59:43.463Z] ERR: [SocketHandler-OpoBudsSocket-XX] SocketHandler Disconnected Gio.IOErrorEnum: Operation was cancelled
+
