@@ -400,9 +400,10 @@ export const OpoBudsSocket = GObject.registerClass({
         this._callbacks?.updateNoiseControl?.(modeByte);
     }
 
-    setNoiseControl(modeByte) {
-        this._log.info(`Set ANC mode byte: ${hexBytes(modeByte)}`);
-        const payload =  [0x01, 0x01, modeByte];
+    setNoiseControl(modeBytes) {
+        const arr = Array.isArray(modeBytes) ? modeBytes : [modeBytes];
+        this._log.info(`Set ANC mode bytes: ${hexBytes(arr)}`);
+        const payload = [0x01, 0x01, ...arr];
         this._queuePacket(Cmd.SET_ANC, payload, 'Set ANC Mode');
     }
 
@@ -558,15 +559,13 @@ export const OpoBudsSocket = GObject.registerClass({
         this._callbacks?.updateGestures?.(hex);
     }
 
-    setGestures(gesturesHex) {
-        this._log.info(`Set gestures hex: ${gesturesHex}`);
-        const bytes = [];
-        for (let i = 0; i < gesturesHex.length; i += 2)
-            bytes.push(parseInt(gesturesHex.slice(i, i + 2), 16));
-
-        const count = Math.floor(bytes.length / 4);
-        const payload = [0x00, count, ...bytes];
-        this._queuePacket(Cmd.SET_KEY_FUNCTION, payload, 'Set Key Functions');
+    setGestureSlot(device, buttonId, gestureType, action) {
+        this._log.info(
+            `Set gesture slot: dev=${hexBytes(device)} btn=${hexBytes(buttonId)} ` +
+            `type=${hexBytes(gestureType)} action=${hexBytes(action)}`
+        );
+        const payload = [device, buttonId, gestureType, action];
+        this._queuePacket(Cmd.SET_KEY_FUNCTION, payload, 'Set Key Function');
     }
 
     setNoiseControlCycle(maskByte) {
