@@ -652,8 +652,8 @@ export const RedmiBudsSocket = GObject.registerClass({
                 this._modelData.ancLevel;
 
         const hasAmbientStrength = this._modelData.transparencyStrength;
-        const ncByte = this._modelData.noiseControl.noiseCancellation;
-        const ambByte = this._modelData.noiseControl.transparency;
+        const ncByte = this._modelData.noiseControl?.noiseCancellation;
+        const ambByte = this._modelData.noiseControl?.transparency;
 
         if (mode === ncByte && hasNCStrength)
             this._callbacks?.updateAncStrength?.(strength);
