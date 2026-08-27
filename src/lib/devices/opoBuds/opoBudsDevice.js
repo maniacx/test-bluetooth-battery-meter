@@ -171,10 +171,6 @@ export const OpoBudsDevice = GObject.registerClass({
             ...this._modelData.findMyPhone && {
                 'find-phone': false,
             },
-
-            ...this._modelData.gestureOptions && {
-                'gestures': this._modelData.gestureOptions.default,
-            },
         };
     }
 
@@ -352,9 +348,13 @@ export const OpoBudsDevice = GObject.registerClass({
 
             if (this._modelData.gestureOptions) {
                 const gestures = this._settingsItems['gestures'];
-                if (this._gestures !== gestures) {
+                if (gestures && this._gestures !== gestures) {
+                    const changed = this._findChangedGestureSlot(this._gestures, gestures);
                     this._gestures = gestures;
-                    this._opoBudsSocket?.setGestures(gestures);
+                    if (changed)
+                        this._opoBudsSocket?.setGestureSlot(
+                            changed.device, changed.buttonId,
+                            changed.gestureType, changed.action);
                 }
             }
 
@@ -365,15 +365,6 @@ export const OpoBudsDevice = GObject.registerClass({
                     this._opoBudsSocket?.setFindBuds(ringState);
                 }
             }
-        });
-    }
-
-    _monitorOpoBudsListGsettings() {
-        this._settingsHandlerId = this._settings?.connect('changed::opo-buds-list', () => {
-            if (this._ignoreGsettingsChange)
-                return;
-
-            this._updateGsettings();
         });
     }
 
@@ -418,23 +409,34 @@ export const OpoBudsDevice = GObject.registerClass({
         this._ancToggleMap = {};
         this._config.toggle1Title = _('Noise Control');
 
-        const addToggle = (type, bytes, icon, name) => {
+        const addToggle = (type, modeBytes, icon, name, matchBytes = modeBytes) => {
             this._config[`toggle1Button${buttonIndex}Icon`] = icon;
             this._config[`toggle1Button${buttonIndex}Name`] = name;
-            this._ancToggleMap[buttonIndex] = {type, bytes};
+            this._ancToggleMap[buttonIndex] = {type, modeBytes, matchBytes};
             buttonIndex++;
         };
 
+        const toBytes = entry => {
+            if (Array.isArray(entry))
+                return entry;
+            if (entry?.byte !== undefined)
+                return [entry.byte];
+            return [];
+        };
+
         if (nc.off)
-            addToggle('off', [nc.off.byte], 'bbm-anc-off-symbolic', _('Off'));
+            addToggle('off', toBytes(nc.off), 'bbm-anc-off-symbolic', _('Off'));
 
         if (nc.transparency) {
-            addToggle('transparency', [nc.transparency.byte],
+            const transBytes = nc.transparency.levels?.regular
+                ? toBytes(nc.transparency.levels.regular)
+                : toBytes(nc.transparency);
+            addToggle('transparency', transBytes,
                 'bbm-transperancy-symbolic', _('Transparency'));
         }
 
         if (nc.noiseCancellation) {
-            const bytes = [];
+            const flatBytes = [];
             this._ancRadioMap = {};
             this._ancRadioReverse = {};
 
@@ -453,20 +455,24 @@ export const OpoBudsDevice = GObject.registerClass({
                 levelKeys.forEach((key, idx) => {
                     const num = idx + 1;
                     radioNames.push(levelNames[key] ?? key);
-                    const byte = levelsObj[key];
-                    this._ancRadioMap[num] = byte;
-                    this._ancRadioReverse[byte] = num;
-                    bytes.push(byte);
+                    const modeBytes = toBytes(levelsObj[key]);
+                    this._ancRadioMap[num] = modeBytes;
+                    if (modeBytes.length)
+                        this._ancRadioReverse[modeBytes[modeBytes.length - 1]] = num;
+                    flatBytes.push(...modeBytes);
                 });
 
                 this._config.box1RadioButton = radioNames;
                 this._config.box1RadioTitle = _('Noise Cancellation Level');
                 this._config.optionsBox1 = ['radio-button'];
             } else if (nc.noiseCancellation.byte !== undefined) {
-                bytes.push(nc.noiseCancellation.byte);
+                flatBytes.push(nc.noiseCancellation.byte);
+            } else {
+                flatBytes.push(...toBytes(nc.noiseCancellation));
             }
 
-            addToggle('noiseCancellation', bytes, 'bbm-anc-on-symbolic', _('Noise Cancellation'));
+            addToggle('noiseCancellation', flatBytes, 'bbm-anc-on-symbolic', _('Noise Cancellation'),
+                flatBytes);
         }
 
         this.dataHandler?.setConfig(this._config);
@@ -515,23 +521,23 @@ export const OpoBudsDevice = GObject.registerClass({
         this._props.toggle1State = index;
 
         if (toggle.type === 'noiseCancellation') {
-            const hasLevels = toggle.bytes.length > 1;
+            const hasLevels = toggle.matchBytes.length > 1;
             this._props.optionsBoxVisible = hasLevels ? 1 : 0;
 
             if (hasLevels) {
                 const radioIndex = this._props.box1RadioButtonState || 1;
-                let byte = this._ancRadioMap[radioIndex];
-                if (byte == null) {
-                    byte = toggle.bytes[0];
+                let modeBytes = this._ancRadioMap[radioIndex];
+                if (!modeBytes?.length) {
+                    modeBytes = [toggle.matchBytes[0]];
                     this._props.box1RadioButtonState = 1;
                 }
-                ancMode = byte;
+                ancMode = modeBytes;
             } else {
-                ancMode = toggle.bytes[0];
+                ancMode = toggle.modeBytes;
             }
         } else {
             this._props.optionsBoxVisible = 0;
-            ancMode = toggle.bytes[0];
+            ancMode = toggle.modeBytes;
         }
 
         this.dataHandler?.setProps(this._props);
@@ -547,9 +553,9 @@ export const OpoBudsDevice = GObject.registerClass({
         this._props.box1RadioButtonState = index;
         this.dataHandler?.setProps(this._props);
 
-        const byte = this._ancRadioMap[index];
-        if (byte != null)
-            this._opoBudsSocket?.setNoiseControl(byte);
+        const modeBytes = this._ancRadioMap[index];
+        if (modeBytes?.length)
+            this._opoBudsSocket?.setNoiseControl(modeBytes);
     }
 
     _settingsButtonClicked() {
@@ -600,8 +606,8 @@ export const OpoBudsDevice = GObject.registerClass({
         let toggleIndex = 0;
         let isNcMode = false;
 
-        for (const [index, {bytes, type}] of Object.entries(this._ancToggleMap)) {
-            if (bytes.includes(modeByte)) {
+        for (const [index, {matchBytes, type}] of Object.entries(this._ancToggleMap)) {
+            if (matchBytes.includes(modeByte)) {
                 toggleIndex = Number(index);
                 if (type === 'noiseCancellation')
                     isNcMode = true;
@@ -708,6 +714,51 @@ export const OpoBudsDevice = GObject.registerClass({
             this._settingsItems['eq-preset'] = this._eqPreset;
             this._updateGsettings();
         }
+    }
+
+    _buildPlaceholderGesturesHex() {
+        const gesturesConfig = this._modelData?.gestureOptions;
+        if (!gesturesConfig)
+            return '';
+
+        let hex = '';
+        gesturesConfig.slots.forEach(slot => {
+            const gestureDef = gesturesConfig.gestures[slot.type];
+            if (!gestureDef?.actions?.length)
+                return;
+
+            const firstAction = gestureDef.actions[0];
+            const func = gesturesConfig.mapping.actions[firstAction]?.[0] ?? 0;
+            const btnId = slot.buttonId ?? 0x01;
+            const act = gesturesConfig.mapping.gestureTypes[slot.type];
+
+            hex += slot.device.toString(16).padStart(2, '0');
+            hex += btnId.toString(16).padStart(2, '0');
+            hex += act.toString(16).padStart(2, '0');
+            hex += func.toString(16).padStart(2, '0');
+        });
+        return hex;
+    }
+
+    _findChangedGestureSlot(oldHex, newHex) {
+        if (!newHex)
+            return null;
+
+        const baseHex = oldHex ?? this._buildPlaceholderGesturesHex();
+
+        for (let i = 0; i < newHex.length; i += 8) {
+            const baseChunk = baseHex.slice(i, i + 8);
+            const newChunk = newHex.slice(i, i + 8);
+            if (baseChunk !== newChunk && newChunk.length === 8)
+                return {
+                    device: parseInt(newChunk.slice(0, 2), 16),
+                    buttonId: parseInt(newChunk.slice(2, 4), 16),
+                    gestureType: parseInt(newChunk.slice(4, 6), 16),
+                    action: parseInt(newChunk.slice(6, 8), 16),
+                };
+        }
+
+        return null;
     }
 
     updateGestures(gesturesHex) {
