@@ -35,7 +35,6 @@ export const OpoBudsDevice = GObject.registerClass({
         this.updateDeviceMapCb = updateDeviceMapCb;
         this._ignoreGsettingsChange = false;
         this._fwVersion = '';
-        this._serialNo = '';
         this._commonIcon = 'earbuds-stem';
         this._caseIcon = 'case-round';
 
@@ -110,7 +109,6 @@ export const OpoBudsDevice = GObject.registerClass({
             alias: this._alias,
             icon: this._commonIcon,
             'fw-version': this._fwVersion,
-            'serial': this._serialNo,
 
             ...this._modelData.batteryCase && {
                 'case': this._caseIcon,
