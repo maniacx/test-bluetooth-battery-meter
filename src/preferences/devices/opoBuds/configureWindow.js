@@ -28,16 +28,14 @@ export const ConfigureWindow = GObject.registerClass({
         this._gettext = _;
 
         const pathsString = settings.get_strv('opo-buds-list').map(JSON.parse);
-        this._settingsItems = pathsString.find(info => info.path === devicePath ||
-            info['device-path'] === devicePath);
+        this._settingsItems = pathsString.find(info => info.path === devicePath);
 
         if (!this._settingsItems)
             return;
 
         this.title = this._settingsItems.alias;
 
-        this._modelData =
-            OpoBudsModelList.find(m => m.modelId === this._settingsItems.modelid);
+        this._modelData = OpoBudsModelList.find(m => m.modelId === this._settingsItems.modelid);
 
         if (!this._modelData)
             return;
@@ -66,7 +64,7 @@ export const ConfigureWindow = GObject.registerClass({
             rowTitle: _('Select Icon'),
             rowSubtitle: _('Select the icon used for the indicator and quick menu'),
             iconList,
-            initialIcon: this._settingsItems['icon'] ?? 'earbuds-stem',
+            initialIcon: this._settingsItems['icon'],
             caseIconList,
             initialCaseIcon,
             mac,
@@ -98,8 +96,7 @@ export const ConfigureWindow = GObject.registerClass({
                 return;
 
             const list = this._settings.get_strv('opo-buds-list').map(JSON.parse);
-            const item = list.find(d => d.path === this._devicePath ||
-                d['device-path'] === this._devicePath);
+            const item = list.find(d => d.path === this._devicePath);
 
             if (!item)
                 return;
@@ -112,33 +109,31 @@ export const ConfigureWindow = GObject.registerClass({
                     this._eqPresetDropdown.selected_item = this._settingsItems['eq-preset'];
 
                 if (this._modelData.dynamicBass && this._dynamicBassSwitch)
-                    this._dynamicBassSwitch.active = this._settingsItems['dynamic-bass'] ?? false;
+                    this._dynamicBassSwitch.active = this._settingsItems['dynamic-bass'];
 
                 if (this._modelData.spatialAudio && this._spatialAudioSwitch)
-                    this._spatialAudioSwitch.active = this._settingsItems['spatial'] ?? false;
+                    this._spatialAudioSwitch.active = this._settingsItems['spatial'];
 
-                if (this._modelData.volumeEnhancer && this._volumeEnhancerSwitch) {
-                    this._volumeEnhancerSwitch.active = this._settingsItems['volume-enhancer'] ??
-                            false;
-                }
+                if (this._modelData.volumeEnhancer && this._volumeEnhancerSwitch)
+                    this._volumeEnhancerSwitch.active = this._settingsItems['volume-enhancer'];
 
                 if (this._modelData.highResAudio && this._highResSwitch)
-                    this._highResSwitch.active = this._settingsItems['high-res'] ?? false;
+                    this._highResSwitch.active = this._settingsItems['high-res'];
 
                 if (this._modelData.windNoiseReduction && this._windNoiseSwitch)
-                    this._windNoiseSwitch.active = this._settingsItems['wind-noise'] ?? false;
+                    this._windNoiseSwitch.active = this._settingsItems['wind-noise'];
 
                 if (this._modelData.lowLatencyMode && this._lowLatencySwitch)
-                    this._lowLatencySwitch.active = this._settingsItems['lowlatency'] ?? false;
+                    this._lowLatencySwitch.active = this._settingsItems['lowlatency'];
 
                 if (this._modelData.inEarDetection && this._inEarSwitch)
-                    this._inEarSwitch.active = this._settingsItems['inear-enable'] ?? false;
+                    this._inEarSwitch.active = this._settingsItems['inear-enable'];
 
                 if (this._modelData.autoAnswer && this._autoAnswerSwitch)
-                    this._autoAnswerSwitch.active = this._settingsItems['auto-answer'] ?? false;
+                    this._autoAnswerSwitch.active = this._settingsItems['auto-answer'];
 
                 if (this._modelData.findMyPhone && this._findPhoneSwitch)
-                    this._findPhoneSwitch.active = this._settingsItems['find-phone'] ?? false;
+                    this._findPhoneSwitch.active = this._settingsItems['find-phone'];
 
                 if (this._modelData.gestureOptions && this._gestureDropdowns) {
                     const gesturesHex = this._settingsItems['gestures'] ??
@@ -172,8 +167,7 @@ export const ConfigureWindow = GObject.registerClass({
 
     _updateGsettings(key, value) {
         const currentList = this._settings.get_strv('opo-buds-list').map(JSON.parse);
-        const index = currentList.findIndex(d => d.path === this._devicePath ||
-            d['device-path'] === this._devicePath);
+        const index = currentList.findIndex(d => d.path === this._devicePath);
 
         if (index !== -1) {
             currentList[index][key] = value;
@@ -239,7 +233,7 @@ export const ConfigureWindow = GObject.registerClass({
             this._dynamicBassSwitch = new Adw.SwitchRow({
                 title: _('Dynamic Bass Boost'),
                 subtitle: _('Dynamically enhances low frequency bass in real-time'),
-                active: this._settingsItems['dynamic-bass'] ?? false,
+                active: this._settingsItems['dynamic-bass'],
             });
 
             this._dynamicBassSwitch.connect('notify::active', () => {
@@ -253,7 +247,7 @@ export const ConfigureWindow = GObject.registerClass({
             this._spatialAudioSwitch = new Adw.SwitchRow({
                 title: _('Spatial Audio'),
                 subtitle: _('Immersive 3D surround sound experience'),
-                active: this._settingsItems['spatial'] ?? false,
+                active: this._settingsItems['spatial'],
             });
 
             this._spatialAudioSwitch.connect('notify::active', () => {
@@ -267,7 +261,7 @@ export const ConfigureWindow = GObject.registerClass({
             this._volumeEnhancerSwitch = new Adw.SwitchRow({
                 title: _('Volume Enhancer'),
                 subtitle: _('Boost overall sound output for louder playback'),
-                active: this._settingsItems['volume-enhancer'] ?? false,
+                active: this._settingsItems['volume-enhancer'],
             });
 
             this._volumeEnhancerSwitch.connect('notify::active', () => {
@@ -281,7 +275,7 @@ export const ConfigureWindow = GObject.registerClass({
             this._highResSwitch = new Adw.SwitchRow({
                 title: _('High-Res Audio (LHDC / LDAC)'),
                 subtitle: _('Enable high-definition Bluetooth audio codec streaming'),
-                active: this._settingsItems['high-res'] ?? false,
+                active: this._settingsItems['high-res'],
             });
 
             this._highResSwitch.connect('notify::active', () => {
@@ -295,7 +289,7 @@ export const ConfigureWindow = GObject.registerClass({
             this._windNoiseSwitch = new Adw.SwitchRow({
                 title: _('Smart Wind Noise Reduction'),
                 subtitle: _('Suppress turbulent wind noise during outdoor use'),
-                active: this._settingsItems['wind-noise'] ?? false,
+                active: this._settingsItems['wind-noise'],
             });
 
             this._windNoiseSwitch.connect('notify::active', () => {
@@ -324,7 +318,7 @@ export const ConfigureWindow = GObject.registerClass({
             this._lowLatencySwitch = new Adw.SwitchRow({
                 title: _('Game Mode'),
                 subtitle: _('Reduce audio latency for responsive gaming'),
-                active: this._settingsItems['lowlatency'] ?? false,
+                active: this._settingsItems['lowlatency'],
             });
 
             this._lowLatencySwitch.connect('notify::active', () => {
@@ -338,7 +332,7 @@ export const ConfigureWindow = GObject.registerClass({
             this._inEarSwitch = new Adw.SwitchRow({
                 title: _('In-Ear Detection'),
                 subtitle: _('Auto-pause audio playback when earbud is removed'),
-                active: this._settingsItems['inear-enable'] ?? false,
+                active: this._settingsItems['inear-enable'],
             });
 
             this._inEarSwitch.connect('notify::active', () => {
@@ -352,7 +346,7 @@ export const ConfigureWindow = GObject.registerClass({
             this._dualConnectionSwitch = new Adw.SwitchRow({
                 title: _('Dual Device Connection'),
                 subtitle: _('Connect to two Bluetooth audio devices simultaneously'),
-                active: this._settingsItems['dual-connection'] ?? false,
+                active: this._settingsItems['dual-connection'],
             });
 
             this._dualConnectionSwitch.connect('notify::active', () => {
@@ -366,7 +360,7 @@ export const ConfigureWindow = GObject.registerClass({
             this._autoAnswerSwitch = new Adw.SwitchRow({
                 title: _('Auto Answer Calls'),
                 subtitle: _('Automatically answer incoming calls when putting on earbuds'),
-                active: this._settingsItems['auto-answer'] ?? false,
+                active: this._settingsItems['auto-answer'],
             });
 
             this._autoAnswerSwitch.connect('notify::active', () => {
@@ -380,7 +374,7 @@ export const ConfigureWindow = GObject.registerClass({
             this._findPhoneSwitch = new Adw.SwitchRow({
                 title: _('Find My Phone'),
                 subtitle: _('Allow triggering phone ringing from neckband controls'),
-                active: this._settingsItems['find-phone'] ?? false,
+                active: this._settingsItems['find-phone'],
             });
 
             this._findPhoneSwitch.connect('notify::active', () => {
