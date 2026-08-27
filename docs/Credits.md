@@ -181,6 +181,7 @@ permalink: /credits
 >
 > * drinkingoutofcups **Special thanks for testing and helping bring up the Redmi protocol.**
 > * iamirayman
+> * LittleHaku
 
 ## Sennheiser
 

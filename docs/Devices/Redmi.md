@@ -17,6 +17,11 @@ permalink: /redmi
 > * **Bluetooth Battery Meter** GNOME Extension  (disable the Redmi feature in the extension preferences)
 
 
+{: .note }
+>
+> Some Redmi / Xiaomi Earbuds sockets may remain unavailable to BudsLink while connected to the OEM companion app on a mobile device. Disconnect the earbuds from the mobile app before using BudsLink. 
+
+
 <br>
 <img src="{{ 'assets/images/redmi/redmi-main.png' | relative_url }}" width="45%">
 
@@ -63,6 +68,11 @@ Some devices have not yet been tested and may show incorrect features in the con
 
 Currently tested and confirmed working:
 * **Redmi Buds 6 Play**  ✅ — Credits: drinkingoutofcups
+* **Redmi Buds 8 Lite**  ✅ — Credits: myemirhan
+* **Redmi Buds 5 Pro**  ✅ — Credits: LittleHaku
+
+
+LittleHaku
 
 
 <style>
@@ -87,11 +97,47 @@ table th:nth-of-type(3) {
 | Find My buds (Ring)           | ✅        | ✅     |
 | Gestures                      | ✅        | ✅     |
 
+### Redmi Buds 8 Lite
+
+| Feature                       | Supported | Tested |
+|:-----------------------------:|:---------:|:------:|
+| Battery Level                 | L, R, Case| ✅     |
+| Noise Control                 | ✅        | ✅     |
+| Equalizer Preset              | ✅        | ✅     |
+| Equalizer Custom              | ✅        | ✅     |
+| In Ear Detection              | ✅        | ✅     |
+| Auto Answer Calls             | ✅        | ✅     |
+| Adaptive Sound                | ✅        | ✅     |
+| Low Latency                   | ✅        | ✅     |
+| Dual Connection (Multipoint)  | ✅        | ✅     |
+| Find My buds (Ring)           | ✅        | ✅     |
+| Gestures                      | ✅        | ✅     |
+
+### Redmi Buds 5 Pro
+
+| Feature                       | Supported | Tested |
+|:-----------------------------:|:---------:|:------:|
+| Battery Level                 | L, R, Case| ✅     |
+| Noise Control                 | ✅        | ✅     |
+| Noise Cancellation (strength) | ✅        | ✅     |
+| Transparency (modes)          | ✅        | ✅     |
+| Equalizer Preset              | ✅        | ✅     |
+| Equalizer Custom              | ✅        | ✅     |
+| In Ear Detection              | ✅        | ✅     |
+| Auto Answer Calls             | ✅        | ✅     |
+| Adaptive Sound                | ✅        | ✅     |
+| Low Latency                   | ✅        | ✅     |
+| Dual Connection (Multipoint)  | ✅        | ✅     |
+| Find My buds (Ring)           | ✅        | ✅     |
+| Gestures                      | ✅        | ✅     |
+
+
 ### Redmi Buds 8 Pro
 
 | Feature                       | Supported | Tested |
 |:-----------------------------:|:---------:|:------:|
 | Battery Level                 | L, R, Case| ❌     |
+| Noise Control                 | ✅        | ❌     |
 | Noise Cancellation (strength) | ✅        | ❌     |
 | Transparency (modes)          | ✅        | ❌     |
 | Equalizer Preset              | ✅        | ❌     |
@@ -103,4 +149,3 @@ table th:nth-of-type(3) {
 | Dual Connection (Multipoint)  | ✅        | ❌     |
 | Find My buds (Ring)           | ✅        | ❌     |
 | Gestures                      | ✅        | ❌     |
-

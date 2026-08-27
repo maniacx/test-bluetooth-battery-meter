@@ -8,7 +8,19 @@ permalink: /changelogs
 # Changelogs
 
 {: .important-title }
-> Version 0.2.0 &emsp;&emsp; Upcoming
+> Version 0.2.2 &emsp;&emsp; Upcoming
+> * Added support for Redmi Buds 5 Pro credits: LittleHaku@github.com 
+> * Added support for Redmi Buds 8 Lite credits: myemirhan@github.com 
+> * Update Italian translations. credits: albanobattistella@github.com 
+> * Added Indonesian translations. credits: arifpedia@github.com 
+> * Updated Czech translations. credits: p-bo@weblate.com 
+
+{: .important-title }
+> Version 0.2.1 &emsp;&emsp; Aug 24, 2026
+> * Updated metadata
+
+{: .important-title }
+> Version 0.2.0 &emsp;&emsp; Aug 23, 2026
 > * Updated Device Information UI and added serial number for several devices
 > * Added support for Beats Powerbeats Fit credits: schlagmichdoch@github.com
 > * Added support for Bose QC Ultra Earbuds credits: MobileAZN@github.com
