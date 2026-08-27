@@ -15,14 +15,18 @@ export default {
     },
 
     noiseControl: {
-        off: {byte: 0x01},
-        transparency: {byte: 0x02},
+        off: [0x01],
+        transparency: {
+            levels: {
+                regular: [0x02],
+            },
+        },
         noiseCancellation: {
             levels: {
-                smart: 0x20,
-                mild: 0x04,
-                moderate: 0x10,
-                deep: 0x08,
+                smart: [0x20],
+                mild: [0x04],
+                moderate: [0x10],
+                deep: [0x08],
             },
         },
     },
@@ -37,7 +41,6 @@ export default {
     ring: true,
 
     gestureOptions: {
-        default: '0101010101010206010103050101040401040108',
         slots: [
             {group: 'mfb', device: 0x01, buttonId: 0x01, type: 'single'},
             {group: 'mfb', device: 0x01, buttonId: 0x01, type: 'double'},
