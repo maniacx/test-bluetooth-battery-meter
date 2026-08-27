@@ -218,38 +218,6 @@ export const OpoBudsSocket = GObject.registerClass({
             this._getGestures();
     }
 
-    _getBattery() {
-        this._queuePacket(Cmd.BATTERY, [], 'Query Battery');
-    }
-
-    _getNoiseControl() {
-        this._queuePacket(Cmd.ANC, [0x01, 0x01], 'Query ANC');
-    }
-
-    _getFeatureSwitches() {
-        const features = [
-            FeatureId.IN_EAR,
-            FeatureId.GAME_MODE,
-            FeatureId.DUAL_DEVICE,
-            FeatureId.WIND_NOISE,
-            FeatureId.VOLUME_ENHANCER,
-            FeatureId.SPATIAL,
-            FeatureId.HIGH_RES,
-            FeatureId.DYNAMIC_BASS,
-            FeatureId.AUTO_ANSWER,
-            FeatureId.FIND_PHONE,
-        ];
-        this._queuePacket(Cmd.FEATURE_SWITCH, [features.length, ...features], 'Query Features');
-    }
-
-    _getEqPreset() {
-        this._queuePacket(Cmd.EQ, [], 'Query EQ Preset');
-    }
-
-    _getGestures() {
-        this._queuePacket(Cmd.KEY_FUNCTION, [0x02, 0x01, 0x02], 'Query Key Functions');
-    }
-
     _parseData(resp) {
         const {cmd, payload} = resp;
 
@@ -305,135 +273,6 @@ export const OpoBudsSocket = GObject.registerClass({
         }
     }
 
-    _parseFirmwareVersion(payload) {
-        if (payload.length < 2 || payload[0] !== 0x00)
-            return;
-
-        const strBytes = payload.slice(2);
-        const versionStr = String.fromCharCode(...strBytes);
-        this._log.info(`Firmware string: ${versionStr}`);
-
-        const parts = versionStr.split(',');
-        const ver = parts.find(p => /^\d+(\.\d+){1,3}$/.test(p)) ?? parts[0];
-        if (ver)
-            this._callbacks?.updateFirmwareInfo?.(ver);
-    }
-
-    _parseBattery(payload) {
-        if (payload.length < 2)
-            return;
-
-        const offset = payload[0] === 0x00 ? 1 : 0;
-        const count = payload[offset];
-        let left = null;
-        let right = null;
-        let cse = null;
-
-        for (let i = 0; i < count; i++) {
-            const idx = offset + 1 + i * 2;
-            if (idx + 1 >= payload.length)
-                break;
-
-            const comp = payload[idx];
-            const rawVal = payload[idx + 1];
-            const level = rawVal & 0x7F;
-            const charging = (rawVal & 0x80) !== 0;
-
-            const info = {level, isCharging: charging};
-            if (comp === BatteryComponent.LEFT)
-                left = info;
-            else if (comp === BatteryComponent.RIGHT)
-                right = info;
-            else if (comp === BatteryComponent.CASE)
-                cse = info;
-        }
-
-        this._callbacks?.updateBatteryProps?.({left, right, case: cse});
-    }
-
-    _parseAnc(payload) {
-        if (payload.length < 3)
-            return;
-
-        const modeByte = payload[payload.length - 1];
-        this._log.info(`Parsed ANC mode byte: 0x${modeByte.toString(16)}`);
-        this._callbacks?.updateNoiseControl?.(modeByte);
-    }
-
-    _parseFeatureSwitches(payload) {
-        if (payload.length < 2)
-            return;
-
-        let startIdx = 1;
-        let count = payload[0];
-
-        if (payload[0] === 0x00) {
-            if (payload.length > 2 && payload[1] === 0x00) {
-                startIdx = 3;
-                count = payload[2];
-            } else {
-                startIdx = 2;
-                count = payload[1];
-            }
-        }
-
-        for (let i = 0; i < count; i++) {
-            const idx = startIdx + i * 2;
-            if (idx + 1 >= payload.length)
-                break;
-
-            const feat = payload[idx];
-            const val = payload[idx + 1] === 0x01;
-
-            if (feat === FeatureId.IN_EAR)
-                this._callbacks?.updateInEar?.(val);
-            else if (feat === FeatureId.GAME_MODE)
-                this._callbacks?.updateLatency?.(val);
-            else if (feat === FeatureId.DUAL_DEVICE)
-                this._callbacks?.updateDualConnection?.(val);
-            else if (feat === FeatureId.WIND_NOISE)
-                this._callbacks?.updateWindNoise?.(val);
-            else if (feat === FeatureId.VOLUME_ENHANCER)
-                this._callbacks?.updateVolumeEnhancer?.(val);
-            else if (feat === FeatureId.SPATIAL)
-                this._callbacks?.updateSpatialAudio?.(val);
-            else if (feat === FeatureId.HIGH_RES)
-                this._callbacks?.updateHighRes?.(val);
-            else if (feat === FeatureId.DYNAMIC_BASS)
-                this._callbacks?.updateDynamicBass?.(val);
-            else if (feat === FeatureId.AUTO_ANSWER)
-                this._callbacks?.updateAutoAnswer?.(val);
-            else if (feat === FeatureId.FIND_PHONE)
-                this._callbacks?.updateFindPhone?.(val);
-        }
-    }
-
-    _parseEq(payload) {
-        if (payload.length === 0)
-            return;
-
-        const presetId = payload[payload.length - 1];
-        this._log.info(`Parsed EQ preset: ${presetId}`);
-        this._callbacks?.updateEqPreset?.(presetId);
-    }
-
-    _parseGestures(payload) {
-        if (payload.length < 3)
-            return;
-
-        let startIdx = 3;
-        if (payload[0] === 0x00 && payload[1] !== 0x00)
-            startIdx = 2;
-        else if (payload[0] !== 0x00)
-            startIdx = 1;
-
-        const count = payload[startIdx - 1];
-        const slotsBytes = payload.slice(startIdx, startIdx + count * 4);
-        const hex = Array.from(slotsBytes).map(b => b.toString(16).padStart(2, '0')).join('');
-        this._log.info(`Parsed gestures hex: ${hex}`);
-        this._callbacks?.updateGestures?.(hex);
-    }
-
     _parseNotificationEvent(payload) {
         if (payload.length === 0)
             return;
@@ -486,16 +325,155 @@ export const OpoBudsSocket = GObject.registerClass({
         }
     }
 
+    _parseFirmwareVersion(payload) {
+        if (payload.length < 2 || payload[0] !== 0x00)
+            return;
+
+        const strBytes = payload.slice(2);
+        const versionStr = String.fromCharCode(...strBytes);
+        this._log.info(`Firmware string: ${versionStr}`);
+
+        const parts = versionStr.split(',');
+        const ver = parts.find(p => /^\d+(\.\d+){1,3}$/.test(p)) ?? parts[0];
+        if (ver)
+            this._callbacks?.updateFirmwareInfo?.(ver);
+    }
+
+    _getBattery() {
+        this._queuePacket(Cmd.BATTERY, [], 'Query Battery');
+    }
+
+    _parseBattery(payload) {
+        if (payload.length < 2)
+            return;
+
+        const offset = payload[0] === 0x00 ? 1 : 0;
+        const count = payload[offset];
+        let left = null;
+        let right = null;
+        let cse = null;
+
+        for (let i = 0; i < count; i++) {
+            const idx = offset + 1 + i * 2;
+            if (idx + 1 >= payload.length)
+                break;
+
+            const comp = payload[idx];
+            const rawVal = payload[idx + 1];
+            const level = rawVal & 0x7F;
+            const charging = (rawVal & 0x80) !== 0;
+
+            const info = {level, isCharging: charging};
+            if (comp === BatteryComponent.LEFT)
+                left = info;
+            else if (comp === BatteryComponent.RIGHT)
+                right = info;
+            else if (comp === BatteryComponent.CASE)
+                cse = info;
+        }
+
+        this._callbacks?.updateBatteryProps?.({left, right, case: cse});
+    }
+
+    _getEqPreset() {
+        this._queuePacket(Cmd.EQ, [], 'Query EQ Preset');
+    }
+
+    _parseEq(payload) {
+        if (payload.length === 0)
+            return;
+
+        const presetId = payload[payload.length - 1];
+        this._log.info(`Parsed EQ preset: ${presetId}`);
+        this._callbacks?.updateEqPreset?.(presetId);
+    }
+
+    setEqPreset(presetId) {
+        this._log.info(`Set EQ Preset: ${presetId}`);
+        this._queuePacket(Cmd.SET_EQ, [presetId], 'Set EQ Preset');
+    }
+
+    _getNoiseControl() {
+        this._queuePacket(Cmd.ANC, [0x01, 0x01], 'Query ANC');
+    }
+
+    _parseAnc(payload) {
+        if (payload.length < 3)
+            return;
+
+        const modeByte = payload[payload.length - 1];
+        this._log.info(`Parsed ANC mode byte: 0x${modeByte.toString(16)}`);
+        this._callbacks?.updateNoiseControl?.(modeByte);
+    }
+
     setNoiseControl(modeByte) {
         this._log.info(`Set ANC mode byte: 0x${modeByte.toString(16)}`);
         const payload =  [0x01, 0x01, modeByte];
         this._queuePacket(Cmd.SET_ANC, payload, 'Set ANC Mode');
     }
 
-    setNoiseControlCycle(maskByte) {
-        this._log.info(`Set ANC cycle mask byte: 0x${maskByte.toString(16)}`);
-        const payload = [0x01, maskByte];
-        this._queuePacket(Cmd.SET_ANC_CYCLE, payload, 'Set ANC Cycle Mask');
+    _getFeatureSwitches() {
+        const features = [
+            FeatureId.IN_EAR,
+            FeatureId.GAME_MODE,
+            FeatureId.DUAL_DEVICE,
+            FeatureId.WIND_NOISE,
+            FeatureId.VOLUME_ENHANCER,
+            FeatureId.SPATIAL,
+            FeatureId.HIGH_RES,
+            FeatureId.DYNAMIC_BASS,
+            FeatureId.AUTO_ANSWER,
+            FeatureId.FIND_PHONE,
+        ];
+        this._queuePacket(Cmd.FEATURE_SWITCH, [features.length, ...features], 'Query Features');
+    }
+
+    _parseFeatureSwitches(payload) {
+        if (payload.length < 2)
+            return;
+
+        let startIdx = 1;
+        let count = payload[0];
+
+        if (payload[0] === 0x00) {
+            if (payload.length > 2 && payload[1] === 0x00) {
+                startIdx = 3;
+                count = payload[2];
+            } else {
+                startIdx = 2;
+                count = payload[1];
+            }
+        }
+
+        for (let i = 0; i < count; i++) {
+            const idx = startIdx + i * 2;
+            if (idx + 1 >= payload.length)
+                break;
+
+            const feat = payload[idx];
+            const val = payload[idx + 1] === 0x01;
+
+            if (feat === FeatureId.IN_EAR)
+                this._callbacks?.updateInEar?.(val);
+            else if (feat === FeatureId.GAME_MODE)
+                this._callbacks?.updateLatency?.(val);
+            else if (feat === FeatureId.DUAL_DEVICE)
+                this._callbacks?.updateDualConnection?.(val);
+            else if (feat === FeatureId.WIND_NOISE)
+                this._callbacks?.updateWindNoise?.(val);
+            else if (feat === FeatureId.VOLUME_ENHANCER)
+                this._callbacks?.updateVolumeEnhancer?.(val);
+            else if (feat === FeatureId.SPATIAL)
+                this._callbacks?.updateSpatialAudio?.(val);
+            else if (feat === FeatureId.HIGH_RES)
+                this._callbacks?.updateHighRes?.(val);
+            else if (feat === FeatureId.DYNAMIC_BASS)
+                this._callbacks?.updateDynamicBass?.(val);
+            else if (feat === FeatureId.AUTO_ANSWER)
+                this._callbacks?.updateAutoAnswer?.(val);
+            else if (feat === FeatureId.FIND_PHONE)
+                this._callbacks?.updateFindPhone?.(val);
+        }
     }
 
     setLatency(enable) {
@@ -558,17 +536,32 @@ export const OpoBudsSocket = GObject.registerClass({
         this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Find My Phone');
     }
 
-    setEqPreset(presetId) {
-        this._log.info(`Set EQ Preset: ${presetId}`);
-        const payload = [presetId];
-        this._queuePacket(Cmd.SET_EQ, payload, 'Set EQ Preset');
-    }
-
     setFindBuds(ringState) {
         const ring = ringState === 'started' || ringState === 'playing';
         this._log.info(`Set Find Buds: ${ring}`);
         const payload = [ring ? 0x01 : 0x00];
         this._queuePacket(Cmd.FIND_BUDS, payload, 'Set Find Buds');
+    }
+
+    _getGestures() {
+        this._queuePacket(Cmd.KEY_FUNCTION, [0x02, 0x01, 0x02], 'Query Key Functions');
+    }
+
+    _parseGestures(payload) {
+        if (payload.length < 3)
+            return;
+
+        let startIdx = 3;
+        if (payload[0] === 0x00 && payload[1] !== 0x00)
+            startIdx = 2;
+        else if (payload[0] !== 0x00)
+            startIdx = 1;
+
+        const count = payload[startIdx - 1];
+        const slotsBytes = payload.slice(startIdx, startIdx + count * 4);
+        const hex = Array.from(slotsBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+        this._log.info(`Parsed gestures hex: ${hex}`);
+        this._callbacks?.updateGestures?.(hex);
     }
 
     setGestures(gesturesHex) {
@@ -580,6 +573,12 @@ export const OpoBudsSocket = GObject.registerClass({
         const count = Math.floor(bytes.length / 4);
         const payload = [0x00, count, ...bytes];
         this._queuePacket(Cmd.SET_KEY_FUNCTION, payload, 'Set Key Functions');
+    }
+
+    setNoiseControlCycle(maskByte) {
+        this._log.info(`Set ANC cycle mask byte: 0x${maskByte.toString(16)}`);
+        const payload = [0x01, maskByte];
+        this._queuePacket(Cmd.SET_ANC_CYCLE, payload, 'Set ANC Cycle Mask');
     }
 
     destroy() {
