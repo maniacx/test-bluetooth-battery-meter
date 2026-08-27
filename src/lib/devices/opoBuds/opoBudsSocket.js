@@ -4,7 +4,6 @@ import GObject from 'gi://GObject';
 
 import {createLogger, getDeviceIdentifier} from '../logger.js';
 import {SocketHandler} from '../socketByProfile.js';
-import {getBluezDeviceProxy} from '../../bluezDeviceProxy.js';
 import {
     OpoBudsModelList, Cmd, FeatureId, EventCode, BatteryComponent
 } from './opoBudsConfig.js';
@@ -177,27 +176,24 @@ export const OpoBudsSocket = GObject.registerClass({
         this._queuePacket(Cmd.PRODUCT_ID, [], 'Query Product ID');
         this._queuePacket(Cmd.VERSION, [], 'Query Version');
 
-        this._modelFallbackTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => {
+        this._modelRetryTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => {
             if (!this._modelInitialized)
-                this._getModelByName();
+                this._queuePacket(Cmd.PRODUCT_ID, [], 'Query Product ID');
 
-            this._modelFallbackTimeoutId = null;
+            this._modelRetryTimeoutId = null;
             return GLib.SOURCE_REMOVE;
         });
     }
 
-    _getModelByName() {
-        const bluezProxy = getBluezDeviceProxy(this._devicePath);
-        const alias = bluezProxy.Alias ?? bluezProxy.Name ?? '';
-
-        this._log.info(`Model fallback by name: "${alias}"`);
-        const model = OpoBudsModelList.find(m => m.pattern.test(alias)) ?? OpoBudsModelList[0];
-        this._onModelInitialized(model);
-    }
 
     _onModelInitialized(modelData) {
         if (this._modelInitialized)
             return;
+
+        if (this._modelRetryTimeoutId) {
+            GLib.source_remove(this._modelRetryTimeoutId);
+            this._modelRetryTimeoutId = null;
+        }
 
         this._log.info(`OpoBuds Model Initialized: ${modelData.name}`);
         this._modelInitialized = true;
@@ -230,8 +226,6 @@ export const OpoBudsSocket = GObject.registerClass({
                     const model = OpoBudsModelList.find(m => m.modelId.toUpperCase() === pidHex);
                     if (model)
                         this._onModelInitialized(model);
-                    else
-                        this._getModelByName();
                 }
                 break;
 
@@ -582,14 +576,14 @@ export const OpoBudsSocket = GObject.registerClass({
     }
 
     destroy() {
-        if (this._modelFallbackTimeoutId) {
-            GLib.source_remove(this._modelFallbackTimeoutId);
-            this._modelFallbackTimeoutId = null;
-        }
-
         if (this._pendingTimeout) {
             GLib.source_remove(this._pendingTimeout);
             this._pendingTimeout = null;
+        }
+
+        if (this._modelRetryTimeoutId) {
+            GLib.source_remove(this._modelRetryTimeoutId);
+            this._modelRetryTimeoutId = null;
         }
 
         super.destroy();

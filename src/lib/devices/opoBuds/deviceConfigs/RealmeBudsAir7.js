@@ -3,7 +3,6 @@
 export default {
     modelId: '064812',
     name: 'Realme Buds Air 7',
-    pattern: /^realme Buds Air\s*7$/i,
 
     batteryLR: true,
     batteryCase: true,

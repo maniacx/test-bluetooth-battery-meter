@@ -3,7 +3,6 @@
 export default {
     modelId: '051412',
     name: 'Realme Buds Wireless 5 ANC',
-    pattern: /^realme Buds Wireless\s*5(\s*ANC)?$/i,
 
     batteryLR: false,
     batteryCase: false,
