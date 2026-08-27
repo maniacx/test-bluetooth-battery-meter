@@ -1,4 +1,6 @@
 'use strict';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import {createConfigureWindow} from '../../appLibs/confirueWindowlauncher.js';
 
 export const SppUUidType = 'serial';
@@ -114,6 +116,37 @@ export function validateProperties(settings, settingsKey, devicesList, defaults,
         );
     }
 }
+
+export async function getAdapterMac(devicePath) {
+    try {
+        const adapterPath = devicePath.split('/dev_')[0];
+
+        const connection = await Gio.bus_get(
+            Gio.BusType.SYSTEM,
+            null
+        );
+
+        const result = await connection.call(
+            'org.bluez',
+            adapterPath,
+            'org.freedesktop.DBus.Properties',
+            'Get',
+            new GLib.Variant('(ss)', [
+                'org.bluez.Adapter1',
+                'Address',
+            ]),
+            new GLib.VariantType('(v)'),
+            Gio.DBusCallFlags.NONE,
+            -1,
+            null
+        );
+
+        return result.deepUnpack()[0].deepUnpack();
+    } catch {
+        return null;
+    }
+}
+
 
 const _openConfigureWindows = new Map();
 

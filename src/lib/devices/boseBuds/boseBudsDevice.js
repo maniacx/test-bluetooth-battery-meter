@@ -7,7 +7,7 @@ import {gettext as _} from 'gettext';
 import {createLogger, getDeviceIdentifier, hexBytes} from '../logger.js';
 import {
     buds2to1BatteryLevel, validateProperties, launchConfigureWindow, isArrayEqual,
-    SppUUidType, SppUUid
+    SppUUidType, SppUUid, getAdapterMac
 } from '../deviceUtils.js';
 import {createConfig, createProperties, DataHandler} from '../../dataHandler.js';
 import {getBluezDeviceProxy} from '../../bluezDeviceProxy.js';
@@ -101,7 +101,6 @@ export const BoseBudsDevice = GObject.registerClass({
             updateRemoveBTDeviceError: this.updateRemoveBTDeviceError.bind(this),
             updateRemoveBTDeviceStatus: this.updateRemoveBTDeviceStatus.bind(this),
             updateRoutingStatus: this.updateRoutingStatus.bind(this),
-            updateOwnDeviceId: this.updateOwnDeviceId.bind(this),
         };
 
         const bluezDeviceProxy = getBluezDeviceProxy(this._devicePath);
@@ -166,6 +165,9 @@ export const BoseBudsDevice = GObject.registerClass({
             this._modelData,
             this._callbacks
         );
+
+        if (this._modelData.dualConnection)
+            this._updateOwnId();
     }
 
     _createModesArray() {
@@ -320,7 +322,6 @@ export const BoseBudsDevice = GObject.registerClass({
             this._pairingMode = this._settingsItems['pairing-mode'];
             this._devMgmtAction = this._settingsItems['dev-mgmt-action'];
             this._activeDevice = this._settingsItems['active-dev'];
-            this._ownDevice = this._settingsItems['own-dev'];
         }
 
         if (this._modelData.sideTone)
@@ -1470,7 +1471,7 @@ export const BoseBudsDevice = GObject.registerClass({
 
     updateDisconnectError() {
         const pending = [...this._pendingBTOperations.entries()]
-        .find(([, pending]) => pending.operation === 'disconnect');
+                .find(([, pending]) => pending.operation === 'disconnect');
 
         if (!pending)
             return;
@@ -1568,12 +1569,16 @@ export const BoseBudsDevice = GObject.registerClass({
         this._boseBudsSocket?.setRoutingBTDevice(id);
     }
 
-    updateOwnDeviceId(id) {
-        if (this._ownDevice !== id) {
-            this._ownDevice = id;
-            this._settingsItems['own-dev'] = id;
-            this._updateGsettings();
-        }
+    async _updateOwnId() {
+        const ownMac = await getAdapterMac();
+
+        if (!ownMac)
+            return;
+
+        const id = ownMac.replaceAll(':', '').toLowerCase();
+
+        this._settingsItems['own-dev'] = id;
+        this._updateGsettings();
     }
 
     _settingsButtonClicked() {

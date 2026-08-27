@@ -353,12 +353,6 @@ export const BoseBudsSocket = GObject.registerClass({
                 break;
             }
 
-            case CommandType.GET_OWN_DEVICE_ID: {
-                if (this._modelData.dualConnection && isStatus)
-                    this._parseOwnDeviceId(msg.payload);
-                break;
-            }
-
             default:
                 this._log.info(`Unhandled command ${hexBytes(msg.command)}`);
         }
@@ -431,7 +425,6 @@ export const BoseBudsSocket = GObject.registerClass({
             this._getActionButton();
 
         if (this._modelData.dualConnection) {
-            this._getOwnDeviceId();
             this._getRoutingBTDevice();
             this._getPairingMode();
             this._getAllBTDevices();
@@ -1173,10 +1166,11 @@ export const BoseBudsSocket = GObject.registerClass({
     _parseConnectBTDevice(msg) {
         const isStatus = msg.operator === Operator.STATUS;
         const isError = msg.operator === Operator.ERROR;
+        const isResult = msg.operator === Operator.RESULT;
 
         if (isError) {
             this._callbacks?.updateConnectError();
-        } else if (msg.payload.length > 6 && isStatus) {
+        } else if (msg.payload.length > 6 && (isStatus || isResult)) {
             this._log.info('Parse Connect Result');
             const macAddress = bytesToHex(msg.payload.slice(0, 6));
             const flags = msg.payload[6];
@@ -1194,10 +1188,11 @@ export const BoseBudsSocket = GObject.registerClass({
     _parseDisconnectBTDevice(msg) {
         const isStatus = msg.operator === Operator.STATUS;
         const isError = msg.operator === Operator.ERROR;
+        const isResult = msg.operator === Operator.RESULT;
 
         if (isError) {
             this._callbacks?.updateDisconnectError?.();
-        } else if (msg.payload.length >= 6 && isStatus) {
+        } else if (msg.payload.length >= 6 && (isStatus || isResult)) {
             this._log.info('Parse Disconnect Result');
             const macAddress = bytesToHex(msg.payload.slice(0, 6));
             this._callbacks?.updateDisconnectStatus?.(macAddress);
@@ -1213,10 +1208,11 @@ export const BoseBudsSocket = GObject.registerClass({
     _parseRemoveBTDevice(msg) {
         const isStatus = msg.operator === Operator.STATUS;
         const isError = msg.operator === Operator.ERROR;
+        const isResult = msg.operator === Operator.RESULT;
 
         if (isError) {
             this._callbacks?.updateRemoveBTDeviceError?.();
-        } else if (msg.payload.length >= 6 && isStatus) {
+        } else if (msg.payload.length >= 6 && (isStatus || isResult)) {
             this._log.info('Parse Remove BTDevice Result');
             const macAddress = bytesToHex(msg.payload.slice(0, 6));
             this._callbacks?.updateRemoveBTDeviceStatus?.(macAddress);
@@ -1250,20 +1246,6 @@ export const BoseBudsSocket = GObject.registerClass({
         const loginfo = 'Set Routing BTDevice';
         const mac = hexToBytes(macHex);
         this._encode(CommandType.DEVICE_ROUTING, Operator.START, loginfo, mac);
-    }
-
-    _getOwnDeviceId() {
-        const loginfo = 'Get OwnDeviceId';
-        this._encode(CommandType.GET_OWN_DEVICE_ID, Operator.GET, loginfo);
-    }
-
-    _parseOwnDeviceId(payload) {
-        if (payload.length !== 6)
-            return;
-
-        this._log.info('Parse OwnDeviceId');
-        const macAddress = bytesToHex(payload);
-        this._callbacks?.updateOwnDeviceId?.(macAddress);
     }
 
     destroy() {

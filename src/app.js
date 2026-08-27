@@ -17,6 +17,7 @@ import {BluetoothClient} from './appLibs/bluetoothClient.js';
 import {initConfigureWindowLauncher} from './appLibs/confirueWindowlauncher.js';
 import {EnhancedDeviceSupportManager} from './lib/enhancedDeviceSupportManager.js';
 
+Gio._promisify(Gio, 'bus_get');
 Gio._promisify(Gio.DBusProxy, 'new');
 Gio._promisify(Gio.DBusProxy, 'new_for_bus');
 Gio._promisify(Gio.DBusProxy.prototype, 'call');
