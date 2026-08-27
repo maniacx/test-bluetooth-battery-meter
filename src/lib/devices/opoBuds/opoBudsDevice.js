@@ -188,7 +188,9 @@ export const OpoBudsDevice = GObject.registerClass({
                 this._defaultsDeviceSettings, this._devicePath);
         }
 
-        this._commonIcon = this._settingsItems['icon'] ?? this._modelData?.budsIcon ?? 'earbuds-stem';
+        this._commonIcon = this._settingsItems['icon'] ?? this._modelData?.budsIcon ??
+            'earbuds-stem';
+
         if (this._modelData?.batteryCase)
             this._caseIcon = this._settingsItems['case'] ?? this._modelData?.case ?? 'case-round';
 
@@ -387,7 +389,7 @@ export const OpoBudsDevice = GObject.registerClass({
         }
 
         if (nc.noiseCancellation) {
-            let bytes = [];
+            const bytes = [];
             this._ancRadioMap = {};
             this._ancRadioReverse = {};
 

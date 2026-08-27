@@ -96,10 +96,10 @@ export const OpoBudsSocket = GObject.registerClass({
             0x00,
             0x00,
             cmd & 0xFF,
-            (cmd >> 8) & 0xFF,
+            cmd >> 8 & 0xFF,
             this._seq,
             payLen & 0xFF,
-            (payLen >> 8) & 0xFF,
+            payLen >> 8 & 0xFF,
         ];
 
         const packet = Uint8Array.from([...header, ...payload]);
@@ -153,9 +153,9 @@ export const OpoBudsSocket = GObject.registerClass({
     }
 
     _parseMessage(raw) {
-        const cmd = raw[4] | (raw[5] << 8);
+        const cmd = raw[4] | raw[5] << 8;
         const seq = raw[6];
-        const payLen = raw[7] | (raw[8] << 8);
+        const payLen = raw[7] | raw[8] << 8;
         const payload = raw.slice(9, 9 + payLen);
 
         return {cmd, seq, payload};
@@ -171,7 +171,8 @@ export const OpoBudsSocket = GObject.registerClass({
         this._queuePacket(Cmd.GET_NOTIFICATION_CAPABILITY, [], 'Query Notification Capabilities');
 
         const events = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x0d, 0x0e, 0x0f, 0x10, 0xf1, 0xf2];
-        this._queuePacket(Cmd.REGISTER_NOTIFICATION, [events.length, ...events], 'Subscribe Broadcast Events');
+        const payload =  [events.length, ...events];
+        this._queuePacket(Cmd.REGISTER_NOTIFICATION, payload, 'Subscribe Broadcast Events');
 
         this._queuePacket(Cmd.PRODUCT_ID, [], 'Query Product ID');
         this._queuePacket(Cmd.VERSION, [], 'Query Version');
@@ -255,7 +256,7 @@ export const OpoBudsSocket = GObject.registerClass({
         switch (cmd) {
             case Cmd.PRODUCT_ID_RSP:
                 if (!this._modelInitialized && payload.length >= 4 && payload[0] === 0x00) {
-                    const id = payload[1] | (payload[2] << 8) | (payload[3] << 16);
+                    const id = payload[1] | payload[2] << 8 | payload[3] << 16;
                     const pidHex = id.toString(16).padStart(6, '0').toUpperCase();
                     this._log.info(`Received Product ID: 0x${pidHex}`);
                     const model = OpoBudsModelList.find(m => m.modelId.toUpperCase() === pidHex);
@@ -474,7 +475,9 @@ export const OpoBudsSocket = GObject.registerClass({
                     const btn = eventData[1];
                     const act = eventData[2];
                     const func = eventData[3];
-                    this._log.info(`Live button event: dev=${dev} btn=${btn} act=${act} func=${func}`);
+                    this._log.info(`Live button event: dev=${dev} btn=${btn} ` +
+                        `act=${act} func=${func}`);
+
                     this._callbacks?.updateSingleGesture?.(dev, btn, act, func);
                 } else {
                     this._getGestures();
@@ -485,73 +488,87 @@ export const OpoBudsSocket = GObject.registerClass({
 
     setNoiseControl(modeByte) {
         this._log.info(`Set ANC mode byte: 0x${modeByte.toString(16)}`);
-        this._queuePacket(Cmd.SET_ANC, [0x01, 0x01, modeByte], 'Set ANC Mode');
+        const payload =  [0x01, 0x01, modeByte];
+        this._queuePacket(Cmd.SET_ANC, payload, 'Set ANC Mode');
     }
 
     setNoiseControlCycle(maskByte) {
         this._log.info(`Set ANC cycle mask byte: 0x${maskByte.toString(16)}`);
-        this._queuePacket(Cmd.SET_ANC_CYCLE, [0x01, maskByte], 'Set ANC Cycle Mask');
+        const payload = [0x01, maskByte];
+        this._queuePacket(Cmd.SET_ANC_CYCLE, payload, 'Set ANC Cycle Mask');
     }
 
     setLatency(enable) {
         this._log.info(`Set Low Latency Game Mode: ${enable}`);
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, [FeatureId.GAME_MODE, enable ? 0x01 : 0x00], 'Set Game Mode');
+        const payload = [FeatureId.GAME_MODE, enable ? 0x01 : 0x00];
+        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Game Mode');
     }
 
     setInEar(enable) {
         this._log.info(`Set In-Ear Detection: ${enable}`);
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, [FeatureId.IN_EAR, enable ? 0x01 : 0x00], 'Set In-Ear Detection');
+        const payload = [FeatureId.IN_EAR, enable ? 0x01 : 0x00];
+        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set In-Ear Detection');
     }
 
     setDualConnection(enable) {
         this._log.info(`Set Dual Connection: ${enable}`);
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, [FeatureId.DUAL_DEVICE, enable ? 0x01 : 0x00], 'Set Dual Connection');
+        const payload = [FeatureId.DUAL_DEVICE, enable ? 0x01 : 0x00];
+        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Dual Connection');
     }
 
     setWindNoise(enable) {
         this._log.info(`Set Wind Noise: ${enable}`);
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, [FeatureId.WIND_NOISE, enable ? 0x01 : 0x00], 'Set Wind Noise');
+        const payload = [FeatureId.WIND_NOISE, enable ? 0x01 : 0x00];
+        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Wind Noise');
     }
 
     setVolumeEnhancer(enable) {
         this._log.info(`Set Volume Enhancer: ${enable}`);
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, [FeatureId.VOLUME_ENHANCER, enable ? 0x01 : 0x00], 'Set Volume Enhancer');
+        const payload = [FeatureId.VOLUME_ENHANCER, enable ? 0x01 : 0x00];
+        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Volume Enhancer');
     }
 
     setSpatialAudio(enable) {
         this._log.info(`Set Spatial Audio: ${enable}`);
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, [FeatureId.SPATIAL, enable ? 0x01 : 0x00], 'Set Spatial Audio');
+        const payload = [FeatureId.SPATIAL, enable ? 0x01 : 0x00];
+        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Spatial Audio');
     }
 
     setHighRes(enable) {
         this._log.info(`Set High-Res LHDC: ${enable}`);
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, [FeatureId.HIGH_RES, enable ? 0x01 : 0x00], 'Set High-Res LHDC');
+        const payload = [FeatureId.HIGH_RES, enable ? 0x01 : 0x00];
+        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set High-Res LHDC');
     }
 
     setDynamicBass(enable) {
         this._log.info(`Set Dynamic Bass: ${enable}`);
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, [FeatureId.DYNAMIC_BASS, enable ? 0x01 : 0x00], 'Set Dynamic Bass');
+        const payload = [FeatureId.DYNAMIC_BASS, enable ? 0x01 : 0x00];
+        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Dynamic Bass');
     }
 
     setAutoAnswer(enable) {
         this._log.info(`Set Auto Answer: ${enable}`);
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, [FeatureId.AUTO_ANSWER, enable ? 0x01 : 0x00], 'Set Auto Answer');
+        const payload = [FeatureId.AUTO_ANSWER, enable ? 0x01 : 0x00];
+        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Auto Answer');
     }
 
     setFindPhone(enable) {
         this._log.info(`Set Find My Phone: ${enable}`);
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, [FeatureId.FIND_PHONE, enable ? 0x01 : 0x00], 'Set Find My Phone');
+        const payload = [FeatureId.FIND_PHONE, enable ? 0x01 : 0x00];
+        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Find My Phone');
     }
 
     setEqPreset(presetId) {
         this._log.info(`Set EQ Preset: ${presetId}`);
-        this._queuePacket(Cmd.SET_EQ, [presetId], 'Set EQ Preset');
+        const payload = [presetId];
+        this._queuePacket(Cmd.SET_EQ, payload, 'Set EQ Preset');
     }
 
     setFindBuds(ringState) {
         const ring = ringState === 'started' || ringState === 'playing';
         this._log.info(`Set Find Buds: ${ring}`);
-        this._queuePacket(Cmd.FIND_BUDS, [ring ? 0x01 : 0x00], 'Set Find Buds');
+        const payload = [ring ? 0x01 : 0x00];
+        this._queuePacket(Cmd.FIND_BUDS, payload, 'Set Find Buds');
     }
 
     setGestures(gesturesHex) {
@@ -561,7 +578,8 @@ export const OpoBudsSocket = GObject.registerClass({
             bytes.push(parseInt(gesturesHex.slice(i, i + 2), 16));
 
         const count = Math.floor(bytes.length / 4);
-        this._queuePacket(Cmd.SET_KEY_FUNCTION, [0x00, count, ...bytes], 'Set Key Functions');
+        const payload = [0x00, count, ...bytes];
+        this._queuePacket(Cmd.SET_KEY_FUNCTION, payload, 'Set Key Functions');
     }
 
     destroy() {

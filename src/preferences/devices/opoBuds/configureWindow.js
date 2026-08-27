@@ -1,6 +1,5 @@
 'use strict';
 import Adw from 'gi://Adw';
-import Gtk from 'gi://Gtk';
 import GObject from 'gi://GObject';
 
 import {DropDownRowWidget} from '../../widgets/dropDownRowWidget.js';
@@ -29,7 +28,8 @@ export const ConfigureWindow = GObject.registerClass({
         this._gettext = _;
 
         const pathsString = settings.get_strv('opo-buds-list').map(JSON.parse);
-        this._settingsItems = pathsString.find(info => info.path === devicePath || info['device-path'] === devicePath);
+        this._settingsItems = pathsString.find(info => info.path === devicePath ||
+            info['device-path'] === devicePath);
 
         if (!this._settingsItems)
             return;
@@ -98,7 +98,9 @@ export const ConfigureWindow = GObject.registerClass({
                 return;
 
             const list = this._settings.get_strv('opo-buds-list').map(JSON.parse);
-            const item = list.find(d => d.path === this._devicePath || d['device-path'] === this._devicePath);
+            const item = list.find(d => d.path === this._devicePath ||
+                d['device-path'] === this._devicePath);
+
             if (!item)
                 return;
 
@@ -115,8 +117,10 @@ export const ConfigureWindow = GObject.registerClass({
                 if (this._modelData.spatialAudio && this._spatialAudioSwitch)
                     this._spatialAudioSwitch.active = this._settingsItems['spatial'] ?? false;
 
-                if (this._modelData.volumeEnhancer && this._volumeEnhancerSwitch)
-                    this._volumeEnhancerSwitch.active = this._settingsItems['volume-enhancer'] ?? false;
+                if (this._modelData.volumeEnhancer && this._volumeEnhancerSwitch) {
+                    this._volumeEnhancerSwitch.active = this._settingsItems['volume-enhancer'] ??
+                            false;
+                }
 
                 if (this._modelData.highResAudio && this._highResSwitch)
                     this._highResSwitch.active = this._settingsItems['high-res'] ?? false;
@@ -137,10 +141,13 @@ export const ConfigureWindow = GObject.registerClass({
                     this._findPhoneSwitch.active = this._settingsItems['find-phone'] ?? false;
 
                 if (this._modelData.gestureOptions && this._gestureDropdowns) {
-                    const gesturesHex = this._settingsItems['gestures'] ?? this._modelData.gestureOptions.default;
+                    const gesturesHex = this._settingsItems['gestures'] ??
+                            this._modelData.gestureOptions.default;
+
                     const slots = this._decodeGestures(gesturesHex);
                     Object.entries(this._gestureDropdowns).forEach(([slotKey, dropdown]) => {
-                        if (slots[slotKey] !== undefined && dropdown.selected_item !== slots[slotKey])
+                        if (slots[slotKey] !== undefined &&
+                                dropdown.selected_item !== slots[slotKey])
                             dropdown.selected_item = slots[slotKey];
                     });
                 }
@@ -165,7 +172,8 @@ export const ConfigureWindow = GObject.registerClass({
 
     _updateGsettings(key, value) {
         const currentList = this._settings.get_strv('opo-buds-list').map(JSON.parse);
-        const index = currentList.findIndex(d => d.path === this._devicePath || d['device-path'] === this._devicePath);
+        const index = currentList.findIndex(d => d.path === this._devicePath ||
+            d['device-path'] === this._devicePath);
 
         if (index !== -1) {
             currentList[index][key] = value;
@@ -461,8 +469,12 @@ export const ConfigureWindow = GObject.registerClass({
                 });
 
                 const btnId = slot.buttonId ?? 0x01;
-                const slotKey = `${slot.device}_${btnId}_${gesturesConfig.mapping.gestureTypes[slot.type]}`;
-                const currentFuncCode = currentSlots[slotKey] !== undefined ? currentSlots[slotKey] : values[0];
+                const slotKey =
+                    `${slot.device}_${btnId}_${gesturesConfig.mapping.gestureTypes[slot.type]}`;
+
+                const currentFuncCode =
+                     currentSlots[slotKey] !== undefined ? currentSlots[slotKey] : values[0];
+
                 const rowTitle = gestureSlotNames[slot.type] ?? slot.type;
 
                 const dropdown = new DropDownRowWidget({
