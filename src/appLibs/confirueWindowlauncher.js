@@ -89,7 +89,7 @@ export function createConfigureWindow({
         return null;
 
     const list = _settings.get_strv(schemaKey).map(JSON.parse);
-    const entry = list.find(e => e.path === devicePath || e['device-path'] === devicePath);
+    const entry = list.find(e => e.path === devicePath);
     if (!entry)
         return null;
 
