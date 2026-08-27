@@ -11,14 +11,11 @@ import {OpoBudsSocket} from './opoBudsSocket.js';
 
 export const DeviceTypeOpoBuds = 'opoBuds';
 
-const OpoBudsUUIDs = [
-    '0000079a-d102-11e1-9b23-00025b00a5a5',
-    '00001107-d102-11e1-9b23-00025b00a5a5',
-];
+const OpoBudsUUID = '0000079a-d102-11e1-9b23-00025b00a5a5';
 
 export function isOpoBuds(bluezDeviceProxy, uuids) {
     const bluezProps = [];
-    const supported = uuids.some(u => OpoBudsUUIDs.includes(u.toLowerCase())) ? 'yes' : 'no';
+    const supported = uuids.some(uuid => uuid.toLowerCase() === OpoBudsUUID) ? 'yes' : 'no';
     return {supported, bluezProps};
 }
 
@@ -66,7 +63,7 @@ export const OpoBudsDevice = GObject.registerClass({
             updateSingleGesture: this.updateSingleGesture.bind(this),
         };
 
-        const profile = {type: DeviceTypeOpoBuds, uuid: OpoBudsUUIDs[0]};
+        const profile = {type: DeviceTypeOpoBuds, uuid: OpoBudsUUID};
 
         this._opoBudsSocket = new OpoBudsSocket(
             devicePath,
