@@ -9,7 +9,6 @@ export default {
 
     batteryMutiple: true,
     batteryCase: true,
-    /*
     eqPreset: {
         standard: 0x00,
         treble: 0x06,
@@ -100,7 +99,6 @@ export default {
         },
         noiseControlModes: ['off', 'transparency', 'noise-cancellation'],
     },
-*/
     albumArtIcon: 'earbuds',
     budsIcon: 'earbuds',
     case: 'case-normal',
