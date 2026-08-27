@@ -136,7 +136,7 @@ export const ConfigureWindow = GObject.registerClass({
 
                 if (this._modelData.gestureOptions && this._gestureDropdowns) {
                     const gesturesHex = this._settingsItems['gestures'] ??
-                            this._modelData.gestureOptions.default;
+                            this._buildPlaceholderGesturesHex(this._modelData.gestureOptions);
 
                     const slots = this._decodeGestures(gesturesHex);
                     Object.entries(this._gestureDropdowns).forEach(([slotKey, dropdown]) => {
@@ -436,7 +436,8 @@ export const ConfigureWindow = GObject.registerClass({
             'double-action-hold': _('Double Tap &amp; Hold'),
         };
 
-        const currentGesturesHex = this._settingsItems['gestures'] ?? gesturesConfig.default;
+        const currentGesturesHex = this._settingsItems['gestures'] ??
+            this._buildPlaceholderGesturesHex(gesturesConfig);
         const currentSlots = this._decodeGestures(currentGesturesHex);
 
         const groups = [...new Set(gesturesConfig.slots.map(s => s.group))];
@@ -483,7 +484,7 @@ export const ConfigureWindow = GObject.registerClass({
                         return;
 
                     currentSlots[slotKey] = dropdown.selected_item;
-                    const newHex = this._encodeGestures(currentSlots, currentGesturesHex);
+                    const newHex = this._encodeGestures(currentSlots, gesturesConfig);
                     this._updateGsettings('gestures', newHex);
                 });
 
@@ -512,6 +513,26 @@ export const ConfigureWindow = GObject.registerClass({
         }
     }
 
+    _buildPlaceholderGesturesHex(gesturesConfig) {
+        let hex = '';
+        gesturesConfig.slots.forEach(slot => {
+            const gestureDef = gesturesConfig.gestures[slot.type];
+            if (!gestureDef?.actions?.length)
+                return;
+
+            const firstAction = gestureDef.actions[0];
+            const func = gesturesConfig.mapping.actions[firstAction]?.[0] ?? 0;
+            const btnId = slot.buttonId ?? 0x01;
+            const act = gesturesConfig.mapping.gestureTypes[slot.type];
+
+            hex += slot.device.toString(16).padStart(2, '0');
+            hex += btnId.toString(16).padStart(2, '0');
+            hex += act.toString(16).padStart(2, '0');
+            hex += func.toString(16).padStart(2, '0');
+        });
+        return hex;
+    }
+
     _decodeGestures(hex) {
         const slots = {};
         for (let i = 0; i < hex.length; i += 8) {
@@ -524,22 +545,23 @@ export const ConfigureWindow = GObject.registerClass({
         return slots;
     }
 
-    _encodeGestures(slotMap, baseHex) {
+    _encodeGestures(slotMap, gesturesConfig) {
         let hex = '';
-        for (let i = 0; i < baseHex.length; i += 8) {
-            const dev = parseInt(baseHex.slice(i, i + 2), 16);
-            const btn = parseInt(baseHex.slice(i + 2, i + 4), 16);
-            const act = parseInt(baseHex.slice(i + 4, i + 6), 16);
-            const origFunc = parseInt(baseHex.slice(i + 6, i + 8), 16);
+        gesturesConfig.slots.forEach(slot => {
+            const btnId = slot.buttonId ?? 0x01;
+            const act = gesturesConfig.mapping.gestureTypes[slot.type];
+            const key = `${slot.device}_${btnId}_${act}`;
+            const gestureDef = gesturesConfig.gestures[slot.type];
+            const defaultFunc = gestureDef?.actions?.length
+                ? gesturesConfig.mapping.actions[gestureDef.actions[0]]?.[0] ?? 0
+                : 0;
+            const func = slotMap[key] !== undefined ? slotMap[key] : defaultFunc;
 
-            const key = `${dev}_${btn}_${act}`;
-            const func = slotMap[key] !== undefined ? slotMap[key] : origFunc;
-
-            hex += dev.toString(16).padStart(2, '0');
-            hex += btn.toString(16).padStart(2, '0');
+            hex += slot.device.toString(16).padStart(2, '0');
+            hex += btnId.toString(16).padStart(2, '0');
             hex += act.toString(16).padStart(2, '0');
             hex += func.toString(16).padStart(2, '0');
-        }
+        });
         return hex;
     }
 });
