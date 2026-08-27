@@ -193,6 +193,7 @@
         <file>lib/devices/senhBuds/deviceConfigs/MomentumWireless4.js</file>
         <file>lib/devices/senhBuds/deviceConfigs/MomentumWireless5.js</file>
         <file>preferences/devices/senhBuds/configureWindow.js</file>
+
         <file>lib/devices/edifierBuds/edifierBudsConfig.js</file>
         <file>lib/devices/edifierBuds/edifierBudsDevice.js</file>
         <file>lib/devices/edifierBuds/edifierBudsSocket.js</file>
