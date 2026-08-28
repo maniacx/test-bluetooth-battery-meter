@@ -6,6 +6,7 @@ import Gtk from 'gi://Gtk';
 import {DropDownRowWidget} from '../../widgets/dropDownRowWidget.js';
 import {IconSelectorWidget} from '../../widgets/iconSelectorWidget.js';
 import {RingMyBudsRow} from '../../widgets/ringMyBudsRow.js';
+import {CheckBoxesRowWidget} from '../../widgets/checkBoxesRowWidget.js';
 import {
     supportedAudioDualIcons, supportedAudioSingleIcons, supportedCaseIcons
 } from '../../../lib/widgets/iconGroups.js';
@@ -342,6 +343,15 @@ export const ConfigureWindow = GObject.registerClass({
             effectsGroup.add(this._windNoiseSwitch);
         }
 
+        if (this._modelData.noiseControl?.noiseCancellation?.levels?.smart) {
+            const smartSub = this._settingsItems['smart-anc-sublevel'] || _('Moderate');
+            const smartRow = new Adw.ActionRow({
+                title: _('Smart ANC Adaptive State'),
+                subtitle: `${_('Live environmental adaptation:')} ${smartSub}`,
+            });
+            effectsGroup.add(smartRow);
+        }
+
         this._page.add(effectsGroup);
     }
 
@@ -386,17 +396,106 @@ export const ConfigureWindow = GObject.registerClass({
         }
 
         if (this._modelData.dualConnection) {
-            this._dualConnectionSwitch = new Adw.SwitchRow({
-                title: _('Dual Device Connection'),
-                subtitle: _('Connect to two Bluetooth audio devices simultaneously'),
-                active: this._settingsItems['dual-connection'],
-            });
+            const multiDevices = this._settingsItems['multi-devices'] ?? [];
+            if (multiDevices.length > 0) {
+                const isDualActive = this._settingsItems['dual-connection'] ?? false;
+                const dualDeviceExpander = new Adw.ExpanderRow({
+                    title: _('Dual Device Connection'),
+                    subtitle: _('Connect to two Bluetooth audio devices simultaneously'),
+                    show_enable_switch: true,
+                    enable_expansion: isDualActive,
+                    expanded: isDualActive,
+                });
 
-            this._dualConnectionSwitch.connect('notify::active', () => {
-                this._updateGsettings('dual-connection', this._dualConnectionSwitch.active);
-            });
+                dualDeviceExpander.connect('notify::enable-expansion', () => {
+                    const enabled = dualDeviceExpander.enable_expansion;
+                    dualDeviceExpander.expanded = enabled;
+                    this._updateGsettings('dual-connection', enabled);
+                });
 
-            miscGroup.add(this._dualConnectionSwitch);
+                multiDevices.forEach(dev => {
+                    let statusLabel = _('Paired');
+                    if (dev.isConnected) {
+                        if (dev.isCurrent)
+                            statusLabel = _('Current Host (Connected)');
+                        else if (dev.isAudioActive)
+                            statusLabel = _('Audio Streaming (Connected)');
+                        else
+                            statusLabel = _('Connected');
+                    }
+
+                    const devRow = new Adw.ActionRow({
+                        title: dev.name || dev.mac,
+                        subtitle: `${dev.mac} • ${statusLabel}`,
+                    });
+
+                    const btnBox = new Gtk.Box({
+                        orientation: Gtk.Orientation.HORIZONTAL,
+                        spacing: 6,
+                        valign: Gtk.Align.CENTER,
+                    });
+
+                    if (dev.isConnected) {
+                        const priorityBtn = new Gtk.Button({
+                            label: _('Priority'),
+                            valign: Gtk.Align.CENTER,
+                            css_classes: ['flat', 'suggested-action'],
+                            tooltip_text: _('Set audio priority to this device'),
+                        });
+                        priorityBtn.connect('clicked', () => {
+                            this._updateGsettings('multi-device-op', {op: 0x04, mac: dev.mac, ts: Date.now()});
+                        });
+                        btnBox.append(priorityBtn);
+
+                        const disconnectBtn = new Gtk.Button({
+                            label: _('Disconnect'),
+                            valign: Gtk.Align.CENTER,
+                            css_classes: ['flat'],
+                        });
+                        disconnectBtn.connect('clicked', () => {
+                            this._updateGsettings('multi-device-op', {op: 0x02, mac: dev.mac, ts: Date.now()});
+                        });
+                        btnBox.append(disconnectBtn);
+                    } else {
+                        const connectBtn = new Gtk.Button({
+                            label: _('Connect'),
+                            valign: Gtk.Align.CENTER,
+                            css_classes: ['flat', 'suggested-action'],
+                        });
+                        connectBtn.connect('clicked', () => {
+                            this._updateGsettings('multi-device-op', {op: 0x01, mac: dev.mac, ts: Date.now()});
+                        });
+                        btnBox.append(connectBtn);
+
+                        const unpairBtn = new Gtk.Button({
+                            label: _('Unpair'),
+                            valign: Gtk.Align.CENTER,
+                            css_classes: ['flat', 'destructive-action'],
+                        });
+                        unpairBtn.connect('clicked', () => {
+                            this._updateGsettings('multi-device-op', {op: 0x03, mac: dev.mac, ts: Date.now()});
+                        });
+                        btnBox.append(unpairBtn);
+                    }
+
+                    devRow.add_suffix(btnBox);
+                    dualDeviceExpander.add_row(devRow);
+                });
+
+                miscGroup.add(dualDeviceExpander);
+            } else {
+                this._dualConnectionSwitch = new Adw.SwitchRow({
+                    title: _('Dual Device Connection'),
+                    subtitle: _('Connect to two Bluetooth audio devices simultaneously'),
+                    active: this._settingsItems['dual-connection'],
+                });
+
+                this._dualConnectionSwitch.connect('notify::active', () => {
+                    this._updateGsettings('dual-connection', this._dualConnectionSwitch.active);
+                });
+
+                miscGroup.add(this._dualConnectionSwitch);
+            }
         }
 
         if (this._modelData.autoAnswer) {
@@ -539,6 +638,38 @@ export const ConfigureWindow = GObject.registerClass({
         });
 
         this._page.add(gestureGroup);
+
+        if (this._modelData.noiseControl) {
+            const items = [
+                {name: _('Off'), icon: 'bbm-anc-off-symbolic'},
+                {name: _('Transparency'), icon: 'bbm-transperancy-symbolic'},
+                {name: _('Noise Cancellation'), icon: 'bbm-anc-on-symbolic'},
+            ];
+
+            const initialMask = this._settingsItems['nc-cycle-mask'] ?? 0x06;
+
+            const ncCycleGroup = new Adw.PreferencesGroup({
+                title: _('Noise Control Cycling'),
+                description: _('Select modes to cycle through when switching with the earbud/neckband button (minimum 2 required)'),
+            });
+
+            this._ncCycleWidget = new CheckBoxesRowWidget({
+                rowTitle: _('Cycle Through Modes'),
+                rowSubtitle: _('Select 2 or 3 modes to cycle'),
+                items,
+                applyBtnName: _('Apply'),
+                initialValue: initialMask,
+                minRequired: 2,
+            });
+
+            this._ncCycleWidget.connect('notify::toggled-value', () => {
+                const mask = this._ncCycleWidget.toggled_value;
+                this._updateGsettings('nc-cycle-mask', mask);
+            });
+
+            ncCycleGroup.add(this._ncCycleWidget);
+            this._page.add(ncCycleGroup);
+        }
     }
 
     _getGroupTitle(group) {
@@ -552,6 +683,8 @@ export const ConfigureWindow = GObject.registerClass({
                 return _('Button Controls');
             case 'mfb':
                 return _('Multi-Function Button');
+            case 'anc':
+                return _('Noise Control (ANC) Button');
             default:
                 return _('Button & Gesture Controls');
         }

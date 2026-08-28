@@ -60,6 +60,8 @@ export const OpoBudsDevice = GObject.registerClass({
             updateEqPreset: this.updateEqPreset.bind(this),
             updateGestures: this.updateGestures.bind(this),
             updateSingleGesture: this.updateSingleGesture.bind(this),
+            updateMultiConnectDevices: this.updateMultiConnectDevices.bind(this),
+            updateAdaptiveAncSubLevel: this.updateAdaptiveAncSubLevel.bind(this),
         };
 
         const profile = {type: DeviceTypeOpoBuds, uuid: OpoBudsUUID};
@@ -190,6 +192,10 @@ export const OpoBudsDevice = GObject.registerClass({
             ...this._modelData.findMyPhone && {
                 'find-phone': false,
             },
+
+            ...this._modelData.noiseControl && {
+                'nc-cycle-mask': 0x06,
+            },
         };
     }
 
@@ -253,6 +259,9 @@ export const OpoBudsDevice = GObject.registerClass({
 
         if (this._modelData.ring)
             this._ringState = this._settingsItems['ring-state'];
+
+        if (this._modelData.noiseControl)
+            this._ncCycleMask = this._settingsItems['nc-cycle-mask'] ?? 0x06;
     }
 
     _addPropsToSettings(devicesList) {
@@ -311,10 +320,22 @@ export const OpoBudsDevice = GObject.registerClass({
             }
 
             if (this._modelData.dualConnection) {
-                const dual = this._settingsItems['dual-connection'];
-                if (this._dualConnection !== dual) {
-                    this._dualConnection = dual;
-                    this._opoBudsSocket?.setDualConnection(dual);
+                const dualConnection = this._settingsItems['dual-connection'];
+                if (this._dualConnection !== dualConnection) {
+                    this._dualConnection = dualConnection;
+                    this._opoBudsSocket?.setDualConnection(dualConnection);
+                }
+
+                const priorityMac = this._settingsItems['audio-priority-mac'];
+                if (this._audioPriorityMac !== priorityMac) {
+                    this._audioPriorityMac = priorityMac;
+                    this._opoBudsSocket?.setAudioPriorityDevice(priorityMac);
+                }
+
+                const multiDeviceOp = this._settingsItems['multi-device-op'];
+                if (multiDeviceOp && multiDeviceOp.ts !== this._lastMultiDeviceOpTs) {
+                    this._lastMultiDeviceOpTs = multiDeviceOp.ts;
+                    this._opoBudsSocket?.operateMultiConnect(multiDeviceOp.op, multiDeviceOp.mac);
                 }
             }
 
@@ -403,6 +424,14 @@ export const OpoBudsDevice = GObject.registerClass({
                     this._opoBudsSocket?.setFindBuds(ringState);
                 }
             }
+
+            if (this._modelData.noiseControl) {
+                const ncCycleMask = this._settingsItems['nc-cycle-mask'] ?? 0x06;
+                if (this._ncCycleMask !== ncCycleMask) {
+                    this._ncCycleMask = ncCycleMask;
+                    this._opoBudsSocket?.setNoiseControlCycle(ncCycleMask);
+                }
+            }
         });
     }
 
@@ -424,6 +453,8 @@ export const OpoBudsDevice = GObject.registerClass({
         this._config.commonIcon = this._commonIcon;
         this._config.albumArtIcon = this._commonIcon;
         this._config.showSettingsButton = true;
+        this._config.labelIndicatorEnabled = 1;
+        this._props.labelIndicator1 = '';
 
         this._config.battery1ShowOnDisconnect = true;
         if (this._modelData?.batteryLR) {
@@ -483,10 +514,10 @@ export const OpoBudsDevice = GObject.registerClass({
                 const levelKeys = ['smart', 'mild', 'moderate', 'deep'].filter(k => k in levelsObj);
 
                 const levelNames = {
-                    'smart': _('Smart (Adaptive)'),
+                    'smart': _('Smart'),
                     'mild': _('Mild'),
                     'moderate': _('Moderate'),
-                    'deep': _('Deep (Max)'),
+                    'deep': _('Max'),
                 };
 
                 const radioNames = [];
@@ -611,7 +642,7 @@ export const OpoBudsDevice = GObject.registerClass({
             ancMode = toggle.modeBytes;
         }
 
-        this.dataHandler?.setProps(this._props);
+        this._updateLabelIndicator();
 
         if (this._isReady && !isSameState && ancMode != null)
             this._opoBudsSocket?.setNoiseControl(ancMode);
@@ -622,7 +653,7 @@ export const OpoBudsDevice = GObject.registerClass({
             return;
 
         this._props.box1RadioButtonState = index;
-        this.dataHandler?.setProps(this._props);
+        this._updateLabelIndicator();
 
         const modeBytes = this._ancRadioMap[index];
         if (modeBytes?.length)
@@ -675,6 +706,14 @@ export const OpoBudsDevice = GObject.registerClass({
         this._fwVersion = version;
         if (this._settingsItems) {
             this._settingsItems['fw-version'] = version;
+            this._updateGsettings();
+        }
+    }
+
+    updateMultiConnectDevices(devices) {
+        this._multiDevices = devices;
+        if (this._settingsItems) {
+            this._settingsItems['multi-devices'] = devices;
             this._updateGsettings();
         }
     }
@@ -737,7 +776,37 @@ export const OpoBudsDevice = GObject.registerClass({
             this._props.optionsBoxVisible = 0;
         }
 
+        this._updateLabelIndicator();
+    }
+
+    _updateLabelIndicator() {
+        const toggle = this._ancToggleMap?.[this._props.toggle1State];
+        const isAnc = toggle?.type === 'noiseCancellation';
+        const isSmart = this._props.box1RadioButtonState === 1;
+
+        if (isAnc && isSmart && this._modelData.noiseControl?.noiseCancellation?.levels?.smart) {
+            const sub = this._smartSubName || _('Moderate');
+            this._props.labelIndicator1 = `${_('Adaptive')}: ${sub}`;
+        } else {
+            this._props.labelIndicator1 = '';
+        }
         this.dataHandler?.setProps(this._props);
+    }
+
+    updateAdaptiveAncSubLevel(subByte) {
+        const subNames = {
+            0x04: _('Mild'),
+            0x10: _('Moderate'),
+            0x08: _('Max (Deep)'),
+        };
+        const subName = subNames[subByte] ?? '';
+        this._log.info(`Real-Time Adaptive ANC Level: ${subName} (0x${subByte.toString(16)})`);
+        this._smartSubName = subName;
+        if (subName && this._settingsItems) {
+            this._settingsItems['smart-anc-sublevel'] = subName;
+            this._updateGsettings();
+        }
+        this._updateLabelIndicator();
     }
 
     updateInEar(inEar) {

@@ -212,6 +212,9 @@ export const OpoBudsSocket = GObject.registerClass({
 
         if (modelData.gestureOptions)
             this._getGestures();
+
+        if (modelData.dualConnection)
+            this._getMultiConnectInfo();
     }
 
     _parseData(resp) {
@@ -260,6 +263,11 @@ export const OpoBudsSocket = GObject.registerClass({
                 this._getGestures();
                 break;
 
+            case Cmd.GET_MULTI_CONNECT_INFO_RSP:
+            case 0x0512:
+                this._parseMultiConnectInfo(payload);
+                break;
+
             case Cmd.NOTIFICATION_EVENT:
                 this._parseNotificationEvent(payload);
                 break;
@@ -281,14 +289,20 @@ export const OpoBudsSocket = GObject.registerClass({
             case EventCode.ANC_MODE:
                 if (eventData.length >= 3) {
                     const subId = eventData[0];
-                    if (subId === 0x01) {
-                        const modeByte = eventData[2];
+                    const modeByte = eventData[eventData.length - 1];
+                    if (subId === 0x04)
+                        this._callbacks?.updateAdaptiveAncSubLevel?.(modeByte);
+                    else
                         this._callbacks?.updateNoiseControl?.(modeByte);
-                    }
                 } else if (eventData.length >= 1) {
                     const modeByte = eventData[eventData.length - 1];
                     this._callbacks?.updateNoiseControl?.(modeByte);
                 }
+                break;
+
+            case 0x05:
+            case 0x0E:
+                this._getMultiConnectInfo();
                 break;
 
             case EventCode.GAME_MODE:
@@ -497,6 +511,92 @@ export const OpoBudsSocket = GObject.registerClass({
         this._log.info(`Set Dual Connection: ${enable}`);
         const payload = [FeatureId.DUAL_DEVICE, enable ? 0x01 : 0x00];
         this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Dual Connection');
+        if (enable)
+            this._getMultiConnectInfo();
+    }
+
+    _getMultiConnectInfo() {
+        this._queuePacket(Cmd.GET_MULTI_CONNECT_INFO, [], 'Query Multi-Connect Devices');
+    }
+
+    _parseMultiConnectInfo(payload) {
+        if (payload.length < 2)
+            return;
+
+        const count = payload[0] === 0x00 ? payload[1] : payload[0];
+        let pos = payload[0] === 0x00 ? 2 : 1;
+        const devices = [];
+
+        for (let i = 0; i < count && pos + 9 <= payload.length; i++) {
+            // MAC is transmitted in reverse (little-endian wire order)
+            const macBytes = [];
+            for (let j = 0; j < 6; j++)
+                macBytes.push(payload[pos + 5 - j]);
+            const mac = macBytes.map(b => b.toString(16).padStart(2, '0')).join(':').toUpperCase();
+            pos += 6;
+
+            const elemByte = payload[pos++];
+            const connState = payload[pos++];
+            const flag = payload[pos++];
+            const nameLen = payload[pos++];
+
+            if (nameLen < 0 || pos + nameLen > payload.length)
+                break;
+
+            let deviceName = '';
+            if (nameLen > 0) {
+                const nameBytes = payload.slice(pos, pos + nameLen);
+                deviceName = new TextDecoder('utf-8').decode(new Uint8Array(nameBytes)).replace(/\0+$/, '');
+                pos += nameLen;
+            } else {
+                deviceName = `Device ${mac.slice(-5)}`;
+            }
+
+            const isCurrent = (flag & 0x01) !== 0;
+            const isMainAudio = (flag & 0x02) !== 0;
+            const isAudioActive = (flag & 0x04) !== 0;
+            const isConnected = connState === 0x02 || connState === 0x01;
+
+            devices.push({
+                mac,
+                name: deviceName,
+                isConnected,
+                isCurrent,
+                isMainAudio,
+                isAudioActive,
+                connState,
+            });
+        }
+
+        this._log.info(`Parsed Multi-Connect Devices (${devices.length}): ${JSON.stringify(devices)}`);
+        this._callbacks?.updateMultiConnectDevices?.(devices);
+    }
+
+    operateMultiConnect(op, macAddress) {
+        this._log.info(`Operate MultiConnect: op=${op}, mac=${macAddress}`);
+        if (op === 0x04) {
+            this.setAudioPriorityDevice(macAddress);
+            return;
+        }
+        const macParts = macAddress ? macAddress.split(':').map(h => parseInt(h, 16)) : [];
+        const payload = [op, ...macParts];
+        this._queuePacket(Cmd.OPERATE_MULTI_CONNECT, payload, `MultiConnect Op ${op}`);
+
+        GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
+            this._getMultiConnectInfo();
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+
+    setAudioPriorityDevice(macAddress) {
+        this._log.info(`Set Audio Priority Device: ${macAddress}`);
+        if (!macAddress) {
+            this._queuePacket(Cmd.OPERATE_MULTI_CONNECT, [0x04, 0x00], 'Clear Audio Priority');
+            return;
+        }
+        const macParts = macAddress.split(':').map(h => parseInt(h, 16));
+        const payload = [0x04, 0x01, ...macParts];
+        this._queuePacket(Cmd.OPERATE_MULTI_CONNECT, payload, 'Set Audio Priority Device');
     }
 
     setWindNoise(enable) {
