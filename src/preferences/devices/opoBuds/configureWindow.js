@@ -1,6 +1,7 @@
 'use strict';
 import Adw from 'gi://Adw';
 import GObject from 'gi://GObject';
+import Gtk from 'gi://Gtk';
 
 import {DropDownRowWidget} from '../../widgets/dropDownRowWidget.js';
 import {IconSelectorWidget} from '../../widgets/iconSelectorWidget.js';
@@ -229,17 +230,60 @@ export const ConfigureWindow = GObject.registerClass({
         });
 
         if (this._modelData.dynamicBass) {
-            this._dynamicBassSwitch = new Adw.SwitchRow({
-                title: _('Dynamic Bass Boost'),
-                subtitle: _('Dynamically enhances low frequency bass in real-time'),
-                active: this._settingsItems['dynamic-bass'],
+            const isDynamicBassActive = this._settingsItems['dynamic-bass'] ?? false;
+            const dynamicAudioExpander = new Adw.ExpanderRow({
+                title: _('Dynamic Audio'),
+                subtitle: _('Real-time dynamic bass and 3-band equalization'),
+                show_enable_switch: true,
+                enable_expansion: isDynamicBassActive,
+                expanded: isDynamicBassActive,
             });
 
-            this._dynamicBassSwitch.connect('notify::active', () => {
-                this._updateGsettings('dynamic-bass', this._dynamicBassSwitch.active);
+            dynamicAudioExpander.connect('notify::enable-expansion', () => {
+                const enabled = dynamicAudioExpander.enable_expansion;
+                dynamicAudioExpander.expanded = enabled;
+                this._updateGsettings('dynamic-bass', enabled);
             });
 
-            effectsGroup.add(this._dynamicBassSwitch);
+            const createFreqScaleRow = (label, gsettingsKey) => {
+                const row = new Adw.ActionRow({
+                    title: label,
+                });
+                const adjustment = new Gtk.Adjustment({
+                    lower: -5,
+                    upper: 5,
+                    step_increment: 1,
+                    page_increment: 1,
+                    value: this._settingsItems[gsettingsKey] ?? 0,
+                });
+                const scale = new Gtk.Scale({
+                    orientation: Gtk.Orientation.HORIZONTAL,
+                    adjustment,
+                    draw_value: true,
+                    value_pos: Gtk.PositionType.RIGHT,
+                    hexpand: true,
+                    width_request: 180,
+                    digits: 0,
+                    round_digits: 0,
+                });
+                scale.set_digits(0);
+                scale.set_round_digits(0);
+                scale.add_mark(-5, Gtk.PositionType.BOTTOM, '-5');
+                scale.add_mark(0, Gtk.PositionType.BOTTOM, '0');
+                scale.add_mark(5, Gtk.PositionType.BOTTOM, '+5');
+                scale.connect('value-changed', () => {
+                    const val = Math.round(scale.get_value());
+                    this._updateGsettings(gsettingsKey, val);
+                });
+                row.add_suffix(scale);
+                return row;
+            };
+
+            dynamicAudioExpander.add_row(createFreqScaleRow(_('Low Frequency'), 'dynamic-audio-low'));
+            dynamicAudioExpander.add_row(createFreqScaleRow(_('Mid Frequency'), 'dynamic-audio-med'));
+            dynamicAudioExpander.add_row(createFreqScaleRow(_('High Frequency'), 'dynamic-audio-high'));
+
+            effectsGroup.add(dynamicAudioExpander);
         }
 
         if (this._modelData.spatialAudio) {

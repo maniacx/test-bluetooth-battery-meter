@@ -386,6 +386,17 @@ export const OpoBudsSocket = GObject.registerClass({
         this._queuePacket(Cmd.SET_EQ, [presetId], 'Set EQ Preset');
     }
 
+    setDynamicAudioEq(low, med, high) {
+        const toByte = v => (v < 0 ? 256 + v : v) & 0xFF;
+        const lowByte = toByte(low);
+        const medByte = toByte(med);
+        const highByte = toByte(high);
+
+        this._log.info(`Set Dynamic Audio EQ: Low=${low}, Med=${med}, High=${high}`);
+        const payload = [0x03, lowByte, medByte, highByte];
+        this._queuePacket(Cmd.SET_EQ_DETAIL, payload, 'Set Dynamic Audio EQ');
+    }
+
     _getNoiseControl() {
         this._queuePacket(Cmd.ANC, [0x01, 0x01], 'Query ANC');
     }
