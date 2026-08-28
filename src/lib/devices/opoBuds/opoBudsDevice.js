@@ -72,6 +72,10 @@ export const OpoBudsDevice = GObject.registerClass({
         );
 
         this._battInfoRecieved = false;
+        this._pendingAncMode = null;
+        this._pendingWindNoise = null;
+        this._pendingVolumeEnhancer = null;
+        this._isReady = false;
     }
 
     modelIntialized(modelData) {
@@ -100,6 +104,21 @@ export const OpoBudsDevice = GObject.registerClass({
 
         this._updateIcons();
         this._updateAncConfig();
+
+        if (this._pendingAncMode !== null) {
+            this.updateNoiseControl(this._pendingAncMode);
+            this._pendingAncMode = null;
+        }
+
+        if (this._pendingWindNoise !== null) {
+            this.updateWindNoise(this._pendingWindNoise);
+            this._pendingWindNoise = null;
+        }
+
+        if (this._pendingVolumeEnhancer !== null) {
+            this.updateVolumeEnhancer(this._pendingVolumeEnhancer);
+            this._pendingVolumeEnhancer = null;
+        }
 
         if (this._modelData.ring) {
             this._ringState = 'stopped';
@@ -199,11 +218,16 @@ export const OpoBudsDevice = GObject.registerClass({
         if (this._modelData.dualConnection)
             this._dualConnection = this._settingsItems['dual-connection'];
 
-        if (this._modelData.windNoiseReduction)
+        if (this._modelData.windNoiseReduction) {
             this._windNoise = this._settingsItems['wind-noise'];
+            this._props.box1CheckButton1State = this._windNoise ? 1 : 0;
+            this._props.box2CheckButton2State = this._windNoise ? 1 : 0;
+        }
 
-        if (this._modelData.volumeEnhancer)
+        if (this._modelData.volumeEnhancer) {
             this._volumeEnhancer = this._settingsItems['volume-enhancer'];
+            this._props.box2CheckButton1State = this._volumeEnhancer ? 1 : 0;
+        }
 
         if (this._modelData.spatialAudio)
             this._spatial = this._settingsItems['spatial'];
@@ -464,7 +488,6 @@ export const OpoBudsDevice = GObject.registerClass({
 
                 this._config.box1RadioButton = radioNames;
                 this._config.box1RadioTitle = _('Noise Cancellation Level');
-                this._config.optionsBox1 = ['radio-button'];
             } else if (nc.noiseCancellation.byte !== undefined) {
                 flatBytes.push(nc.noiseCancellation.byte);
             } else {
@@ -473,6 +496,26 @@ export const OpoBudsDevice = GObject.registerClass({
 
             addToggle('noiseCancellation', flatBytes, 'bbm-anc-on-symbolic', _('Noise Cancellation'),
                 flatBytes);
+        }
+
+        this._config.optionsBox1 = [];
+        if (nc.noiseCancellation?.levels)
+            this._config.optionsBox1.push('radio-button');
+        if (this._modelData.windNoiseReduction) {
+            this._config.optionsBox1.push('check-button');
+            this._config.box1CheckButton = [_('Smart Wind Noise Reduction')];
+        }
+
+        this._config.optionsBox2 = [];
+        const box2Labels = [];
+        if (this._modelData.volumeEnhancer)
+            box2Labels.push(_('Enhance Voice'));
+        if (this._modelData.windNoiseReduction)
+            box2Labels.push(_('Smart Wind Noise Reduction'));
+
+        if (box2Labels.length > 0) {
+            this._config.optionsBox2.push('check-button');
+            this._config.box2CheckButton = box2Labels;
         }
 
         this.dataHandler?.setConfig(this._config);
@@ -504,27 +547,38 @@ export const OpoBudsDevice = GObject.registerClass({
             if (command === 'box1RadioButtonState')
                 this._box1RadioButtonStateChanged(value);
 
+            if (command === 'box1CheckButton1State')
+                this._box1CheckButton1Changed(value);
+
+            if (command === 'box2CheckButton1State')
+                this._box2CheckButton1Changed(value);
+
+            if (command === 'box2CheckButton2State')
+                this._box2CheckButton2Changed(value);
+
             if (command === 'settingsButtonClicked')
                 this._settingsButtonClicked();
         });
+
+        this._isReady = true;
     }
 
     _toggle1ButtonClicked(index) {
-        if (!this._ancToggleMap)
+        if (!this._ancToggleMap || !this._modelData)
             return;
 
         const toggle = this._ancToggleMap[index];
         if (!toggle)
             return;
 
-        let ancMode = null;
+        const isSameState = (this._props.toggle1State === index);
         this._props.toggle1State = index;
 
+        let ancMode = null;
         if (toggle.type === 'noiseCancellation') {
-            const hasLevels = toggle.matchBytes.length > 1;
-            this._props.optionsBoxVisible = hasLevels ? 1 : 0;
+            this._props.optionsBoxVisible = this._config.optionsBox1?.length ? 1 : 0;
 
-            if (hasLevels) {
+            if (toggle.matchBytes.length > 1) {
                 const radioIndex = this._props.box1RadioButtonState || 1;
                 let modeBytes = this._ancRadioMap[radioIndex];
                 if (!modeBytes?.length) {
@@ -535,6 +589,9 @@ export const OpoBudsDevice = GObject.registerClass({
             } else {
                 ancMode = toggle.modeBytes;
             }
+        } else if (toggle.type === 'transparency') {
+            this._props.optionsBoxVisible = this._config.optionsBox2?.length ? 2 : 0;
+            ancMode = toggle.modeBytes;
         } else {
             this._props.optionsBoxVisible = 0;
             ancMode = toggle.modeBytes;
@@ -542,7 +599,7 @@ export const OpoBudsDevice = GObject.registerClass({
 
         this.dataHandler?.setProps(this._props);
 
-        if (ancMode != null)
+        if (this._isReady && !isSameState && ancMode != null)
             this._opoBudsSocket?.setNoiseControl(ancMode);
     }
 
@@ -556,6 +613,44 @@ export const OpoBudsDevice = GObject.registerClass({
         const modeBytes = this._ancRadioMap[index];
         if (modeBytes?.length)
             this._opoBudsSocket?.setNoiseControl(modeBytes);
+    }
+
+    _box1CheckButton1Changed(value) {
+        const enabled = value > 0;
+        this._windNoise = enabled;
+        if (this._settingsItems) {
+            this._settingsItems['wind-noise'] = enabled;
+            this._updateGsettings();
+        }
+        this._props.box1CheckButton1State = value;
+        this._props.box2CheckButton2State = value;
+        this.dataHandler?.setProps(this._props);
+        this._opoBudsSocket?.setWindNoise(enabled);
+    }
+
+    _box2CheckButton1Changed(value) {
+        const enabled = value > 0;
+        this._volumeEnhancer = enabled;
+        if (this._settingsItems) {
+            this._settingsItems['volume-enhancer'] = enabled;
+            this._updateGsettings();
+        }
+        this._props.box2CheckButton1State = value;
+        this.dataHandler?.setProps(this._props);
+        this._opoBudsSocket?.setVolumeEnhancer(enabled);
+    }
+
+    _box2CheckButton2Changed(value) {
+        const enabled = value > 0;
+        this._windNoise = enabled;
+        if (this._settingsItems) {
+            this._settingsItems['wind-noise'] = enabled;
+            this._updateGsettings();
+        }
+        this._props.box1CheckButton1State = value;
+        this._props.box2CheckButton2State = value;
+        this.dataHandler?.setProps(this._props);
+        this._opoBudsSocket?.setWindNoise(enabled);
     }
 
     _settingsButtonClicked() {
@@ -596,34 +691,37 @@ export const OpoBudsDevice = GObject.registerClass({
     }
 
     updateNoiseControl(modeByte) {
-        if (!this._ancToggleMap)
+        if (!this._ancToggleMap) {
+            this._pendingAncMode = modeByte;
             return;
+        }
 
         const nc = this._modelData?.noiseControl;
         if (!nc)
             return;
 
         let toggleIndex = 0;
-        let isNcMode = false;
+        let activeType = 'off';
 
         for (const [index, {matchBytes, type}] of Object.entries(this._ancToggleMap)) {
             if (matchBytes.includes(modeByte)) {
                 toggleIndex = Number(index);
-                if (type === 'noiseCancellation')
-                    isNcMode = true;
+                activeType = type;
                 break;
             }
         }
 
         this._props.toggle1State = toggleIndex;
 
-        if (isNcMode && this._ancRadioReverse && this._ancRadioReverse[modeByte] !== undefined)
-            this._props.box1RadioButtonState = this._ancRadioReverse[modeByte];
-
-        if (isNcMode && nc.noiseCancellation?.levels)
-            this._props.optionsBoxVisible = 1;
-        else
+        if (activeType === 'noiseCancellation') {
+            if (this._ancRadioReverse && this._ancRadioReverse[modeByte] !== undefined)
+                this._props.box1RadioButtonState = this._ancRadioReverse[modeByte];
+            this._props.optionsBoxVisible = this._config.optionsBox1?.length ? 1 : 0;
+        } else if (activeType === 'transparency') {
+            this._props.optionsBoxVisible = this._config.optionsBox2?.length ? 2 : 0;
+        } else {
             this._props.optionsBoxVisible = 0;
+        }
 
         this.dataHandler?.setProps(this._props);
     }
@@ -653,19 +751,32 @@ export const OpoBudsDevice = GObject.registerClass({
     }
 
     updateWindNoise(windNoise) {
+        if (!this._modelData) {
+            this._pendingWindNoise = windNoise;
+            return;
+        }
         this._windNoise = windNoise;
         if (this._settingsItems) {
             this._settingsItems['wind-noise'] = this._windNoise;
             this._updateGsettings();
         }
+        this._props.box1CheckButton1State = windNoise ? 1 : 0;
+        this._props.box2CheckButton2State = windNoise ? 1 : 0;
+        this.dataHandler?.setProps(this._props);
     }
 
     updateVolumeEnhancer(volumeEnhancer) {
+        if (!this._modelData) {
+            this._pendingVolumeEnhancer = volumeEnhancer;
+            return;
+        }
         this._volumeEnhancer = volumeEnhancer;
         if (this._settingsItems) {
             this._settingsItems['volume-enhancer'] = this._volumeEnhancer;
             this._updateGsettings();
         }
+        this._props.box2CheckButton1State = volumeEnhancer ? 1 : 0;
+        this.dataHandler?.setProps(this._props);
     }
 
     updateSpatialAudio(spatial) {
