@@ -6,7 +6,6 @@ import Gtk from 'gi://Gtk';
 import {DropDownRowWidget} from '../../widgets/dropDownRowWidget.js';
 import {IconSelectorWidget} from '../../widgets/iconSelectorWidget.js';
 import {RingMyBudsRow} from '../../widgets/ringMyBudsRow.js';
-import {CheckBoxesRowWidget} from '../../widgets/checkBoxesRowWidget.js';
 import {
     supportedAudioDualIcons, supportedAudioSingleIcons, supportedCaseIcons
 } from '../../../lib/widgets/iconGroups.js';
@@ -146,6 +145,13 @@ export const ConfigureWindow = GObject.registerClass({
                                 dropdown.selected_item !== slots[slotKey])
                             dropdown.selected_item = slots[slotKey];
                     });
+                }
+
+                if (this._modelData.noiseControl && this._ancCycleSwitchOff) {
+                    const mask = this._settingsItems['nc-cycle-mask'] ?? 0x0B;
+                    this._ancCycleSwitchOff.active = (mask & 0x01) !== 0;
+                    this._ancCycleSwitchTrans.active = (mask & 0x02) !== 0;
+                    this._ancCycleSwitchAnc.active = (mask & 0x08) !== 0;
                 }
             } finally {
                 this._isUpdatingUI = false;
@@ -596,7 +602,7 @@ export const ConfigureWindow = GObject.registerClass({
                 if (!gestureDef)
                     return;
 
-                const allowedActions = gestureDef.actions;
+                const allowedActions = slot.actions ?? gestureDef.actions;
                 const options = [];
                 const values = [];
 
@@ -640,34 +646,61 @@ export const ConfigureWindow = GObject.registerClass({
         this._page.add(gestureGroup);
 
         if (this._modelData.noiseControl) {
-            const items = [
-                {name: _('Off'), icon: 'bbm-anc-off-symbolic'},
-                {name: _('Transparency'), icon: 'bbm-transperancy-symbolic'},
-                {name: _('Noise Cancellation'), icon: 'bbm-anc-on-symbolic'},
-            ];
-
-            const initialMask = this._settingsItems['nc-cycle-mask'] ?? 0x06;
+            const initialMask = this._settingsItems['nc-cycle-mask'] ?? 0x0B;
 
             const ncCycleGroup = new Adw.PreferencesGroup({
-                title: _('Noise Control Cycling'),
-                description: _('Select modes to cycle through when switching with the earbud/neckband button (minimum 2 required)'),
+                title: _('Noise Control Button Cycling'),
+                description: _('Select modes to cycle through when pressing the earbud/neckband button (minimum 2 required)'),
             });
 
-            this._ncCycleWidget = new CheckBoxesRowWidget({
-                rowTitle: _('Cycle Through Modes'),
-                rowSubtitle: _('Select 2 or 3 modes to cycle'),
-                items,
-                applyBtnName: _('Apply'),
-                initialValue: initialMask,
-                minRequired: 2,
+            this._ancCycleSwitchAnc = new Adw.SwitchRow({
+                title: _('Noise Cancellation'),
+                subtitle: _('Block out ambient background noise'),
+                icon_name: 'bbm-anc-on-symbolic',
+                active: (initialMask & 0x08) !== 0,
             });
 
-            this._ncCycleWidget.connect('notify::toggled-value', () => {
-                const mask = this._ncCycleWidget.toggled_value;
+            this._ancCycleSwitchTrans = new Adw.SwitchRow({
+                title: _('Transparency'),
+                subtitle: _('Hear external sounds and voices clearly'),
+                icon_name: 'bbm-transperancy-symbolic',
+                active: (initialMask & 0x02) !== 0,
+            });
+
+            this._ancCycleSwitchOff = new Adw.SwitchRow({
+                title: _('Off'),
+                subtitle: _('Disable active noise cancellation and transparency'),
+                icon_name: 'bbm-anc-off-symbolic',
+                active: (initialMask & 0x01) !== 0,
+            });
+
+            const onCycleSwitchToggled = toggledSwitch => {
+                if (this._isUpdatingUI)
+                    return;
+
+                const anc = this._ancCycleSwitchAnc.active;
+                const trans = this._ancCycleSwitchTrans.active;
+                const off = this._ancCycleSwitchOff.active;
+                const count = (anc ? 1 : 0) + (trans ? 1 : 0) + (off ? 1 : 0);
+
+                if (count < 2) {
+                    this._isUpdatingUI = true;
+                    toggledSwitch.active = true;
+                    this._isUpdatingUI = false;
+                    return;
+                }
+
+                const mask = (off ? 0x01 : 0x00) | (trans ? 0x02 : 0x00) | (anc ? 0x08 : 0x00);
                 this._updateGsettings('nc-cycle-mask', mask);
-            });
+            };
 
-            ncCycleGroup.add(this._ncCycleWidget);
+            this._ancCycleSwitchAnc.connect('notify::active', () => onCycleSwitchToggled(this._ancCycleSwitchAnc));
+            this._ancCycleSwitchTrans.connect('notify::active', () => onCycleSwitchToggled(this._ancCycleSwitchTrans));
+            this._ancCycleSwitchOff.connect('notify::active', () => onCycleSwitchToggled(this._ancCycleSwitchOff));
+
+            ncCycleGroup.add(this._ancCycleSwitchAnc);
+            ncCycleGroup.add(this._ancCycleSwitchTrans);
+            ncCycleGroup.add(this._ancCycleSwitchOff);
             this._page.add(ncCycleGroup);
         }
     }
@@ -694,10 +727,11 @@ export const ConfigureWindow = GObject.registerClass({
         let hex = '';
         gesturesConfig.slots.forEach(slot => {
             const gestureDef = gesturesConfig.gestures[slot.type];
-            if (!gestureDef?.actions?.length)
+            const allowedActions = slot.actions ?? gestureDef?.actions;
+            if (!allowedActions?.length)
                 return;
 
-            const firstAction = gestureDef.actions[0];
+            const firstAction = allowedActions[0];
             const func = gesturesConfig.mapping.actions[firstAction]?.[0] ?? 0;
             const btnId = slot.buttonId ?? 0x01;
             const act = gesturesConfig.mapping.gestureTypes[slot.type];

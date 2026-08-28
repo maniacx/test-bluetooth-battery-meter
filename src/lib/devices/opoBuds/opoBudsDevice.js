@@ -62,6 +62,7 @@ export const OpoBudsDevice = GObject.registerClass({
             updateSingleGesture: this.updateSingleGesture.bind(this),
             updateMultiConnectDevices: this.updateMultiConnectDevices.bind(this),
             updateAdaptiveAncSubLevel: this.updateAdaptiveAncSubLevel.bind(this),
+            updateNoiseControlCycle: this.updateNoiseControlCycle.bind(this),
         };
 
         const profile = {type: DeviceTypeOpoBuds, uuid: OpoBudsUUID};
@@ -194,7 +195,7 @@ export const OpoBudsDevice = GObject.registerClass({
             },
 
             ...this._modelData.noiseControl && {
-                'nc-cycle-mask': 0x06,
+                'nc-cycle-mask': 0x0B,
             },
         };
     }
@@ -261,7 +262,7 @@ export const OpoBudsDevice = GObject.registerClass({
             this._ringState = this._settingsItems['ring-state'];
 
         if (this._modelData.noiseControl)
-            this._ncCycleMask = this._settingsItems['nc-cycle-mask'] ?? 0x06;
+            this._ncCycleMask = this._settingsItems['nc-cycle-mask'] ?? 0x0B;
     }
 
     _addPropsToSettings(devicesList) {
@@ -426,7 +427,7 @@ export const OpoBudsDevice = GObject.registerClass({
             }
 
             if (this._modelData.noiseControl) {
-                const ncCycleMask = this._settingsItems['nc-cycle-mask'] ?? 0x06;
+                const ncCycleMask = this._settingsItems['nc-cycle-mask'] ?? 0x0B;
                 if (this._ncCycleMask !== ncCycleMask) {
                     this._ncCycleMask = ncCycleMask;
                     this._opoBudsSocket?.setNoiseControlCycle(ncCycleMask);
@@ -779,6 +780,14 @@ export const OpoBudsDevice = GObject.registerClass({
         this._updateLabelIndicator();
     }
 
+    updateNoiseControlCycle(maskByte) {
+        this._ncCycleMask = maskByte;
+        if (this._settingsItems) {
+            this._settingsItems['nc-cycle-mask'] = maskByte;
+            this._updateGsettings();
+        }
+    }
+
     _updateLabelIndicator() {
         const toggle = this._ancToggleMap?.[this._props.toggle1State];
         const isAnc = toggle?.type === 'noiseCancellation';
@@ -918,10 +927,11 @@ export const OpoBudsDevice = GObject.registerClass({
         let hex = '';
         gesturesConfig.slots.forEach(slot => {
             const gestureDef = gesturesConfig.gestures[slot.type];
-            if (!gestureDef?.actions?.length)
+            const allowedActions = slot.actions ?? gestureDef?.actions;
+            if (!allowedActions?.length)
                 return;
 
-            const firstAction = gestureDef.actions[0];
+            const firstAction = allowedActions[0];
             const func = gesturesConfig.mapping.actions[firstAction]?.[0] ?? 0;
             const btnId = slot.buttonId ?? 0x01;
             const act = gesturesConfig.mapping.gestureTypes[slot.type];

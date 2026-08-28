@@ -11,6 +11,37 @@ import {
 const HEADER_MAGIC = 0xAA;
 const MIN_FRAME_LEN = 9;
 
+export function cycleMaskToEnum(mask) {
+    const off = (mask & 0x01) !== 0;
+    const trans = (mask & 0x02) !== 0;
+    const anc = (mask & 0x08) !== 0 || (mask & 0x04) !== 0;
+
+    if (anc && trans && off)
+        return 0x02; // All 3 modes
+    if (anc && trans && !off)
+        return 0x01; // ANC + Trans
+    if (anc && !trans && off)
+        return 0x03; // ANC + Off
+    if (!anc && trans && off)
+        return 0x04; // Trans + Off
+    return 0x02;
+}
+
+export function cycleEnumToMask(enumVal) {
+    switch (enumVal) {
+        case 0x01: // ANC + Trans
+            return 0x0A;
+        case 0x02: // All 3
+            return 0x0B;
+        case 0x03: // ANC + Off
+            return 0x09;
+        case 0x04: // Trans + Off
+            return 0x03;
+        default:
+            return 0x0B;
+    }
+}
+
 export const OpoBudsSocket = GObject.registerClass({
     GTypeName: 'BudsLink_OpoBudsSocket',
 }, class OpoBudsSocket extends SocketHandler {
@@ -321,10 +352,13 @@ export const OpoBudsSocket = GObject.registerClass({
                     const btn = eventData[1];
                     const act = eventData[2];
                     const func = eventData[3];
+                    const extra = eventData.length >= 5 ? eventData[4] : null;
                     this._log.info(`Live button event: dev=${dev} btn=${btn} ` +
-                        `act=${act} func=${func}`);
+                        `act=${act} func=${func} extra=${extra}`);
 
                     this._callbacks?.updateSingleGesture?.(dev, btn, act, func);
+                    if (func === 0x08 && extra !== null)
+                        this._callbacks?.updateNoiseControl?.(extra);
                 } else {
                     this._getGestures();
                 }
@@ -412,16 +446,28 @@ export const OpoBudsSocket = GObject.registerClass({
     }
 
     _getNoiseControl() {
-        this._queuePacket(Cmd.ANC, [0x01, 0x01], 'Query ANC');
+        this._queuePacket(Cmd.ANC, [0x01, 0x01], 'Query ANC Mode');
+        this._queuePacket(Cmd.ANC, [0x02, 0x01], 'Query ANC Cycle (Action 2, Type 1)');
+        this._queuePacket(Cmd.ANC, [0x02, 0x02], 'Query ANC Cycle (Action 2, Type 2)');
+        this._queuePacket(Cmd.ANC, [0x01, 0x02], 'Query ANC Cycle (Legacy Type 2)');
     }
 
     _parseAnc(payload) {
         if (payload.length < 3)
             return;
 
-        const modeByte = payload[payload.length - 1];
-        this._log.info(`Parsed ANC mode byte: ${hexBytes(modeByte)}`);
-        this._callbacks?.updateNoiseControl?.(modeByte);
+        const action = payload[0];
+        const subId = payload[1];
+        const valByte = payload[payload.length - 1];
+
+        if (action === 0x02 || subId === 0x02) {
+            const mask = valByte <= 0x04 ? cycleEnumToMask(valByte) : valByte;
+            this._log.info(`Parsed ANC cycle: raw=0x${valByte.toString(16)} -> mask=0x${mask.toString(16)}`);
+            this._callbacks?.updateNoiseControlCycle?.(mask);
+        } else {
+            this._log.info(`Parsed ANC mode byte: ${hexBytes(valByte)}`);
+            this._callbacks?.updateNoiseControl?.(valByte);
+        }
     }
 
     setNoiseControl(modeBytes) {
@@ -673,19 +719,25 @@ export const OpoBudsSocket = GObject.registerClass({
         this._callbacks?.updateGestures?.(hex);
     }
 
-    setGestureSlot(device, buttonId, gestureType, action) {
+    setGestureSlot(device, buttonId, gestureType, action, extraByte = null) {
         this._log.info(
             `Set gesture slot: dev=${hexBytes(device)} btn=${hexBytes(buttonId)} ` +
-            `type=${hexBytes(gestureType)} action=${hexBytes(action)}`
+            `type=${hexBytes(gestureType)} action=${hexBytes(action)} extra=${extraByte}`
         );
-        const payload = [device, buttonId, gestureType, action];
+        const payload = extraByte !== null
+            ? [device, buttonId, gestureType, action, extraByte]
+            : [device, buttonId, gestureType, action];
         this._queuePacket(Cmd.SET_KEY_FUNCTION, payload, 'Set Key Function');
     }
 
     setNoiseControlCycle(maskByte) {
-        this._log.info(`Set ANC cycle mask byte: ${hexBytes(maskByte)}`);
-        const payload = [0x01, maskByte];
-        this._queuePacket(Cmd.SET_ANC_CYCLE, payload, 'Set ANC Cycle Mask');
+        const enumVal = cycleMaskToEnum(maskByte);
+        this._log.info(`Set ANC cycle: mask=0x${maskByte.toString(16).padStart(2, '0')}, enum=0x${enumVal.toString(16).padStart(2, '0')}`);
+        // Action 0x02 is NOISE_REDUCTION_ACTION.CYCLE in Realme SDK
+        this._queuePacket(Cmd.SET_ANC, [0x02, 0x01, maskByte], 'Set ANC Cycle (Action 2, Type 1)');
+        this._queuePacket(Cmd.SET_ANC, [0x02, 0x02, maskByte], 'Set ANC Cycle (Action 2, Type 2)');
+        this._queuePacket(Cmd.SET_ANC, [0x01, 0x02, maskByte], 'Set ANC Cycle (Action 1, Type 2)');
+        this._queuePacket(Cmd.SET_ANC, [0x01, 0x02, enumVal], 'Set ANC Cycle (Action 1, Enum)');
     }
 
     destroy() {
