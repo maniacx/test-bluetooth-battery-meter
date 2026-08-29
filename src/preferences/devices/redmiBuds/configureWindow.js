@@ -8,6 +8,7 @@ import {
 import {DropDownRowWidget} from './../../widgets/dropDownRowWidget.js';
 import {CheckBoxesRowWidget} from './../../widgets/checkBoxesRowWidget.js';
 import {IconSelectorWidget} from './../../widgets/iconSelectorWidget.js';
+import {RadioButtonRowWidget} from './../../widgets/radioButtonRowWidget.js';
 import {RingMyBudsRow} from './../../widgets/ringMyBudsRow.js';
 import {EqualizerWidget} from './../../widgets/equalizerWidget.js';
 import {RedmiBudsModelList} from '../../../lib/devices/redmiBuds/redmiBudsConfig.js';
@@ -114,6 +115,7 @@ export const ConfigureWindow = GObject.registerClass({
 
         this._page.add(iconSelector);
 
+        this._addInEar();
         this._addEq();
         this._addMiscSetting();
         this._addGestureControls();
@@ -198,6 +200,39 @@ export const ConfigureWindow = GObject.registerClass({
             pairedDevice[existingPathIndex] = JSON.stringify(existingItem);
             this._settings.set_strv('redmi-buds-list', pairedDevice);
         }
+    }
+
+    _addInEar() {
+        if (!this._modelData.inEarDetection)
+            return;
+
+        const _ = this._gettext;
+
+        const inEarSettingsGroup = new Adw.PreferencesGroup({
+            title: _('Playback Behavior'),
+        });
+
+        const inEarOptions =  [
+            _('Default behavior'),
+            _('Resume with both earbuds, Pause if any removed'),
+            _('Resume with any earbud, Pause if both removed'),
+        ];
+
+        this._inEarDropdown = new RadioButtonRowWidget({
+            title: _('Choose Playback Behavior for Ear Detection'),
+            subtitle: _('Automatically pause or resume playback ' +
+                'based on wearing detection.'),
+            options: inEarOptions,
+            initialValue: this._settingsItems['ear-detection-mode'],
+        });
+
+        this._inEarDropdown.connect('notify::toggled-value', () => {
+            this._updateGsettings('ear-detection-mode', this._inEarDropdown.toggled_value);
+        });
+
+        inEarSettingsGroup.add(this._inEarDropdown);
+
+        this._page.add(inEarSettingsGroup);
     }
 
     _addEq() {

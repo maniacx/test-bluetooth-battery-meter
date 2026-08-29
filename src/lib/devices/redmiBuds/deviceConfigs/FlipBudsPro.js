@@ -29,7 +29,6 @@ export default {
         ambient: 0x02,
     },
 
-    inEarDetection: true,
     lowLatencyMode: true,
     adaptiveSound: true,
     dualConnection: true,

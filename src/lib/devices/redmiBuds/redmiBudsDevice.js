@@ -8,6 +8,7 @@ import {
     buds2to1BatteryLevel, validateProperties, launchConfigureWindow, isArrayEqual
 } from '../deviceUtils.js';
 import {createConfig, createProperties, DataHandler} from '../../dataHandler.js';
+import {MediaController} from '../mediaController.js';
 import {RedmiBudsSocket} from './redmiBudsSocket.js';
 
 export const DeviceTypeRedmiBuds = 'redmiBuds';
@@ -151,6 +152,10 @@ export const RedmiBudsDevice = GObject.registerClass({
                 'dual-conn': false,
             },
 
+            ...this._modelData.inEarDetection && {
+                'ear-detection-mode': 1,
+            },
+
             ...this._modelData.autoAnswer && {
                 'auto-answer': false,
             },
@@ -225,6 +230,9 @@ export const RedmiBudsDevice = GObject.registerClass({
 
         if (this._modelData.dualConnection)
             this._dualConn = this._settingsItems['dual-conn'];
+
+        if (this._modelData.inEarDetection)
+            this._earDetectionMode = this._settingsItems['ear-detection-mode'];
 
         if (this._modelData.autoAnswer)
             this._autoAnswer = this._settingsItems['auto-answer'];
@@ -332,6 +340,14 @@ export const RedmiBudsDevice = GObject.registerClass({
             if (this._dualConn !== enable) {
                 this._dualConn = enable;
                 this._setDualConn(enable);
+            }
+        }
+
+        if (this._modelData.inEarDetection) {
+            const earDetectionMode = this._settingsItems['ear-detection-mode'];
+            if (this._earDetectionMode !== earDetectionMode) {
+                this._earDetectionMode = earDetectionMode;
+                this._configureMediaController(earDetectionMode);
             }
         }
 
@@ -671,6 +687,8 @@ export const RedmiBudsDevice = GObject.registerClass({
 
         this._battInfoRecieved = true;
 
+        this._configureMediaController();
+
         if (this._modelData.noiseControl)
             this._props.toggle1Visible = true;
 
@@ -702,6 +720,20 @@ export const RedmiBudsDevice = GObject.registerClass({
                     this._settingsButtonClicked();
             }
         );
+    }
+
+    _configureMediaController() {
+        if (!this._modelData.inEarDetection)
+            return;
+
+        const enableMediaController = this._earDetectionMode !== 0;
+
+        if (enableMediaController && !this._mediaController) {
+            this._mediaController = new MediaController(this._settings, this._devicePath, -1);
+        } else if (!enableMediaController) {
+            this._mediaController?.destroy();
+            this._mediaController = null;
+        }
     }
 
     updateFirmwareInfo(fwVersion) {
@@ -892,6 +924,20 @@ export const RedmiBudsDevice = GObject.registerClass({
 
     updateInEarState(left, right) {
         this._log.info(`Inear status left: ${left} Right: ${right}`);
+        if (!this._modelData.inEarDetection || this._earDetectionMode === 0)
+            return;
+
+        const bothInEars = left  && right;
+        const budInEar = left || right;
+
+        let playbackMode = null;
+        if (this._earDetectionMode === 1)
+            playbackMode = bothInEars ? 'play' : 'pause';
+        else if (this._earDetectionMode === 2)
+            playbackMode = budInEar ? 'play' : 'pause';
+
+        if (playbackMode)
+            this._mediaController?.changeActivePlayerState(playbackMode);
     }
 
     updateEqPreset(mode) {
@@ -1212,6 +1258,8 @@ export const RedmiBudsDevice = GObject.registerClass({
             this._settings?.disconnect(this._settingsHandlerId);
         this._settingsHandlerId = null;
         this._settings = null;
+        this._mediaController?.destroy();
+        this._mediaController = null;
         this._battInfoRecieved = false;
     }
 });

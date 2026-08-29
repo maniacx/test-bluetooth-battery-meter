@@ -35,7 +35,6 @@ export default {
         voice: 0x01,
     },
 
-    inEarDetection: true,
     lowLatencyMode: true,
     adaptiveSound: true,
     dualConnection: true,

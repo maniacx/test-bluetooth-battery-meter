@@ -28,7 +28,6 @@ export default {
     },
 
 
-    inEarDetection: true,
     dualConnection: true,
     autoAnswer: true,
     ring: true,

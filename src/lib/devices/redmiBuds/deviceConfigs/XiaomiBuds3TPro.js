@@ -35,7 +35,6 @@ export default {
         voice: 0x01,
     },
 
-    inEarDetection: true,
     dualConnection: true,
     autoAnswer: true,
     ring: true,
