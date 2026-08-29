@@ -18,7 +18,6 @@ export default {
         boostVolume: 0x07,
     },
 
-    inEarDetection: true,
     ring: true,
 
     gestureOptions: {

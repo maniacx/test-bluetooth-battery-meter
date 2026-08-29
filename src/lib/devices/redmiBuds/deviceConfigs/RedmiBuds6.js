@@ -36,7 +36,6 @@ export default {
         ambient: 0x02,
     },
 
-    inEarDetection: true,
     immersiveSound: true,
     dualConnection: true,
     autoAnswer: true,

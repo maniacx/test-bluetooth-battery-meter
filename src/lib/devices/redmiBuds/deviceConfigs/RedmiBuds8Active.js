@@ -18,7 +18,6 @@ export default {
         boostVolume: 0x07,
     },
 
-    inEarDetection: true,
     lowLatencyMode: true,
     dualConnection: true,
     ring: true,

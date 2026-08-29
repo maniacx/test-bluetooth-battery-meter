@@ -24,7 +24,6 @@ export default {
         transparency: 0x02,
     },
 
-    inEarDetection: true,
     lowLatencyMode: true,
     ring: true,
 

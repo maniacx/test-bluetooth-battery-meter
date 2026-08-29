@@ -10,7 +10,6 @@ export default {
     batteryMutiple: true,
     batteryCase: true,
     /*
-    inEarDetection: true,
     lowLatencyMode: true,
     ring: true,
 

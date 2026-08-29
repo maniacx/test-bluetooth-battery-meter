@@ -22,7 +22,6 @@ export default {
         high: 0x00,
     },
 
-    inEarDetection: true,
     immersiveSound: true,
     lowLatencyMode: true,
     dualConnection: true,
