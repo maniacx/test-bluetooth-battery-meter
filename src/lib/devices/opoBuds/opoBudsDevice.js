@@ -311,97 +311,101 @@ export const OpoBudsDevice = GObject.registerClass({
             if (this._ignoreGsettingsChange)
                 return;
 
-            const devicesList = this._settings.get_strv('opo-buds-list').map(safeJsonParse).filter(Boolean);
-            const index = devicesList.findIndex(item => item.path === this._devicePath);
-            if (index === -1)
-                return;
+            try {
+                const devicesList = this._settings.get_strv('opo-buds-list').map(safeJsonParse).filter(Boolean);
+                const index = devicesList.findIndex(item => item.path === this._devicePath);
+                if (index === -1)
+                    return;
 
-            this._settingsItems = devicesList[index];
+                this._settingsItems = devicesList[index];
 
-            // 1. Common & Case Icons
-            const icon = this._settingsItems['icon'];
-            if (this._commonIcon !== icon) {
-                this._commonIcon = icon;
-                this._updateIcons();
-            }
-
-            if (this._modelData.batteryCase) {
-                const caseIcon = this._settingsItems['case'];
-                if (this._caseIcon !== caseIcon) {
-                    this._caseIcon = caseIcon;
+                // 1. Common & Case Icons
+                const icon = this._settingsItems['icon'];
+                if (this._commonIcon !== icon) {
+                    this._commonIcon = icon;
                     this._updateIcons();
                 }
-            }
 
-            // 2. Declarative 1-to-1 feature mapping
-            for (const item of SIMPLE_FEATURE_MAP) {
-                if (this._modelData[item.flag]) {
-                    const val = this._settingsItems[item.key];
-                    if (this[item.prop] !== val) {
-                        this[item.prop] = val;
-                        if (this._opoBudsSocket)
-                            item.fn(this._opoBudsSocket, val);
+                if (this._modelData.batteryCase) {
+                    const caseIcon = this._settingsItems['case'];
+                    if (this._caseIcon !== caseIcon) {
+                        this._caseIcon = caseIcon;
+                        this._updateIcons();
                     }
                 }
-            }
 
-            // 3. Multi-device operations
-            if (this._modelData.dualConnection) {
-                const multiDeviceOp = this._settingsItems['multi-device-op'];
-                if (multiDeviceOp && multiDeviceOp.ts !== this._lastMultiDeviceOpTs) {
-                    this._lastMultiDeviceOpTs = multiDeviceOp.ts;
-                    if (multiDeviceOp.op === 'refresh' || multiDeviceOp.op === 0xFF)
-                        this._opoBudsSocket?.getMultiConnectInfo();
-                    else
-                        this._opoBudsSocket?.operateMultiConnect(multiDeviceOp.op, multiDeviceOp.mac);
+                // 2. Declarative 1-to-1 feature mapping
+                for (const item of SIMPLE_FEATURE_MAP) {
+                    if (this._modelData[item.flag]) {
+                        const val = this._settingsItems[item.key];
+                        if (this[item.prop] !== val) {
+                            this[item.prop] = val;
+                            if (this._opoBudsSocket)
+                                item.fn(this._opoBudsSocket, val);
+                        }
+                    }
                 }
-            }
 
-            // 4. Earbud Fit Test operations
-            if (this._modelData.fitTest) {
-                const fitTestOp = this._settingsItems['fit-test-op'];
-                if (fitTestOp && fitTestOp.ts !== this._lastFitTestOpTs) {
-                    this._lastFitTestOpTs = fitTestOp.ts;
-                    if (fitTestOp.action === 'start')
-                        this._opoBudsSocket?.startFitTest();
-                    else if (fitTestOp.action === 'stop')
-                        this._opoBudsSocket?.stopFitTest();
+                // 3. Multi-device operations
+                if (this._modelData.dualConnection) {
+                    const multiDeviceOp = this._settingsItems['multi-device-op'];
+                    if (multiDeviceOp && multiDeviceOp.ts !== this._lastMultiDeviceOpTs) {
+                        this._lastMultiDeviceOpTs = multiDeviceOp.ts;
+                        if (multiDeviceOp.op === 'refresh' || multiDeviceOp.op === 0xFF)
+                            this._opoBudsSocket?.getMultiConnectInfo();
+                        else
+                            this._opoBudsSocket?.operateMultiConnect(multiDeviceOp.op, multiDeviceOp.mac);
+                    }
                 }
-            }
 
-            // 5. Dynamic Audio EQ (3-band sliders)
-            if (this._modelData.dynamicBass) {
-                const low = this._settingsItems['dynamic-audio-low'] ?? 0;
-                const med = this._settingsItems['dynamic-audio-med'] ?? 0;
-                const high = this._settingsItems['dynamic-audio-high'] ?? 0;
-                if (this._dynamicAudioLow !== low || this._dynamicAudioMed !== med || this._dynamicAudioHigh !== high) {
-                    this._dynamicAudioLow = low;
-                    this._dynamicAudioMed = med;
-                    this._dynamicAudioHigh = high;
-                    this._opoBudsSocket?.setDynamicAudioEq(low, med, high);
+                // 4. Earbud Fit Test operations
+                if (this._modelData.fitTest) {
+                    const fitTestOp = this._settingsItems['fit-test-op'];
+                    if (fitTestOp && fitTestOp.ts !== this._lastFitTestOpTs) {
+                        this._lastFitTestOpTs = fitTestOp.ts;
+                        if (fitTestOp.action === 'start')
+                            this._opoBudsSocket?.startFitTest();
+                        else if (fitTestOp.action === 'stop')
+                            this._opoBudsSocket?.stopFitTest();
+                    }
                 }
-            }
 
-            // 6. Gestures slot change detection
-            if (this._modelData.gestureOptions) {
-                const gestures = this._settingsItems['gestures'];
-                if (gestures && this._gestures !== gestures) {
-                    const changed = this._findChangedGestureSlot(this._gestures, gestures);
-                    this._gestures = gestures;
-                    if (changed)
-                        this._opoBudsSocket?.setGestureSlot(
-                            changed.device, changed.buttonId,
-                            changed.gestureType, changed.action);
+                // 5. Dynamic Audio EQ (3-band sliders)
+                if (this._modelData.dynamicBass) {
+                    const low = this._settingsItems['dynamic-audio-low'] ?? 0;
+                    const med = this._settingsItems['dynamic-audio-med'] ?? 0;
+                    const high = this._settingsItems['dynamic-audio-high'] ?? 0;
+                    if (this._dynamicAudioLow !== low || this._dynamicAudioMed !== med || this._dynamicAudioHigh !== high) {
+                        this._dynamicAudioLow = low;
+                        this._dynamicAudioMed = med;
+                        this._dynamicAudioHigh = high;
+                        this._opoBudsSocket?.setDynamicAudioEq(low, med, high);
+                    }
                 }
-            }
 
-            // 7. Noise Control cycle mask
-            if (this._modelData.noiseControl) {
-                const ncCycleMask = this._settingsItems['nc-cycle-mask'] ?? 0x0B;
-                if (this._ncCycleMask !== ncCycleMask) {
-                    this._ncCycleMask = ncCycleMask;
-                    this._opoBudsSocket?.setNoiseControlCycle(ncCycleMask);
+                // 6. Gestures slot change detection
+                if (this._modelData.gestureOptions) {
+                    const gestures = this._settingsItems['gestures'];
+                    if (gestures && this._gestures !== gestures) {
+                        const changed = this._findChangedGestureSlot(this._gestures, gestures);
+                        this._gestures = gestures;
+                        if (changed)
+                            this._opoBudsSocket?.setGestureSlot(
+                                changed.device, changed.buttonId,
+                                changed.gestureType, changed.action);
+                    }
                 }
+
+                // 7. Noise Control cycle mask
+                if (this._modelData.noiseControl) {
+                    const ncCycleMask = this._settingsItems['nc-cycle-mask'] ?? 0x0B;
+                    if (this._ncCycleMask !== ncCycleMask) {
+                        this._ncCycleMask = ncCycleMask;
+                        this._opoBudsSocket?.setNoiseControlCycle(ncCycleMask);
+                    }
+                }
+            } catch (e) {
+                Logger.error(e, 'OpoBudsDevice: GSettings monitor error');
             }
         });
     }

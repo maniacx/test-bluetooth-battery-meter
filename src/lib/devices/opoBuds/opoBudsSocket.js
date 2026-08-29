@@ -647,13 +647,15 @@ export const OpoBudsSocket = GObject.registerClass({
 
     operateMultiConnect(op, macAddress) {
         this._log.info(`Operate MultiConnect: op=${op}, mac=${macAddress}`);
-        if (!macAddress)
+        if (!macAddress || !/^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$/.test(macAddress)) {
+            this._log.warn(`Invalid MAC address format for MultiConnect: ${macAddress}`);
             return;
+        }
 
         // Convert MAC address to reversed (little-endian) byte array matching firmware wire order
         const macParts = macAddress.split(':').map(h => parseInt(h, 16)).reverse();
-        if (macParts.length !== 6) {
-            this._log.warn(`Invalid MAC address for MultiConnect: ${macAddress}`);
+        if (macParts.length !== 6 || macParts.some(isNaN)) {
+            this._log.warn(`Invalid MAC address bytes for MultiConnect: ${macAddress}`);
             return;
         }
 
