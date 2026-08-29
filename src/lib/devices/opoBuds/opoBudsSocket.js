@@ -750,7 +750,19 @@ export const OpoBudsSocket = GObject.registerClass({
         if (!payload || payload.length === 0)
             return;
 
-        const statusByte = payload[payload.length - 1];
+        let statusByte = payload[payload.length - 1];
+        if (payload.length >= 4) {
+            const leftStatus = payload[1];
+            const rightStatus = payload[3];
+            if (leftStatus === 0x01 && rightStatus === 0x01)
+                statusByte = 1;
+            else if (leftStatus === 0x02 && rightStatus === 0x01)
+                statusByte = 2;
+            else if (leftStatus === 0x01 && rightStatus === 0x02)
+                statusByte = 3;
+            else if (leftStatus === 0x02 && rightStatus === 0x02)
+                statusByte = 4;
+        }
         this._log.info(`Parsed compactness result: 0x${statusByte.toString(16)} (payload=${hexBytes(payload)})`);
         this._callbacks?.updateFitTestResult?.(statusByte);
     }
@@ -761,12 +773,14 @@ export const OpoBudsSocket = GObject.registerClass({
 
     startFitTest() {
         this._log.info('Start Earbud Fit Test (Compactness Detect)');
+        this._queuePacket(0x0405, [0x01], 'Start Fit Test (0x0405)');
         this._queuePacket(Cmd.START_COMPACTNESS_DETECT, [0x01], 'Start Fit Test (0x0410)');
         this._queuePacket(0x040A, [0x01], 'Start Fit Test (0x040A)');
     }
 
     stopFitTest() {
         this._log.info('Stop Earbud Fit Test');
+        this._queuePacket(0x0405, [0x00], 'Stop Fit Test (0x0405)');
         this._queuePacket(Cmd.START_COMPACTNESS_DETECT, [0x00], 'Stop Fit Test (0x0410)');
         this._queuePacket(0x040A, [0x00], 'Stop Fit Test (0x040A)');
     }

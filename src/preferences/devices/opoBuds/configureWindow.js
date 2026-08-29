@@ -1,5 +1,6 @@
 'use strict';
 import Adw from 'gi://Adw';
+import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
 
@@ -559,14 +560,17 @@ export const ConfigureWindow = GObject.registerClass({
 
             this._fitTestBtn.connect('clicked', () => {
                 this._fitTestBtn.sensitive = false;
-                this._fitTestResultLabel.label = _('Testing…');
+                this._fitTestResultLabel.label = _('Testing acoustic seal…');
                 this._fitTestResultLabel.css_classes = ['dim-label'];
                 this._updateGsettings('fit-test-op', {action: 'start', ts: Date.now()});
 
-                GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 4, () => {
+                GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
                     this._fitTestBtn.sensitive = true;
-                    const curRes = this._settingsItems['fit-test-result'] ?? 1;
-                    this._renderFitTestBadge(curRes);
+                    const curRes = this._settingsItems['fit-test-result'] ?? 0;
+                    if (curRes > 0)
+                        this._renderFitTestBadge(curRes);
+                    else
+                        this._renderFitTestBadge(1);
                     return GLib.SOURCE_REMOVE;
                 });
             });
