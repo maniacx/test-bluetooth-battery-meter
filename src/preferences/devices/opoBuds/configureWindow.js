@@ -656,7 +656,7 @@ export const ConfigureWindow = GObject.registerClass({
                 this._updateGsettings('fit-test-result', null);
                 this._updateGsettings('fit-test-op', {action: 'start', ts: Date.now()});
 
-                GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 4, () => {
+                GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 3, () => {
                     this._fitPlayBtn.sensitive = true;
                     this._fitPlayBtn.child = new Adw.ButtonContent({
                         icon_name: 'bbm-play-symbolic',
@@ -664,8 +664,18 @@ export const ConfigureWindow = GObject.registerClass({
                     });
 
                     const res = this._settingsItems['fit-test-result'];
-                    const leftGood = (res?.left === 1);
-                    const rightGood = (res?.right === 1);
+                    if (!res || typeof res !== 'object' || res.left === undefined || res.right === undefined) {
+                        this._fitLeftBadge.label = _('Failed');
+                        this._fitLeftBadge.css_classes = ['error', 'heading'];
+                        this._fitRightBadge.label = _('Failed');
+                        this._fitRightBadge.css_classes = ['error', 'heading'];
+                        descRow.title = _('Test Incomplete');
+                        descRow.subtitle = _('Could not detect earbud seal. Ensure earbuds are worn, then test again');
+                        return GLib.SOURCE_REMOVE;
+                    }
+
+                    const leftGood = (res.left === 1);
+                    const rightGood = (res.right === 1);
 
                     if (leftGood) {
                         this._fitLeftBadge.label = _('Good');
