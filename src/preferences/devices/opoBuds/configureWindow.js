@@ -17,7 +17,7 @@ import {
 import {
     OpoBudsModelList, safeJsonParse,
     buildPlaceholderGesturesHex, decodeGesturesHex, encodeGesturesHex,
-    NC_CYCLE_BITS, widgetMaskToProtocolMask, protocolMaskToWidgetMask
+    widgetMaskToProtocolMask, protocolMaskToWidgetMask
 } from '../../../lib/devices/opoBuds/opoBudsConfig.js';
 
 export const ConfigureWindow = GObject.registerClass({
@@ -34,6 +34,7 @@ export const ConfigureWindow = GObject.registerClass({
         });
 
         this._isCompactMode = false;
+        this._gestureSlotMap = {};
 
         this._breakpointCompact = new Adw.Breakpoint({
             condition: Adw.BreakpointCondition.parse('max-width: 500px'),
@@ -194,9 +195,10 @@ export const ConfigureWindow = GObject.registerClass({
 
                 if (this._modelData.gestureOptions && this._gestureDropdowns) {
                     const gesturesHex = this._settingsItems['gestures'] ??
-                            this._buildPlaceholderGesturesHex(this._modelData.gestureOptions);
+                            buildPlaceholderGesturesHex(this._modelData.gestureOptions);
 
-                    const slots = this._decodeGestures(gesturesHex);
+                    const slots = decodeGesturesHex(gesturesHex);
+                    this._gestureSlotMap = {...slots};
                     Object.entries(this._gestureDropdowns).forEach(([slotKey, dropdown]) => {
                         if (slots[slotKey] !== undefined &&
                                 dropdown.selected_item !== slots[slotKey])
@@ -791,12 +793,7 @@ export const ConfigureWindow = GObject.registerClass({
                     label: _('Test Again'),
                 });
 
-                let leftGood = false;
-                let rightGood = false;
-                if (res && typeof res === 'object' && res.left !== undefined && res.right !== undefined) {
-                    leftGood = (res.left === 1);
-                    rightGood = (res.right === 1);
-                } else {
+                if (!res || typeof res !== 'object' || res.left === undefined || res.right === undefined) {
                     this._fitLeftBadge.label = _('Failed');
                     this._fitLeftBadge.css_classes = ['error', 'heading'];
                     this._fitRightBadge.label = _('Failed');
@@ -805,6 +802,37 @@ export const ConfigureWindow = GObject.registerClass({
                     descRow.subtitle = _('Could not detect earbud seal. Ensure earbuds are worn, then test again');
                     return;
                 }
+
+                const left = res.left;
+                const right = res.right;
+
+                // Status 4 = Not in ear (Wear earbuds first)
+                if (left === 4 || right === 4) {
+                    this._fitLeftBadge.label = (left === 4) ? _('Not in ear') : (left === 1 ? _('Good') : _('Not ideal'));
+                    this._fitLeftBadge.css_classes = (left === 4) ? ['warning', 'heading'] : (left === 1 ? ['success', 'heading'] : ['warning', 'heading']);
+
+                    this._fitRightBadge.label = (right === 4) ? _('Not in ear') : (right === 1 ? _('Good') : _('Not ideal'));
+                    this._fitRightBadge.css_classes = (right === 4) ? ['warning', 'heading'] : (right === 1 ? ['success', 'heading'] : ['warning', 'heading']);
+
+                    descRow.title = _('Insert your earbuds');
+                    descRow.subtitle = _('Please wear both earbuds in your ears, then tap "Test Again"');
+                    return;
+                }
+
+                // Status 2 or 3 = Test Failed / Interrupted
+                if (left === 2 || left === 3 || right === 2 || right === 3) {
+                    this._fitLeftBadge.label = _('Failed');
+                    this._fitLeftBadge.css_classes = ['error', 'heading'];
+                    this._fitRightBadge.label = _('Failed');
+                    this._fitRightBadge.css_classes = ['error', 'heading'];
+                    descRow.title = _('Test Incomplete');
+                    descRow.subtitle = _('Wear your earbuds and remain still during the test, then try again');
+                    return;
+                }
+
+                // Status 1 = Good seal, Status 0 = Poor seal / Needs adjust
+                const leftGood = (left === 1);
+                const rightGood = (right === 1);
 
                 if (leftGood) {
                     this._fitLeftBadge.label = _('Good');
@@ -825,9 +853,15 @@ export const ConfigureWindow = GObject.registerClass({
                 if (leftGood && rightGood) {
                     descRow.title = _('Great Fit');
                     descRow.subtitle = _('Both earbuds make a good seal for optimal noise cancelling');
-                } else {
+                } else if (!leftGood && rightGood) {
                     descRow.title = _('Adjust your earbuds');
-                    descRow.subtitle = _('Adjust the position of the earbud or change ear tip size, then test again');
+                    descRow.subtitle = _('Adjust the position of the left earbud or change the ear tip size, then test again');
+                } else if (leftGood && !rightGood) {
+                    descRow.title = _('Adjust your earbuds');
+                    descRow.subtitle = _('Adjust the position of the right earbud or change the ear tip size, then test again');
+                } else {
+                    descRow.title = _('Insert your earbuds');
+                    descRow.subtitle = _('Ensure both earbuds are worn in your ears, then test again');
                 }
             };
             this._onFitTestCompleted = onFitTestCompleted;
@@ -929,9 +963,17 @@ export const ConfigureWindow = GObject.registerClass({
             'double-action-hold': _('Double Tap &amp; Hold'),
         };
 
+        const pressSlotNames = {
+            'single': _('Single-press'),
+            'double': _('Double-press'),
+            'triple': _('Triple-press'),
+            'action-hold': _('Press &amp; Hold'),
+            'double-action-hold': _('Double Press &amp; Hold'),
+        };
+
         const currentGesturesHex = this._settingsItems['gestures'] ??
-            this._buildPlaceholderGesturesHex(gesturesConfig);
-        const currentSlots = this._decodeGestures(currentGesturesHex);
+            buildPlaceholderGesturesHex(gesturesConfig);
+        this._gestureSlotMap = decodeGesturesHex(currentGesturesHex);
 
         const groups = [...new Set(gesturesConfig.slots.map(s => s.group))];
 
@@ -960,9 +1002,12 @@ export const ConfigureWindow = GObject.registerClass({
                     `${slot.device}_${btnId}_${gesturesConfig.mapping.gestureTypes[slot.type]}`;
 
                 const currentFuncCode =
-                     currentSlots[slotKey] !== undefined ? currentSlots[slotKey] : values[0];
+                     this._gestureSlotMap[slotKey] !== undefined ? this._gestureSlotMap[slotKey] : values[0];
 
-                const rowTitle = gestureSlotNames[slot.type] ?? slot.type;
+                const isPress = slot.group === 'mfb' || gestureDef?.type === 'press';
+                const rowTitle = (isPress && pressSlotNames[slot.type])
+                    ? pressSlotNames[slot.type]
+                    : (gestureSlotNames[slot.type] ?? slot.type);
 
                 const dropdown = new DropDownRowWidget({
                     title: rowTitle,
@@ -976,8 +1021,8 @@ export const ConfigureWindow = GObject.registerClass({
                     if (this._isUpdatingUI)
                         return;
 
-                    currentSlots[slotKey] = dropdown.selected_item;
-                    const newHex = this._encodeGestures(currentSlots, gesturesConfig);
+                    this._gestureSlotMap[slotKey] = dropdown.selected_item;
+                    const newHex = encodeGesturesHex(this._gestureSlotMap, gesturesConfig);
                     this._updateGsettings('gestures', newHex);
                 });
 
@@ -1048,20 +1093,8 @@ export const ConfigureWindow = GObject.registerClass({
             case 'anc':
                 return _('Noise Control (ANC) Button');
             default:
-                return _('Button & Gesture Controls');
+                return _('Button &amp; Gesture Controls');
         }
-    }
-
-    _buildPlaceholderGesturesHex(gesturesConfig) {
-        return buildPlaceholderGesturesHex(gesturesConfig);
-    }
-
-    _decodeGestures(hex) {
-        return decodeGesturesHex(hex);
-    }
-
-    _encodeGestures(slotMap, gesturesConfig) {
-        return encodeGesturesHex(slotMap, gesturesConfig);
     }
 
     _updateCompactStatus() {
