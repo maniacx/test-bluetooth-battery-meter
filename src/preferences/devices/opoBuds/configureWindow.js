@@ -241,8 +241,15 @@ export const ConfigureWindow = GObject.registerClass({
             this._highFreq = null;
 
             if (this._multiDevicePollId) {
-                GLib.source_remove(this._multiDevicePollId);
+                const id = this._multiDevicePollId;
                 this._multiDevicePollId = null;
+                GLib.source_remove(id);
+            }
+
+            if (this._fitTestTimeoutId) {
+                const id = this._fitTestTimeoutId;
+                this._fitTestTimeoutId = null;
+                GLib.source_remove(id);
             }
 
             if (this._modelData?.ring) {
@@ -599,8 +606,9 @@ export const ConfigureWindow = GObject.registerClass({
 
                 this._dualConnSwitch._dialog.connect('closed', () => {
                     if (this._multiDevicePollId) {
-                        GLib.source_remove(this._multiDevicePollId);
+                        const id = this._multiDevicePollId;
                         this._multiDevicePollId = null;
+                        GLib.source_remove(id);
                     }
                 });
             }
@@ -727,8 +735,9 @@ export const ConfigureWindow = GObject.registerClass({
             const resetFitState = () => {
                 this._isTestingFit = false;
                 if (this._fitTestTimeoutId) {
-                    GLib.source_remove(this._fitTestTimeoutId);
+                    const id = this._fitTestTimeoutId;
                     this._fitTestTimeoutId = null;
+                    GLib.source_remove(id);
                 }
                 if (this._fitLeftBadge) {
                     this._fitLeftBadge.label = '-';
@@ -756,8 +765,9 @@ export const ConfigureWindow = GObject.registerClass({
 
                 this._isTestingFit = false;
                 if (this._fitTestTimeoutId) {
-                    GLib.source_remove(this._fitTestTimeoutId);
+                    const id = this._fitTestTimeoutId;
                     this._fitTestTimeoutId = null;
+                    GLib.source_remove(id);
                 }
 
                 this._fitPlayBtn.sensitive = true;
@@ -827,8 +837,11 @@ export const ConfigureWindow = GObject.registerClass({
                     'fit-test-op': {action: 'start', ts: Date.now()},
                 });
 
-                if (this._fitTestTimeoutId)
-                    GLib.source_remove(this._fitTestTimeoutId);
+                if (this._fitTestTimeoutId) {
+                    const id = this._fitTestTimeoutId;
+                    this._fitTestTimeoutId = null;
+                    GLib.source_remove(id);
+                }
 
                 // 10-second watchdog fallback in case hardware packet drops
                 this._fitTestTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 10, () => {
