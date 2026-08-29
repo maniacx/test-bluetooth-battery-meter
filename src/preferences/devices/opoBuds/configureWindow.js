@@ -9,6 +9,8 @@ import {IconSelectorWidget} from '../../widgets/iconSelectorWidget.js';
 import {RingMyBudsRow} from '../../widgets/ringMyBudsRow.js';
 import {SliderRowWidget} from '../../widgets/sliderRowWidget.js';
 import {CheckBoxesRowWidget} from '../../widgets/checkBoxesRowWidget.js';
+import {DeviceManagementRow} from '../../widgets/deviceMgmtRowWidget.js';
+import {BtDeviceState, DeviceManagementAction} from '../../../lib/devices/commonEmuns.js';
 import {
     supportedAudioDualIcons, supportedAudioSingleIcons, supportedCaseIcons
 } from '../../../lib/widgets/iconGroups.js';
@@ -165,6 +167,22 @@ export const ConfigureWindow = GObject.registerClass({
                 if (this._modelData.inEarDetection && this._inEarSwitch)
                     this._inEarSwitch.active = this._settingsItems['inear-enable'];
 
+                if (this._modelData.dualConnection && this._dualConnSwitch) {
+                    this._dualConnSwitch.active = this._settingsItems['dual-connection'] ?? false;
+
+                    const multiDevices = this._settingsItems['multi-devices'] ?? [];
+                    const devArr = multiDevices.map(dev => ({
+                        id: dev.mac,
+                        name: dev.name,
+                        connected: dev.isConnected,
+                        state: BtDeviceState.Ready,
+                    }));
+                    this._dualConnSwitch.updateDevices(devArr);
+
+                    const ownDev = multiDevices.find(d => d.isCurrent)?.mac ?? '';
+                    this._dualConnSwitch.updateOwnDevice(ownDev);
+                }
+
                 if (this._modelData.autoAnswer && this._autoAnswerSwitch)
                     this._autoAnswerSwitch.active = this._settingsItems['auto-answer'];
 
@@ -221,6 +239,11 @@ export const ConfigureWindow = GObject.registerClass({
             this._midFreq = null;
             this._highFreq?.destroy();
             this._highFreq = null;
+
+            if (this._multiDevicePollId) {
+                GLib.Source.remove(this._multiDevicePollId);
+                this._multiDevicePollId = null;
+            }
 
             if (this._modelData?.ring) {
                 const ringState = this._settingsItems?.['ring-state'];
@@ -499,105 +522,87 @@ export const ConfigureWindow = GObject.registerClass({
         }
 
         if (this._modelData.dualConnection) {
+            const deviceManagementConfig = {
+                maxConnected: 2,
+                hasMultipointSwitch: true,
+                hasPairMode: false,
+                hasRoutingIndicator: false,
+                hasRoutingControl: false,
+                hasActiveFix: false,
+                showMac: true,
+            };
+
             const multiDevices = this._settingsItems['multi-devices'] ?? [];
-            if (multiDevices.length > 0) {
-                const isDualActive = this._settingsItems['dual-connection'] ?? false;
-                const dualDeviceExpander = new Adw.ExpanderRow({
-                    title: _('Dual Device Connection'),
-                    subtitle: _('Connect to two Bluetooth audio devices simultaneously'),
-                    show_enable_switch: true,
-                    enable_expansion: isDualActive,
-                    expanded: isDualActive,
-                });
+            const devArr = multiDevices.map(dev => ({
+                id: dev.mac,
+                name: dev.name,
+                connected: dev.isConnected,
+                state: BtDeviceState.Ready,
+            }));
 
-                dualDeviceExpander.connect('notify::enable-expansion', () => {
-                    const enabled = dualDeviceExpander.enable_expansion;
-                    dualDeviceExpander.expanded = enabled;
-                    this._updateGsettings('dual-connection', enabled);
-                });
+            const ownDevice = multiDevices.find(d => d.isCurrent)?.mac ?? '';
 
-                multiDevices.forEach(dev => {
-                    let statusLabel = _('Paired');
-                    if (dev.isConnected) {
-                        if (dev.isCurrent)
-                            statusLabel = _('Current Host (Connected)');
-                        else if (dev.isAudioActive)
-                            statusLabel = _('Audio Streaming (Connected)');
-                        else
-                            statusLabel = _('Connected');
-                    }
+            this._dualConnSwitch = new DeviceManagementRow(
+                this,
+                _,
+                devArr,
+                ownDevice,
+                '',
+                deviceManagementConfig
+            );
 
-                    const devRow = new Adw.ActionRow({
-                        title: dev.name || dev.mac,
-                        subtitle: `${dev.mac} • ${statusLabel}`,
+            this._dualConnSwitch.active = this._settingsItems['dual-connection'] ?? false;
+
+            this._dualConnSwitch.connect('notify::active', () => {
+                this._updateGsettings('dual-connection', this._dualConnSwitch.active);
+            });
+
+            this._dualConnSwitch.connect('device-action', (_row, action, id) => {
+                const opMap = {
+                    [DeviceManagementAction.Connect]: 0x02,
+                    [DeviceManagementAction.Disconnect]: 0x01,
+                    [DeviceManagementAction.Remove]: 0x03,
+                };
+                const op = opMap[action];
+                if (op) {
+                    this._updateGsettings('multi-device-op', {
+                        op,
+                        mac: id,
+                        ts: Date.now(),
+                    });
+                }
+            });
+
+            miscGroup.add(this._dualConnSwitch);
+
+            if (this._dualConnSwitch._button && this._dualConnSwitch._dialog) {
+                this._dualConnSwitch._button.connect('clicked', () => {
+                    // Query immediately upon opening the Manage Devices dialog
+                    this._updateGsettings('multi-device-op', {
+                        op: 'refresh',
+                        mac: '',
+                        ts: Date.now(),
                     });
 
-                    const btnBox = new Gtk.Box({
-                        orientation: Gtk.Orientation.HORIZONTAL,
-                        spacing: 6,
-                        valign: Gtk.Align.CENTER,
-                    });
-
-                    if (dev.isConnected) {
-                        const priorityBtn = new Gtk.Button({
-                            label: _('Priority'),
-                            valign: Gtk.Align.CENTER,
-                            css_classes: ['flat', 'suggested-action'],
-                            tooltip_text: _('Set audio priority to this device'),
+                    // Start 3-second heartbeat only while the dialog is open
+                    if (!this._multiDevicePollId) {
+                        this._multiDevicePollId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 3, () => {
+                            this._updateGsettings('multi-device-op', {
+                                op: 'refresh',
+                                mac: '',
+                                ts: Date.now(),
+                            });
+                            return GLib.SOURCE_CONTINUE;
                         });
-                        priorityBtn.connect('clicked', () => {
-                            this._updateGsettings('multi-device-op', {op: 0x04, mac: dev.mac, ts: Date.now()});
-                        });
-                        btnBox.append(priorityBtn);
-
-                        const disconnectBtn = new Gtk.Button({
-                            label: _('Disconnect'),
-                            valign: Gtk.Align.CENTER,
-                            css_classes: ['flat'],
-                        });
-                        disconnectBtn.connect('clicked', () => {
-                            this._updateGsettings('multi-device-op', {op: 0x02, mac: dev.mac, ts: Date.now()});
-                        });
-                        btnBox.append(disconnectBtn);
-                    } else {
-                        const connectBtn = new Gtk.Button({
-                            label: _('Connect'),
-                            valign: Gtk.Align.CENTER,
-                            css_classes: ['flat', 'suggested-action'],
-                        });
-                        connectBtn.connect('clicked', () => {
-                            this._updateGsettings('multi-device-op', {op: 0x01, mac: dev.mac, ts: Date.now()});
-                        });
-                        btnBox.append(connectBtn);
-
-                        const unpairBtn = new Gtk.Button({
-                            label: _('Unpair'),
-                            valign: Gtk.Align.CENTER,
-                            css_classes: ['flat', 'destructive-action'],
-                        });
-                        unpairBtn.connect('clicked', () => {
-                            this._updateGsettings('multi-device-op', {op: 0x03, mac: dev.mac, ts: Date.now()});
-                        });
-                        btnBox.append(unpairBtn);
                     }
-
-                    devRow.add_suffix(btnBox);
-                    dualDeviceExpander.add_row(devRow);
                 });
 
-                miscGroup.add(dualDeviceExpander);
-            } else {
-                this._dualConnectionSwitch = new Adw.SwitchRow({
-                    title: _('Dual Device Connection'),
-                    subtitle: _('Connect to two Bluetooth audio devices simultaneously'),
-                    active: this._settingsItems['dual-connection'],
+                this._dualConnSwitch._dialog.connect('closed', () => {
+                    if (this._multiDevicePollId) {
+                        GLib.Source.remove(this._multiDevicePollId);
+                        this._multiDevicePollId = null;
+                    }
                 });
-
-                this._dualConnectionSwitch.connect('notify::active', () => {
-                    this._updateGsettings('dual-connection', this._dualConnectionSwitch.active);
-                });
-
-                miscGroup.add(this._dualConnectionSwitch);
             }
         }
 
@@ -824,6 +829,7 @@ export const ConfigureWindow = GObject.registerClass({
 
                 if (this._fitTestTimeoutId)
                     GLib.source_remove(this._fitTestTimeoutId);
+
                 // 10-second watchdog fallback in case hardware packet drops
                 this._fitTestTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 10, () => {
                     this._fitTestTimeoutId = null;

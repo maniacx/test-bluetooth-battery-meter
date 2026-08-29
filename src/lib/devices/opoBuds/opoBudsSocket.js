@@ -299,11 +299,20 @@ export const OpoBudsSocket = GObject.registerClass({
                 this._parseMultiConnectInfo(payload);
                 break;
 
+            case Cmd.OPERATE_MULTI_CONNECT_RSP:
+            case 0x050E:
+            case 0x0513:
+            case 0x0516:
+                this._log.info(`Multi-connect notify/ack (cmd=0x${cmd.toString(16)}): refreshing device list`);
+                this._getMultiConnectInfo();
+                break;
+
             case Cmd.GET_COMPACTNESS_INFO_RSP:
             case Cmd.START_COMPACTNESS_DETECT_RSP:
             case 0x8405:
             case 0x840A:
-                this._log.info(`Compactness cmd response: ${hexBytes(payload)}`);
+            case 0x8410:
+                this._log.info(`Compactness cmd response (cmd=0x${cmd.toString(16)}): ${hexBytes(payload)}`);
                 break;
 
             case Cmd.NOTIFICATION_EVENT:
@@ -340,6 +349,9 @@ export const OpoBudsSocket = GObject.registerClass({
 
             case 0x05:
             case 0x0E:
+            case 0x12:
+            case 0x13:
+            case 0x16:
                 this._getMultiConnectInfo();
                 break;
 
@@ -629,31 +641,41 @@ export const OpoBudsSocket = GObject.registerClass({
         this._callbacks?.updateMultiConnectDevices?.(devices);
     }
 
-    operateMultiConnect(op, macAddress) {
-        this._log.info(`Operate MultiConnect: op=${op}, mac=${macAddress}`);
-        if (op === 0x04) {
-            this.setAudioPriorityDevice(macAddress);
-            return;
-        }
-        const macParts = macAddress ? macAddress.split(':').map(h => parseInt(h, 16)) : [];
-        const payload = [op, ...macParts];
-        this._queuePacket(Cmd.OPERATE_MULTI_CONNECT, payload, `MultiConnect Op ${op}`);
-
-        GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
-            this._getMultiConnectInfo();
-            return GLib.SOURCE_REMOVE;
-        });
+    getMultiConnectInfo() {
+        this._getMultiConnectInfo();
     }
 
-    setAudioPriorityDevice(macAddress) {
-        this._log.info(`Set Audio Priority Device: ${macAddress}`);
-        if (!macAddress) {
-            this._queuePacket(Cmd.OPERATE_MULTI_CONNECT, [0x04, 0x00], 'Clear Audio Priority');
+    operateMultiConnect(op, macAddress) {
+        this._log.info(`Operate MultiConnect: op=${op}, mac=${macAddress}`);
+        if (!macAddress)
+            return;
+
+        // Convert MAC address to reversed (little-endian) byte array matching firmware wire order
+        const macParts = macAddress.split(':').map(h => parseInt(h, 16)).reverse();
+        if (macParts.length !== 6) {
+            this._log.warn(`Invalid MAC address for MultiConnect: ${macAddress}`);
             return;
         }
-        const macParts = macAddress.split(':').map(h => parseInt(h, 16));
-        const payload = [0x04, 0x01, ...macParts];
-        this._queuePacket(Cmd.OPERATE_MULTI_CONNECT, payload, 'Set Audio Priority Device');
+
+        // Action byte: 0x00 = Disconnect, 0x01 = Connect, 0x02 = Remove (Delete)
+        let action = 0x00;
+        if (op === 0x01 || op === 'disconnect')
+            action = 0x00;
+        else if (op === 0x02 || op === 'connect')
+            action = 0x01;
+        else if (op === 0x03 || op === 'remove')
+            action = 0x02;
+
+        const payload = [0x01, ...macParts, action];
+        this._queuePacket(Cmd.OPERATE_MULTI_CONNECT, payload, `MultiConnect Action ${action} for ${macAddress}`);
+
+        // Schedule staggered refresh checks as Bluetooth connection/disconnection takes 1-4 seconds
+        [800, 2000, 3500, 5500].forEach(delayMs => {
+            GLib.timeout_add(GLib.PRIORITY_DEFAULT, delayMs, () => {
+                this._getMultiConnectInfo();
+                return GLib.SOURCE_REMOVE;
+            });
+        });
     }
 
     setWindNoise(enable) {
@@ -755,11 +777,12 @@ export const OpoBudsSocket = GObject.registerClass({
         let rightStatus = 0;
 
         if (payload.length >= 4 && payload[0] === 0x01 && payload[2] === 0x02) {
-            leftStatus = payload[1];
-            rightStatus = payload[3];
+            // 0x01 = Good (Green), 0x00 / other = Not ideal (Yellow)
+            leftStatus = (payload[1] === 0x01) ? 1 : 0;
+            rightStatus = (payload[3] === 0x01) ? 1 : 0;
         } else if (payload.length >= 2) {
-            leftStatus = payload[0];
-            rightStatus = payload[1];
+            leftStatus = (payload[0] === 0x01) ? 1 : 0;
+            rightStatus = (payload[1] === 0x01) ? 1 : 0;
         } else {
             const single = payload[payload.length - 1];
             leftStatus = (single === 1 || single === 3) ? 1 : 0;

@@ -26,7 +26,6 @@ const SIMPLE_FEATURE_MAP = [
     { key: 'inear-enable', flag: 'inEarDetection', prop: '_inEar', fn: (s, v) => s.setInEar(v) },
     { key: 'lowlatency', flag: 'lowLatencyMode', prop: '_lowlatency', fn: (s, v) => s.setLatency(v) },
     { key: 'dual-connection', flag: 'dualConnection', prop: '_dualConnection', fn: (s, v) => s.setDualConnection(v) },
-    { key: 'audio-priority-mac', flag: 'dualConnection', prop: '_audioPriorityMac', fn: (s, v) => s.setAudioPriorityDevice(v) },
     { key: 'wind-noise', flag: 'windNoiseReduction', prop: '_windNoise', fn: (s, v) => s.setWindNoise(v) },
     { key: 'volume-enhancer', flag: 'volumeEnhancer', prop: '_volumeEnhancer', fn: (s, v) => s.setVolumeEnhancer(v) },
     { key: 'spatial', flag: 'spatialAudio', prop: '_spatial', fn: (s, v) => s.setSpatialAudio(v) },
@@ -351,7 +350,10 @@ export const OpoBudsDevice = GObject.registerClass({
                 const multiDeviceOp = this._settingsItems['multi-device-op'];
                 if (multiDeviceOp && multiDeviceOp.ts !== this._lastMultiDeviceOpTs) {
                     this._lastMultiDeviceOpTs = multiDeviceOp.ts;
-                    this._opoBudsSocket?.operateMultiConnect(multiDeviceOp.op, multiDeviceOp.mac);
+                    if (multiDeviceOp.op === 'refresh' || multiDeviceOp.op === 0xFF)
+                        this._opoBudsSocket?.getMultiConnectInfo();
+                    else
+                        this._opoBudsSocket?.operateMultiConnect(multiDeviceOp.op, multiDeviceOp.mac);
                 }
             }
 
