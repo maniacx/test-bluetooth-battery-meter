@@ -48,17 +48,6 @@ export default {
             {group: 'mfb', device: 0x01, buttonId: 0x01, type: 'double'},
             {group: 'mfb', device: 0x01, buttonId: 0x01, type: 'triple'},
             {group: 'mfb', device: 0x01, buttonId: 0x01, type: 'action-hold'},
-            {
-                group: 'anc',
-                device: 0x01,
-                buttonId: 0x04,
-                type: 'single',
-                actions: [
-                    'noise-control',
-                    'device-switch',
-                    'none',
-                ],
-            },
         ],
         mapping: {
             gestureTypes: {
@@ -113,7 +102,7 @@ export default {
                 ],
             },
             'action-hold': {
-                type: 'hold',
+                type: 'press',
                 actions: [
                     'voice-assistant',
                     'game-mode',
