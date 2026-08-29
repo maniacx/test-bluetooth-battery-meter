@@ -299,6 +299,12 @@ export const OpoBudsSocket = GObject.registerClass({
                 this._parseMultiConnectInfo(payload);
                 break;
 
+            case Cmd.GET_COMPACTNESS_INFO_RSP:
+            case Cmd.START_COMPACTNESS_DETECT_RSP:
+            case 0x840A:
+                this._parseCompactnessResult(payload);
+                break;
+
             case Cmd.NOTIFICATION_EVENT:
                 this._parseNotificationEvent(payload);
                 break;
@@ -738,6 +744,31 @@ export const OpoBudsSocket = GObject.registerClass({
         this._queuePacket(Cmd.SET_ANC, [0x02, 0x02, maskByte], 'Set ANC Cycle (Action 2, Type 2)');
         this._queuePacket(Cmd.SET_ANC, [0x01, 0x02, maskByte], 'Set ANC Cycle (Action 1, Type 2)');
         this._queuePacket(Cmd.SET_ANC, [0x01, 0x02, enumVal], 'Set ANC Cycle (Action 1, Enum)');
+    }
+
+    _parseCompactnessResult(payload) {
+        if (!payload || payload.length === 0)
+            return;
+
+        const statusByte = payload[payload.length - 1];
+        this._log.info(`Parsed compactness result: 0x${statusByte.toString(16)} (payload=${hexBytes(payload)})`);
+        this._callbacks?.updateFitTestResult?.(statusByte);
+    }
+
+    getCompactnessInfo() {
+        this._queuePacket(Cmd.GET_COMPACTNESS_INFO, [], 'Query Compactness Info');
+    }
+
+    startFitTest() {
+        this._log.info('Start Earbud Fit Test (Compactness Detect)');
+        this._queuePacket(Cmd.START_COMPACTNESS_DETECT, [0x01], 'Start Fit Test (0x0410)');
+        this._queuePacket(0x040A, [0x01], 'Start Fit Test (0x040A)');
+    }
+
+    stopFitTest() {
+        this._log.info('Stop Earbud Fit Test');
+        this._queuePacket(Cmd.START_COMPACTNESS_DETECT, [0x00], 'Stop Fit Test (0x0410)');
+        this._queuePacket(0x040A, [0x00], 'Stop Fit Test (0x040A)');
     }
 
     destroy() {

@@ -63,6 +63,7 @@ export const OpoBudsDevice = GObject.registerClass({
             updateMultiConnectDevices: this.updateMultiConnectDevices.bind(this),
             updateAdaptiveAncSubLevel: this.updateAdaptiveAncSubLevel.bind(this),
             updateNoiseControlCycle: this.updateNoiseControlCycle.bind(this),
+            updateFitTestResult: this.updateFitTestResult.bind(this),
         };
 
         const profile = {type: DeviceTypeOpoBuds, uuid: OpoBudsUUID};
@@ -196,6 +197,10 @@ export const OpoBudsDevice = GObject.registerClass({
 
             ...this._modelData.noiseControl && {
                 'nc-cycle-mask': 0x0B,
+            },
+
+            ...this._modelData.fitTest && {
+                'fit-test-result': 0,
             },
         };
     }
@@ -353,6 +358,17 @@ export const OpoBudsDevice = GObject.registerClass({
                 if (this._volumeEnhancer !== volumeEnhancer) {
                     this._volumeEnhancer = volumeEnhancer;
                     this._opoBudsSocket?.setVolumeEnhancer(volumeEnhancer);
+                }
+            }
+
+            if (this._modelData.fitTest) {
+                const fitTestOp = this._settingsItems['fit-test-op'];
+                if (fitTestOp && fitTestOp.ts !== this._lastFitTestOpTs) {
+                    this._lastFitTestOpTs = fitTestOp.ts;
+                    if (fitTestOp.action === 'start')
+                        this._opoBudsSocket?.startFitTest();
+                    else if (fitTestOp.action === 'stop')
+                        this._opoBudsSocket?.stopFitTest();
                 }
             }
 
@@ -1007,6 +1023,15 @@ export const OpoBudsDevice = GObject.registerClass({
             this._updateGsettings();
         } else {
             this._opoBudsSocket?._getGestures();
+        }
+    }
+
+    updateFitTestResult(statusByte) {
+        this._log.info(`Update Fit Test Result: 0x${statusByte.toString(16)}`);
+        this._fitTestResult = statusByte;
+        if (this._modelData?.fitTest && this._settingsItems) {
+            this._settingsItems['fit-test-result'] = statusByte;
+            this._updateGsettings();
         }
     }
 

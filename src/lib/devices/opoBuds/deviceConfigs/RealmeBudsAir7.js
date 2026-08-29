@@ -40,6 +40,7 @@ export default {
     highResAudio: true,
     dynamicBass: true,
     autoAnswer: true,
+    fitTest: true,
     ring: true,
 
     gestureOptions: {

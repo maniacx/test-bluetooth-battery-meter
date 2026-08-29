@@ -153,6 +153,11 @@ export const ConfigureWindow = GObject.registerClass({
                     this._ancCycleSwitchTrans.active = (mask & 0x02) !== 0;
                     this._ancCycleSwitchAnc.active = (mask & 0x08) !== 0;
                 }
+
+                if (this._modelData.fitTest && this._fitTestResultLabel) {
+                    const res = this._settingsItems['fit-test-result'] ?? 0;
+                    this._renderFitTestBadge(res);
+                }
             } finally {
                 this._isUpdatingUI = false;
             }
@@ -349,22 +354,14 @@ export const ConfigureWindow = GObject.registerClass({
             effectsGroup.add(this._windNoiseSwitch);
         }
 
-        if (this._modelData.noiseControl?.noiseCancellation?.levels?.smart) {
-            const smartSub = this._settingsItems['smart-anc-sublevel'] || _('Moderate');
-            const smartRow = new Adw.ActionRow({
-                title: _('Smart ANC Adaptive State'),
-                subtitle: `${_('Live environmental adaptation:')} ${smartSub}`,
-            });
-            effectsGroup.add(smartRow);
-        }
-
         this._page.add(effectsGroup);
     }
 
     _addMiscSetting() {
         const _ = this._gettext;
         const hasMisc = this._modelData.lowLatencyMode || this._modelData.inEarDetection ||
-            this._modelData.dualConnection || this._modelData.autoAnswer || this._modelData.ring;
+            this._modelData.dualConnection || this._modelData.autoAnswer ||
+            this._modelData.fitTest || this._modelData.findMyPhone || this._modelData.ring;
 
         if (!hasMisc)
             return;
@@ -530,6 +527,54 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             miscGroup.add(this._findPhoneSwitch);
+        }
+
+        if (this._modelData.fitTest) {
+            const fitTestRow = new Adw.ActionRow({
+                title: _('Earbud Fit Test'),
+                subtitle: _('Test the acoustic seal of your earbuds for optimal audio and ANC'),
+            });
+
+            const fitBox = new Gtk.Box({
+                orientation: Gtk.Orientation.HORIZONTAL,
+                spacing: 12,
+                valign: Gtk.Align.CENTER,
+            });
+
+            this._fitTestResultLabel = new Gtk.Label({
+                valign: Gtk.Align.CENTER,
+            });
+
+            const initialRes = this._settingsItems['fit-test-result'] ?? 0;
+            this._renderFitTestBadge(initialRes);
+
+            this._fitTestBtn = new Gtk.Button({
+                valign: Gtk.Align.CENTER,
+                css_classes: ['suggested-action'],
+                child: new Adw.ButtonContent({
+                    icon_name: 'bbm-play-symbolic',
+                    label: _('Test Fit'),
+                }),
+            });
+
+            this._fitTestBtn.connect('clicked', () => {
+                this._fitTestBtn.sensitive = false;
+                this._fitTestResultLabel.label = _('Testing…');
+                this._fitTestResultLabel.css_classes = ['dim-label'];
+                this._updateGsettings('fit-test-op', {action: 'start', ts: Date.now()});
+
+                GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 4, () => {
+                    this._fitTestBtn.sensitive = true;
+                    const curRes = this._settingsItems['fit-test-result'] ?? 1;
+                    this._renderFitTestBadge(curRes);
+                    return GLib.SOURCE_REMOVE;
+                });
+            });
+
+            fitBox.append(this._fitTestResultLabel);
+            fitBox.append(this._fitTestBtn);
+            fitTestRow.add_suffix(fitBox);
+            miscGroup.add(fitTestRow);
         }
 
         if (this._modelData.ring) {
@@ -774,5 +819,28 @@ export const ConfigureWindow = GObject.registerClass({
             hex += func.toString(16).padStart(2, '0');
         });
         return hex;
+    }
+
+    _renderFitTestBadge(statusCode) {
+        const _ = this._gettext;
+        if (!this._fitTestResultLabel)
+            return;
+
+        if (statusCode === 1) {
+            this._fitTestResultLabel.label = _('✓ Good Earbud Seal');
+            this._fitTestResultLabel.css_classes = ['success', 'heading'];
+        } else if (statusCode === 2) {
+            this._fitTestResultLabel.label = _('⚠ Adjust Left Earbud');
+            this._fitTestResultLabel.css_classes = ['warning', 'heading'];
+        } else if (statusCode === 3) {
+            this._fitTestResultLabel.label = _('⚠ Adjust Right Earbud');
+            this._fitTestResultLabel.css_classes = ['warning', 'heading'];
+        } else if (statusCode === 4) {
+            this._fitTestResultLabel.label = _('⚠ Poor Seal (Adjust Both)');
+            this._fitTestResultLabel.css_classes = ['error', 'heading'];
+        } else {
+            this._fitTestResultLabel.label = '';
+            this._fitTestResultLabel.css_classes = ['dim-label'];
+        }
     }
 });

@@ -39,6 +39,7 @@ export default {
     spatialAudio: true,
     autoAnswer: true,
     findMyPhone: true,
+    fitTest: true,
     ring: true,
 
     gestureOptions: {
