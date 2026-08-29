@@ -351,6 +351,11 @@ export const OpoBudsSocket = GObject.registerClass({
                 this._log.info('Received Earbuds in-ear status event');
                 break;
 
+            case 0x04:
+                this._log.info(`Received fit test / compactness event: ${hexBytes(eventData)}`);
+                this._parseCompactnessResult(eventData);
+                break;
+
             case EventCode.USER_INTERACTION:
             case 0xF1:
                 if (eventData.length >= 4) {
@@ -750,21 +755,23 @@ export const OpoBudsSocket = GObject.registerClass({
         if (!payload || payload.length === 0)
             return;
 
-        let statusByte = payload[payload.length - 1];
-        if (payload.length >= 4) {
-            const leftStatus = payload[1];
-            const rightStatus = payload[3];
-            if (leftStatus === 0x01 && rightStatus === 0x01)
-                statusByte = 1;
-            else if (leftStatus === 0x02 && rightStatus === 0x01)
-                statusByte = 2;
-            else if (leftStatus === 0x01 && rightStatus === 0x02)
-                statusByte = 3;
-            else if (leftStatus === 0x02 && rightStatus === 0x02)
-                statusByte = 4;
+        let leftStatus = 1;
+        let rightStatus = 1;
+
+        if (payload.length >= 4 && payload[0] === 0x01 && payload[2] === 0x02) {
+            leftStatus = payload[1];
+            rightStatus = payload[3];
+        } else if (payload.length >= 2) {
+            leftStatus = payload[0];
+            rightStatus = payload[1];
+        } else {
+            const single = payload[payload.length - 1];
+            leftStatus = (single === 1 || single === 3) ? 1 : 0;
+            rightStatus = (single === 1 || single === 2) ? 1 : 0;
         }
-        this._log.info(`Parsed compactness result: 0x${statusByte.toString(16)} (payload=${hexBytes(payload)})`);
-        this._callbacks?.updateFitTestResult?.(statusByte);
+
+        this._log.info(`Parsed compactness result: left=${leftStatus}, right=${rightStatus} (payload=${hexBytes(payload)})`);
+        this._callbacks?.updateFitTestResult?.({left: leftStatus, right: rightStatus});
     }
 
     getCompactnessInfo() {

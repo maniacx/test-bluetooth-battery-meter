@@ -155,10 +155,16 @@ export const ConfigureWindow = GObject.registerClass({
                     this._ancCycleSwitchAnc.active = (mask & 0x08) !== 0;
                 }
 
-                if (this._modelData.fitTest && this._fitTestResultLabel) {
-                    const res = this._settingsItems['fit-test-result'] ?? 0;
-                    if (res > 0)
-                        this._renderFitTestBadge(res);
+                if (this._modelData.fitTest && this._fitLeftBadge) {
+                    const res = this._settingsItems['fit-test-result'];
+                    if (res && typeof res === 'object') {
+                        const leftGood = (res.left === 1);
+                        const rightGood = (res.right === 1);
+                        this._fitLeftBadge.label = leftGood ? _('Good') : _('Not ideal');
+                        this._fitLeftBadge.css_classes = [leftGood ? 'success' : 'warning', 'heading'];
+                        this._fitRightBadge.label = rightGood ? _('Good') : _('Not ideal');
+                        this._fitRightBadge.css_classes = [rightGood ? 'success' : 'warning', 'heading'];
+                    }
                 }
             } finally {
                 this._isUpdatingUI = false;
@@ -171,6 +177,9 @@ export const ConfigureWindow = GObject.registerClass({
                 if (ringState === 'playing')
                     this._updateGsettings('ring-state', 'stopped');
             }
+
+            if (this._modelData?.fitTest)
+                this._updateGsettings('fit-test-result', null);
 
             if (this._settingsHandlerId) {
                 this._settings.disconnect(this._settingsHandlerId);
@@ -532,56 +541,181 @@ export const ConfigureWindow = GObject.registerClass({
         }
 
         if (this._modelData.fitTest) {
-            const fitTestRow = new Adw.ActionRow({
+            const fitExpander = new Adw.ExpanderRow({
                 title: _('Earbud Fit Test'),
-                subtitle: _('Test the acoustic seal of your earbuds for optimal audio and ANC'),
+                subtitle: _('Check acoustic seal for optimal sound quality and noise cancellation'),
+                expanded: false,
             });
 
-            const fitBox = new Gtk.Box({
+            const descRow = new Adw.ActionRow({
+                title: _('Ensure good seal with your ear canals'),
+                subtitle: _('Tap "Play" to start the acoustic test'),
+                subtitle_lines: 3,
+            });
+
+            const statusRow = new Adw.ActionRow({
+                title: _('Earbuds Seal Status'),
+            });
+
+            const earbudStatusBox = new Gtk.Box({
+                orientation: Gtk.Orientation.HORIZONTAL,
+                spacing: 24,
+                valign: Gtk.Align.CENTER,
+            });
+
+            // Left Earbud Box
+            const leftBox = new Gtk.Box({
+                orientation: Gtk.Orientation.HORIZONTAL,
+                spacing: 8,
+                valign: Gtk.Align.CENTER,
+            });
+            const leftIcon = new Gtk.Image({
+                icon_name: 'bbm-earbuds-left-symbolic',
+                pixel_size: 20,
+            });
+            const leftName = new Gtk.Label({
+                label: _('Left (L):'),
+                css_classes: ['dim-label'],
+            });
+            this._fitLeftBadge = new Gtk.Label({
+                label: '-',
+                css_classes: ['dim-label'],
+            });
+            leftBox.append(leftIcon);
+            leftBox.append(leftName);
+            leftBox.append(this._fitLeftBadge);
+
+            // Right Earbud Box
+            const rightBox = new Gtk.Box({
+                orientation: Gtk.Orientation.HORIZONTAL,
+                spacing: 8,
+                valign: Gtk.Align.CENTER,
+            });
+            const rightIcon = new Gtk.Image({
+                icon_name: 'bbm-earbuds-right-symbolic',
+                pixel_size: 20,
+            });
+            const rightName = new Gtk.Label({
+                label: _('Right (R):'),
+                css_classes: ['dim-label'],
+            });
+            this._fitRightBadge = new Gtk.Label({
+                label: '-',
+                css_classes: ['dim-label'],
+            });
+            rightBox.append(rightIcon);
+            rightBox.append(rightName);
+            rightBox.append(this._fitRightBadge);
+
+            earbudStatusBox.append(leftBox);
+            earbudStatusBox.append(rightBox);
+            statusRow.add_suffix(earbudStatusBox);
+
+            const actionRow = new Adw.ActionRow({
+                title: _('Acoustic Fit Test'),
+            });
+
+            const btnBox = new Gtk.Box({
                 orientation: Gtk.Orientation.HORIZONTAL,
                 spacing: 12,
                 valign: Gtk.Align.CENTER,
             });
 
-            this._fitTestResultLabel = new Gtk.Label({
-                valign: Gtk.Align.CENTER,
-                label: '',
-            });
-
-            this._fitTestBtn = new Gtk.Button({
+            this._fitPlayBtn = new Gtk.Button({
                 valign: Gtk.Align.CENTER,
                 css_classes: ['suggested-action'],
                 child: new Adw.ButtonContent({
                     icon_name: 'bbm-play-symbolic',
-                    label: _('Test Fit'),
+                    label: _('Play'),
                 }),
             });
 
-            this._fitTestBtn.connect('clicked', () => {
-                this._fitTestBtn.sensitive = false;
-                this._fitTestResultLabel.label = _('Testing acoustic seal…');
-                this._fitTestResultLabel.css_classes = ['dim-label'];
+            const resetFitState = () => {
+                if (this._fitLeftBadge) {
+                    this._fitLeftBadge.label = '-';
+                    this._fitLeftBadge.css_classes = ['dim-label'];
+                }
+                if (this._fitRightBadge) {
+                    this._fitRightBadge.label = '-';
+                    this._fitRightBadge.css_classes = ['dim-label'];
+                }
+                descRow.title = _('Ensure good seal with your ear canals');
+                descRow.subtitle = _('Tap "Play" to start the acoustic test');
+                if (this._fitPlayBtn) {
+                    this._fitPlayBtn.sensitive = true;
+                    this._fitPlayBtn.child = new Adw.ButtonContent({
+                        icon_name: 'bbm-play-symbolic',
+                        label: _('Play'),
+                    });
+                }
+            };
+
+            fitExpander.connect('notify::expanded', () => {
+                if (!fitExpander.expanded)
+                    resetFitState();
+            });
+
+            this._fitPlayBtn.connect('clicked', () => {
+                this._fitPlayBtn.sensitive = false;
+                this._fitLeftBadge.label = _('Testing…');
+                this._fitLeftBadge.css_classes = ['dim-label'];
+                this._fitRightBadge.label = _('Testing…');
+                this._fitRightBadge.css_classes = ['dim-label'];
+                descRow.title = _('Analyzing earbud fit…');
+                descRow.subtitle = _('Please keep earbuds in your ears while the tone plays');
+
                 this._updateGsettings('fit-test-op', {action: 'start', ts: Date.now()});
 
                 GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
-                    this._fitTestBtn.sensitive = true;
-                    this._fitTestBtn.child = new Adw.ButtonContent({
+                    this._fitPlayBtn.sensitive = true;
+                    this._fitPlayBtn.child = new Adw.ButtonContent({
                         icon_name: 'bbm-play-symbolic',
                         label: _('Test Again'),
                     });
-                    const curRes = this._settingsItems['fit-test-result'] ?? 0;
-                    if (curRes > 0)
-                        this._renderFitTestBadge(curRes);
-                    else
-                        this._renderFitTestBadge(1);
+
+                    const res = this._settingsItems['fit-test-result'];
+                    let leftGood = true;
+                    let rightGood = true;
+                    if (res && typeof res === 'object') {
+                        leftGood = (res.left === 1);
+                        rightGood = (res.right === 1);
+                    }
+
+                    if (leftGood) {
+                        this._fitLeftBadge.label = _('Good');
+                        this._fitLeftBadge.css_classes = ['success', 'heading'];
+                    } else {
+                        this._fitLeftBadge.label = _('Not ideal');
+                        this._fitLeftBadge.css_classes = ['warning', 'heading'];
+                    }
+
+                    if (rightGood) {
+                        this._fitRightBadge.label = _('Good');
+                        this._fitRightBadge.css_classes = ['success', 'heading'];
+                    } else {
+                        this._fitRightBadge.label = _('Not ideal');
+                        this._fitRightBadge.css_classes = ['warning', 'heading'];
+                    }
+
+                    if (leftGood && rightGood) {
+                        descRow.title = _('Great Fit');
+                        descRow.subtitle = _('Both earbuds make a good seal for optimal noise cancelling');
+                    } else {
+                        descRow.title = _('Adjust your earbuds');
+                        descRow.subtitle = _('Adjust the position of the earbud or change ear tip size, then test again');
+                    }
+
                     return GLib.SOURCE_REMOVE;
                 });
             });
 
-            fitBox.append(this._fitTestResultLabel);
-            fitBox.append(this._fitTestBtn);
-            fitTestRow.add_suffix(fitBox);
-            miscGroup.add(fitTestRow);
+            btnBox.append(this._fitPlayBtn);
+            actionRow.add_suffix(btnBox);
+
+            fitExpander.add_row(descRow);
+            fitExpander.add_row(statusRow);
+            fitExpander.add_row(actionRow);
+            miscGroup.add(fitExpander);
         }
 
         if (this._modelData.ring) {
@@ -826,28 +960,5 @@ export const ConfigureWindow = GObject.registerClass({
             hex += func.toString(16).padStart(2, '0');
         });
         return hex;
-    }
-
-    _renderFitTestBadge(statusCode) {
-        const _ = this._gettext;
-        if (!this._fitTestResultLabel)
-            return;
-
-        if (statusCode === 1) {
-            this._fitTestResultLabel.label = _('✓ Good Earbud Seal');
-            this._fitTestResultLabel.css_classes = ['success', 'heading'];
-        } else if (statusCode === 2) {
-            this._fitTestResultLabel.label = _('⚠ Adjust Left Earbud');
-            this._fitTestResultLabel.css_classes = ['warning', 'heading'];
-        } else if (statusCode === 3) {
-            this._fitTestResultLabel.label = _('⚠ Adjust Right Earbud');
-            this._fitTestResultLabel.css_classes = ['warning', 'heading'];
-        } else if (statusCode === 4) {
-            this._fitTestResultLabel.label = _('⚠ Poor Seal (Adjust Both)');
-            this._fitTestResultLabel.css_classes = ['error', 'heading'];
-        } else {
-            this._fitTestResultLabel.label = '';
-            this._fitTestResultLabel.css_classes = ['dim-label'];
-        }
     }
 });

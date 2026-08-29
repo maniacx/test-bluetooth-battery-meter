@@ -1026,11 +1026,11 @@ export const OpoBudsDevice = GObject.registerClass({
         }
     }
 
-    updateFitTestResult(statusByte) {
-        this._log.info(`Update Fit Test Result: 0x${statusByte.toString(16)}`);
-        this._fitTestResult = statusByte;
+    updateFitTestResult(result) {
+        this._log.info(`Update Fit Test Result: left=${result?.left}, right=${result?.right}`);
+        this._fitTestResult = result;
         if (this._modelData?.fitTest && this._settingsItems) {
-            this._settingsItems['fit-test-result'] = statusByte;
+            this._settingsItems['fit-test-result'] = result;
             this._updateGsettings();
         }
     }
