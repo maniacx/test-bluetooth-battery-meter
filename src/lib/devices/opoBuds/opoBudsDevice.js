@@ -1028,9 +1028,10 @@ export const OpoBudsDevice = GObject.registerClass({
 
     updateFitTestResult(result) {
         this._log.info(`Update Fit Test Result: left=${result?.left}, right=${result?.right}`);
-        this._fitTestResult = result;
+        const timestamped = result ? {...result, ts: Date.now()} : null;
+        this._fitTestResult = timestamped;
         if (this._modelData?.fitTest && this._settingsItems) {
-            this._settingsItems['fit-test-result'] = result;
+            this._settingsItems['fit-test-result'] = timestamped;
             this._updateGsettings();
         }
     }

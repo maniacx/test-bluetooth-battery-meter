@@ -157,7 +157,7 @@ export const ConfigureWindow = GObject.registerClass({
 
                 if (this._isTestingFit && this._modelData.fitTest) {
                     const res = this._settingsItems['fit-test-result'];
-                    if (res && typeof res === 'object')
+                    if (res && typeof res === 'object' && res.ts && this._fitTestStartTs && res.ts >= this._fitTestStartTs)
                         this._onFitTestCompleted?.(res);
                 }
             } finally {
@@ -625,6 +625,12 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             const resetFitState = () => {
+                this._isTestingFit = false;
+                this._fitTestStartTs = 0;
+                if (this._fitTestTimeoutId) {
+                    GLib.source_remove(this._fitTestTimeoutId);
+                    this._fitTestTimeoutId = null;
+                }
                 if (this._fitLeftBadge) {
                     this._fitLeftBadge.label = '-';
                     this._fitLeftBadge.css_classes = ['dim-label'];
@@ -649,6 +655,7 @@ export const ConfigureWindow = GObject.registerClass({
                     return;
 
                 this._isTestingFit = false;
+                this._fitTestStartTs = 0;
                 if (this._fitTestTimeoutId) {
                     GLib.source_remove(this._fitTestTimeoutId);
                     this._fitTestTimeoutId = null;
@@ -699,6 +706,7 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             this._fitPlayBtn.connect('clicked', () => {
+                this._fitTestStartTs = Date.now();
                 this._isTestingFit = true;
                 this._fitPlayBtn.sensitive = false;
                 this._fitLeftBadge.label = _('Testing…');
@@ -708,9 +716,7 @@ export const ConfigureWindow = GObject.registerClass({
                 descRow.title = _('Analyzing earbud fit…');
                 descRow.subtitle = _('Please keep earbuds in your ears while the tone plays');
 
-                this._settingsItems['fit-test-result'] = null;
-                this._updateGsettings('fit-test-result', null);
-                this._updateGsettings('fit-test-op', {action: 'start', ts: Date.now()});
+                this._updateGsettings('fit-test-op', {action: 'start', ts: this._fitTestStartTs});
 
                 if (this._fitTestTimeoutId)
                     GLib.source_remove(this._fitTestTimeoutId);
