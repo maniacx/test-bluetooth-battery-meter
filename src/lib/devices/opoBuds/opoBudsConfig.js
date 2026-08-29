@@ -8,6 +8,50 @@ export const OpoBudsModelList = [
     RealmeBudsWireless5ANC,
 ];
 
+export const CommonRealmeEqPresets = {
+    original_sound: 0x00,
+    deep_bass: 0x01,
+    serenade: 0x02,
+    clear_bass: 0x03,
+};
+
+export const CommonRealmeAncLevels = {
+    off: [0x01],
+    transparency: {
+        levels: {
+            regular: [0x02],
+        },
+    },
+    noiseCancellation: {
+        levels: {
+            smart: [0x20],
+            mild: [0x04],
+            moderate: [0x10],
+            deep: [0x08],
+        },
+    },
+};
+
+export const CommonGestureMapping = {
+    gestureTypes: {
+        'single': 0x01,
+        'double': 0x02,
+        'triple': 0x03,
+        'action-hold': 0x04,
+        'double-action-hold': 0x06,
+    },
+    actions: {
+        'none': [0x00],
+        'play-pause': [0x01],
+        'voice-assistant': [0x04],
+        'skip-back': [0x05],
+        'skip-forward': [0x06],
+        'noise-control': [0x08],
+        'device-switch': [0x0A],
+        'game-mode': [0x11],
+    },
+};
+
 export const Cmd = {
     HANDSHAKE: 0x0100,
     HANDSHAKE_RSP: 0x8100,
@@ -36,6 +80,9 @@ export const Cmd = {
     GET_NOTIFICATION_CAPABILITY: 0x0200,
     GET_NOTIFICATION_CAPABILITY_RSP: 0x8200,
 
+    REGISTER_NOTIFICATION_SINGLE: 0x0201,
+    REGISTER_NOTIFICATION_SINGLE_RSP: 0x8201,
+
     NOTIFICATION_EVENT: 0x0204,
 
     REGISTER_NOTIFICATION: 0x0205,
@@ -47,11 +94,11 @@ export const Cmd = {
     SET_KEY_FUNCTION: 0x0401,
     SET_KEY_FUNCTION_RSP: 0x8401,
 
-    SET_FEATURE_SWITCH: 0x0403,
-    SET_FEATURE_SWITCH_RSP: 0x8403,
-
     SET_KEY_FUNCTION_BULK: 0x0402,
     SET_KEY_FUNCTION_BULK_RSP: 0x8402,
+
+    SET_FEATURE_SWITCH: 0x0403,
+    SET_FEATURE_SWITCH_RSP: 0x8403,
 
     SET_ANC: 0x0404,
     SET_ANC_RSP: 0x8404,
@@ -182,9 +229,27 @@ export function protocolMaskToWidgetMask(protocolMask) {
     return widgetMask;
 }
 
+export function macToReversedBytes(mac) {
+    if (!mac || typeof mac !== 'string' || !/^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$/.test(mac))
+        return [];
+    return mac.split(':').map(h => parseInt(h, 16)).reverse();
+}
+
+export function reversedBytesToMac(bytes) {
+    if (!bytes || !Array.isArray(bytes) || bytes.length < 6)
+        return '';
+    const macBytes = [];
+    for (let j = 0; j < 6; j++)
+        macBytes.push(bytes[5 - j]);
+    return macBytes.map(b => b.toString(16).padStart(2, '0')).join(':').toUpperCase();
+}
+
 export function decodeGesturesHex(hex) {
     const slots = {};
-    if (!hex || typeof hex !== 'string')
+    if (!hex || typeof hex !== 'string' || hex.length % 8 !== 0)
+        return slots;
+
+    if (!/^[0-9a-fA-F]*$/.test(hex))
         return slots;
 
     for (let i = 0; i + 8 <= hex.length; i += 8) {
@@ -207,8 +272,9 @@ export function encodeGesturesHex(slotMap, gesturesConfig) {
         const act = gesturesConfig.mapping.gestureTypes[slot.type];
         const key = `${slot.device}_${btnId}_${act}`;
         const gestureDef = gesturesConfig.gestures[slot.type];
-        const defaultFunc = gestureDef?.actions?.length
-            ? gesturesConfig.mapping.actions[gestureDef.actions[0]]?.[0] ?? 0
+        const allowedActions = slot.actions ?? gestureDef?.actions;
+        const defaultFunc = allowedActions?.length
+            ? gesturesConfig.mapping.actions[allowedActions[0]]?.[0] ?? 0
             : 0;
         const func = slotMap[key] !== undefined ? slotMap[key] : defaultFunc;
 
@@ -244,9 +310,10 @@ export function buildPlaceholderGesturesHex(gesturesConfig) {
     return hex;
 }
 
-export function findChangedGestureSlot(oldHex, newHex, gesturesConfig) {
+export function findChangedGestureSlots(oldHex, newHex, gesturesConfig) {
+    const changed = [];
     if (!newHex)
-        return null;
+        return changed;
 
     const baseHex = oldHex ?? buildPlaceholderGesturesHex(gesturesConfig);
 
@@ -254,16 +321,21 @@ export function findChangedGestureSlot(oldHex, newHex, gesturesConfig) {
         const baseChunk = baseHex.slice(i, i + 8);
         const newChunk = newHex.slice(i, i + 8);
         if (baseChunk !== newChunk && newChunk.length === 8) {
-            return {
+            changed.push({
                 device: parseInt(newChunk.slice(0, 2), 16),
                 buttonId: parseInt(newChunk.slice(2, 4), 16),
                 gestureType: parseInt(newChunk.slice(4, 6), 16),
                 action: parseInt(newChunk.slice(6, 8), 16),
-            };
+            });
         }
     }
 
-    return null;
+    return changed;
+}
+
+export function findChangedGestureSlot(oldHex, newHex, gesturesConfig) {
+    const slots = findChangedGestureSlots(oldHex, newHex, gesturesConfig);
+    return slots.length > 0 ? slots[0] : null;
 }
 
 export function updateGestureSlotInHex(hex, dev, btn, act, func) {

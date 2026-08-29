@@ -6,10 +6,8 @@ import {createLogger, getDeviceIdentifier, hexBytes} from '../logger.js';
 import {SocketHandler} from '../socketByProfile.js';
 import {
     OpoBudsModelList, Cmd, FeatureId, EventCode, BatteryComponent,
-    cycleMaskToEnum, cycleEnumToMask
+    cycleEnumToMask, macToReversedBytes, reversedBytesToMac
 } from './opoBudsConfig.js';
-
-export {cycleMaskToEnum, cycleEnumToMask};
 
 const HEADER_MAGIC = 0xAA;
 const MIN_FRAME_LEN = 9;
@@ -83,7 +81,11 @@ export const OpoBudsSocket = GObject.registerClass({
         if (item.loginfo)
             this._log.info(item.loginfo);
 
-        this._encode(item.cmd, item.payload);
+        if (!this._encode(item.cmd, item.payload)) {
+            this._processQueue();
+            return;
+        }
+
         this._pendingRequest = this._seq;
 
         if (this._pendingTimeout) {
@@ -116,13 +118,13 @@ export const OpoBudsSocket = GObject.registerClass({
     }
 
     _encode(cmd, payload = []) {
-        this._seq = this._seq >= 250 ? 1 : this._seq + 1;
         const payLen = payload.length;
         if (payLen > 248) {
             this._log.error(`Payload too large for 1-byte frame length: ${payLen}`);
-            return;
+            return false;
         }
 
+        this._seq = this._seq >= 250 ? 1 : this._seq + 1;
         const totalLen = 7 + payLen;
 
         const header = [
@@ -140,6 +142,7 @@ export const OpoBudsSocket = GObject.registerClass({
         const packet = [...header, ...payload];
         this._log.bytes(`Send -> Cmd: 0x${cmd.toString(16).padStart(4, '0')} Seq: ${this._seq} Len: ${totalLen} Data: ${hexBytes(packet)}`);
         this._sendPacket(packet);
+        return true;
     }
 
     _sendPacket(bytes) {
@@ -304,7 +307,7 @@ export const OpoBudsSocket = GObject.registerClass({
 
             case Cmd.GET_MULTI_CONNECT_INFO_RSP:
             case 0x0512:
-                this._parseMultiConnectInfo(payload);
+                this._parseMultiConnectInfo(payload, cmd);
                 break;
 
             case Cmd.OPERATE_MULTI_CONNECT_RSP:
@@ -336,16 +339,16 @@ export const OpoBudsSocket = GObject.registerClass({
     }
 
     _parseNotificationCapability(payload) {
+        const wanted = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x0D, 0x0E, 0x0F, 0x10, 0xF1, 0xF2];
         if (payload.length < 2 || payload[0] !== 0x00) {
-            // Fallback subscription if capability response is empty or unsupported
-            const fallback = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x0D, 0x0E, 0x0F, 0x10, 0xF1, 0xF2];
-            this._queuePacket(Cmd.REGISTER_NOTIFICATION, [fallback.length, ...fallback], 'Subscribe Broadcast Events (Fallback)');
+            // Fallback subscription if capability response is empty or error
+            this._log.info(`Subscribing to fallback notification events`);
+            this._queuePacket(Cmd.REGISTER_NOTIFICATION, [wanted.length, ...wanted], 'Subscribe Broadcast Events (Fallback)');
             return;
         }
 
         const count = payload[1];
         const supported = new Set(payload.slice(2, 2 + count));
-        const wanted = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x0D, 0x0E, 0x0F, 0x10, 0xF1, 0xF2];
         const events = wanted.filter(e => supported.has(e));
         const toRegister = events.length > 0 ? events : wanted;
 
@@ -375,11 +378,14 @@ export const OpoBudsSocket = GObject.registerClass({
                 break;
 
             case EventCode.MULTI_CONNECT:
-            case 0x0E:
             case 0x12:
             case 0x13:
             case 0x16:
                 this._getMultiConnectInfo();
+                break;
+
+            case 0x0E:
+                this._log.info(`Received special/ear-scan event (0x0E): ${hexBytes(eventData)}`);
                 break;
 
             case EventCode.EARBUDS_STATUS:
@@ -474,10 +480,10 @@ export const OpoBudsSocket = GObject.registerClass({
     }
 
     _parseEq(payload) {
-        if (payload.length === 0)
+        if (payload.length < 2 || payload[0] !== 0x00)
             return;
 
-        const presetId = payload[payload.length - 1];
+        const presetId = payload[1];
         this._log.info(`Parsed EQ preset: ${presetId}`);
         this._callbacks?.updateEqPreset?.(presetId);
     }
@@ -517,7 +523,7 @@ export const OpoBudsSocket = GObject.registerClass({
             this._log.info(`Parsed ANC cycle response: raw=0x${valByte.toString(16)} -> mask=0x${mask.toString(16)}`);
             this._callbacks?.updateNoiseControlCycle?.(mask);
         } else {
-            this._log.info(`Parsed ANC mode response: ${hexBytes(valByte)}`);
+            this._log.info(`Parsed ANC mode response: 0x${valByte.toString(16).padStart(2, '0')}`);
             this._callbacks?.updateNoiseControl?.(valByte);
         }
     }
@@ -606,45 +612,82 @@ export const OpoBudsSocket = GObject.registerClass({
         }
     }
 
+    _setFeatureSwitch(featureId, enable, logName) {
+        this._log.info(`Set ${logName}: ${enable}`);
+        const payload = [featureId, enable ? 0x01 : 0x00];
+        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, `Set ${logName}`);
+    }
+
     setLatency(enable) {
-        this._log.info(`Set Low Latency Game Mode: ${enable}`);
-        const payload = [FeatureId.GAME_MODE, enable ? 0x01 : 0x00];
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Game Mode');
+        this._setFeatureSwitch(FeatureId.GAME_MODE, enable, 'Low Latency Game Mode');
     }
 
     setInEar(enable) {
-        this._log.info(`Set In-Ear Detection: ${enable}`);
-        const payload = [FeatureId.IN_EAR, enable ? 0x01 : 0x00];
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set In-Ear Detection');
+        this._setFeatureSwitch(FeatureId.IN_EAR, enable, 'In-Ear Detection');
     }
 
     setDualConnection(enable) {
-        this._log.info(`Set Dual Connection: ${enable}`);
-        const payload = [FeatureId.DUAL_DEVICE, enable ? 0x01 : 0x00];
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Dual Connection');
+        this._setFeatureSwitch(FeatureId.DUAL_DEVICE, enable, 'Dual Connection');
         if (enable)
             this._getMultiConnectInfo();
+    }
+
+    setWindNoise(enable) {
+        this._setFeatureSwitch(FeatureId.WIND_NOISE, enable, 'Wind Noise');
+    }
+
+    setVolumeEnhancer(enable) {
+        this._setFeatureSwitch(FeatureId.VOLUME_ENHANCER, enable, 'Volume Enhancer');
+    }
+
+    setSpatialAudio(enable) {
+        this._setFeatureSwitch(FeatureId.SPATIAL, enable, 'Spatial Audio');
+    }
+
+    setHighRes(enable) {
+        this._setFeatureSwitch(FeatureId.HIGH_RES, enable, 'High-Res LHDC');
+    }
+
+    setDynamicBass(enable) {
+        this._setFeatureSwitch(FeatureId.DYNAMIC_BASS, enable, 'Dynamic Bass');
+    }
+
+    setAutoAnswer(enable) {
+        this._setFeatureSwitch(FeatureId.AUTO_ANSWER, enable, 'Auto Answer');
+    }
+
+    setFindPhone(enable) {
+        this._setFeatureSwitch(FeatureId.FIND_PHONE, enable, 'Find My Phone');
+    }
+
+    setFindBuds(ringState) {
+        const ring = ringState === 'started' || ringState === 'playing' || ringState === true || ringState === 1;
+        this._log.info(`Set Find Buds: ${ring}`);
+        const payload = [ring ? 0x01 : 0x00];
+        this._queuePacket(Cmd.FIND_BUDS, payload, 'Set Find Buds');
     }
 
     _getMultiConnectInfo() {
         this._queuePacket(Cmd.GET_MULTI_CONNECT_INFO, [], 'Query Multi-Connect Devices');
     }
 
-    _parseMultiConnectInfo(payload) {
+    _parseMultiConnectInfo(payload, cmd) {
         if (payload.length < 2)
             return;
 
-        const isResponse = payload[0] === 0x00;
+        const isResponse = cmd === Cmd.GET_MULTI_CONNECT_INFO_RSP || payload[0] === 0x00;
+        if (cmd === Cmd.GET_MULTI_CONNECT_INFO_RSP && payload[0] !== 0x00) {
+            this._log.info(`Multi-connect query returned error status: 0x${payload[0].toString(16)}`);
+            return;
+        }
+
         const count = isResponse ? payload[1] : payload[0];
         let pos = isResponse ? 2 : 1;
         const devices = [];
 
         for (let i = 0; i < count && pos + 9 <= payload.length; i++) {
-            // MAC is transmitted in reverse (little-endian wire order)
-            const macBytes = [];
-            for (let j = 0; j < 6; j++)
-                macBytes.push(payload[pos + 5 - j]);
-            const mac = macBytes.map(b => b.toString(16).padStart(2, '0')).join(':').toUpperCase();
+            const macBytes = payload.slice(pos, pos + 6);
+            const mac = reversedBytesToMac(macBytes);
             pos += 6;
 
             const elemLen = payload[pos++];
@@ -690,15 +733,9 @@ export const OpoBudsSocket = GObject.registerClass({
 
     operateMultiConnect(op, macAddress) {
         this._log.info(`Operate MultiConnect: op=${op}, mac=${macAddress}`);
-        if (!macAddress || !/^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$/.test(macAddress)) {
-            this._log.info(`Invalid MAC address format for MultiConnect: ${macAddress}`);
-            return;
-        }
-
-        // Convert MAC address to reversed (little-endian) byte array matching firmware wire order
-        const macParts = macAddress.split(':').map(h => parseInt(h, 16)).reverse();
-        if (macParts.length !== 6 || macParts.some(isNaN)) {
-            this._log.info(`Invalid MAC address bytes for MultiConnect: ${macAddress}`);
+        const macParts = macToReversedBytes(macAddress);
+        if (macParts.length !== 6) {
+            this._log.info(`Invalid MAC address for MultiConnect: ${macAddress}`);
             return;
         }
 
@@ -725,71 +762,18 @@ export const OpoBudsSocket = GObject.registerClass({
         });
     }
 
-    setWindNoise(enable) {
-        this._log.info(`Set Wind Noise: ${enable}`);
-        const payload = [FeatureId.WIND_NOISE, enable ? 0x01 : 0x00];
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Wind Noise');
-    }
-
-    setVolumeEnhancer(enable) {
-        this._log.info(`Set Volume Enhancer: ${enable}`);
-        const payload = [FeatureId.VOLUME_ENHANCER, enable ? 0x01 : 0x00];
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Volume Enhancer');
-    }
-
-    setSpatialAudio(enable) {
-        this._log.info(`Set Spatial Audio: ${enable}`);
-        const payload = [FeatureId.SPATIAL, enable ? 0x01 : 0x00];
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Spatial Audio');
-    }
-
-    setHighRes(enable) {
-        this._log.info(`Set High-Res LHDC: ${enable}`);
-        const payload = [FeatureId.HIGH_RES, enable ? 0x01 : 0x00];
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set High-Res LHDC');
-    }
-
-    setDynamicBass(enable) {
-        this._log.info(`Set Dynamic Bass: ${enable}`);
-        const payload = [FeatureId.DYNAMIC_BASS, enable ? 0x01 : 0x00];
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Dynamic Bass');
-    }
-
-    setAutoAnswer(enable) {
-        this._log.info(`Set Auto Answer: ${enable}`);
-        const payload = [FeatureId.AUTO_ANSWER, enable ? 0x01 : 0x00];
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Auto Answer');
-    }
-
-    setFindPhone(enable) {
-        this._log.info(`Set Find My Phone: ${enable}`);
-        const payload = [FeatureId.FIND_PHONE, enable ? 0x01 : 0x00];
-        this._queuePacket(Cmd.SET_FEATURE_SWITCH, payload, 'Set Find My Phone');
-    }
-
-    setFindBuds(ringState) {
-        const ring = ringState === 'started' || ringState === 'playing';
-        this._log.info(`Set Find Buds: ${ring}`);
-        const payload = [ring ? 0x01 : 0x00];
-        this._queuePacket(Cmd.FIND_BUDS, payload, 'Set Find Buds');
-    }
-
     _getGestures() {
         this._queuePacket(Cmd.KEY_FUNCTION, [0x02, 0x01, 0x02], 'Query Key Functions');
     }
 
     _parseGestures(payload) {
-        if (payload.length < 3)
+        if (payload.length < 2 || payload[0] !== 0x00)
             return;
 
-        let startIdx = 3;
-        if (payload[0] === 0x00 && payload[1] !== 0x00)
-            startIdx = 2;
-        else if (payload[0] !== 0x00)
-            startIdx = 1;
-
-        const count = payload[startIdx - 1];
+        const count = payload[1];
+        const startIdx = 2;
         const needed = count * 4;
+
         if (count < 1 || count > 16 || payload.length < startIdx + needed)
             return;
 
@@ -811,6 +795,22 @@ export const OpoBudsSocket = GObject.registerClass({
         this._queuePacket(Cmd.SET_KEY_FUNCTION, payload, 'Set Key Function');
     }
 
+    setGestureSlots(slots) {
+        if (!slots || slots.length === 0)
+            return;
+
+        if (slots.length === 1) {
+            const s = slots[0];
+            this.setGestureSlot(s.device, s.buttonId, s.gestureType, s.action);
+            return;
+        }
+
+        this._log.info(`Set ${slots.length} gesture slots`);
+        for (const s of slots) {
+            this.setGestureSlot(s.device, s.buttonId, s.gestureType, s.action);
+        }
+    }
+
     setNoiseControlCycle(maskByte) {
         this._log.info(`Set ANC cycle: mask=0x${maskByte.toString(16).padStart(2, '0')}`);
         this._queuePacket(Cmd.SET_ANC, [0x02, 0x01, maskByte], 'Set ANC Cycle (Action 2, Type 1)');
@@ -825,19 +825,27 @@ export const OpoBudsSocket = GObject.registerClass({
         let rightStatus = 0;
 
         if (payload.length >= 4 && payload[0] === 0x01 && payload[2] === 0x02) {
-            // 0x01 = Good (Green), 0x00 / other = Not ideal (Yellow)
-            leftStatus = (payload[1] === 0x01) ? 1 : 0;
-            rightStatus = (payload[3] === 0x01) ? 1 : 0;
+            leftStatus = payload[1];
+            rightStatus = payload[3];
         } else if (payload.length >= 2) {
-            leftStatus = (payload[0] === 0x01) ? 1 : 0;
-            rightStatus = (payload[1] === 0x01) ? 1 : 0;
+            leftStatus = payload[0];
+            rightStatus = payload[1];
         } else {
             const single = payload[payload.length - 1];
-            leftStatus = (single === 1 || single === 3) ? 1 : 0;
-            rightStatus = (single === 1 || single === 2) ? 1 : 0;
+            leftStatus = single;
+            rightStatus = single;
         }
 
-        this._log.info(`[FitTest Telemetry] Left=${leftStatus === 1 ? 'Good' : 'Not ideal'} (${leftStatus}), Right=${rightStatus === 1 ? 'Good' : 'Not ideal'} (${rightStatus}) (payload=${hexBytes(payload)})`);
+        const statusNames = {
+            0: 'Poor fit (0)',
+            1: 'Good seal (1)',
+            2: 'Failed / Interrupted (2)',
+            3: 'Failed / Interrupted (3)',
+            4: 'Not in ear (4)',
+            5: 'App ignored (5)',
+        };
+
+        this._log.info(`[FitTest Telemetry] Left=${statusNames[leftStatus] ?? leftStatus}, Right=${statusNames[rightStatus] ?? rightStatus} (payload=${hexBytes(payload)})`);
         this._callbacks?.updateFitTestResult?.({left: leftStatus, right: rightStatus});
     }
 
