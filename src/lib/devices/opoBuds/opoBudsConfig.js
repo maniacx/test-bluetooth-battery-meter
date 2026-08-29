@@ -121,3 +121,175 @@ export const BatteryComponent = {
     RIGHT: 2,
     CASE: 3,
 };
+
+export const NC_CYCLE_BITS = [0x01, 0x02, 0x08];
+
+export function safeJsonParse(str) {
+    try {
+        return JSON.parse(str);
+    } catch {
+        return null;
+    }
+}
+
+export function cycleMaskToEnum(mask) {
+    const hasOff = (mask & 0x01) !== 0;
+    const hasTrans = (mask & 0x02) !== 0;
+    const hasAnc = (mask & 0x08) !== 0;
+
+    if (hasAnc && hasTrans && hasOff)
+        return 0x04;
+    if (hasAnc && hasTrans)
+        return 0x01;
+    if (hasAnc && hasOff)
+        return 0x02;
+    if (hasTrans && hasOff)
+        return 0x03;
+
+    return 0x04;
+}
+
+export function cycleEnumToMask(code) {
+    switch (code) {
+        case 0x01:
+            return 0x0A;
+        case 0x02:
+            return 0x09;
+        case 0x03:
+            return 0x03;
+        case 0x04:
+            return 0x0B;
+        default:
+            return code;
+    }
+}
+
+export function widgetMaskToProtocolMask(widgetMask) {
+    let mask = 0;
+    NC_CYCLE_BITS.forEach((bit, index) => {
+        if (widgetMask & 1 << index)
+            mask |= bit;
+    });
+    return mask;
+}
+
+export function protocolMaskToWidgetMask(protocolMask) {
+    let widgetMask = 0;
+    NC_CYCLE_BITS.forEach((bit, index) => {
+        if (protocolMask & bit)
+            widgetMask |= 1 << index;
+    });
+    return widgetMask;
+}
+
+export function decodeGesturesHex(hex) {
+    const slots = {};
+    if (!hex || typeof hex !== 'string')
+        return slots;
+
+    for (let i = 0; i + 8 <= hex.length; i += 8) {
+        const dev = parseInt(hex.slice(i, i + 2), 16);
+        const btn = parseInt(hex.slice(i + 2, i + 4), 16);
+        const act = parseInt(hex.slice(i + 4, i + 6), 16);
+        const func = parseInt(hex.slice(i + 6, i + 8), 16);
+        slots[`${dev}_${btn}_${act}`] = func;
+    }
+    return slots;
+}
+
+export function encodeGesturesHex(slotMap, gesturesConfig) {
+    if (!gesturesConfig?.slots)
+        return '';
+
+    let hex = '';
+    gesturesConfig.slots.forEach(slot => {
+        const btnId = slot.buttonId ?? 0x01;
+        const act = gesturesConfig.mapping.gestureTypes[slot.type];
+        const key = `${slot.device}_${btnId}_${act}`;
+        const gestureDef = gesturesConfig.gestures[slot.type];
+        const defaultFunc = gestureDef?.actions?.length
+            ? gesturesConfig.mapping.actions[gestureDef.actions[0]]?.[0] ?? 0
+            : 0;
+        const func = slotMap[key] !== undefined ? slotMap[key] : defaultFunc;
+
+        hex += slot.device.toString(16).padStart(2, '0');
+        hex += btnId.toString(16).padStart(2, '0');
+        hex += act.toString(16).padStart(2, '0');
+        hex += func.toString(16).padStart(2, '0');
+    });
+    return hex;
+}
+
+export function buildPlaceholderGesturesHex(gesturesConfig) {
+    if (!gesturesConfig?.slots)
+        return '';
+
+    let hex = '';
+    gesturesConfig.slots.forEach(slot => {
+        const gestureDef = gesturesConfig.gestures[slot.type];
+        const allowedActions = slot.actions ?? gestureDef?.actions;
+        if (!allowedActions?.length)
+            return;
+
+        const firstAction = allowedActions[0];
+        const func = gesturesConfig.mapping.actions[firstAction]?.[0] ?? 0;
+        const btnId = slot.buttonId ?? 0x01;
+        const act = gesturesConfig.mapping.gestureTypes[slot.type];
+
+        hex += slot.device.toString(16).padStart(2, '0');
+        hex += btnId.toString(16).padStart(2, '0');
+        hex += act.toString(16).padStart(2, '0');
+        hex += func.toString(16).padStart(2, '0');
+    });
+    return hex;
+}
+
+export function findChangedGestureSlot(oldHex, newHex, gesturesConfig) {
+    if (!newHex)
+        return null;
+
+    const baseHex = oldHex ?? buildPlaceholderGesturesHex(gesturesConfig);
+
+    for (let i = 0; i + 8 <= newHex.length; i += 8) {
+        const baseChunk = baseHex.slice(i, i + 8);
+        const newChunk = newHex.slice(i, i + 8);
+        if (baseChunk !== newChunk && newChunk.length === 8) {
+            return {
+                device: parseInt(newChunk.slice(0, 2), 16),
+                buttonId: parseInt(newChunk.slice(2, 4), 16),
+                gestureType: parseInt(newChunk.slice(4, 6), 16),
+                action: parseInt(newChunk.slice(6, 8), 16),
+            };
+        }
+    }
+
+    return null;
+}
+
+export function updateGestureSlotInHex(hex, dev, btn, act, func) {
+    if (!hex || hex.length < 8)
+        return hex;
+
+    const devHex = dev.toString(16).padStart(2, '0');
+    const btnHex = btn.toString(16).padStart(2, '0');
+    const actHex = act.toString(16).padStart(2, '0');
+    const funcHex = func.toString(16).padStart(2, '0');
+
+    let updated = false;
+    let newHex = '';
+
+    for (let i = 0; i + 8 <= hex.length; i += 8) {
+        const chunkDev = hex.slice(i, i + 2);
+        const chunkBtn = hex.slice(i + 2, i + 4);
+        const chunkAct = hex.slice(i + 4, i + 6);
+
+        if (chunkDev === devHex && chunkBtn === btnHex && chunkAct === actHex) {
+            newHex += chunkDev + chunkBtn + chunkAct + funcHex;
+            updated = true;
+        } else {
+            newHex += hex.slice(i, i + 8);
+        }
+    }
+
+    return updated ? newHex : hex;
+}

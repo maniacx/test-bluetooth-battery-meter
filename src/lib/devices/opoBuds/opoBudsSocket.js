@@ -5,42 +5,14 @@ import GObject from 'gi://GObject';
 import {createLogger, getDeviceIdentifier, hexBytes} from '../logger.js';
 import {SocketHandler} from '../socketByProfile.js';
 import {
-    OpoBudsModelList, Cmd, FeatureId, EventCode, BatteryComponent
+    OpoBudsModelList, Cmd, FeatureId, EventCode, BatteryComponent,
+    cycleMaskToEnum, cycleEnumToMask
 } from './opoBudsConfig.js';
+
+export {cycleMaskToEnum, cycleEnumToMask};
 
 const HEADER_MAGIC = 0xAA;
 const MIN_FRAME_LEN = 9;
-
-export function cycleMaskToEnum(mask) {
-    const off = (mask & 0x01) !== 0;
-    const trans = (mask & 0x02) !== 0;
-    const anc = (mask & 0x08) !== 0 || (mask & 0x04) !== 0;
-
-    if (anc && trans && off)
-        return 0x02; // All 3 modes
-    if (anc && trans && !off)
-        return 0x01; // ANC + Trans
-    if (anc && !trans && off)
-        return 0x03; // ANC + Off
-    if (!anc && trans && off)
-        return 0x04; // Trans + Off
-    return 0x02;
-}
-
-export function cycleEnumToMask(enumVal) {
-    switch (enumVal) {
-        case 0x01: // ANC + Trans
-            return 0x0A;
-        case 0x02: // All 3
-            return 0x0B;
-        case 0x03: // ANC + Off
-            return 0x09;
-        case 0x04: // Trans + Off
-            return 0x03;
-        default:
-            return 0x0B;
-    }
-}
 
 export const OpoBudsSocket = GObject.registerClass({
     GTypeName: 'BudsLink_OpoBudsSocket',
@@ -60,10 +32,38 @@ export const OpoBudsSocket = GObject.registerClass({
         this._pendingTimeout = null;
         this._modelInitialized = false;
         this._modelData = null;
+        this._miscTimeoutIds = new Set();
 
         this._callbacks = callbacks;
 
         this.startSocket();
+    }
+
+    postConnectInitialization() {
+        this._log.info('OpoBuds socket ready: Initializing device info...');
+        this._queuePacket(Cmd.HANDSHAKE, [], 'Handshake');
+        this._queuePacket(Cmd.GET_NOTIFICATION_CAPABILITY, [], 'Query Notification Capabilities');
+        this._queuePacket(Cmd.PRODUCT_ID, [], 'Query Product ID');
+        this._queuePacket(Cmd.VERSION, [], 'Query Version');
+
+        this._modelRetryTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => {
+            if (!this._modelInitialized)
+                this._queuePacket(Cmd.PRODUCT_ID, [], 'Query Product ID');
+
+            this._modelRetryTimeoutId = null;
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+
+    _addTimeout(id) {
+        this._miscTimeoutIds.add(id);
+        return id;
+    }
+
+    _removeAllTimeouts() {
+        for (const id of this._miscTimeoutIds)
+            GLib.source_remove(id);
+        this._miscTimeoutIds.clear();
     }
 
     _queuePacket(cmd, payload = [], loginfo = '') {
@@ -118,6 +118,11 @@ export const OpoBudsSocket = GObject.registerClass({
     _encode(cmd, payload = []) {
         this._seq = this._seq >= 250 ? 1 : this._seq + 1;
         const payLen = payload.length;
+        if (payLen > 248) {
+            this._log.error(`Payload too large for 1-byte frame length: ${payLen}`);
+            return;
+        }
+
         const totalLen = 7 + payLen;
 
         const header = [
@@ -132,90 +137,90 @@ export const OpoBudsSocket = GObject.registerClass({
             payLen >> 8 & 0xFF,
         ];
 
-        const packet = Uint8Array.from([...header, ...payload]);
-        this.sendMessage(packet);
+        const packet = [...header, ...payload];
+        this._log.bytes(`Send -> Cmd: 0x${cmd.toString(16).padStart(4, '0')} Seq: ${this._seq} Len: ${totalLen} Data: ${hexBytes(packet)}`);
+        this._sendPacket(packet);
     }
 
-    processData(bytes) {
-        this._rxBuffer.push(...bytes);
+    _sendPacket(bytes) {
+        this.sendMessage(bytes);
+    }
 
-        while (true) {
+    processData(byteArray) {
+        if (!byteArray || byteArray.length === 0)
+            return;
+
+        const incoming = Array.from(byteArray);
+        this._log.bytes(`Raw Received bytes (${incoming.length}): ${hexBytes(incoming)}`);
+
+        for (let i = 0; i < incoming.length; i++)
+            this._rxBuffer.push(incoming[i]);
+
+        this._processRxBuffer();
+    }
+
+    _processRxBuffer() {
+        while (this._rxBuffer.length >= MIN_FRAME_LEN) {
             const msg = this._extractMessage();
-
             if (!msg)
                 break;
 
-            if (msg.seq !== 0xFF)
-                this._completePendingRequest(msg.seq);
-
-            this._parseData(msg);
+            this._handleMessage(msg);
         }
     }
 
     _extractMessage() {
         const buf = this._rxBuffer;
+        let magicIdx = -1;
 
         for (let i = 0; i < buf.length; i++) {
-            if (buf[i] !== HEADER_MAGIC)
-                continue;
-
-            if (buf.length - i < MIN_FRAME_LEN)
-                return null;
-
-            const totalLen = buf[i + 1];
-            const frameLen = totalLen + 2;
-
-            if (totalLen < 7 || frameLen > 512)
-                continue;
-
-            if (buf.length - i < frameLen)
-                return null;
-
-            const raw = buf.slice(i, i + frameLen);
-            this._rxBuffer.splice(0, i + frameLen);
-            return this._parseMessage(raw);
+            if (buf[i] === HEADER_MAGIC) {
+                magicIdx = i;
+                break;
+            }
         }
 
-        if (buf.length > 512)
+        if (magicIdx === -1) {
             this._rxBuffer = [];
+            return null;
+        }
 
-        return null;
-    }
+        if (magicIdx > 0)
+            this._rxBuffer = this._rxBuffer.slice(magicIdx);
 
-    _parseMessage(raw) {
+        if (this._rxBuffer.length < MIN_FRAME_LEN)
+            return null;
+
+        const totalLen = this._rxBuffer[1];
+        const frameLen = totalLen + 2;
+
+        if (this._rxBuffer.length < frameLen)
+            return null;
+
+        const raw = this._rxBuffer.slice(0, frameLen);
+        this._rxBuffer = this._rxBuffer.slice(frameLen);
+
         const cmd = raw[4] | raw[5] << 8;
         const seq = raw[6];
         const payLen = raw[7] | raw[8] << 8;
+
+        if (payLen + 7 !== totalLen)
+            this._log.info(`Frame length mismatch: totalLen=${totalLen}, payLen=${payLen}`);
+
         const payload = raw.slice(9, 9 + payLen);
 
         return {cmd, seq, payload};
     }
 
-    postConnectInitialization() {
-        this._onPostConnectInitialization();
+    _handleMessage(msg) {
+        const {cmd, seq, payload} = msg;
+        this._log.bytes(`Recv <- Cmd: 0x${cmd.toString(16).padStart(4, '0')} Seq: ${seq} PayLen: ${payload.length} Data: ${hexBytes(payload)}`);
+
+        if (seq !== 0xFF)
+            this._completePendingRequest(seq);
+
+        this._parseData(msg);
     }
-
-    _onPostConnectInitialization() {
-        this._log.info('Starting post connect initialization');
-        this._queuePacket(Cmd.HANDSHAKE, [], 'Handshake');
-        this._queuePacket(Cmd.GET_NOTIFICATION_CAPABILITY, [], 'Query Notification Capabilities');
-
-        const events = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x0d, 0x0e, 0x0f, 0x10, 0xf1, 0xf2];
-        const payload =  [events.length, ...events];
-        this._queuePacket(Cmd.REGISTER_NOTIFICATION, payload, 'Subscribe Broadcast Events');
-
-        this._queuePacket(Cmd.PRODUCT_ID, [], 'Query Product ID');
-        this._queuePacket(Cmd.VERSION, [], 'Query Version');
-
-        this._modelRetryTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => {
-            if (!this._modelInitialized)
-                this._queuePacket(Cmd.PRODUCT_ID, [], 'Query Product ID');
-
-            this._modelRetryTimeoutId = null;
-            return GLib.SOURCE_REMOVE;
-        });
-    }
-
 
     _onModelInitialized(modelData) {
         if (this._modelInitialized)
@@ -229,7 +234,7 @@ export const OpoBudsSocket = GObject.registerClass({
         this._log.info(`OpoBuds Model Initialized: ${modelData.name}`);
         this._modelInitialized = true;
         this._modelData = modelData;
-        this._callbacks?.modelIntialized?.(modelData);
+        this._callbacks?.modelInitialized?.(modelData);
 
         this._getBattery();
 
@@ -268,16 +273,19 @@ export const OpoBudsSocket = GObject.registerClass({
                 break;
 
             case Cmd.BATTERY_RSP:
-                this._parseBattery(payload);
+                this._parseBatteryResponse(payload);
                 break;
 
             case Cmd.ANC_RSP:
-                this._parseAnc(payload);
+                this._parseAncResponse(payload);
                 break;
 
             case Cmd.FEATURE_SWITCH_RSP:
+                this._parseFeatureSwitchResponse(payload);
+                break;
+
             case Cmd.FEATURE_EVENT:
-                this._parseFeatureSwitches(payload);
+                this._parseFeatureSwitchEvent(payload);
                 break;
 
             case Cmd.EQ_RSP:
@@ -307,18 +315,42 @@ export const OpoBudsSocket = GObject.registerClass({
                 this._getMultiConnectInfo();
                 break;
 
+            case Cmd.GET_NOTIFICATION_CAPABILITY_RSP:
+                this._parseNotificationCapability(payload);
+                break;
+
             case Cmd.GET_COMPACTNESS_INFO_RSP:
             case Cmd.START_COMPACTNESS_DETECT_RSP:
-            case 0x8405:
             case 0x840A:
-            case 0x8410:
-                this._log.info(`Compactness cmd response (cmd=0x${cmd.toString(16)}): ${hexBytes(payload)}`);
+                this._log.info(`Compactness / Power cmd response (cmd=0x${cmd.toString(16)}): ${hexBytes(payload)}`);
                 break;
 
             case Cmd.NOTIFICATION_EVENT:
                 this._parseNotificationEvent(payload);
                 break;
+
+            default:
+                this._log.info(`Unhandled packet cmd=0x${cmd.toString(16)} payload=${hexBytes(payload)}`);
+                break;
         }
+    }
+
+    _parseNotificationCapability(payload) {
+        if (payload.length < 2 || payload[0] !== 0x00) {
+            // Fallback subscription if capability response is empty or unsupported
+            const fallback = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x0D, 0x0E, 0x0F, 0x10, 0xF1, 0xF2];
+            this._queuePacket(Cmd.REGISTER_NOTIFICATION, [fallback.length, ...fallback], 'Subscribe Broadcast Events (Fallback)');
+            return;
+        }
+
+        const count = payload[1];
+        const supported = new Set(payload.slice(2, 2 + count));
+        const wanted = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x0D, 0x0E, 0x0F, 0x10, 0xF1, 0xF2];
+        const events = wanted.filter(e => supported.has(e));
+        const toRegister = events.length > 0 ? events : wanted;
+
+        this._log.info(`Subscribing to ${toRegister.length} supported notification events: [${toRegister.map(e => '0x' + e.toString(16)).join(', ')}]`);
+        this._queuePacket(Cmd.REGISTER_NOTIFICATION, [toRegister.length, ...toRegister], 'Subscribe Broadcast Events');
     }
 
     _parseNotificationEvent(payload) {
@@ -330,25 +362,11 @@ export const OpoBudsSocket = GObject.registerClass({
 
         switch (eventCode) {
             case EventCode.BATTERY:
-                this._parseBattery(eventData);
+                this._parseBatteryEvent(eventData);
                 break;
 
             case EventCode.ANC_MODE:
-                if (eventData.length >= 3) {
-                    const action = eventData[0];
-                    const valByte = eventData[eventData.length - 1];
-                    if (action === 0x02) {
-                        const mask = valByte <= 0x04 ? cycleEnumToMask(valByte) : valByte;
-                        this._callbacks?.updateNoiseControlCycle?.(mask);
-                    } else if (action === 0x04) {
-                        this._callbacks?.updateAdaptiveAncSubLevel?.(valByte);
-                    } else {
-                        this._callbacks?.updateNoiseControl?.(valByte);
-                    }
-                } else if (eventData.length >= 1) {
-                    const modeByte = eventData[eventData.length - 1];
-                    this._callbacks?.updateNoiseControl?.(modeByte);
-                }
+                this._parseAncEvent(eventData);
                 break;
 
             case EventCode.GAME_MODE:
@@ -365,7 +383,7 @@ export const OpoBudsSocket = GObject.registerClass({
                 break;
 
             case EventCode.EARBUDS_STATUS:
-                this._log.info('Received Earbuds in-ear status event');
+                this._log.info(`Received Earbuds in-ear status event: ${hexBytes(eventData)}`);
                 break;
 
             case 0x04:
@@ -397,8 +415,7 @@ export const OpoBudsSocket = GObject.registerClass({
         if (payload.length < 2 || payload[0] !== 0x00)
             return;
 
-        const strBytes = payload.slice(2);
-        const versionStr = String.fromCharCode(...strBytes);
+        const versionStr = new TextDecoder('utf-8').decode(new Uint8Array(payload.slice(2))).replace(/\0+$/, '');
         this._log.info(`Firmware string: ${versionStr}`);
 
         const parts = versionStr.split(',');
@@ -411,23 +428,32 @@ export const OpoBudsSocket = GObject.registerClass({
         this._queuePacket(Cmd.BATTERY, [], 'Query Battery');
     }
 
-    _parseBattery(payload) {
-        if (payload.length < 2)
+    _parseBatteryResponse(payload) {
+        if (payload.length < 2 || payload[0] !== 0x00)
+            return;
+        this._parseBatteryEntries(payload.slice(1));
+    }
+
+    _parseBatteryEvent(eventData) {
+        this._parseBatteryEntries(eventData);
+    }
+
+    _parseBatteryEntries(bytes) {
+        if (bytes.length < 1)
             return;
 
-        const offset = payload[0] === 0x00 ? 1 : 0;
-        const count = payload[offset];
+        const count = bytes[0];
         let left = null;
         let right = null;
         let cse = null;
 
         for (let i = 0; i < count; i++) {
-            const idx = offset + 1 + i * 2;
-            if (idx + 1 >= payload.length)
+            const idx = 1 + i * 2;
+            if (idx + 1 >= bytes.length)
                 break;
 
-            const comp = payload[idx];
-            const rawVal = payload[idx + 1];
+            const comp = bytes[idx];
+            const rawVal = bytes[idx + 1];
             const level = rawVal & 0x7F;
             const charging = (rawVal & 0x80) !== 0;
 
@@ -478,20 +504,38 @@ export const OpoBudsSocket = GObject.registerClass({
         this._queuePacket(Cmd.ANC, [0x02, 0x02], 'Query ANC Cycle (Action 2, Type 2)');
     }
 
-    _parseAnc(payload) {
-        if (payload.length < 3)
+    _parseAncResponse(payload) {
+        if (payload.length < 4 || payload[0] !== 0x00)
             return;
 
-        const action = payload[0];
-        const subId = payload[1];
-        const valByte = payload[payload.length - 1];
+        const action = payload[1];
+        const subId = payload[2];
+        const valByte = payload[3];
 
         if (action === 0x02 || subId === 0x02) {
             const mask = valByte <= 0x04 ? cycleEnumToMask(valByte) : valByte;
-            this._log.info(`Parsed ANC cycle: raw=0x${valByte.toString(16)} -> mask=0x${mask.toString(16)}`);
+            this._log.info(`Parsed ANC cycle response: raw=0x${valByte.toString(16)} -> mask=0x${mask.toString(16)}`);
             this._callbacks?.updateNoiseControlCycle?.(mask);
         } else {
-            this._log.info(`Parsed ANC mode byte: ${hexBytes(valByte)}`);
+            this._log.info(`Parsed ANC mode response: ${hexBytes(valByte)}`);
+            this._callbacks?.updateNoiseControl?.(valByte);
+        }
+    }
+
+    _parseAncEvent(eventData) {
+        if (eventData.length < 1)
+            return;
+
+        const action = eventData[0];
+        const valByte = eventData[eventData.length - 1];
+
+        if (action === 0x02 && eventData.length >= 3) {
+            const mask = valByte <= 0x04 ? cycleEnumToMask(valByte) : valByte;
+            this._log.info(`Parsed ANC cycle event: raw=0x${valByte.toString(16)} -> mask=0x${mask.toString(16)}`);
+            this._callbacks?.updateNoiseControlCycle?.(mask);
+        } else if (action === 0x04 && eventData.length >= 2) {
+            this._callbacks?.updateAdaptiveAncSubLevel?.(valByte);
+        } else {
             this._callbacks?.updateNoiseControl?.(valByte);
         }
     }
@@ -519,14 +563,22 @@ export const OpoBudsSocket = GObject.registerClass({
         this._queuePacket(Cmd.FEATURE_SWITCH, [features.length, ...features], 'Query Features');
     }
 
-    _parseFeatureSwitches(payload) {
-        if (payload.length < 2)
+    _parseFeatureSwitchResponse(payload) {
+        if (payload.length < 2 || payload[0] !== 0x00)
             return;
+        const count = payload[1];
+        this._applyFeaturePairs(payload, count, 2);
+    }
 
-        const isResponse = (payload[0] === 0x00 && payload.length % 2 === 0);
-        const count = isResponse ? payload[1] : payload[0];
-        let pos = isResponse ? 2 : 1;
+    _parseFeatureSwitchEvent(payload) {
+        if (payload.length < 1)
+            return;
+        const count = payload[0];
+        this._applyFeaturePairs(payload, count, 1);
+    }
 
+    _applyFeaturePairs(payload, count, startIdx) {
+        let pos = startIdx;
         for (let i = 0; i < count && pos + 1 < payload.length; i++) {
             const feat = payload[pos++];
             const val = payload[pos++] === 0x01;
@@ -582,8 +634,9 @@ export const OpoBudsSocket = GObject.registerClass({
         if (payload.length < 2)
             return;
 
-        const count = payload[0] === 0x00 ? payload[1] : payload[0];
-        let pos = payload[0] === 0x00 ? 2 : 1;
+        const isResponse = payload[0] === 0x00;
+        const count = isResponse ? payload[1] : payload[0];
+        let pos = isResponse ? 2 : 1;
         const devices = [];
 
         for (let i = 0; i < count && pos + 9 <= payload.length; i++) {
@@ -638,14 +691,14 @@ export const OpoBudsSocket = GObject.registerClass({
     operateMultiConnect(op, macAddress) {
         this._log.info(`Operate MultiConnect: op=${op}, mac=${macAddress}`);
         if (!macAddress || !/^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$/.test(macAddress)) {
-            this._log.warn(`Invalid MAC address format for MultiConnect: ${macAddress}`);
+            this._log.info(`Invalid MAC address format for MultiConnect: ${macAddress}`);
             return;
         }
 
         // Convert MAC address to reversed (little-endian) byte array matching firmware wire order
         const macParts = macAddress.split(':').map(h => parseInt(h, 16)).reverse();
         if (macParts.length !== 6 || macParts.some(isNaN)) {
-            this._log.warn(`Invalid MAC address bytes for MultiConnect: ${macAddress}`);
+            this._log.info(`Invalid MAC address bytes for MultiConnect: ${macAddress}`);
             return;
         }
 
@@ -661,12 +714,14 @@ export const OpoBudsSocket = GObject.registerClass({
         const payload = [0x01, ...macParts, action];
         this._queuePacket(Cmd.OPERATE_MULTI_CONNECT, payload, `MultiConnect Action ${action} for ${macAddress}`);
 
-        // Schedule staggered refresh checks as Bluetooth connection/disconnection takes 1-4 seconds
+        // Schedule staggered refresh checks with tracked timeout IDs
         [800, 2000, 3500, 5500].forEach(delayMs => {
-            GLib.timeout_add(GLib.PRIORITY_DEFAULT, delayMs, () => {
+            const id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, delayMs, () => {
+                this._miscTimeoutIds.delete(id);
                 this._getMultiConnectInfo();
                 return GLib.SOURCE_REMOVE;
             });
+            this._addTimeout(id);
         });
     }
 
@@ -810,6 +865,8 @@ export const OpoBudsSocket = GObject.registerClass({
             GLib.source_remove(this._modelRetryTimeoutId);
             this._modelRetryTimeoutId = null;
         }
+
+        this._removeAllTimeouts();
 
         super.destroy();
     }

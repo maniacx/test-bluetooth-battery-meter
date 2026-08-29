@@ -14,17 +14,11 @@ import {BtDeviceState, DeviceManagementAction} from '../../../lib/devices/common
 import {
     supportedAudioDualIcons, supportedAudioSingleIcons, supportedCaseIcons
 } from '../../../lib/widgets/iconGroups.js';
-import {OpoBudsModelList} from '../../../lib/devices/opoBuds/opoBudsConfig.js';
-
-const ncCycleBits = [0x01, 0x02, 0x08];
-
-function safeJsonParse(str) {
-    try {
-        return JSON.parse(str);
-    } catch {
-        return null;
-    }
-}
+import {
+    OpoBudsModelList, safeJsonParse,
+    buildPlaceholderGesturesHex, decodeGesturesHex, encodeGesturesHex,
+    NC_CYCLE_BITS, widgetMaskToProtocolMask, protocolMaskToWidgetMask
+} from '../../../lib/devices/opoBuds/opoBudsConfig.js';
 
 export const ConfigureWindow = GObject.registerClass({
     GTypeName: 'BudsLink_OpoBudsConfigureWindow',
@@ -212,14 +206,7 @@ export const ConfigureWindow = GObject.registerClass({
 
                 if (this._modelData.noiseControl && this._ncCycleWidget) {
                     const mask = this._settingsItems['nc-cycle-mask'] ?? 0x0B;
-                    let widgetMask = 0;
-
-                    ncCycleBits.forEach((bit, index) => {
-                        if (mask & bit)
-                            widgetMask |= 1 << index;
-                    });
-
-                    this._ncCycleWidget.toggled_value = widgetMask;
+                    this._ncCycleWidget.toggled_value = protocolMaskToWidgetMask(mask);
                 }
 
                 if (this._isTestingFit && this._modelData.fitTest) {
@@ -240,6 +227,12 @@ export const ConfigureWindow = GObject.registerClass({
             this._highFreq?.destroy();
             this._highFreq = null;
 
+            if (this._eqDebounceId) {
+                const id = this._eqDebounceId;
+                this._eqDebounceId = null;
+                GLib.source_remove(id);
+            }
+
             if (this._multiDevicePollId) {
                 const id = this._multiDevicePollId;
                 this._multiDevicePollId = null;
@@ -250,6 +243,14 @@ export const ConfigureWindow = GObject.registerClass({
                 const id = this._fitTestTimeoutId;
                 this._fitTestTimeoutId = null;
                 GLib.source_remove(id);
+            }
+
+            if (this._isTestingFit) {
+                this._updateGsettings('fit-test-op', {
+                    action: 'stop',
+                    ts: Date.now(),
+                });
+                this._isTestingFit = false;
             }
 
             if (this._modelData?.ring) {
@@ -387,24 +388,12 @@ export const ConfigureWindow = GObject.registerClass({
                 initialValue: this._settingsItems['dynamic-audio-low'],
             });
 
-            this._lowFreq.compact_mode = this._isCompactMode;
-
-            this._lowFreq.connect('notify::value', () => {
-                this._updateGsettings('dynamic-audio-low', this._lowFreq.value);
-            });
-
             this._midFreq = new SliderRowWidget({
                 rowTitle: _('Mid Frequency'),
                 range,
                 marks,
                 snapOnStep: true,
                 initialValue: this._settingsItems['dynamic-audio-med'],
-            });
-
-            this._midFreq.compact_mode = this._isCompactMode;
-
-            this._midFreq.connect('notify::value', () => {
-                this._updateGsettings('dynamic-audio-med', this._midFreq.value);
             });
 
             this._highFreq = new SliderRowWidget({
@@ -415,11 +404,31 @@ export const ConfigureWindow = GObject.registerClass({
                 initialValue: this._settingsItems['dynamic-audio-high'],
             });
 
+            this._lowFreq.compact_mode = this._isCompactMode;
+            this._midFreq.compact_mode = this._isCompactMode;
             this._highFreq.compact_mode = this._isCompactMode;
 
-            this._highFreq.connect('notify::value', () => {
-                this._updateGsettings('dynamic-audio-high', this._highFreq.value);
-            });
+            const debounceEqUpdate = () => {
+                if (this._isUpdatingUI)
+                    return;
+
+                if (this._eqDebounceId)
+                    GLib.source_remove(this._eqDebounceId);
+
+                this._eqDebounceId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 350, () => {
+                    this._eqDebounceId = null;
+                    this._updateMultipleGsettings({
+                        'dynamic-audio-low': this._lowFreq.value,
+                        'dynamic-audio-med': this._midFreq.value,
+                        'dynamic-audio-high': this._highFreq.value,
+                    });
+                    return GLib.SOURCE_REMOVE;
+                });
+            };
+
+            this._lowFreq.connect('notify::value', debounceEqUpdate);
+            this._midFreq.connect('notify::value', debounceEqUpdate);
+            this._highFreq.connect('notify::value', debounceEqUpdate);
 
             dynamicAudioExpander.add_row(this._lowFreq);
             dynamicAudioExpander.add_row(this._midFreq);
@@ -733,6 +742,12 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             const resetFitState = () => {
+                if (this._isTestingFit) {
+                    this._updateGsettings('fit-test-op', {
+                        action: 'stop',
+                        ts: Date.now(),
+                    });
+                }
                 this._isTestingFit = false;
                 if (this._fitTestTimeoutId) {
                     const id = this._fitTestTimeoutId;
@@ -996,12 +1011,7 @@ export const ConfigureWindow = GObject.registerClass({
                 },
             ];
 
-            let initialWidgetMask = 0;
-
-            ncCycleItems.forEach((item, index) => {
-                if (initialMask & ncCycleBits[index])
-                    initialWidgetMask |= 1 << index;
-            });
+            const initialWidgetMask = protocolMaskToWidgetMask(initialMask);
 
             this._ncCycleWidget = new CheckBoxesRowWidget({
                 rowTitle: _('Select modes to cycle through'),
@@ -1015,13 +1025,7 @@ export const ConfigureWindow = GObject.registerClass({
 
             this._ncCycleWidget.connect('notify::toggled-value', () => {
                 const toggled = this._ncCycleWidget.toggled_value;
-                let mask = 0;
-
-                ncCycleItems.forEach((item, index) => {
-                    if (toggled & 1 << index)
-                        mask |= ncCycleBits[index];
-                });
-
+                const mask = widgetMaskToProtocolMask(toggled);
                 this._updateGsettings('nc-cycle-mask', mask);
             });
 
@@ -1049,56 +1053,15 @@ export const ConfigureWindow = GObject.registerClass({
     }
 
     _buildPlaceholderGesturesHex(gesturesConfig) {
-        let hex = '';
-        gesturesConfig.slots.forEach(slot => {
-            const gestureDef = gesturesConfig.gestures[slot.type];
-            const allowedActions = slot.actions ?? gestureDef?.actions;
-            if (!allowedActions?.length)
-                return;
-
-            const firstAction = allowedActions[0];
-            const func = gesturesConfig.mapping.actions[firstAction]?.[0] ?? 0;
-            const btnId = slot.buttonId ?? 0x01;
-            const act = gesturesConfig.mapping.gestureTypes[slot.type];
-
-            hex += slot.device.toString(16).padStart(2, '0');
-            hex += btnId.toString(16).padStart(2, '0');
-            hex += act.toString(16).padStart(2, '0');
-            hex += func.toString(16).padStart(2, '0');
-        });
-        return hex;
+        return buildPlaceholderGesturesHex(gesturesConfig);
     }
 
     _decodeGestures(hex) {
-        const slots = {};
-        for (let i = 0; i < hex.length; i += 8) {
-            const dev = parseInt(hex.slice(i, i + 2), 16);
-            const btn = parseInt(hex.slice(i + 2, i + 4), 16);
-            const act = parseInt(hex.slice(i + 4, i + 6), 16);
-            const func = parseInt(hex.slice(i + 6, i + 8), 16);
-            slots[`${dev}_${btn}_${act}`] = func;
-        }
-        return slots;
+        return decodeGesturesHex(hex);
     }
 
     _encodeGestures(slotMap, gesturesConfig) {
-        let hex = '';
-        gesturesConfig.slots.forEach(slot => {
-            const btnId = slot.buttonId ?? 0x01;
-            const act = gesturesConfig.mapping.gestureTypes[slot.type];
-            const key = `${slot.device}_${btnId}_${act}`;
-            const gestureDef = gesturesConfig.gestures[slot.type];
-            const defaultFunc = gestureDef?.actions?.length
-                ? gesturesConfig.mapping.actions[gestureDef.actions[0]]?.[0] ?? 0
-                : 0;
-            const func = slotMap[key] !== undefined ? slotMap[key] : defaultFunc;
-
-            hex += slot.device.toString(16).padStart(2, '0');
-            hex += btnId.toString(16).padStart(2, '0');
-            hex += act.toString(16).padStart(2, '0');
-            hex += func.toString(16).padStart(2, '0');
-        });
-        return hex;
+        return encodeGesturesHex(slotMap, gesturesConfig);
     }
 
     _updateCompactStatus() {

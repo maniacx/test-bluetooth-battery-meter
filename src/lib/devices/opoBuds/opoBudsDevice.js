@@ -8,18 +8,13 @@ import {
 } from '../deviceUtils.js';
 import {createConfig, createProperties, DataHandler} from '../../dataHandler.js';
 import {OpoBudsSocket} from './opoBudsSocket.js';
+import {
+    safeJsonParse, buildPlaceholderGesturesHex, findChangedGestureSlot, updateGestureSlotInHex
+} from './opoBudsConfig.js';
 
 export const DeviceTypeOpoBuds = 'opoBuds';
 
 const OpoBudsUUID = '0000079a-d102-11e1-9b23-00025b00a5a5';
-
-function safeJsonParse(str) {
-    try {
-        return JSON.parse(str);
-    } catch {
-        return null;
-    }
-}
 
 const SIMPLE_FEATURE_MAP = [
     { key: 'eq-preset', flag: 'eqPreset', prop: '_eqPreset', fn: (s, v) => s.setEqPreset(v) },
@@ -66,7 +61,7 @@ export const OpoBudsDevice = GObject.registerClass({
         this._lastFitTestOpTs = 0;
 
         this._callbacks = {
-            modelIntialized: this.modelIntialized.bind(this),
+            modelInitialized: this.modelInitialized.bind(this),
             updateFirmwareInfo: this.updateFirmwareInfo.bind(this),
             updateBatteryProps: this.updateBatteryProps.bind(this),
             updateNoiseControl: this.updateNoiseControl.bind(this),
@@ -98,14 +93,14 @@ export const OpoBudsDevice = GObject.registerClass({
             this._callbacks
         );
 
-        this._battInfoRecieved = false;
+        this._battInfoReceived = false;
         this._pendingAncMode = null;
         this._pendingWindNoise = null;
         this._pendingVolumeEnhancer = null;
         this._isReady = false;
     }
 
-    modelIntialized(modelData) {
+    modelInitialized(modelData) {
         this._modelData = modelData;
 
         this._log.info(`Configuration: ${JSON.stringify(this._modelData, null, 2)}`);
@@ -132,7 +127,7 @@ export const OpoBudsDevice = GObject.registerClass({
         this._updateIcons();
         this._updateAncConfig();
 
-        if (this._pendingAncMode !== null) {
+        if (this._pendingAncMode != null) {
             this.updateNoiseControl(this._pendingAncMode);
             this._pendingAncMode = null;
         }
@@ -542,12 +537,6 @@ export const OpoBudsDevice = GObject.registerClass({
             this._props.box1RadioButtonState = 1;
 
         this.dataHandler?.setConfig(this._config);
-
-        if (this._pendingAncMode !== undefined) {
-            const pending = this._pendingAncMode;
-            delete this._pendingAncMode;
-            this.updateNoiseControl(pending);
-        }
     }
 
     _startConfiguration(battProps) {
@@ -561,7 +550,7 @@ export const OpoBudsDevice = GObject.registerClass({
         if (bat1level <= 0 && bat2level <= 0 && bat3level <= 0)
             return;
 
-        this._battInfoRecieved = true;
+        this._battInfoReceived = true;
 
         if (this._modelData.noiseControl)
             this._props.toggle1Visible = true;
@@ -907,49 +896,11 @@ export const OpoBudsDevice = GObject.registerClass({
     }
 
     _buildPlaceholderGesturesHex() {
-        const gesturesConfig = this._modelData?.gestureOptions;
-        if (!gesturesConfig)
-            return '';
-
-        let hex = '';
-        gesturesConfig.slots.forEach(slot => {
-            const gestureDef = gesturesConfig.gestures[slot.type];
-            const allowedActions = slot.actions ?? gestureDef?.actions;
-            if (!allowedActions?.length)
-                return;
-
-            const firstAction = allowedActions[0];
-            const func = gesturesConfig.mapping.actions[firstAction]?.[0] ?? 0;
-            const btnId = slot.buttonId ?? 0x01;
-            const act = gesturesConfig.mapping.gestureTypes[slot.type];
-
-            hex += slot.device.toString(16).padStart(2, '0');
-            hex += btnId.toString(16).padStart(2, '0');
-            hex += act.toString(16).padStart(2, '0');
-            hex += func.toString(16).padStart(2, '0');
-        });
-        return hex;
+        return buildPlaceholderGesturesHex(this._modelData?.gestureOptions);
     }
 
     _findChangedGestureSlot(oldHex, newHex) {
-        if (!newHex)
-            return null;
-
-        const baseHex = oldHex ?? this._buildPlaceholderGesturesHex();
-
-        for (let i = 0; i < newHex.length; i += 8) {
-            const baseChunk = baseHex.slice(i, i + 8);
-            const newChunk = newHex.slice(i, i + 8);
-            if (baseChunk !== newChunk && newChunk.length === 8)
-                return {
-                    device: parseInt(newChunk.slice(0, 2), 16),
-                    buttonId: parseInt(newChunk.slice(2, 4), 16),
-                    gestureType: parseInt(newChunk.slice(4, 6), 16),
-                    action: parseInt(newChunk.slice(6, 8), 16),
-                };
-        }
-
-        return null;
+        return findChangedGestureSlot(oldHex, newHex, this._modelData?.gestureOptions);
     }
 
     updateGestures(gesturesHex) {
@@ -966,29 +917,10 @@ export const OpoBudsDevice = GObject.registerClass({
             return;
         }
 
-        const devHex = dev.toString(16).padStart(2, '0');
-        const btnHex = btn.toString(16).padStart(2, '0');
-        const actHex = act.toString(16).padStart(2, '0');
-        const funcHex = func.toString(16).padStart(2, '0');
-
         const hex = this._settingsItems['gestures'];
-        let updated = false;
-        let newHex = '';
+        const newHex = updateGestureSlotInHex(hex, dev, btn, act, func);
 
-        for (let i = 0; i < hex.length; i += 8) {
-            const chunkDev = hex.slice(i, i + 2);
-            const chunkBtn = hex.slice(i + 2, i + 4);
-            const chunkAct = hex.slice(i + 4, i + 6);
-
-            if (chunkDev === devHex && chunkBtn === btnHex && chunkAct === actHex) {
-                newHex += chunkDev + chunkBtn + chunkAct + funcHex;
-                updated = true;
-            } else {
-                newHex += hex.slice(i, i + 8);
-            }
-        }
-
-        if (updated) {
+        if (newHex !== hex) {
             this._gestures = newHex;
             this._settingsItems['gestures'] = newHex;
             this._updateGsettings();

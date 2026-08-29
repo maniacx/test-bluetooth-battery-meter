@@ -63,14 +63,12 @@ export default {
             actions: {
                 'none': [0x00],
                 'play-pause': [0x01],
-                'skip-back': [0x02],
-                'volume-up': [0x03],
-                'volume-down': [0x04],
-                'game-mode': [0x05],
+                'voice-assistant': [0x04],
+                'skip-back': [0x05],
                 'skip-forward': [0x06],
-                'voice-assistant': [0x07],
                 'noise-control': [0x08],
-                'device-switch': [0x09],
+                'device-switch': [0x0A],
+                'game-mode': [0x11],
             },
         },
         gestures: {
@@ -79,7 +77,9 @@ export default {
                 actions: [
                     'play-pause',
                     'skip-forward',
+                    'skip-back',
                     'voice-assistant',
+                    'game-mode',
                     'none',
                 ],
             },
@@ -88,8 +88,7 @@ export default {
                 actions: [
                     'skip-forward',
                     'skip-back',
-                    'volume-up',
-                    'volume-down',
+                    'play-pause',
                     'voice-assistant',
                     'game-mode',
                     'none',
