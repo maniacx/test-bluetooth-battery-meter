@@ -788,17 +788,13 @@ export const OpoBudsSocket = GObject.registerClass({
     }
 
     startFitTest() {
-        this._log.info('Start Earbud Fit Test (Compactness Detect)');
+        this._log.info('Start Earbud Fit Test (0x0405)');
         this._queuePacket(0x0405, [0x01], 'Start Fit Test (0x0405)');
-        this._queuePacket(Cmd.START_COMPACTNESS_DETECT, [0x01], 'Start Fit Test (0x0410)');
-        this._queuePacket(0x040A, [0x01], 'Start Fit Test (0x040A)');
     }
 
     stopFitTest() {
         this._log.info('Stop Earbud Fit Test');
         this._queuePacket(0x0405, [0x00], 'Stop Fit Test (0x0405)');
-        this._queuePacket(Cmd.START_COMPACTNESS_DETECT, [0x00], 'Stop Fit Test (0x0410)');
-        this._queuePacket(0x040A, [0x00], 'Stop Fit Test (0x040A)');
     }
 
     destroy() {

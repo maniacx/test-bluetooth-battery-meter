@@ -201,6 +201,19 @@ export const ConfigureWindow = GObject.registerClass({
         }
     }
 
+    _updateMultipleGsettings(obj) {
+        const currentList = this._settings.get_strv('opo-buds-list').map(safeJsonParse).filter(Boolean);
+        const index = currentList.findIndex(d => d.path === this._devicePath);
+
+        if (index !== -1) {
+            for (const [key, value] of Object.entries(obj)) {
+                currentList[index][key] = value;
+                this._settingsItems[key] = value;
+            }
+            this._settings.set_strv('opo-buds-list', currentList.map(JSON.stringify));
+        }
+    }
+
     _addEq() {
         if (!this._modelData.eqPreset)
             return;
@@ -730,9 +743,10 @@ export const ConfigureWindow = GObject.registerClass({
                 descRow.title = _('Analyzing earbud fit…');
                 descRow.subtitle = _('Please keep earbuds in your ears while the tone plays');
 
-                this._settingsItems['fit-test-result'] = null;
-                this._updateGsettings('fit-test-result', null);
-                this._updateGsettings('fit-test-op', {action: 'start', ts: Date.now()});
+                this._updateMultipleGsettings({
+                    'fit-test-result': null,
+                    'fit-test-op': {action: 'start', ts: Date.now()},
+                });
 
                 if (this._fitTestTimeoutId)
                     GLib.source_remove(this._fitTestTimeoutId);
