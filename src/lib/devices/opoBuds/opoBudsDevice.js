@@ -156,8 +156,9 @@ export const OpoBudsDevice = GObject.registerClass({
         this._defaultsDeviceSettings = {
             'path': this._devicePath,
             'modelid': this._modelData.modelId,
-            'name': this._modelData.name,
+            'alias': this._alias,
             'icon': this._commonIcon,
+            'fw-version': this._fwVersion,
 
             ...this._modelData.batteryCase && {
                 'case': this._caseIcon,
@@ -257,11 +258,16 @@ export const OpoBudsDevice = GObject.registerClass({
             this._audioPriorityMac = this._settingsItems['audio-priority-mac'];
         }
 
-        if (this._modelData.windNoiseReduction)
+        if (this._modelData.windNoiseReduction) {
             this._windNoise = this._settingsItems['wind-noise'];
+            this._props.box1CheckButton1State = this._windNoise ? 1 : 0;
+            this._props.box2CheckButton2State = this._windNoise ? 1 : 0;
+        }
 
-        if (this._modelData.volumeEnhancer)
+        if (this._modelData.volumeEnhancer) {
             this._volumeEnhancer = this._settingsItems['volume-enhancer'];
+            this._props.box2CheckButton1State = this._volumeEnhancer ? 1 : 0;
+        }
 
         if (this._modelData.spatialAudio)
             this._spatial = this._settingsItems['spatial'];
@@ -540,6 +546,11 @@ export const OpoBudsDevice = GObject.registerClass({
 
         if (this._modelData.noiseControl)
             this._props.toggle1Visible = true;
+
+        if (this.dataHandler) {
+            this.dataHandler.setProps(this._props);
+            return;
+        }
 
         this.dataHandler = new DataHandler(this._config, this._props);
         this.updateDeviceMapCb(this._devicePath, this.dataHandler);
