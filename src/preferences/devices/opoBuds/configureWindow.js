@@ -656,7 +656,7 @@ export const ConfigureWindow = GObject.registerClass({
                 this._updateGsettings('fit-test-result', null);
                 this._updateGsettings('fit-test-op', {action: 'start', ts: Date.now()});
 
-                GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
+                GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 3, () => {
                     this._fitPlayBtn.sensitive = true;
                     this._fitPlayBtn.child = new Adw.ButtonContent({
                         icon_name: 'bbm-play-symbolic',
