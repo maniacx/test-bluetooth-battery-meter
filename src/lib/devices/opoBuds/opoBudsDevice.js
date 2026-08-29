@@ -538,16 +538,7 @@ export const OpoBudsDevice = GObject.registerClass({
             this._config.box2CheckButton = box2Labels;
         }
 
-        if (this._config.box1RadioButton?.length && !this._props.box1RadioButtonState)
-            this._props.box1RadioButtonState = 1;
-
         this.dataHandler?.setConfig(this._config);
-
-        if (this._pendingAncMode !== undefined) {
-            const pending = this._pendingAncMode;
-            delete this._pendingAncMode;
-            this.updateNoiseControl(pending);
-        }
     }
 
     _startConfiguration(battProps) {
@@ -613,12 +604,11 @@ export const OpoBudsDevice = GObject.registerClass({
             this._props.optionsBoxVisible = this._config.optionsBox1?.length ? 1 : 0;
 
             if (toggle.matchBytes.length > 1) {
-                let radioIndex = this._props.box1RadioButtonState;
-                let modeBytes = this._ancRadioMap?.[radioIndex];
+                const radioIndex = this._props.box1RadioButtonState || 1;
+                let modeBytes = this._ancRadioMap[radioIndex];
                 if (!modeBytes?.length) {
-                    radioIndex = 1;
+                    modeBytes = [toggle.matchBytes[0]];
                     this._props.box1RadioButtonState = 1;
-                    modeBytes = this._ancRadioMap?.[1] || [toggle.matchBytes[0]];
                 }
                 ancMode = modeBytes;
             } else {
@@ -759,8 +749,6 @@ export const OpoBudsDevice = GObject.registerClass({
         if (activeType === 'noiseCancellation') {
             if (this._ancRadioReverse && this._ancRadioReverse[modeByte] !== undefined)
                 this._props.box1RadioButtonState = this._ancRadioReverse[modeByte];
-            else if (!this._props.box1RadioButtonState)
-                this._props.box1RadioButtonState = 1;
             this._props.optionsBoxVisible = this._config.optionsBox1?.length ? 1 : 0;
         } else if (activeType === 'transparency') {
             this._props.optionsBoxVisible = this._config.optionsBox2?.length ? 2 : 0;
