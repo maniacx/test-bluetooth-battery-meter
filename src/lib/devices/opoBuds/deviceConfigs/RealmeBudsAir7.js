@@ -45,18 +45,24 @@ export default {
 
     gestureOptions: {
         slots: [
+            {group: 'left',  device: 0x01, buttonId: 0x01, type: 'single'},
             {group: 'left',  device: 0x01, buttonId: 0x01, type: 'double'},
             {group: 'left',  device: 0x01, buttonId: 0x01, type: 'triple'},
             {group: 'left',  device: 0x01, buttonId: 0x01, type: 'action-hold'},
+            {group: 'left',  device: 0x01, buttonId: 0x01, type: 'double-action-hold'},
+            {group: 'right', device: 0x02, buttonId: 0x01, type: 'single'},
             {group: 'right', device: 0x02, buttonId: 0x01, type: 'double'},
             {group: 'right', device: 0x02, buttonId: 0x01, type: 'triple'},
             {group: 'right', device: 0x02, buttonId: 0x01, type: 'action-hold'},
+            {group: 'right', device: 0x02, buttonId: 0x01, type: 'double-action-hold'},
         ],
         mapping: {
             gestureTypes: {
+                'single': 0x01,
                 'double': 0x02,
                 'triple': 0x03,
                 'action-hold': 0x04,
+                'double-action-hold': 0x06,
             },
             actions: {
                 'none': [0x00],
@@ -68,9 +74,19 @@ export default {
                 'skip-forward': [0x06],
                 'voice-assistant': [0x07],
                 'noise-control': [0x08],
+                'device-switch': [0x09],
             },
         },
         gestures: {
+            'single': {
+                type: 'tap',
+                actions: [
+                    'none',
+                    'play-pause',
+                    'volume-up',
+                    'volume-down',
+                ],
+            },
             'double': {
                 type: 'tap',
                 actions: [
@@ -98,7 +114,18 @@ export default {
                     'noise-control',
                     'voice-assistant',
                     'game-mode',
+                    'device-switch',
                     'none',
+                ],
+            },
+            'double-action-hold': {
+                type: 'hold',
+                actions: [
+                    'none',
+                    'game-mode',
+                    'voice-assistant',
+                    'noise-control',
+                    'device-switch',
                 ],
             },
         },
