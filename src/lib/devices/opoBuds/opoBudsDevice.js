@@ -60,11 +60,11 @@ export const OpoBudsDevice = GObject.registerClass({
         this._ignoreGsettingsChange = false;
         this._fwVersion = '';
         this._commonIcon = 'earbuds-stem';
-        this._caseIcon = 'case-round';
-
         this._config = createConfig();
         this._props = createProperties();
         this._modelData = null;
+        this._lastMultiDeviceOpTs = 0;
+        this._lastFitTestOpTs = 0;
 
         this._callbacks = {
             modelIntialized: this.modelIntialized.bind(this),
@@ -256,7 +256,11 @@ export const OpoBudsDevice = GObject.registerClass({
         if (this._modelData.dualConnection) {
             this._dualConnection = this._settingsItems['dual-connection'];
             this._audioPriorityMac = this._settingsItems['audio-priority-mac'];
+            this._lastMultiDeviceOpTs = this._settingsItems['multi-device-op']?.ts ?? 0;
         }
+
+        if (this._modelData.fitTest)
+            this._lastFitTestOpTs = this._settingsItems['fit-test-op']?.ts ?? 0;
 
         if (this._modelData.windNoiseReduction) {
             this._windNoise = this._settingsItems['wind-noise'];
