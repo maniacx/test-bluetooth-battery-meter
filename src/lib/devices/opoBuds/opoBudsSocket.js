@@ -301,8 +301,9 @@ export const OpoBudsSocket = GObject.registerClass({
 
             case Cmd.GET_COMPACTNESS_INFO_RSP:
             case Cmd.START_COMPACTNESS_DETECT_RSP:
+            case 0x8405:
             case 0x840A:
-                this._parseCompactnessResult(payload);
+                this._log.info(`Compactness cmd response: ${hexBytes(payload)}`);
                 break;
 
             case Cmd.NOTIFICATION_EVENT:
@@ -755,8 +756,8 @@ export const OpoBudsSocket = GObject.registerClass({
         if (!payload || payload.length === 0)
             return;
 
-        let leftStatus = 1;
-        let rightStatus = 1;
+        let leftStatus = 0;
+        let rightStatus = 0;
 
         if (payload.length >= 4 && payload[0] === 0x01 && payload[2] === 0x02) {
             leftStatus = payload[1];
@@ -770,7 +771,7 @@ export const OpoBudsSocket = GObject.registerClass({
             rightStatus = (single === 1 || single === 2) ? 1 : 0;
         }
 
-        this._log.info(`Parsed compactness result: left=${leftStatus}, right=${rightStatus} (payload=${hexBytes(payload)})`);
+        this._log.info(`[FitTest Telemetry] Left=${leftStatus === 1 ? 'Good' : 'Not ideal'} (${leftStatus}), Right=${rightStatus === 1 ? 'Good' : 'Not ideal'} (${rightStatus}) (payload=${hexBytes(payload)})`);
         this._callbacks?.updateFitTestResult?.({left: leftStatus, right: rightStatus});
     }
 
