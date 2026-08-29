@@ -198,10 +198,6 @@ export const OpoBudsDevice = GObject.registerClass({
             ...this._modelData.noiseControl && {
                 'nc-cycle-mask': 0x0B,
             },
-
-            ...this._modelData.fitTest && {
-                'fit-test-result': 0,
-            },
         };
     }
 
