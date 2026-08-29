@@ -7,10 +7,14 @@ import Gtk from 'gi://Gtk';
 import {DropDownRowWidget} from '../../widgets/dropDownRowWidget.js';
 import {IconSelectorWidget} from '../../widgets/iconSelectorWidget.js';
 import {RingMyBudsRow} from '../../widgets/ringMyBudsRow.js';
+import {SliderRowWidget} from '../../widgets/sliderRowWidget.js';
+import {CheckBoxesRowWidget} from '../../widgets/checkBoxesRowWidget.js';
 import {
     supportedAudioDualIcons, supportedAudioSingleIcons, supportedCaseIcons
 } from '../../../lib/widgets/iconGroups.js';
 import {OpoBudsModelList} from '../../../lib/devices/opoBuds/opoBudsConfig.js';
+
+const ncCycleBits = [0x01, 0x02, 0x08];
 
 function safeJsonParse(str) {
     try {
@@ -31,6 +35,29 @@ export const ConfigureWindow = GObject.registerClass({
             height_request: 100,
             modal,
             transient_for: parentWindow ?? null,
+        });
+
+        this._isCompactMode = false;
+
+        this._breakpointCompact = new Adw.Breakpoint({
+            condition: Adw.BreakpointCondition.parse('max-width: 500px'),
+        });
+
+        this._breakpointExpanded = new Adw.Breakpoint({
+            condition: Adw.BreakpointCondition.parse('min-width: 550px'),
+        });
+
+        this.add_breakpoint(this._breakpointCompact);
+        this.add_breakpoint(this._breakpointExpanded);
+
+        this._breakpointCompact.connect('apply', () => {
+            this._isCompactMode = true;
+            this._updateCompactStatus();
+        });
+
+        this._breakpointExpanded.connect('apply', () => {
+            this._isCompactMode = false;
+            this._updateCompactStatus();
         });
 
         this._settings = settings;
@@ -144,6 +171,15 @@ export const ConfigureWindow = GObject.registerClass({
                 if (this._modelData.findMyPhone && this._findPhoneSwitch)
                     this._findPhoneSwitch.active = this._settingsItems['find-phone'];
 
+                if (this._lowFreq)
+                    this._lowFreq.value = this._settingsItems['dynamic-audio-low'];
+
+                if (this._midFreq)
+                    this._midFreq.value = this._settingsItems['dynamic-audio-med'];
+
+                if (this._highFreq)
+                    this._highFreq.value = this._settingsItems['dynamic-audio-high'];
+
                 if (this._modelData.gestureOptions && this._gestureDropdowns) {
                     const gesturesHex = this._settingsItems['gestures'] ??
                             this._buildPlaceholderGesturesHex(this._modelData.gestureOptions);
@@ -156,11 +192,16 @@ export const ConfigureWindow = GObject.registerClass({
                     });
                 }
 
-                if (this._modelData.noiseControl && this._ancCycleSwitchOff) {
+                if (this._modelData.noiseControl && this._ncCycleWidget) {
                     const mask = this._settingsItems['nc-cycle-mask'] ?? 0x0B;
-                    this._ancCycleSwitchOff.active = (mask & 0x01) !== 0;
-                    this._ancCycleSwitchTrans.active = (mask & 0x02) !== 0;
-                    this._ancCycleSwitchAnc.active = (mask & 0x08) !== 0;
+                    let widgetMask = 0;
+
+                    ncCycleBits.forEach((bit, index) => {
+                        if (mask & bit)
+                            widgetMask |= 1 << index;
+                    });
+
+                    this._ncCycleWidget.toggled_value = widgetMask;
                 }
 
                 if (this._isTestingFit && this._modelData.fitTest) {
@@ -174,6 +215,13 @@ export const ConfigureWindow = GObject.registerClass({
         });
 
         this.connect('close-request', () => {
+            this._lowFreq?.destroy();
+            this._lowFreq = null;
+            this._midFreq?.destroy();
+            this._midFreq = null;
+            this._highFreq?.destroy();
+            this._highFreq = null;
+
             if (this._modelData?.ring) {
                 const ringState = this._settingsItems?.['ring-state'];
                 if (ringState === 'playing')
@@ -283,43 +331,69 @@ export const ConfigureWindow = GObject.registerClass({
                 this._updateGsettings('dynamic-bass', enabled);
             });
 
-            const createFreqScaleRow = (label, gsettingsKey) => {
-                const row = new Adw.ActionRow({
-                    title: label,
-                });
-                const adjustment = new Gtk.Adjustment({
-                    lower: -5,
-                    upper: 5,
-                    step_increment: 1,
-                    page_increment: 1,
-                    value: this._settingsItems[gsettingsKey] ?? 0,
-                });
-                const scale = new Gtk.Scale({
-                    orientation: Gtk.Orientation.HORIZONTAL,
-                    adjustment,
-                    draw_value: true,
-                    value_pos: Gtk.PositionType.RIGHT,
-                    hexpand: true,
-                    width_request: 180,
-                    digits: 0,
-                    round_digits: 0,
-                });
-                scale.set_digits(0);
-                scale.set_round_digits(0);
-                scale.add_mark(-5, Gtk.PositionType.BOTTOM, '-5');
-                scale.add_mark(0, Gtk.PositionType.BOTTOM, '0');
-                scale.add_mark(5, Gtk.PositionType.BOTTOM, '+5');
-                scale.connect('value-changed', () => {
-                    const val = Math.round(scale.get_value());
-                    this._updateGsettings(gsettingsKey, val);
-                });
-                row.add_suffix(scale);
-                return row;
-            };
+            const range = [-5, 5, 1];
 
-            dynamicAudioExpander.add_row(createFreqScaleRow(_('Low Frequency'), 'dynamic-audio-low'));
-            dynamicAudioExpander.add_row(createFreqScaleRow(_('Mid Frequency'), 'dynamic-audio-med'));
-            dynamicAudioExpander.add_row(createFreqScaleRow(_('High Frequency'), 'dynamic-audio-high'));
+            const marks = Array.from({length: 11}, (_o, i) => {
+                const value = i - 5;
+                const obj = {
+                    mark: value,
+                };
+
+                if (value === -5)
+                    obj.label = _('-5');
+                else if (value === 0)
+                    obj.label = _('0');
+                else if (value === 5)
+                    obj.label = _('5');
+
+                return obj;
+            });
+
+            this._lowFreq = new SliderRowWidget({
+                rowTitle: _('Low Frequency'),
+                range,
+                marks,
+                snapOnStep: true,
+                initialValue: this._settingsItems['dynamic-audio-low'],
+            });
+
+            this._lowFreq.compact_mode = this._isCompactMode;
+
+            this._lowFreq.connect('notify::value', () => {
+                this._updateGsettings('dynamic-audio-low', this._lowFreq.value);
+            });
+
+            this._midFreq = new SliderRowWidget({
+                rowTitle: _('Mid Frequency'),
+                range,
+                marks,
+                snapOnStep: true,
+                initialValue: this._settingsItems['dynamic-audio-med'],
+            });
+
+            this._midFreq.compact_mode = this._isCompactMode;
+
+            this._midFreq.connect('notify::value', () => {
+                this._updateGsettings('dynamic-audio-med', this._midFreq.value);
+            });
+
+            this._highFreq = new SliderRowWidget({
+                rowTitle: _('High Frequency'),
+                range,
+                marks,
+                snapOnStep: true,
+                initialValue: this._settingsItems['dynamic-audio-high'],
+            });
+
+            this._highFreq.compact_mode = this._isCompactMode;
+
+            this._highFreq.connect('notify::value', () => {
+                this._updateGsettings('dynamic-audio-high', this._highFreq.value);
+            });
+
+            dynamicAudioExpander.add_row(this._lowFreq);
+            dynamicAudioExpander.add_row(this._midFreq);
+            dynamicAudioExpander.add_row(this._highFreq);
 
             effectsGroup.add(dynamicAudioExpander);
         }
@@ -886,57 +960,53 @@ export const ConfigureWindow = GObject.registerClass({
 
             const ncCycleGroup = new Adw.PreferencesGroup({
                 title: _('Noise Control Button Cycling'),
-                description: _('Select modes to cycle through when pressing the earbud/neckband button (minimum 2 required)'),
             });
 
-            this._ancCycleSwitchAnc = new Adw.SwitchRow({
-                title: _('Noise Cancellation'),
-                subtitle: _('Block out ambient background noise'),
-                icon_name: 'bbm-anc-on-symbolic',
-                active: (initialMask & 0x08) !== 0,
+            const ncCycleItems = [
+                {
+                    name: _('Off'),
+                    icon: 'bbm-anc-off-symbolic',
+                },
+                {
+                    name: _('Transparency'),
+                    icon: 'bbm-transperancy-symbolic',
+                },
+                {
+                    name: _('Noise Cancellation'),
+                    icon: 'bbm-anc-on-symbolic',
+                },
+            ];
+
+            let initialWidgetMask = 0;
+
+            ncCycleItems.forEach((item, index) => {
+                if (initialMask & ncCycleBits[index])
+                    initialWidgetMask |= 1 << index;
             });
 
-            this._ancCycleSwitchTrans = new Adw.SwitchRow({
-                title: _('Transparency'),
-                subtitle: _('Hear external sounds and voices clearly'),
-                icon_name: 'bbm-transperancy-symbolic',
-                active: (initialMask & 0x02) !== 0,
+            this._ncCycleWidget = new CheckBoxesRowWidget({
+                rowTitle: _('Select modes to cycle through'),
+                items: ncCycleItems,
+                applyBtnName: _('Apply'),
+                initialValue: initialWidgetMask,
+                minRequired: 2,
             });
 
-            this._ancCycleSwitchOff = new Adw.SwitchRow({
-                title: _('Off'),
-                subtitle: _('Disable active noise cancellation and transparency'),
-                icon_name: 'bbm-anc-off-symbolic',
-                active: (initialMask & 0x01) !== 0,
-            });
+            this._ncCycleWidget.compact_mode = this._isCompactMode;
 
-            const onCycleSwitchToggled = toggledSwitch => {
-                if (this._isUpdatingUI)
-                    return;
+            this._ncCycleWidget.connect('notify::toggled-value', () => {
+                const toggled = this._ncCycleWidget.toggled_value;
+                let mask = 0;
 
-                const anc = this._ancCycleSwitchAnc.active;
-                const trans = this._ancCycleSwitchTrans.active;
-                const off = this._ancCycleSwitchOff.active;
-                const count = (anc ? 1 : 0) + (trans ? 1 : 0) + (off ? 1 : 0);
+                ncCycleItems.forEach((item, index) => {
+                    if (toggled & 1 << index)
+                        mask |= ncCycleBits[index];
+                });
 
-                if (count < 2) {
-                    this._isUpdatingUI = true;
-                    toggledSwitch.active = true;
-                    this._isUpdatingUI = false;
-                    return;
-                }
-
-                const mask = (off ? 0x01 : 0x00) | (trans ? 0x02 : 0x00) | (anc ? 0x08 : 0x00);
                 this._updateGsettings('nc-cycle-mask', mask);
-            };
+            });
 
-            this._ancCycleSwitchAnc.connect('notify::active', () => onCycleSwitchToggled(this._ancCycleSwitchAnc));
-            this._ancCycleSwitchTrans.connect('notify::active', () => onCycleSwitchToggled(this._ancCycleSwitchTrans));
-            this._ancCycleSwitchOff.connect('notify::active', () => onCycleSwitchToggled(this._ancCycleSwitchOff));
-
-            ncCycleGroup.add(this._ancCycleSwitchAnc);
-            ncCycleGroup.add(this._ancCycleSwitchTrans);
-            ncCycleGroup.add(this._ancCycleSwitchOff);
+            ncCycleGroup.add(this._ncCycleWidget);
             this._page.add(ncCycleGroup);
         }
     }
@@ -1010,5 +1080,12 @@ export const ConfigureWindow = GObject.registerClass({
             hex += func.toString(16).padStart(2, '0');
         });
         return hex;
+    }
+
+    _updateCompactStatus() {
+        this._lowFreq?.set_property('compact-mode', this._isCompactMode);
+        this._midFreq?.set_property('compact-mode', this._isCompactMode);
+        this._highFreq?.set_property('compact-mode', this._isCompactMode);
+        this._ncCycleWidget?.set_property('compact-mode', this._isCompactMode);
     }
 });
