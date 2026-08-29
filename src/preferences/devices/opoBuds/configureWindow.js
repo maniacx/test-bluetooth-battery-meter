@@ -154,18 +154,6 @@ export const ConfigureWindow = GObject.registerClass({
                     this._ancCycleSwitchTrans.active = (mask & 0x02) !== 0;
                     this._ancCycleSwitchAnc.active = (mask & 0x08) !== 0;
                 }
-
-                if (this._modelData.fitTest && this._fitLeftBadge) {
-                    const res = this._settingsItems['fit-test-result'];
-                    if (res && typeof res === 'object') {
-                        const leftGood = (res.left === 1);
-                        const rightGood = (res.right === 1);
-                        this._fitLeftBadge.label = leftGood ? _('Good') : _('Not ideal');
-                        this._fitLeftBadge.css_classes = [leftGood ? 'success' : 'warning', 'heading'];
-                        this._fitRightBadge.label = rightGood ? _('Good') : _('Not ideal');
-                        this._fitRightBadge.css_classes = [rightGood ? 'success' : 'warning', 'heading'];
-                    }
-                }
             } finally {
                 this._isUpdatingUI = false;
             }
@@ -664,6 +652,8 @@ export const ConfigureWindow = GObject.registerClass({
                 descRow.title = _('Analyzing earbud fit…');
                 descRow.subtitle = _('Please keep earbuds in your ears while the tone plays');
 
+                this._settingsItems['fit-test-result'] = null;
+                this._updateGsettings('fit-test-result', null);
                 this._updateGsettings('fit-test-op', {action: 'start', ts: Date.now()});
 
                 GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
