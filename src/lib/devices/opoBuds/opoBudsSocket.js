@@ -335,29 +335,33 @@ export const OpoBudsSocket = GObject.registerClass({
 
             case EventCode.ANC_MODE:
                 if (eventData.length >= 3) {
-                    const subId = eventData[0];
-                    const modeByte = eventData[eventData.length - 1];
-                    if (subId === 0x04)
-                        this._callbacks?.updateAdaptiveAncSubLevel?.(modeByte);
-                    else
-                        this._callbacks?.updateNoiseControl?.(modeByte);
+                    const action = eventData[0];
+                    const valByte = eventData[eventData.length - 1];
+                    if (action === 0x02) {
+                        const mask = valByte <= 0x04 ? cycleEnumToMask(valByte) : valByte;
+                        this._callbacks?.updateNoiseControlCycle?.(mask);
+                    } else if (action === 0x04) {
+                        this._callbacks?.updateAdaptiveAncSubLevel?.(valByte);
+                    } else {
+                        this._callbacks?.updateNoiseControl?.(valByte);
+                    }
                 } else if (eventData.length >= 1) {
                     const modeByte = eventData[eventData.length - 1];
                     this._callbacks?.updateNoiseControl?.(modeByte);
                 }
                 break;
 
-            case 0x05:
+            case EventCode.GAME_MODE:
+                if (eventData.length >= 1)
+                    this._callbacks?.updateLatency?.(eventData[0] === 0x01);
+                break;
+
+            case EventCode.MULTI_CONNECT:
             case 0x0E:
             case 0x12:
             case 0x13:
             case 0x16:
                 this._getMultiConnectInfo();
-                break;
-
-            case EventCode.GAME_MODE:
-                if (eventData.length >= 1)
-                    this._callbacks?.updateLatency?.(eventData[0] === 0x01);
                 break;
 
             case EventCode.EARBUDS_STATUS:
@@ -370,7 +374,6 @@ export const OpoBudsSocket = GObject.registerClass({
                 break;
 
             case EventCode.USER_INTERACTION:
-            case 0xF1:
                 if (eventData.length >= 4) {
                     const dev = eventData[0];
                     const btn = eventData[1];
@@ -520,26 +523,13 @@ export const OpoBudsSocket = GObject.registerClass({
         if (payload.length < 2)
             return;
 
-        let startIdx = 1;
-        let count = payload[0];
+        const isResponse = (payload[0] === 0x00 && payload.length % 2 === 0);
+        const count = isResponse ? payload[1] : payload[0];
+        let pos = isResponse ? 2 : 1;
 
-        if (payload[0] === 0x00) {
-            if (payload.length > 2 && payload[1] === 0x00) {
-                startIdx = 3;
-                count = payload[2];
-            } else {
-                startIdx = 2;
-                count = payload[1];
-            }
-        }
-
-        for (let i = 0; i < count; i++) {
-            const idx = startIdx + i * 2;
-            if (idx + 1 >= payload.length)
-                break;
-
-            const feat = payload[idx];
-            const val = payload[idx + 1] === 0x01;
+        for (let i = 0; i < count && pos + 1 < payload.length; i++) {
+            const feat = payload[pos++];
+            const val = payload[pos++] === 0x01;
 
             if (feat === FeatureId.IN_EAR)
                 this._callbacks?.updateInEar?.(val);
@@ -604,19 +594,17 @@ export const OpoBudsSocket = GObject.registerClass({
             const mac = macBytes.map(b => b.toString(16).padStart(2, '0')).join(':').toUpperCase();
             pos += 6;
 
-            const elemByte = payload[pos++];
+            const elemLen = payload[pos++];
+            const entryEnd = pos + elemLen;
+
             const connState = payload[pos++];
             const flag = payload[pos++];
             const nameLen = payload[pos++];
 
-            if (nameLen < 0 || pos + nameLen > payload.length)
-                break;
-
             let deviceName = '';
-            if (nameLen > 0) {
+            if (nameLen > 0 && pos + nameLen <= payload.length) {
                 const nameBytes = payload.slice(pos, pos + nameLen);
                 deviceName = new TextDecoder('utf-8').decode(new Uint8Array(nameBytes)).replace(/\0+$/, '');
-                pos += nameLen;
             } else {
                 deviceName = `Device ${mac.slice(-5)}`;
             }
@@ -635,6 +623,8 @@ export const OpoBudsSocket = GObject.registerClass({
                 isAudioActive,
                 connState,
             });
+
+            pos = elemLen > 0 ? entryEnd : (pos + Math.max(0, nameLen));
         }
 
         this._log.info(`Parsed Multi-Connect Devices (${devices.length}): ${JSON.stringify(devices)}`);
@@ -759,9 +749,10 @@ export const OpoBudsSocket = GObject.registerClass({
             `Set gesture slot: dev=${hexBytes(device)} btn=${hexBytes(buttonId)} ` +
             `type=${hexBytes(gestureType)} action=${hexBytes(action)} extra=${extraByte}`
         );
-        const payload = extraByte !== null
+        const slotBytes = extraByte !== null
             ? [device, buttonId, gestureType, action, extraByte]
             : [device, buttonId, gestureType, action];
+        const payload = [0x01, ...slotBytes];
         this._queuePacket(Cmd.SET_KEY_FUNCTION, payload, 'Set Key Function');
     }
 

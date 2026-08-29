@@ -104,7 +104,7 @@ export const FeatureId = {
     WIND_NOISE: 0x1A,
     SPATIAL: 0x1B,
     DYNAMIC_BASS: 0x1D,
-    FIND_PHONE: 0x26,
+    FIND_PHONE: 0x36,
 };
 
 export const EventCode = {

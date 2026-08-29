@@ -241,7 +241,7 @@ export const ConfigureWindow = GObject.registerClass({
             this._highFreq = null;
 
             if (this._multiDevicePollId) {
-                GLib.Source.remove(this._multiDevicePollId);
+                GLib.source_remove(this._multiDevicePollId);
                 this._multiDevicePollId = null;
             }
 
@@ -599,7 +599,7 @@ export const ConfigureWindow = GObject.registerClass({
 
                 this._dualConnSwitch._dialog.connect('closed', () => {
                     if (this._multiDevicePollId) {
-                        GLib.Source.remove(this._multiDevicePollId);
+                        GLib.source_remove(this._multiDevicePollId);
                         this._multiDevicePollId = null;
                     }
                 });

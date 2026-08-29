@@ -405,7 +405,7 @@ export const OpoBudsDevice = GObject.registerClass({
                     }
                 }
             } catch (e) {
-                Logger.error(e, 'OpoBudsDevice: GSettings monitor error');
+                this._log.error(`OpoBudsDevice: GSettings monitor error: ${e.message}`);
             }
         });
     }
