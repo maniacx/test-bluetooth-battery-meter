@@ -545,23 +545,23 @@ export const OpoBudsDevice = GObject.registerClass({
         this.updateDeviceMapCb(this._devicePath, this.dataHandler);
 
         this._dataHandlerId = this.dataHandler.connect('ui-action', (o, command, value) => {
-            if (command === 'toggle1State')
-                this._toggle1ButtonClicked(value);
-
-            if (command === 'box1RadioButtonState')
-                this._box1RadioButtonStateChanged(value);
-
-            if (command === 'box1CheckButton1State')
-                this._box1CheckButton1Changed(value);
-
-            if (command === 'box2CheckButton1State')
-                this._box2CheckButton1Changed(value);
-
-            if (command === 'box2CheckButton2State')
-                this._box2CheckButton2Changed(value);
-
-            if (command === 'settingsButtonClicked')
-                this._settingsButtonClicked();
+            try {
+                this._log.info(`ui-action received: command=${command}, value=${value}`);
+                if (command === 'toggle1State')
+                    this._toggle1ButtonClicked(value);
+                else if (command === 'box1RadioButtonState')
+                    this._box1RadioButtonStateChanged(value);
+                else if (command === 'box1CheckButton1State')
+                    this._box1CheckButton1Changed(value);
+                else if (command === 'box2CheckButton1State')
+                    this._box2CheckButton1Changed(value);
+                else if (command === 'box2CheckButton2State')
+                    this._box2CheckButton2Changed(value);
+                else if (command === 'settingsButtonClicked')
+                    this._settingsButtonClicked();
+            } catch (e) {
+                this._log.error(`Error in ui-action (${command}): ${e.message}\n${e.stack}`);
+            }
         });
 
         this._isReady = true;
