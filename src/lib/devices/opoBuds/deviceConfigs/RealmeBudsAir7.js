@@ -45,16 +45,12 @@ export default {
 
     gestureOptions: {
         slots: [
-            {group: 'left',  device: 0x01, buttonId: 0x01, type: 'single'},
             {group: 'left',  device: 0x01, buttonId: 0x01, type: 'double'},
             {group: 'left',  device: 0x01, buttonId: 0x01, type: 'triple'},
             {group: 'left',  device: 0x01, buttonId: 0x01, type: 'action-hold'},
-            {group: 'left',  device: 0x01, buttonId: 0x01, type: 'double-action-hold'},
-            {group: 'right', device: 0x02, buttonId: 0x01, type: 'single'},
             {group: 'right', device: 0x02, buttonId: 0x01, type: 'double'},
             {group: 'right', device: 0x02, buttonId: 0x01, type: 'triple'},
             {group: 'right', device: 0x02, buttonId: 0x01, type: 'action-hold'},
-            {group: 'right', device: 0x02, buttonId: 0x01, type: 'double-action-hold'},
         ],
         mapping: {
             gestureTypes: {
@@ -78,15 +74,6 @@ export default {
             },
         },
         gestures: {
-            'single': {
-                type: 'tap',
-                actions: [
-                    'none',
-                    'play-pause',
-                    'volume-up',
-                    'volume-down',
-                ],
-            },
             'double': {
                 type: 'tap',
                 actions: [
@@ -116,16 +103,6 @@ export default {
                     'game-mode',
                     'device-switch',
                     'none',
-                ],
-            },
-            'double-action-hold': {
-                type: 'hold',
-                actions: [
-                    'none',
-                    'game-mode',
-                    'voice-assistant',
-                    'noise-control',
-                    'device-switch',
                 ],
             },
         },
