@@ -17,18 +17,18 @@ export const DeviceTypeOpoBuds = 'opoBuds';
 const OpoBudsUUID = '0000079a-d102-11e1-9b23-00025b00a5a5';
 
 const SIMPLE_FEATURE_MAP = [
-    { key: 'eq-preset', flag: 'eqPreset', prop: '_eqPreset', fn: (s, v) => s.setEqPreset(v) },
-    { key: 'inear-enable', flag: 'inEarDetection', prop: '_inEar', fn: (s, v) => s.setInEar(v) },
-    { key: 'lowlatency', flag: 'lowLatencyMode', prop: '_lowlatency', fn: (s, v) => s.setLatency(v) },
-    { key: 'dual-connection', flag: 'dualConnection', prop: '_dualConnection', fn: (s, v) => s.setDualConnection(v) },
-    { key: 'wind-noise', flag: 'windNoiseReduction', prop: '_windNoise', fn: (s, v) => s.setWindNoise(v) },
-    { key: 'volume-enhancer', flag: 'volumeEnhancer', prop: '_volumeEnhancer', fn: (s, v) => s.setVolumeEnhancer(v) },
-    { key: 'spatial', flag: 'spatialAudio', prop: '_spatial', fn: (s, v) => s.setSpatialAudio(v) },
-    { key: 'high-res', flag: 'highResAudio', prop: '_highRes', fn: (s, v) => s.setHighRes(v) },
-    { key: 'dynamic-bass', flag: 'dynamicBass', prop: '_dynamicBass', fn: (s, v) => s.setDynamicBass(v) },
-    { key: 'auto-answer', flag: 'autoAnswer', prop: '_autoAnswer', fn: (s, v) => s.setAutoAnswer(v) },
-    { key: 'find-phone', flag: 'findMyPhone', prop: '_findPhone', fn: (s, v) => s.setFindPhone(v) },
-    { key: 'ring-state', flag: 'ring', prop: '_ringState', fn: (s, v) => s.setFindBuds(v) },
+    { key: 'eq-preset', flags: ['eqPreset'], prop: '_eqPreset', fn: (s, v) => s.setEqPreset(v) },
+    { key: 'inear-enable', flags: ['inEarDetection'], prop: '_inEar', fn: (s, v) => s.setInEar(v) },
+    { key: 'lowlatency', flags: ['lowLatencyMode'], prop: '_lowlatency', fn: (s, v) => s.setLatency(v) },
+    { key: 'dual-connection', flags: ['dualConnection'], prop: '_dualConnection', fn: (s, v) => s.setDualConnection(v) },
+    { key: 'wind-noise', flags: ['windNoiseReduction', 'windReduction'], prop: '_windNoise', fn: (s, v) => s.setWindNoise(v) },
+    { key: 'volume-enhancer', flags: ['volumeEnhancer'], prop: '_volumeEnhancer', fn: (s, v) => s.setVolumeEnhancer(v) },
+    { key: 'spatial', flags: ['spatialAudio'], prop: '_spatial', fn: (s, v) => s.setSpatialAudio(v) },
+    { key: 'high-res', flags: ['highResAudio'], prop: '_highRes', fn: (s, v) => s.setHighRes(v) },
+    { key: 'dynamic-bass', flags: ['dynamicBass'], prop: '_dynamicBass', fn: (s, v) => s.setDynamicBass(v) },
+    { key: 'auto-answer', flags: ['autoAnswer'], prop: '_autoAnswer', fn: (s, v) => s.setAutoAnswer(v) },
+    { key: 'find-phone', flags: ['findMyPhone'], prop: '_findPhone', fn: (s, v) => s.setFindPhone(v) },
+    { key: 'ring-state', flags: ['ring'], prop: '_ringState', fn: (s, v) => s.setFindBuds(v) },
 ];
 
 export function isOpoBuds(bluezDeviceProxy, uuids) {
@@ -155,7 +155,7 @@ export const OpoBudsDevice = GObject.registerClass({
             'fw-version': this._fwVersion,
 
             ...(this._modelData.batteryCase ? {'case': this._caseIcon} : {}),
-            ...(this._modelData.eqPreset ? {'eq-preset': 0} : {}),
+            ...(this._modelData.eqPreset ? {'eq-preset': Object.values(this._modelData.eqPreset)[0] ?? 0} : {}),
             ...(this._modelData.inEarDetection ? {'inear-enable': false} : {}),
             ...(this._modelData.lowLatencyMode ? {'lowlatency': false} : {}),
             ...(this._modelData.dualConnection ? {
@@ -163,7 +163,7 @@ export const OpoBudsDevice = GObject.registerClass({
                 'audio-priority-mac': '',
                 'multi-device-op': null,
             } : {}),
-            ...(this._modelData.windNoiseReduction ? {'wind-noise': false} : {}),
+            ...((this._modelData.windNoiseReduction || this._modelData.windReduction) ? {'wind-noise': false} : {}),
             ...(this._modelData.volumeEnhancer ? {'volume-enhancer': false} : {}),
             ...(this._modelData.fitTest ? {'fit-test-op': null} : {}),
             ...(this._modelData.spatialAudio ? {'spatial': false} : {}),
@@ -213,7 +213,7 @@ export const OpoBudsDevice = GObject.registerClass({
         if (this._modelData.fitTest)
             this._lastFitTestOpTs = this._settingsItems['fit-test-op']?.ts ?? 0;
 
-        if (this._modelData.windNoiseReduction) {
+        if (this._modelData.windNoiseReduction || this._modelData.windReduction) {
             this._windNoise = this._settingsItems['wind-noise'];
             this._props.box1CheckButton1State = this._windNoise ? 1 : 0;
             this._props.box2CheckButton2State = this._windNoise ? 1 : 0;
@@ -288,7 +288,8 @@ export const OpoBudsDevice = GObject.registerClass({
 
                 // 2. Declarative 1-to-1 feature mapping
                 for (const item of SIMPLE_FEATURE_MAP) {
-                    if (this._modelData[item.flag]) {
+                    const isConfigured = item.flags.some(flag => this._modelData[flag]);
+                    if (isConfigured) {
                         const val = this._settingsItems[item.key];
                         if (this[item.prop] !== val) {
                             this[item.prop] = val;
@@ -421,6 +422,8 @@ export const OpoBudsDevice = GObject.registerClass({
         const toBytes = entry => {
             if (Array.isArray(entry))
                 return entry;
+            if (typeof entry === 'number')
+                return [entry];
             if (entry?.byte !== undefined)
                 return [entry.byte];
             return [];
@@ -430,11 +433,23 @@ export const OpoBudsDevice = GObject.registerClass({
             addToggle('off', toBytes(nc.off), 'bbm-anc-off-symbolic', _('Off'));
 
         if (nc.transparency) {
-            const transBytes = nc.transparency.levels?.regular
-                ? toBytes(nc.transparency.levels.regular)
-                : toBytes(nc.transparency);
-            addToggle('transparency', transBytes,
-                'bbm-transperancy-symbolic', _('Transparency'));
+            let transDefault = [];
+            const transMatch = [];
+            if (nc.transparency.levels) {
+                const transLevels = nc.transparency.levels;
+                const keys = Object.keys(transLevels);
+                keys.forEach(k => {
+                    const b = toBytes(transLevels[k]);
+                    if (transDefault.length === 0 && b.length > 0)
+                        transDefault = b;
+                    transMatch.push(...b);
+                });
+            } else {
+                transDefault = toBytes(nc.transparency);
+                transMatch.push(...transDefault);
+            }
+            addToggle('transparency', transDefault,
+                'bbm-transperancy-symbolic', _('Transparency'), transMatch);
         }
 
         if (nc.noiseCancellation) {
@@ -444,42 +459,56 @@ export const OpoBudsDevice = GObject.registerClass({
 
             if (nc.noiseCancellation.levels) {
                 const levelsObj = nc.noiseCancellation.levels;
-                const levelKeys = ['smart', 'mild', 'moderate', 'deep'].filter(k => k in levelsObj);
+                const levelKeys = Object.keys(levelsObj);
 
                 const levelNames = {
                     'smart': _('Smart'),
+                    'auto': _('Auto'),
                     'mild': _('Mild'),
+                    'low': _('Low'),
                     'moderate': _('Moderate'),
+                    'mid': _('Moderate'),
                     'deep': _('Max'),
+                    'high': _('High'),
+                    'max': _('Max'),
                 };
 
                 const radioNames = [];
+                let firstLevelBytes = [];
                 levelKeys.forEach((key, idx) => {
                     const num = idx + 1;
-                    radioNames.push(levelNames[key] ?? key);
+                    const displayName = levelNames[key] ??
+                        (key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '));
+                    radioNames.push(displayName);
                     const modeBytes = toBytes(levelsObj[key]);
+                    if (firstLevelBytes.length === 0 && modeBytes.length > 0)
+                        firstLevelBytes = modeBytes;
                     this._ancRadioMap[num] = modeBytes;
-                    if (modeBytes.length)
-                        this._ancRadioReverse[modeBytes[modeBytes.length - 1]] = num;
+                    modeBytes.forEach(b => {
+                        this._ancRadioReverse[b] = num;
+                    });
                     flatBytes.push(...modeBytes);
                 });
 
                 this._config.box1RadioButton = radioNames;
                 this._config.box1RadioTitle = _('Noise Cancellation Level');
+                addToggle('noiseCancellation', firstLevelBytes.length ? firstLevelBytes : flatBytes,
+                    'bbm-anc-on-symbolic', _('Noise Cancellation'), flatBytes);
             } else if (nc.noiseCancellation.byte !== undefined) {
                 flatBytes.push(nc.noiseCancellation.byte);
+                addToggle('noiseCancellation', flatBytes, 'bbm-anc-on-symbolic', _('Noise Cancellation'),
+                    flatBytes);
             } else {
                 flatBytes.push(...toBytes(nc.noiseCancellation));
+                addToggle('noiseCancellation', flatBytes, 'bbm-anc-on-symbolic', _('Noise Cancellation'),
+                    flatBytes);
             }
-
-            addToggle('noiseCancellation', flatBytes, 'bbm-anc-on-symbolic', _('Noise Cancellation'),
-                flatBytes);
         }
 
         this._config.optionsBox1 = [];
         if (nc.noiseCancellation?.levels)
             this._config.optionsBox1.push('radio-button');
-        if (this._modelData.windNoiseReduction) {
+        if (this._modelData.windNoiseReduction || this._modelData.windReduction) {
             this._config.optionsBox1.push('check-button');
             this._config.box1CheckButton = [_('Smart Wind Noise Reduction')];
         }
@@ -488,7 +517,7 @@ export const OpoBudsDevice = GObject.registerClass({
         const box2Labels = [];
         if (this._modelData.volumeEnhancer)
             box2Labels.push(_('Enhance Voice'));
-        if (this._modelData.windNoiseReduction)
+        if (this._modelData.windNoiseReduction || this._modelData.windReduction)
             box2Labels.push(_('Smart Wind Noise Reduction'));
 
         if (box2Labels.length > 0) {
@@ -673,9 +702,9 @@ export const OpoBudsDevice = GObject.registerClass({
             this.dataHandler?.setProps(this._props);
     }
 
-    updateNoiseControl(modeByte) {
+    updateNoiseControl(mode) {
         if (!this._ancToggleMap) {
-            this._pendingAncMode = modeByte;
+            this._pendingAncMode = mode;
             return;
         }
 
@@ -683,11 +712,16 @@ export const OpoBudsDevice = GObject.registerClass({
         if (!nc)
             return;
 
+        const modeArr = Array.isArray(mode) ? mode : [mode];
+        const lastByte = modeArr[modeArr.length - 1];
+
         let toggleIndex = 0;
         let activeType = 'off';
 
         for (const [index, {matchBytes, type}] of Object.entries(this._ancToggleMap)) {
-            if (matchBytes.includes(modeByte)) {
+            const matched = modeArr.some(b => matchBytes.includes(b)) ||
+                matchBytes.some(b => modeArr.includes(b));
+            if (matched) {
                 toggleIndex = Number(index);
                 activeType = type;
                 break;
@@ -697,8 +731,8 @@ export const OpoBudsDevice = GObject.registerClass({
         this._props.toggle1State = toggleIndex;
 
         if (activeType === 'noiseCancellation') {
-            if (this._ancRadioReverse && this._ancRadioReverse[modeByte] !== undefined)
-                this._props.box1RadioButtonState = this._ancRadioReverse[modeByte];
+            if (this._ancRadioReverse && this._ancRadioReverse[lastByte] !== undefined)
+                this._props.box1RadioButtonState = this._ancRadioReverse[lastByte];
             else if (!this._props.box1RadioButtonState)
                 this._props.box1RadioButtonState = 1;
             this._props.optionsBoxVisible = this._config.optionsBox1?.length ? 1 : 0;
@@ -720,7 +754,10 @@ export const OpoBudsDevice = GObject.registerClass({
         const isAnc = toggle?.type === 'noiseCancellation';
         const isSmart = this._props.box1RadioButtonState === 1;
 
-        if (isAnc && isSmart && this._modelData.noiseControl?.noiseCancellation?.levels?.smart) {
+        const hasSmartLevel = this._modelData.noiseControl?.noiseCancellation?.levels?.smart ||
+            this._modelData.noiseControl?.noiseCancellation?.levels?.auto;
+
+        if (isAnc && isSmart && hasSmartLevel) {
             const sub = this._smartSubName || _('Moderate');
             this._props.labelIndicator1 = `${_('Adaptive')}: ${sub}`;
         } else {

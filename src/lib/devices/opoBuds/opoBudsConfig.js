@@ -77,9 +77,6 @@ export const Cmd = {
     EQ: 0x010F,
     EQ_RSP: 0x810F,
 
-    GET_NOTIFICATION_CAPABILITY: 0x0200,
-    GET_NOTIFICATION_CAPABILITY_RSP: 0x8200,
-
     REGISTER_NOTIFICATION_SINGLE: 0x0201,
     REGISTER_NOTIFICATION_SINGLE_RSP: 0x8201,
 
@@ -153,6 +150,50 @@ export const FeatureId = {
     DYNAMIC_BASS: 0x1D,
     FIND_PHONE: 0x36,
 };
+
+export const FEATURE_CONFIG_MAP = [
+    { configKeys: ['inEarDetection'], defaultByte: FeatureId.IN_EAR, name: 'In-Ear Detection', callback: 'updateInEar' },
+    { configKeys: ['lowLatencyMode'], defaultByte: FeatureId.GAME_MODE, name: 'Low Latency Game Mode', callback: 'updateLatency' },
+    { configKeys: ['dualConnection'], defaultByte: FeatureId.DUAL_DEVICE, name: 'Dual Connection', callback: 'updateDualConnection' },
+    { configKeys: ['windReduction', 'windNoiseReduction'], defaultByte: FeatureId.WIND_NOISE, name: 'Wind Noise Reduction', callback: 'updateWindNoise' },
+    { configKeys: ['volumeEnhancer'], defaultByte: FeatureId.VOLUME_ENHANCER, name: 'Volume Enhancer', callback: 'updateVolumeEnhancer' },
+    { configKeys: ['spatialAudio'], defaultByte: FeatureId.SPATIAL, name: 'Spatial Audio', callback: 'updateSpatialAudio' },
+    { configKeys: ['highResAudio'], defaultByte: FeatureId.HIGH_RES, name: 'High-Res LHDC', callback: 'updateHighRes' },
+    { configKeys: ['dynamicBass'], defaultByte: FeatureId.DYNAMIC_BASS, name: 'Dynamic Bass', callback: 'updateDynamicBass' },
+    { configKeys: ['autoAnswer'], defaultByte: FeatureId.AUTO_ANSWER, name: 'Auto Answer', callback: 'updateAutoAnswer' },
+    { configKeys: ['findMyPhone'], defaultByte: FeatureId.FIND_PHONE, name: 'Find My Phone', callback: 'updateFindPhone' },
+];
+
+export function resolveFeatureByte(modelData, configKeys, defaultByte) {
+    if (!modelData)
+        return null;
+    const keys = Array.isArray(configKeys) ? configKeys : [configKeys];
+    for (const key of keys) {
+        const val = modelData[key];
+        if (typeof val === 'number')
+            return val;
+        if (val?.byte !== undefined)
+            return val.byte;
+        if (val === true)
+            return defaultByte;
+    }
+    return null;
+}
+
+export const DefaultBroadcastEvents = [
+    0x01, // Battery
+    0x02, // Earbuds Status / In-Ear
+    0x03, // ANC Mode
+    0x04, // Fit Test / Compactness
+    0x05, // Game Mode
+    0x06, // Multi-Connect
+    0x0D, // Dual Connection State
+    0x0E, // Ear-Scan / Special
+    0x0F, // Spatial Audio State
+    0x10, // Audio Codec / Status
+    0xF1, // Live User Interaction / Gestures
+    0xF2, // Button Events
+];
 
 export const EventCode = {
     BATTERY: 0x01,

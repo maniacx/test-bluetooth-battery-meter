@@ -6,7 +6,8 @@ import {createLogger, getDeviceIdentifier, hexBytes} from '../logger.js';
 import {SocketHandler} from '../socketByProfile.js';
 import {
     OpoBudsModelList, Cmd, FeatureId, EventCode, BatteryComponent,
-    cycleEnumToMask, macToReversedBytes, reversedBytesToMac
+    cycleEnumToMask, macToReversedBytes, reversedBytesToMac,
+    FEATURE_CONFIG_MAP, resolveFeatureByte, DefaultBroadcastEvents
 } from './opoBudsConfig.js';
 
 const HEADER_MAGIC = 0xAA;
@@ -40,7 +41,11 @@ export const OpoBudsSocket = GObject.registerClass({
     postConnectInitialization() {
         this._log.info('OpoBuds socket ready: Initializing device info...');
         this._queuePacket(Cmd.HANDSHAKE, [], 'Handshake');
-        this._queuePacket(Cmd.GET_NOTIFICATION_CAPABILITY, [], 'Query Notification Capabilities');
+        this._queuePacket(
+            Cmd.REGISTER_NOTIFICATION,
+            [DefaultBroadcastEvents.length, ...DefaultBroadcastEvents],
+            'Subscribe Broadcast Events'
+        );
         this._queuePacket(Cmd.PRODUCT_ID, [], 'Query Product ID');
         this._queuePacket(Cmd.VERSION, [], 'Query Version');
 
@@ -249,6 +254,14 @@ export const OpoBudsSocket = GObject.registerClass({
         if (modelData.eqPreset)
             this._getEqPreset();
 
+        if (modelData.broadcastEvents) {
+            this._queuePacket(
+                Cmd.REGISTER_NOTIFICATION,
+                [modelData.broadcastEvents.length, ...modelData.broadcastEvents],
+                'Subscribe Model-Specific Broadcast Events'
+            );
+        }
+
         if (modelData.gestureOptions)
             this._getGestures();
 
@@ -318,10 +331,6 @@ export const OpoBudsSocket = GObject.registerClass({
                 this._getMultiConnectInfo();
                 break;
 
-            case Cmd.GET_NOTIFICATION_CAPABILITY_RSP:
-                this._parseNotificationCapability(payload);
-                break;
-
             case Cmd.GET_COMPACTNESS_INFO_RSP:
             case Cmd.START_COMPACTNESS_DETECT_RSP:
             case 0x840A:
@@ -336,24 +345,6 @@ export const OpoBudsSocket = GObject.registerClass({
                 this._log.info(`Unhandled packet cmd=0x${cmd.toString(16)} payload=${hexBytes(payload)}`);
                 break;
         }
-    }
-
-    _parseNotificationCapability(payload) {
-        const wanted = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x0D, 0x0E, 0x0F, 0x10, 0xF1, 0xF2];
-        if (payload.length < 2 || payload[0] !== 0x00) {
-            // Fallback subscription if capability response is empty or error
-            this._log.info(`Subscribing to fallback notification events`);
-            this._queuePacket(Cmd.REGISTER_NOTIFICATION, [wanted.length, ...wanted], 'Subscribe Broadcast Events (Fallback)');
-            return;
-        }
-
-        const count = payload[1];
-        const supported = new Set(payload.slice(2, 2 + count));
-        const events = wanted.filter(e => supported.has(e));
-        const toRegister = events.length > 0 ? events : wanted;
-
-        this._log.info(`Subscribing to ${toRegister.length} supported notification events: [${toRegister.map(e => '0x' + e.toString(16)).join(', ')}]`);
-        this._queuePacket(Cmd.REGISTER_NOTIFICATION, [toRegister.length, ...toRegister], 'Subscribe Broadcast Events');
     }
 
     _parseNotificationEvent(payload) {
@@ -523,8 +514,9 @@ export const OpoBudsSocket = GObject.registerClass({
             this._log.info(`Parsed ANC cycle response: raw=0x${valByte.toString(16)} -> mask=0x${mask.toString(16)}`);
             this._callbacks?.updateNoiseControlCycle?.(mask);
         } else {
-            this._log.info(`Parsed ANC mode response: 0x${valByte.toString(16).padStart(2, '0')}`);
-            this._callbacks?.updateNoiseControl?.(valByte);
+            const modeBytes = payload.slice(3);
+            this._log.info(`Parsed ANC mode response: ${hexBytes(modeBytes)}`);
+            this._callbacks?.updateNoiseControl?.(modeBytes.length === 1 ? modeBytes[0] : modeBytes);
         }
     }
 
@@ -542,7 +534,9 @@ export const OpoBudsSocket = GObject.registerClass({
         } else if (action === 0x04 && eventData.length >= 2) {
             this._callbacks?.updateAdaptiveAncSubLevel?.(valByte);
         } else {
-            this._callbacks?.updateNoiseControl?.(valByte);
+            const modeBytes = eventData.length > 2 && eventData[0] === 0x01 ? eventData.slice(2) : [valByte];
+            this._log.info(`Parsed ANC mode event: ${hexBytes(modeBytes)}`);
+            this._callbacks?.updateNoiseControl?.(modeBytes.length === 1 ? modeBytes[0] : modeBytes);
         }
     }
 
@@ -554,19 +548,18 @@ export const OpoBudsSocket = GObject.registerClass({
     }
 
     _getFeatureSwitches() {
-        const features = [
-            FeatureId.IN_EAR,
-            FeatureId.GAME_MODE,
-            FeatureId.DUAL_DEVICE,
-            FeatureId.WIND_NOISE,
-            FeatureId.VOLUME_ENHANCER,
-            FeatureId.SPATIAL,
-            FeatureId.HIGH_RES,
-            FeatureId.DYNAMIC_BASS,
-            FeatureId.AUTO_ANSWER,
-            FeatureId.FIND_PHONE,
-        ];
-        this._queuePacket(Cmd.FEATURE_SWITCH, [features.length, ...features], 'Query Features');
+        if (!this._modelData)
+            return;
+
+        const featureBytes = [];
+        for (const feat of FEATURE_CONFIG_MAP) {
+            const byte = resolveFeatureByte(this._modelData, feat.configKeys, feat.defaultByte);
+            if (byte !== null)
+                featureBytes.push(byte);
+        }
+
+        if (featureBytes.length > 0)
+            this._queuePacket(Cmd.FEATURE_SWITCH, [featureBytes.length, ...featureBytes], 'Query Features');
     }
 
     _parseFeatureSwitchResponse(payload) {
@@ -586,29 +579,16 @@ export const OpoBudsSocket = GObject.registerClass({
     _applyFeaturePairs(payload, count, startIdx) {
         let pos = startIdx;
         for (let i = 0; i < count && pos + 1 < payload.length; i++) {
-            const feat = payload[pos++];
+            const featByte = payload[pos++];
             const val = payload[pos++] === 0x01;
 
-            if (feat === FeatureId.IN_EAR)
-                this._callbacks?.updateInEar?.(val);
-            else if (feat === FeatureId.GAME_MODE)
-                this._callbacks?.updateLatency?.(val);
-            else if (feat === FeatureId.DUAL_DEVICE)
-                this._callbacks?.updateDualConnection?.(val);
-            else if (feat === FeatureId.WIND_NOISE)
-                this._callbacks?.updateWindNoise?.(val);
-            else if (feat === FeatureId.VOLUME_ENHANCER)
-                this._callbacks?.updateVolumeEnhancer?.(val);
-            else if (feat === FeatureId.SPATIAL)
-                this._callbacks?.updateSpatialAudio?.(val);
-            else if (feat === FeatureId.HIGH_RES)
-                this._callbacks?.updateHighRes?.(val);
-            else if (feat === FeatureId.DYNAMIC_BASS)
-                this._callbacks?.updateDynamicBass?.(val);
-            else if (feat === FeatureId.AUTO_ANSWER)
-                this._callbacks?.updateAutoAnswer?.(val);
-            else if (feat === FeatureId.FIND_PHONE)
-                this._callbacks?.updateFindPhone?.(val);
+            for (const feat of FEATURE_CONFIG_MAP) {
+                const byte = resolveFeatureByte(this._modelData, feat.configKeys, feat.defaultByte);
+                if (byte === featByte) {
+                    this._callbacks?.[feat.callback]?.(val);
+                    break;
+                }
+            }
         }
     }
 
@@ -619,45 +599,66 @@ export const OpoBudsSocket = GObject.registerClass({
     }
 
     setLatency(enable) {
-        this._setFeatureSwitch(FeatureId.GAME_MODE, enable, 'Low Latency Game Mode');
+        const byte = resolveFeatureByte(this._modelData, 'lowLatencyMode', FeatureId.GAME_MODE);
+        if (byte !== null)
+            this._setFeatureSwitch(byte, enable, 'Low Latency Game Mode');
     }
 
     setInEar(enable) {
-        this._setFeatureSwitch(FeatureId.IN_EAR, enable, 'In-Ear Detection');
+        const byte = resolveFeatureByte(this._modelData, 'inEarDetection', FeatureId.IN_EAR);
+        if (byte !== null)
+            this._setFeatureSwitch(byte, enable, 'In-Ear Detection');
     }
 
     setDualConnection(enable) {
-        this._setFeatureSwitch(FeatureId.DUAL_DEVICE, enable, 'Dual Connection');
-        if (enable)
-            this._getMultiConnectInfo();
+        const byte = resolveFeatureByte(this._modelData, 'dualConnection', FeatureId.DUAL_DEVICE);
+        if (byte !== null) {
+            this._setFeatureSwitch(byte, enable, 'Dual Connection');
+            if (enable)
+                this._getMultiConnectInfo();
+        }
     }
 
     setWindNoise(enable) {
-        this._setFeatureSwitch(FeatureId.WIND_NOISE, enable, 'Wind Noise');
+        const byte = resolveFeatureByte(this._modelData, ['windReduction', 'windNoiseReduction'], FeatureId.WIND_NOISE);
+        if (byte !== null)
+            this._setFeatureSwitch(byte, enable, 'Wind Noise');
     }
 
     setVolumeEnhancer(enable) {
-        this._setFeatureSwitch(FeatureId.VOLUME_ENHANCER, enable, 'Volume Enhancer');
+        const byte = resolveFeatureByte(this._modelData, 'volumeEnhancer', FeatureId.VOLUME_ENHANCER);
+        if (byte !== null)
+            this._setFeatureSwitch(byte, enable, 'Volume Enhancer');
     }
 
     setSpatialAudio(enable) {
-        this._setFeatureSwitch(FeatureId.SPATIAL, enable, 'Spatial Audio');
+        const byte = resolveFeatureByte(this._modelData, 'spatialAudio', FeatureId.SPATIAL);
+        if (byte !== null)
+            this._setFeatureSwitch(byte, enable, 'Spatial Audio');
     }
 
     setHighRes(enable) {
-        this._setFeatureSwitch(FeatureId.HIGH_RES, enable, 'High-Res LHDC');
+        const byte = resolveFeatureByte(this._modelData, 'highResAudio', FeatureId.HIGH_RES);
+        if (byte !== null)
+            this._setFeatureSwitch(byte, enable, 'High-Res LHDC');
     }
 
     setDynamicBass(enable) {
-        this._setFeatureSwitch(FeatureId.DYNAMIC_BASS, enable, 'Dynamic Bass');
+        const byte = resolveFeatureByte(this._modelData, 'dynamicBass', FeatureId.DYNAMIC_BASS);
+        if (byte !== null)
+            this._setFeatureSwitch(byte, enable, 'Dynamic Bass');
     }
 
     setAutoAnswer(enable) {
-        this._setFeatureSwitch(FeatureId.AUTO_ANSWER, enable, 'Auto Answer');
+        const byte = resolveFeatureByte(this._modelData, 'autoAnswer', FeatureId.AUTO_ANSWER);
+        if (byte !== null)
+            this._setFeatureSwitch(byte, enable, 'Auto Answer');
     }
 
     setFindPhone(enable) {
-        this._setFeatureSwitch(FeatureId.FIND_PHONE, enable, 'Find My Phone');
+        const byte = resolveFeatureByte(this._modelData, 'findMyPhone', FeatureId.FIND_PHONE);
+        if (byte !== null)
+            this._setFeatureSwitch(byte, enable, 'Find My Phone');
     }
 
     setFindBuds(ringState) {

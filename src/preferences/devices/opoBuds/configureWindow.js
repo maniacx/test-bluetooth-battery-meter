@@ -153,7 +153,7 @@ export const ConfigureWindow = GObject.registerClass({
                 if (this._modelData.highResAudio && this._highResSwitch)
                     this._highResSwitch.active = this._settingsItems['high-res'];
 
-                if (this._modelData.windNoiseReduction && this._windNoiseSwitch)
+                if ((this._modelData.windNoiseReduction || this._modelData.windReduction) && this._windNoiseSwitch)
                     this._windNoiseSwitch.active = this._settingsItems['wind-noise'];
 
                 if (this._modelData.lowLatencyMode && this._lowLatencySwitch)
@@ -306,16 +306,34 @@ export const ConfigureWindow = GObject.registerClass({
 
         const presetLabels = {
             original_sound: _('Original Sound (Balanced)'),
+            original: _('Original Sound (Balanced)'),
             deep_bass: _('Deep Bass'),
             serenade: _('Serenade (Vocal)'),
             clear_bass: _('Clear Bass'),
+            bassPlus: _('Bass Plus'),
+            bass_plus: _('Bass Plus'),
+            pulseBass: _('Pulse Bass'),
+            pulse_bass: _('Pulse Bass'),
+            vocal: _('Vocal'),
+            rock: _('Rock'),
+            pop: _('Pop'),
+            electronic: _('Electronic'),
+            classic: _('Classic'),
+            custom: _('Custom'),
+        };
+
+        const formatLabel = key => {
+            if (presetLabels[key])
+                return presetLabels[key];
+            const formatted = key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim();
+            return formatted.charAt(0).toUpperCase() + formatted.slice(1);
         };
 
         const options = [];
         const values = [];
 
         Object.entries(this._modelData.eqPreset).forEach(([key, val]) => {
-            options.push(presetLabels[key] ?? key);
+            options.push(formatLabel(key));
             values.push(val);
         });
 
@@ -337,9 +355,10 @@ export const ConfigureWindow = GObject.registerClass({
 
     _addAudioEffects() {
         const _ = this._gettext;
+        const hasWindNoise = this._modelData.windNoiseReduction || this._modelData.windReduction;
         const hasEffects = this._modelData.dynamicBass || this._modelData.spatialAudio ||
             this._modelData.volumeEnhancer || this._modelData.highResAudio ||
-            this._modelData.windNoiseReduction;
+            hasWindNoise;
 
         if (!hasEffects)
             return;
@@ -481,7 +500,7 @@ export const ConfigureWindow = GObject.registerClass({
             effectsGroup.add(this._highResSwitch);
         }
 
-        if (this._modelData.windNoiseReduction) {
+        if (hasWindNoise) {
             this._windNoiseSwitch = new Adw.SwitchRow({
                 title: _('Smart Wind Noise Reduction'),
                 subtitle: _('Suppress turbulent wind noise during outdoor use'),
