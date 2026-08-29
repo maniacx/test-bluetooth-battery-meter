@@ -742,10 +742,18 @@ export const OpoBudsSocket = GObject.registerClass({
         this._queuePacket(Cmd.SET_KEY_FUNCTION, payload, 'Set Key Function');
     }
 
+    /**
+     * Sets the Noise Control cycle modes (toggled when pressing the ANC button).
+     * 
+     * Note: Different firmware revisions across Oppo/Realme/OnePlus buds expect different
+     * action codes and framing formats for setting the cycle mask:
+     * - Older Realme SDK: Action 0x01 with bitmask or enum value.
+     * - Newer Oppo/Realme SDK: Action 0x02 (NOISE_REDUCTION_ACTION.CYCLE) with type 0x01/0x02.
+     * Queuing all variations guarantees broad hardware compatibility without rejecting valid commands.
+     */
     setNoiseControlCycle(maskByte) {
         const enumVal = cycleMaskToEnum(maskByte);
         this._log.info(`Set ANC cycle: mask=0x${maskByte.toString(16).padStart(2, '0')}, enum=0x${enumVal.toString(16).padStart(2, '0')}`);
-        // Action 0x02 is NOISE_REDUCTION_ACTION.CYCLE in Realme SDK
         this._queuePacket(Cmd.SET_ANC, [0x02, 0x01, maskByte], 'Set ANC Cycle (Action 2, Type 1)');
         this._queuePacket(Cmd.SET_ANC, [0x02, 0x02, maskByte], 'Set ANC Cycle (Action 2, Type 2)');
         this._queuePacket(Cmd.SET_ANC, [0x01, 0x02, maskByte], 'Set ANC Cycle (Action 1, Type 2)');

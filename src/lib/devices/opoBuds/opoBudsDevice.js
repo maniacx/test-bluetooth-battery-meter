@@ -13,6 +13,30 @@ export const DeviceTypeOpoBuds = 'opoBuds';
 
 const OpoBudsUUID = '0000079a-d102-11e1-9b23-00025b00a5a5';
 
+function safeJsonParse(str) {
+    try {
+        return JSON.parse(str);
+    } catch {
+        return null;
+    }
+}
+
+const SIMPLE_FEATURE_MAP = [
+    { key: 'eq-preset', flag: 'eqPreset', prop: '_eqPreset', fn: (s, v) => s.setEqPreset(v) },
+    { key: 'inear-enable', flag: 'inEarDetection', prop: '_inEar', fn: (s, v) => s.setInEar(v) },
+    { key: 'lowlatency', flag: 'lowLatencyMode', prop: '_lowlatency', fn: (s, v) => s.setLatency(v) },
+    { key: 'dual-connection', flag: 'dualConnection', prop: '_dualConnection', fn: (s, v) => s.setDualConnection(v) },
+    { key: 'audio-priority-mac', flag: 'dualConnection', prop: '_audioPriorityMac', fn: (s, v) => s.setAudioPriorityDevice(v) },
+    { key: 'wind-noise', flag: 'windNoiseReduction', prop: '_windNoise', fn: (s, v) => s.setWindNoise(v) },
+    { key: 'volume-enhancer', flag: 'volumeEnhancer', prop: '_volumeEnhancer', fn: (s, v) => s.setVolumeEnhancer(v) },
+    { key: 'spatial', flag: 'spatialAudio', prop: '_spatial', fn: (s, v) => s.setSpatialAudio(v) },
+    { key: 'high-res', flag: 'highResAudio', prop: '_highRes', fn: (s, v) => s.setHighRes(v) },
+    { key: 'dynamic-bass', flag: 'dynamicBass', prop: '_dynamicBass', fn: (s, v) => s.setDynamicBass(v) },
+    { key: 'auto-answer', flag: 'autoAnswer', prop: '_autoAnswer', fn: (s, v) => s.setAutoAnswer(v) },
+    { key: 'find-phone', flag: 'findMyPhone', prop: '_findPhone', fn: (s, v) => s.setFindPhone(v) },
+    { key: 'ring-state', flag: 'ring', prop: '_ringState', fn: (s, v) => s.setFindBuds(v) },
+];
+
 export function isOpoBuds(bluezDeviceProxy, uuids) {
     const bluezProps = [];
     const supported = uuids.some(uuid => uuid.toLowerCase() === OpoBudsUUID) ? 'yes' : 'no';
@@ -93,7 +117,7 @@ export const OpoBudsDevice = GObject.registerClass({
 
         this._createDefaultSettings();
 
-        const devicesList = this._settings.get_strv('opo-buds-list').map(JSON.parse);
+        const devicesList = this._settings.get_strv('opo-buds-list').map(safeJsonParse).filter(Boolean);
 
         if (devicesList.length === 0 ||
                 !devicesList.some(device => device.path === this._devicePath)) {
@@ -124,47 +148,37 @@ export const OpoBudsDevice = GObject.registerClass({
             this._pendingVolumeEnhancer = null;
         }
 
-        if (this._modelData.ring) {
-            this._ringState = 'stopped';
-            this._settingsItems['ring-state'] = this._ringState;
-            this._updateGsettings();
-        }
-
-        if (!this._battInfoRecieved) {
-            const b1 = this._props.battery1Level ?? 0;
-            const b2 = this._props.battery2Level ?? 0;
-            const b3 = this._props.battery3Level ?? 0;
-            if (b1 > 0 || b2 > 0 || b3 > 0)
-                this._startConfiguration(this._props);
-        }
+        this._isReady = true;
+        this._log.info('OpoBudsDevice is ready.');
     }
 
     _createDefaultSettings() {
         this._defaultsDeviceSettings = {
-            path: this._devicePath,
-            modelid: this._modelData.modelId,
-            alias: this._alias,
-            icon: this._commonIcon,
-            'fw-version': this._fwVersion,
+            'path': this._devicePath,
+            'modelid': this._modelData.modelId,
+            'name': this._modelData.name,
+            'icon': this._commonIcon,
 
             ...this._modelData.batteryCase && {
                 'case': this._caseIcon,
             },
 
             ...this._modelData.eqPreset && {
-                'eq-preset': Object.values(this._modelData.eqPreset)[0],
-            },
-
-            ...this._modelData.lowLatencyMode && {
-                'lowlatency': false,
+                'eq-preset': 0,
             },
 
             ...this._modelData.inEarDetection && {
                 'inear-enable': false,
             },
 
+            ...this._modelData.lowLatencyMode && {
+                'lowlatency': false,
+            },
+
             ...this._modelData.dualConnection && {
                 'dual-connection': false,
+                'audio-priority-mac': '',
+                'multi-device-op': null,
             },
 
             ...this._modelData.windNoiseReduction && {
@@ -173,6 +187,10 @@ export const OpoBudsDevice = GObject.registerClass({
 
             ...this._modelData.volumeEnhancer && {
                 'volume-enhancer': false,
+            },
+
+            ...this._modelData.fitTest && {
+                'fit-test-op': null,
             },
 
             ...this._modelData.spatialAudio && {
@@ -185,6 +203,17 @@ export const OpoBudsDevice = GObject.registerClass({
 
             ...this._modelData.dynamicBass && {
                 'dynamic-bass': false,
+                'dynamic-audio-low': 0,
+                'dynamic-audio-med': 0,
+                'dynamic-audio-high': 0,
+            },
+
+            ...this._modelData.gestureOptions && {
+                'gestures': '',
+            },
+
+            ...this._modelData.ring && {
+                'ring-state': 0,
             },
 
             ...this._modelData.autoAnswer && {
@@ -202,7 +231,7 @@ export const OpoBudsDevice = GObject.registerClass({
     }
 
     _updateInitialValues() {
-        const devicesList = this._settings.get_strv('opo-buds-list').map(JSON.parse);
+        const devicesList = this._settings.get_strv('opo-buds-list').map(safeJsonParse).filter(Boolean);
         const index = devicesList.findIndex(item => item.path === this._devicePath);
         if (index === -1)
             return;
@@ -223,19 +252,16 @@ export const OpoBudsDevice = GObject.registerClass({
         if (this._modelData.lowLatencyMode)
             this._lowlatency = this._settingsItems['lowlatency'];
 
-        if (this._modelData.dualConnection)
+        if (this._modelData.dualConnection) {
             this._dualConnection = this._settingsItems['dual-connection'];
+            this._audioPriorityMac = this._settingsItems['audio-priority-mac'];
+        }
 
-        if (this._modelData.windNoiseReduction) {
+        if (this._modelData.windNoiseReduction)
             this._windNoise = this._settingsItems['wind-noise'];
-            this._props.box1CheckButton1State = this._windNoise ? 1 : 0;
-            this._props.box2CheckButton2State = this._windNoise ? 1 : 0;
-        }
 
-        if (this._modelData.volumeEnhancer) {
+        if (this._modelData.volumeEnhancer)
             this._volumeEnhancer = this._settingsItems['volume-enhancer'];
-            this._props.box2CheckButton1State = this._volumeEnhancer ? 1 : 0;
-        }
 
         if (this._modelData.spatialAudio)
             this._spatial = this._settingsItems['spatial'];
@@ -276,13 +302,14 @@ export const OpoBudsDevice = GObject.registerClass({
             if (this._ignoreGsettingsChange)
                 return;
 
-            const devicesList = this._settings.get_strv('opo-buds-list').map(JSON.parse);
+            const devicesList = this._settings.get_strv('opo-buds-list').map(safeJsonParse).filter(Boolean);
             const index = devicesList.findIndex(item => item.path === this._devicePath);
             if (index === -1)
                 return;
 
             this._settingsItems = devicesList[index];
 
+            // 1. Common & Case Icons
             const icon = this._settingsItems['icon'];
             if (this._commonIcon !== icon) {
                 this._commonIcon = icon;
@@ -297,43 +324,20 @@ export const OpoBudsDevice = GObject.registerClass({
                 }
             }
 
-            if (this._modelData.eqPreset) {
-                const eqPreset = this._settingsItems['eq-preset'];
-                if (this._eqPreset !== eqPreset) {
-                    this._eqPreset = eqPreset;
-                    this._opoBudsSocket?.setEqPreset(eqPreset);
+            // 2. Declarative 1-to-1 feature mapping
+            for (const item of SIMPLE_FEATURE_MAP) {
+                if (this._modelData[item.flag]) {
+                    const val = this._settingsItems[item.key];
+                    if (this[item.prop] !== val) {
+                        this[item.prop] = val;
+                        if (this._opoBudsSocket)
+                            item.fn(this._opoBudsSocket, val);
+                    }
                 }
             }
 
-            if (this._modelData.inEarDetection) {
-                const inEar = this._settingsItems['inear-enable'];
-                if (this._inEar !== inEar) {
-                    this._inEar = inEar;
-                    this._opoBudsSocket?.setInEar(inEar);
-                }
-            }
-
-            if (this._modelData.lowLatencyMode) {
-                const latency = this._settingsItems['lowlatency'];
-                if (this._lowlatency !== latency) {
-                    this._lowlatency = latency;
-                    this._opoBudsSocket?.setLatency(latency);
-                }
-            }
-
+            // 3. Multi-device operations
             if (this._modelData.dualConnection) {
-                const dualConnection = this._settingsItems['dual-connection'];
-                if (this._dualConnection !== dualConnection) {
-                    this._dualConnection = dualConnection;
-                    this._opoBudsSocket?.setDualConnection(dualConnection);
-                }
-
-                const priorityMac = this._settingsItems['audio-priority-mac'];
-                if (this._audioPriorityMac !== priorityMac) {
-                    this._audioPriorityMac = priorityMac;
-                    this._opoBudsSocket?.setAudioPriorityDevice(priorityMac);
-                }
-
                 const multiDeviceOp = this._settingsItems['multi-device-op'];
                 if (multiDeviceOp && multiDeviceOp.ts !== this._lastMultiDeviceOpTs) {
                     this._lastMultiDeviceOpTs = multiDeviceOp.ts;
@@ -341,22 +345,7 @@ export const OpoBudsDevice = GObject.registerClass({
                 }
             }
 
-            if (this._modelData.windNoiseReduction) {
-                const windNoise = this._settingsItems['wind-noise'];
-                if (this._windNoise !== windNoise) {
-                    this._windNoise = windNoise;
-                    this._opoBudsSocket?.setWindNoise(windNoise);
-                }
-            }
-
-            if (this._modelData.volumeEnhancer) {
-                const volumeEnhancer = this._settingsItems['volume-enhancer'];
-                if (this._volumeEnhancer !== volumeEnhancer) {
-                    this._volumeEnhancer = volumeEnhancer;
-                    this._opoBudsSocket?.setVolumeEnhancer(volumeEnhancer);
-                }
-            }
-
+            // 4. Earbud Fit Test operations
             if (this._modelData.fitTest) {
                 const fitTestOp = this._settingsItems['fit-test-op'];
                 if (fitTestOp && fitTestOp.ts !== this._lastFitTestOpTs) {
@@ -368,29 +357,8 @@ export const OpoBudsDevice = GObject.registerClass({
                 }
             }
 
-            if (this._modelData.spatialAudio) {
-                const spatial = this._settingsItems['spatial'];
-                if (this._spatial !== spatial) {
-                    this._spatial = spatial;
-                    this._opoBudsSocket?.setSpatialAudio(spatial);
-                }
-            }
-
-            if (this._modelData.highResAudio) {
-                const highRes = this._settingsItems['high-res'];
-                if (this._highRes !== highRes) {
-                    this._highRes = highRes;
-                    this._opoBudsSocket?.setHighRes(highRes);
-                }
-            }
-
+            // 5. Dynamic Audio EQ (3-band sliders)
             if (this._modelData.dynamicBass) {
-                const dynamicBass = this._settingsItems['dynamic-bass'];
-                if (this._dynamicBass !== dynamicBass) {
-                    this._dynamicBass = dynamicBass;
-                    this._opoBudsSocket?.setDynamicBass(dynamicBass);
-                }
-
                 const low = this._settingsItems['dynamic-audio-low'] ?? 0;
                 const med = this._settingsItems['dynamic-audio-med'] ?? 0;
                 const high = this._settingsItems['dynamic-audio-high'] ?? 0;
@@ -402,22 +370,7 @@ export const OpoBudsDevice = GObject.registerClass({
                 }
             }
 
-            if (this._modelData.autoAnswer) {
-                const autoAnswer = this._settingsItems['auto-answer'];
-                if (this._autoAnswer !== autoAnswer) {
-                    this._autoAnswer = autoAnswer;
-                    this._opoBudsSocket?.setAutoAnswer(autoAnswer);
-                }
-            }
-
-            if (this._modelData.findMyPhone) {
-                const findPhone = this._settingsItems['find-phone'];
-                if (this._findPhone !== findPhone) {
-                    this._findPhone = findPhone;
-                    this._opoBudsSocket?.setFindPhone(findPhone);
-                }
-            }
-
+            // 6. Gestures slot change detection
             if (this._modelData.gestureOptions) {
                 const gestures = this._settingsItems['gestures'];
                 if (gestures && this._gestures !== gestures) {
@@ -430,14 +383,7 @@ export const OpoBudsDevice = GObject.registerClass({
                 }
             }
 
-            if (this._modelData.ring) {
-                const ringState = this._settingsItems['ring-state'];
-                if (this._ringState !== ringState) {
-                    this._ringState = ringState;
-                    this._opoBudsSocket?.setFindBuds(ringState);
-                }
-            }
-
+            // 7. Noise Control cycle mask
             if (this._modelData.noiseControl) {
                 const ncCycleMask = this._settingsItems['nc-cycle-mask'] ?? 0x0B;
                 if (this._ncCycleMask !== ncCycleMask) {
@@ -451,7 +397,7 @@ export const OpoBudsDevice = GObject.registerClass({
     _updateGsettings() {
         this._ignoreGsettingsChange = true;
 
-        const currentList = this._settings.get_strv('opo-buds-list').map(JSON.parse);
+        const currentList = this._settings.get_strv('opo-buds-list').map(safeJsonParse).filter(Boolean);
         const index = currentList.findIndex(d => d.path === this._devicePath);
 
         if (index !== -1) {
