@@ -157,7 +157,8 @@ export const ConfigureWindow = GObject.registerClass({
 
                 if (this._modelData.fitTest && this._fitTestResultLabel) {
                     const res = this._settingsItems['fit-test-result'] ?? 0;
-                    this._renderFitTestBadge(res);
+                    if (res > 0)
+                        this._renderFitTestBadge(res);
                 }
             } finally {
                 this._isUpdatingUI = false;
@@ -544,10 +545,8 @@ export const ConfigureWindow = GObject.registerClass({
 
             this._fitTestResultLabel = new Gtk.Label({
                 valign: Gtk.Align.CENTER,
+                label: '',
             });
-
-            const initialRes = this._settingsItems['fit-test-result'] ?? 0;
-            this._renderFitTestBadge(initialRes);
 
             this._fitTestBtn = new Gtk.Button({
                 valign: Gtk.Align.CENTER,
@@ -566,6 +565,10 @@ export const ConfigureWindow = GObject.registerClass({
 
                 GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
                     this._fitTestBtn.sensitive = true;
+                    this._fitTestBtn.child = new Adw.ButtonContent({
+                        icon_name: 'bbm-play-symbolic',
+                        label: _('Test Again'),
+                    });
                     const curRes = this._settingsItems['fit-test-result'] ?? 0;
                     if (curRes > 0)
                         this._renderFitTestBadge(curRes);
