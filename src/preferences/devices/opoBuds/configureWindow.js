@@ -154,6 +154,12 @@ export const ConfigureWindow = GObject.registerClass({
                     this._ancCycleSwitchTrans.active = (mask & 0x02) !== 0;
                     this._ancCycleSwitchAnc.active = (mask & 0x08) !== 0;
                 }
+
+                if (this._isTestingFit && this._modelData.fitTest) {
+                    const res = this._settingsItems['fit-test-result'];
+                    if (res && typeof res === 'object')
+                        this._onFitTestCompleted?.(res);
+                }
             } finally {
                 this._isUpdatingUI = false;
             }
@@ -638,12 +644,62 @@ export const ConfigureWindow = GObject.registerClass({
                 }
             };
 
+            const onFitTestCompleted = (res) => {
+                if (!this._isTestingFit)
+                    return;
+
+                this._isTestingFit = false;
+                if (this._fitTestTimeoutId) {
+                    GLib.source_remove(this._fitTestTimeoutId);
+                    this._fitTestTimeoutId = null;
+                }
+
+                this._fitPlayBtn.sensitive = true;
+                this._fitPlayBtn.child = new Adw.ButtonContent({
+                    icon_name: 'bbm-play-symbolic',
+                    label: _('Test Again'),
+                });
+
+                let leftGood = true;
+                let rightGood = true;
+                if (res && typeof res === 'object') {
+                    leftGood = (res.left === 1);
+                    rightGood = (res.right === 1);
+                }
+
+                if (leftGood) {
+                    this._fitLeftBadge.label = _('Good');
+                    this._fitLeftBadge.css_classes = ['success', 'heading'];
+                } else {
+                    this._fitLeftBadge.label = _('Not ideal');
+                    this._fitLeftBadge.css_classes = ['warning', 'heading'];
+                }
+
+                if (rightGood) {
+                    this._fitRightBadge.label = _('Good');
+                    this._fitRightBadge.css_classes = ['success', 'heading'];
+                } else {
+                    this._fitRightBadge.label = _('Not ideal');
+                    this._fitRightBadge.css_classes = ['warning', 'heading'];
+                }
+
+                if (leftGood && rightGood) {
+                    descRow.title = _('Great Fit');
+                    descRow.subtitle = _('Both earbuds make a good seal for optimal noise cancelling');
+                } else {
+                    descRow.title = _('Adjust your earbuds');
+                    descRow.subtitle = _('Adjust the position of the earbud or change ear tip size, then test again');
+                }
+            };
+            this._onFitTestCompleted = onFitTestCompleted;
+
             fitExpander.connect('notify::expanded', () => {
                 if (!fitExpander.expanded)
                     resetFitState();
             });
 
             this._fitPlayBtn.connect('clicked', () => {
+                this._isTestingFit = true;
                 this._fitPlayBtn.sensitive = false;
                 this._fitLeftBadge.label = _('Testing…');
                 this._fitLeftBadge.css_classes = ['dim-label'];
@@ -656,45 +712,12 @@ export const ConfigureWindow = GObject.registerClass({
                 this._updateGsettings('fit-test-result', null);
                 this._updateGsettings('fit-test-op', {action: 'start', ts: Date.now()});
 
-                GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
-                    this._fitPlayBtn.sensitive = true;
-                    this._fitPlayBtn.child = new Adw.ButtonContent({
-                        icon_name: 'bbm-play-symbolic',
-                        label: _('Test Again'),
-                    });
-
-                    const res = this._settingsItems['fit-test-result'];
-                    let leftGood = true;
-                    let rightGood = true;
-                    if (res && typeof res === 'object') {
-                        leftGood = (res.left === 1);
-                        rightGood = (res.right === 1);
-                    }
-
-                    if (leftGood) {
-                        this._fitLeftBadge.label = _('Good');
-                        this._fitLeftBadge.css_classes = ['success', 'heading'];
-                    } else {
-                        this._fitLeftBadge.label = _('Not ideal');
-                        this._fitLeftBadge.css_classes = ['warning', 'heading'];
-                    }
-
-                    if (rightGood) {
-                        this._fitRightBadge.label = _('Good');
-                        this._fitRightBadge.css_classes = ['success', 'heading'];
-                    } else {
-                        this._fitRightBadge.label = _('Not ideal');
-                        this._fitRightBadge.css_classes = ['warning', 'heading'];
-                    }
-
-                    if (leftGood && rightGood) {
-                        descRow.title = _('Great Fit');
-                        descRow.subtitle = _('Both earbuds make a good seal for optimal noise cancelling');
-                    } else {
-                        descRow.title = _('Adjust your earbuds');
-                        descRow.subtitle = _('Adjust the position of the earbud or change ear tip size, then test again');
-                    }
-
+                if (this._fitTestTimeoutId)
+                    GLib.source_remove(this._fitTestTimeoutId);
+                this._fitTestTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 8, () => {
+                    this._fitTestTimeoutId = null;
+                    if (this._isTestingFit)
+                        this._onFitTestCompleted(this._settingsItems['fit-test-result']);
                     return GLib.SOURCE_REMOVE;
                 });
             });
