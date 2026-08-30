@@ -7,7 +7,7 @@ import {SocketHandler} from '../socketByProfile.js';
 import {
     OpoBudsModelList, Cmd, FeatureId, EventCode, BatteryComponent,
     cycleEnumToMask, macToReversedBytes, reversedBytesToMac,
-    FEATURE_CONFIG_MAP, resolveFeatureByte, DefaultBroadcastEvents
+    FEATURE_CONFIG_MAP, resolveFeatureByte, DefaultBroadcastEvents, CustomEqAction
 } from './opoBudsConfig.js';
 
 const HEADER_MAGIC = 0xAA;
@@ -55,6 +55,8 @@ export const OpoBudsSocket = GObject.registerClass({
             this._getFeatureSwitches();
             if (this._modelData.eqPreset)
                 this._getEqPreset();
+            if (this._modelData.eqPreset)
+                this.getCustomEqInfo();
             if (this._modelData.gestureOptions)
                 this._getGestures();
             if (this._modelData.dualConnection)
@@ -297,6 +299,9 @@ export const OpoBudsSocket = GObject.registerClass({
         if (modelData.eqPreset)
             this._getEqPreset();
 
+        if (modelData.eqPreset)
+            this.getCustomEqInfo();
+
         if (modelData.broadcastEvents) {
             this._queuePacket(
                 Cmd.REGISTER_NOTIFICATION,
@@ -353,6 +358,10 @@ export const OpoBudsSocket = GObject.registerClass({
 
             case Cmd.EQ_NOTIFY:
                 this._parseEqNotify(payload);
+                break;
+
+            case Cmd.CUSTOM_EQ_NOTIFY:
+                this._parseCustomEqInfo(payload);
                 break;
 
             case Cmd.KEY_FUNCTION_RSP:
@@ -581,6 +590,102 @@ export const OpoBudsSocket = GObject.registerClass({
         this._log.info(`Set Dynamic Audio EQ: Low=${low}, Med=${med}, High=${high}`);
         const payload = [0x03, lowByte, medByte, highByte];
         this._queuePacket(Cmd.SET_EQ_DETAIL, payload, 'Set Dynamic Audio EQ');
+    }
+
+    // Custom EQ record format:
+    //   isSelected(1) min(1,signed) max(1,signed) eqId(1) nameLen(1)
+    //   name(nameLen utf8) bandCount(1) [freq LE16, db(1,signed)] * bandCount
+    _parseCustomEqInfo(payload) {
+        if (payload.length === 0)
+            return;
+
+        const count = payload[0];
+        const entries = [];
+        let pos = 1;
+
+        for (let i = 0; i < count; i++) {
+            if (pos + 5 > payload.length)
+                break;
+
+            const selected = payload[pos] === 0x01;
+            const min = (payload[pos + 1] << 24) >> 24;
+            const max = (payload[pos + 2] << 24) >> 24;
+            const eqId = payload[pos + 3];
+            const nameLen = payload[pos + 4];
+            pos += 5;
+
+            if (pos + nameLen > payload.length)
+                break;
+
+            const name = new TextDecoder().decode(payload.slice(pos, pos + nameLen));
+            pos += nameLen;
+
+            if (pos >= payload.length)
+                break;
+
+            const bandCount = payload[pos++];
+            const freqs = [];
+            const dbs = [];
+
+            for (let b = 0; b < bandCount; b++) {
+                if (pos + 3 > payload.length)
+                    break;
+
+                freqs.push(payload[pos] | payload[pos + 1] << 8);
+                dbs.push((payload[pos + 2] << 24) >> 24);
+                pos += 3;
+            }
+
+            entries.push({eqId, name, min, max, selected, freqs, dbs});
+        }
+
+        this._log.info(`Parsed Custom EQ entries: ${entries.length}`);
+        this._callbacks?.updateCustomEqs?.(entries);
+    }
+
+    getCustomEqInfo() {
+        this._queuePacket(Cmd.GET_ALL_EQ_INFO, [], 'Query Custom EQ List');
+    }
+
+    setCustomEq(action, eqId, {min = -6, max = 6, name = '', freqs = [], dbs = []} = {}) {
+        const toByte = v => (v < 0 ? 256 + v : v) & 0xFF;
+        const nameBytes = new TextEncoder().encode(name);
+        const payload = [action, toByte(min), toByte(max), eqId, nameBytes.length];
+
+        for (const byte of nameBytes)
+            payload.push(byte);
+
+        if (freqs.length > 0 && freqs.length === dbs.length) {
+            payload.push(freqs.length);
+            freqs.forEach((freq, i) => {
+                payload.push(freq & 0xFF, freq >> 8 & 0xFF, toByte(dbs[i]));
+            });
+        }
+
+        const actionLabel = {
+            [CustomEqAction.ADD]: 'Add',
+            [CustomEqAction.MODIFY]: 'Modify',
+            [CustomEqAction.DELETE]: 'Delete',
+            [CustomEqAction.REQUEST]: 'Request',
+        }[action] ?? `Action ${action}`;
+
+        this._queuePacket(Cmd.SET_EQ_INFO, payload, `Custom EQ ${actionLabel}: ${name || eqId}`);
+    }
+
+    addCustomEq(eqId, eqData) {
+        this.setCustomEq(CustomEqAction.ADD, eqId, eqData);
+    }
+
+    modifyCustomEq(eqId, eqData) {
+        this.setCustomEq(CustomEqAction.MODIFY, eqId, eqData);
+    }
+
+    deleteCustomEq(eqId, eqData = {}) {
+        this.setCustomEq(CustomEqAction.DELETE, eqId, eqData);
+    }
+
+    requestCustomEqInfo() {
+        this.setCustomEq(CustomEqAction.REQUEST, 0x00, {});
     }
 
     _getNoiseControl() {
