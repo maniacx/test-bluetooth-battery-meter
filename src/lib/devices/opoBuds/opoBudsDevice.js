@@ -275,7 +275,6 @@ export const OpoBudsDevice = GObject.registerClass({
 
                 this._settingsItems = devicesList[index];
 
-                // 1. Common & Case Icons
                 const icon = this._settingsItems['icon'];
                 if (this._commonIcon !== icon) {
                     this._commonIcon = icon;
@@ -290,7 +289,6 @@ export const OpoBudsDevice = GObject.registerClass({
                     }
                 }
 
-                // 2. Declarative 1-to-1 feature mapping
                 for (const item of SIMPLE_FEATURE_MAP) {
                     const isConfigured = item.flags.some(flag => this._modelData[flag]);
                     if (isConfigured) {
@@ -298,8 +296,6 @@ export const OpoBudsDevice = GObject.registerClass({
                         if (this[item.prop] !== val) {
                             this[item.prop] = val;
                             if (this._opoBudsSocket) {
-                                // Custom EQ presets are applied by re-sending their recorded
-                                // band gains rather than the plain preset switch opcode.
                                 if (item.key === 'eq-preset') {
                                     const custom = this._customEqList.find(e => e.eqId === val);
                                     if (custom)
@@ -317,7 +313,6 @@ export const OpoBudsDevice = GObject.registerClass({
                                 }
                             }
 
-                            // When Dynamic Bass is enabled, immediately push the stored slider values
                             if (item.key === 'dynamic-bass' && val === true) {
                                 this._opoBudsSocket?.setDynamicAudioEq(
                                     this._dynamicAudioLow ?? 0,
@@ -329,7 +324,6 @@ export const OpoBudsDevice = GObject.registerClass({
                     }
                 }
 
-                // 3. Multi-device operations
                 if (this._modelData.dualConnection) {
                     const multiDeviceOp = this._settingsItems['multi-device-op'];
                     if (multiDeviceOp && multiDeviceOp.ts !== this._lastMultiDeviceOpTs) {
@@ -341,7 +335,6 @@ export const OpoBudsDevice = GObject.registerClass({
                     }
                 }
 
-                // 4. Earbud Fit Test operations
                 if (this._modelData.fitTest) {
                     const fitTestOp = this._settingsItems['fit-test-op'];
                     if (fitTestOp && fitTestOp.ts !== this._lastFitTestOpTs) {
@@ -353,7 +346,6 @@ export const OpoBudsDevice = GObject.registerClass({
                     }
                 }
 
-                // 5. Dynamic Audio EQ (3-band sliders) - only send if dynamic bass is enabled
                 if (this._modelData.dynamicBass) {
                     const low = this._settingsItems['dynamic-audio-low'] ?? 0;
                     const med = this._settingsItems['dynamic-audio-med'] ?? 0;
@@ -368,7 +360,6 @@ export const OpoBudsDevice = GObject.registerClass({
                     }
                 }
 
-                // 6. Gestures slot change detection (multi-slot support)
                 if (this._modelData.gestureOptions) {
                     const gestures = this._settingsItems['gestures'];
                     if (gestures && this._gestures !== gestures) {
@@ -379,7 +370,6 @@ export const OpoBudsDevice = GObject.registerClass({
                     }
                 }
 
-                // 7. Noise Control cycle mask
                 if (this._modelData.noiseControl) {
                     const ncCycleMask = this._settingsItems['nc-cycle-mask'] ?? 0x0B;
                     if (this._ncCycleMask !== ncCycleMask) {
@@ -388,7 +378,6 @@ export const OpoBudsDevice = GObject.registerClass({
                     }
                 }
 
-                // 8. Custom EQ operations
                 if (this._modelData.eqPreset) {
                     const customEqOp = this._settingsItems['custom-eq-op'];
                     if (customEqOp && customEqOp.ts !== this._lastCustomEqOpTs) {

@@ -236,7 +236,6 @@ export const OpoBudsSocket = GObject.registerClass({
 
         const totalLen = this._rxBuffer[1];
         if (totalLen < 7) {
-            // Drop runt/corrupted magic byte and resynchronize
             this._rxBuffer = this._rxBuffer.slice(1);
             return null;
         }
@@ -265,10 +264,6 @@ export const OpoBudsSocket = GObject.registerClass({
         const {cmd, seq, payload} = msg;
         this._log.bytes(`Recv <- Cmd: 0x${cmd.toString(16).padStart(4, '0')} Seq: ${seq} PayLen: ${payload.length} Data: ${hexBytes(payload)}`);
 
-        // Only response commands (0x8000 bit set) settle a pending request.
-        // Device-initiated notifications (e.g. 0x0204 telemetry) run their own
-        // sequence counter that can collide with our 1..250 request seqs and
-        // must never advance the TX queue prematurely.
         if (seq !== 0xFF && (cmd & 0x8000) !== 0)
             this._completePendingRequest(seq);
 
@@ -447,8 +442,6 @@ export const OpoBudsSocket = GObject.registerClass({
 
             case EventCode.EARBUDS_STATUS:
                 this._log.info(`Received Earbuds in-ear status event: ${hexBytes(eventData)}`);
-                // If any bud reports not worn (wearState == 0x00) during a test,
-                // finish immediately instead of waiting the full timeout.
                 if (eventData.length >= 2) {
                     let anyNotWorn = false;
                     for (let i = 1; i + 1 < eventData.length; i += 2) {
@@ -480,10 +473,6 @@ export const OpoBudsSocket = GObject.registerClass({
                     const btn = eventData[1];
                     const act = eventData[2];
                     const func = eventData[3];
-                    // Byte 4 is the action scene, not an ANC mode value -
-                    // deriving a mode from it optimistically forced the toggle
-                    // to "Off" until the device's "03 01 01 <mode>" echo
-                    // corrected it moments later.
                     const scene = eventData.length >= 5 ? eventData[4] : null;
                     this._log.info(`Live button event: dev=${dev} btn=${btn} ` +
                         `act=${act} func=${func} scene=${scene}`);
@@ -592,9 +581,6 @@ export const OpoBudsSocket = GObject.registerClass({
         this._queuePacket(Cmd.SET_EQ_DETAIL, payload, 'Set Dynamic Audio EQ');
     }
 
-    // Custom EQ record format:
-    //   isSelected(1) min(1,signed) max(1,signed) eqId(1) nameLen(1)
-    //   name(nameLen utf8) bandCount(1) [freq LE16, db(1,signed)] * bandCount
     _parseCustomEqInfo(payload) {
         if (payload.length === 0)
             return;
@@ -690,10 +676,6 @@ export const OpoBudsSocket = GObject.registerClass({
 
     _getNoiseControl() {
         this._queuePacket(Cmd.ANC, [0x01, 0x01], 'Query ANC Mode');
-        // Read the cycle table via variant 1 only: both SKUs answer this query
-        // with a value byte, while the variant-2 query is always answered with
-        // a value-less frame (00 02 02) and therefore cannot report state.
-        // Variant selection is still honoured when SETTING the cycle table.
         this._queuePacket(Cmd.ANC, [0x02, 0x01], 'Query ANC Cycle (Action 2, Type 1)');
     }
 
@@ -706,9 +688,6 @@ export const OpoBudsSocket = GObject.registerClass({
 
         if (action === 0x02) {
             if (payload.length < 4) {
-                // Value-less cycle frames (e.g. "00 02 02") carry only the
-                // variant/type byte - there is no mask to parse here. Treating
-                // the type byte as a value previously corrupted the UI mask.
                 this._log.info(`ANC cycle response without value byte (len=${payload.length}), ignoring`);
                 return;
             }
@@ -956,7 +935,6 @@ export const OpoBudsSocket = GObject.registerClass({
             return;
         }
 
-        // Action byte: 0x00 = Disconnect, 0x01 = Connect, 0x02 = Remove (Delete)
         let action = 0x00;
         if (op === 0x01 || op === 'disconnect')
             action = 0x00;
@@ -968,7 +946,6 @@ export const OpoBudsSocket = GObject.registerClass({
         const payload = [0x01, ...macParts, action];
         this._queuePacket(Cmd.OPERATE_MULTI_CONNECT, payload, `MultiConnect Action ${action} for ${macAddress}`);
 
-        // Debounced refresh query after operation
         if (this._multiConnectRefreshTimeout) {
             GLib.source_remove(this._multiConnectRefreshTimeout);
             this._multiConnectRefreshTimeout = null;
@@ -1054,7 +1031,6 @@ export const OpoBudsSocket = GObject.registerClass({
         let rightStatus = 0;
 
         if (payload.length >= 4 && payload[0] === 0x01 && payload[2] === 0x02) {
-            // 0x01 = Good (1), 0x00 / other = Not ideal (0)
             leftStatus = (payload[1] === 0x01) ? 1 : 0;
             rightStatus = (payload[3] === 0x01) ? 1 : 0;
         } else if (payload.length >= 2) {

@@ -105,8 +105,6 @@ export const Cmd = {
     SET_EQ: 0x0406,
     SET_EQ_RSP: 0x8406,
 
-    // 0x0418 carries either the dynamic 3-band EQ (see SET_EQ_DETAIL) or a full
-    // custom EQ record; the leading payload byte selects the format.
     SET_EQ_INFO: 0x0418,
     SET_EQ_INFO_RSP: 0x8418,
 
@@ -138,7 +136,6 @@ export const Cmd = {
     SPATIAL_NOTIFY: 0x0510,
 };
 
-// Operation codes for the custom EQ record carried by SET_EQ_INFO.
 export const CustomEqAction = {
     ADD: 0x01,
     MODIFY: 0x02,
@@ -253,11 +250,6 @@ export function cycleMaskToEnum(mask) {
     return 0x04;
 }
 
-// Wire cycle values are raw bitmasks over NC_CYCLE_BITS (0x01=Off, 0x02=Trans,
-// 0x08=NC): 0x0B/0x0A/0x09/0x03 are the observed legal masks. This function is
-// identity for every legal mask; the switch only exists for legacy single-byte
-// enum codes (1/2/4/7) reported by older SKUs, and must never be reached with
-// a genuine multi-bit mask.
 export function cycleEnumToMask(code) {
     switch (code) {
         case 0x01:
@@ -385,9 +377,6 @@ export function findChangedGestureSlots(oldHex, newHex, gesturesConfig) {
     if (!newHex)
         return changed;
 
-    // Treat a missing OR empty base as uninitialized: without this, an empty
-    // base makes every chunk of newHex differ and resends all slots (pushing
-    // UI defaults over the device's real per-slot values).
     const baseHex = oldHex?.length ? oldHex : buildPlaceholderGesturesHex(gesturesConfig);
 
     for (let i = 0; i + 8 <= newHex.length; i += 8) {

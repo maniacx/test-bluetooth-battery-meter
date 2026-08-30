@@ -155,7 +155,6 @@ export const ConfigureWindow = GObject.registerClass({
                 if (this._modelData.highResAudio && this._highResSwitch)
                     this._highResSwitch.active = this._settingsItems['high-res'];
 
-
                 if (this._modelData.lowLatencyMode && this._lowLatencySwitch)
                     this._lowLatencySwitch.active = this._settingsItems['lowlatency'];
 
@@ -868,14 +867,12 @@ _addCustomEqManagement(eqGroup) {
 
             if (this._dualConnSwitch._button && this._dualConnSwitch._dialog) {
                 this._dualConnSwitch._button.connect('clicked', () => {
-                    // Query immediately upon opening the Manage Devices dialog
                     this._updateGsettings('multi-device-op', {
                         op: 'refresh',
                         mac: '',
                         ts: Date.now(),
                     });
 
-                    // Start 3-second heartbeat only while the dialog is open
                     if (!this._multiDevicePollId) {
                         this._multiDevicePollId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 3, () => {
                             this._updateGsettings('multi-device-op', {
@@ -953,7 +950,6 @@ _addCustomEqManagement(eqGroup) {
                 valign: Gtk.Align.CENTER,
             });
 
-            // Left Earbud Box
             const leftBox = new Gtk.Box({
                 orientation: Gtk.Orientation.HORIZONTAL,
                 spacing: 8,
@@ -975,7 +971,6 @@ _addCustomEqManagement(eqGroup) {
             leftBox.append(leftName);
             leftBox.append(this._fitLeftBadge);
 
-            // Right Earbud Box
             const rightBox = new Gtk.Box({
                 orientation: Gtk.Orientation.HORIZONTAL,
                 spacing: 8,
