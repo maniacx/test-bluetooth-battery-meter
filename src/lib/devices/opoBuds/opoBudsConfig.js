@@ -77,6 +77,8 @@ export const Cmd = {
     EQ: 0x010F,
     EQ_RSP: 0x810F,
 
+    GET_ALL_EQ_INFO: 0x0122,
+
     REGISTER_NOTIFICATION_SINGLE: 0x0201,
     REGISTER_NOTIFICATION_SINGLE_RSP: 0x8201,
 
@@ -103,6 +105,11 @@ export const Cmd = {
     SET_EQ: 0x0406,
     SET_EQ_RSP: 0x8406,
 
+    // 0x0418 carries either the dynamic 3-band EQ (see SET_EQ_DETAIL) or a full
+    // custom EQ record; the leading payload byte selects the format.
+    SET_EQ_INFO: 0x0418,
+    SET_EQ_INFO_RSP: 0x8418,
+
     SET_EQ_DETAIL: 0x0418,
     SET_EQ_DETAIL_RSP: 0x8418,
 
@@ -126,8 +133,17 @@ export const Cmd = {
 
     FEATURE_EVENT: 0x0503,
     EQ_NOTIFY: 0x0504,
+    CUSTOM_EQ_NOTIFY: 0x0506,
     KEY_FUNCTION_NOTIFY: 0x0508,
     SPATIAL_NOTIFY: 0x0510,
+};
+
+// Operation codes for the custom EQ record carried by SET_EQ_INFO.
+export const CustomEqAction = {
+    ADD: 0x01,
+    MODIFY: 0x02,
+    DELETE: 0x03,
+    REQUEST: 0x05,
 };
 
 export const CompactnessStatus = {
