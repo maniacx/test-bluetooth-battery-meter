@@ -193,7 +193,7 @@ export const ConfigureWindow = GObject.registerClass({
                     this._highFreq.value = this._settingsItems['dynamic-audio-high'];
 
                 if (this._modelData.gestureOptions && this._gestureDropdowns) {
-                    const gesturesHex = this._settingsItems['gestures'] ??
+                    const gesturesHex = this._settingsItems['gestures'] ||
                             buildPlaceholderGesturesHex(this._modelData.gestureOptions);
 
                     const slots = decodeGesturesHex(gesturesHex);
@@ -952,7 +952,7 @@ export const ConfigureWindow = GObject.registerClass({
         this._ncCycleSwitches = null;
 
         const gestureGroup = new Adw.PreferencesGroup({
-            title: _('Gesture & Button Controls'),
+            title: _('Gesture &amp; Button Controls'),
             description: _('Customize actions for buttons and touch gestures'),
         });
 
@@ -973,20 +973,20 @@ export const ConfigureWindow = GObject.registerClass({
             'single': _('Single-tap'),
             'double': _('Double-tap'),
             'triple': _('Triple-tap'),
-            'action-hold': _('Touch & Hold'),
+            'action-hold': _('Touch &amp; Hold'),
             'anc-single': _('Single-tap'),
-            'double-action-hold': _('Double Tap & Hold'),
+            'double-action-hold': _('Double Tap &amp; Hold'),
         };
 
         const pressSlotNames = {
             'single': _('Single-press'),
             'double': _('Double-press'),
             'triple': _('Triple-press'),
-            'action-hold': _('Press & Hold'),
-            'double-action-hold': _('Double Press & Hold'),
+            'action-hold': _('Press &amp; Hold'),
+            'double-action-hold': _('Double Press &amp; Hold'),
         };
 
-        const currentGesturesHex = this._settingsItems['gestures'] ??
+        const currentGesturesHex = this._settingsItems['gestures'] ||
             buildPlaceholderGesturesHex(gesturesConfig);
         this._gestureSlotMap = decodeGesturesHex(currentGesturesHex);
 
@@ -1110,7 +1110,7 @@ export const ConfigureWindow = GObject.registerClass({
             case 'anc':
                 return _('Noise Control (ANC) Button');
             default:
-                return _('Button & Gesture Controls');
+                return _('Button &amp; Gesture Controls');
         }
     }
 

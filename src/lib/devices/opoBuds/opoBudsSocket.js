@@ -263,7 +263,11 @@ export const OpoBudsSocket = GObject.registerClass({
         const {cmd, seq, payload} = msg;
         this._log.bytes(`Recv <- Cmd: 0x${cmd.toString(16).padStart(4, '0')} Seq: ${seq} PayLen: ${payload.length} Data: ${hexBytes(payload)}`);
 
-        if (seq !== 0xFF)
+        // Only response commands (0x8000 bit set) settle a pending request.
+        // Device-initiated notifications (e.g. 0x0204 telemetry) run their own
+        // sequence counter that can collide with our 1..250 request seqs and
+        // must never advance the TX queue prematurely.
+        if (seq !== 0xFF && (cmd & 0x8000) !== 0)
             this._completePendingRequest(seq);
 
         this._parseData(msg);
@@ -452,13 +456,15 @@ export const OpoBudsSocket = GObject.registerClass({
                     const btn = eventData[1];
                     const act = eventData[2];
                     const func = eventData[3];
-                    const extra = eventData.length >= 5 ? eventData[4] : null;
+                    // Byte 4 is the action scene, not an ANC mode value -
+                    // deriving a mode from it optimistically forced the toggle
+                    // to "Off" until the device's "03 01 01 <mode>" echo
+                    // corrected it moments later.
+                    const scene = eventData.length >= 5 ? eventData[4] : null;
                     this._log.info(`Live button event: dev=${dev} btn=${btn} ` +
-                        `act=${act} func=${func} extra=${extra}`);
+                        `act=${act} func=${func} scene=${scene}`);
 
                     this._callbacks?.updateSingleGesture?.(dev, btn, act, func);
-                    if (func === 0x08 && extra !== null && extra !== 0)
-                        this._callbacks?.updateNoiseControl?.(extra);
                 } else {
                     this._getGestures();
                 }
@@ -564,15 +570,11 @@ export const OpoBudsSocket = GObject.registerClass({
 
     _getNoiseControl() {
         this._queuePacket(Cmd.ANC, [0x01, 0x01], 'Query ANC Mode');
-        const cycleType = this._modelData?.noiseControl?.ancCycleType ?? this._modelData?.ancCycleType ?? 1;
-        if (cycleType === 2) {
-            this._queuePacket(Cmd.ANC, [0x02, 0x02], 'Query ANC Cycle (Action 2, Type 2)');
-        } else if (cycleType === 'both') {
-            this._queuePacket(Cmd.ANC, [0x02, 0x01], 'Query ANC Cycle (Action 2, Type 1)');
-            this._queuePacket(Cmd.ANC, [0x02, 0x02], 'Query ANC Cycle (Action 2, Type 2)');
-        } else {
-            this._queuePacket(Cmd.ANC, [0x02, 0x01], 'Query ANC Cycle (Action 2, Type 1)');
-        }
+        // Read the cycle table via variant 1 only: both SKUs answer this query
+        // with a value byte, while the variant-2 query is always answered with
+        // a value-less frame (00 02 02) and therefore cannot report state.
+        // Variant selection is still honoured when SETTING the cycle table.
+        this._queuePacket(Cmd.ANC, [0x02, 0x01], 'Query ANC Cycle (Action 2, Type 1)');
     }
 
     _parseAncResponse(payload) {
@@ -583,6 +585,13 @@ export const OpoBudsSocket = GObject.registerClass({
         const valByte = payload.length >= 4 ? payload[3] : payload[2];
 
         if (action === 0x02) {
+            if (payload.length < 4) {
+                // Value-less cycle frames (e.g. "00 02 02") carry only the
+                // variant/type byte - there is no mask to parse here. Treating
+                // the type byte as a value previously corrupted the UI mask.
+                this._log.info(`ANC cycle response without value byte (len=${payload.length}), ignoring`);
+                return;
+            }
             const mask = cycleEnumToMask(valByte);
             this._log.info(`Parsed ANC cycle response: raw=0x${valByte.toString(16)} -> mask=0x${mask.toString(16)}`);
             this._callbacks?.updateNoiseControlCycle?.(mask);
