@@ -82,6 +82,7 @@ export const OpoBudsDevice = GObject.registerClass({
             updateAdaptiveAncSubLevel: this.updateAdaptiveAncSubLevel.bind(this),
             updateNoiseControlCycle: this.updateNoiseControlCycle.bind(this),
             updateFitTestResult: this.updateFitTestResult.bind(this),
+            updateCustomEqs: this.updateCustomEqs.bind(this),
         };
 
         const profile = {type: DeviceTypeOpoBuds, uuid: OpoBudsUUID};
@@ -98,6 +99,8 @@ export const OpoBudsDevice = GObject.registerClass({
         this._pendingWindNoise = null;
         this._pendingVolumeEnhancer = null;
         this._isReady = false;
+        this._customEqList = [];
+        this._lastCustomEqOpTs = 0;
     }
 
     modelInitialized(modelData) {
@@ -156,6 +159,7 @@ export const OpoBudsDevice = GObject.registerClass({
 
             ...(this._modelData.batteryCase ? {'case': this._caseIcon} : {}),
             ...(this._modelData.eqPreset ? {'eq-preset': Object.values(this._modelData.eqPreset)[0] ?? 0} : {}),
+            ...(this._modelData.eqPreset ? {'custom-eq-list': [], 'custom-eq-op': null} : {}),
             ...(this._modelData.inEarDetection ? {'inear-enable': false} : {}),
             ...(this._modelData.lowLatencyMode ? {'lowlatency': false} : {}),
             ...(this._modelData.dualConnection ? {
@@ -197,6 +201,11 @@ export const OpoBudsDevice = GObject.registerClass({
 
         if (this._modelData.eqPreset)
             this._eqPreset = this._settingsItems['eq-preset'];
+
+        if (this._modelData.eqPreset) {
+            this._customEqList = this._settingsItems['custom-eq-list'] ?? [];
+            this._lastCustomEqOpTs = this._settingsItems['custom-eq-op']?.ts ?? 0;
+        }
 
         if (this._modelData.inEarDetection)
             this._inEar = this._settingsItems['inear-enable'];
@@ -288,8 +297,25 @@ export const OpoBudsDevice = GObject.registerClass({
                         const val = this._settingsItems[item.key];
                         if (this[item.prop] !== val) {
                             this[item.prop] = val;
-                            if (this._opoBudsSocket)
-                                item.fn(this._opoBudsSocket, val);
+                            if (this._opoBudsSocket) {
+                                // Custom EQ presets are applied by re-sending their recorded
+                                // band gains rather than the plain preset switch opcode.
+                                if (item.key === 'eq-preset') {
+                                    const custom = this._customEqList.find(e => e.eqId === val);
+                                    if (custom)
+                                        this._opoBudsSocket.modifyCustomEq(custom.eqId, {
+                                            name: custom.name,
+                                            min: custom.min,
+                                            max: custom.max,
+                                            freqs: custom.freqs,
+                                            dbs: custom.dbs,
+                                        });
+                                    else
+                                        item.fn(this._opoBudsSocket, val);
+                                } else {
+                                    item.fn(this._opoBudsSocket, val);
+                                }
+                            }
 
                             // When Dynamic Bass is enabled, immediately push the stored slider values
                             if (item.key === 'dynamic-bass' && val === true) {
@@ -359,6 +385,43 @@ export const OpoBudsDevice = GObject.registerClass({
                     if (this._ncCycleMask !== ncCycleMask) {
                         this._ncCycleMask = ncCycleMask;
                         this._opoBudsSocket?.setNoiseControlCycle(ncCycleMask);
+                    }
+                }
+
+                // 8. Custom EQ operations
+                if (this._modelData.eqPreset) {
+                    const customEqOp = this._settingsItems['custom-eq-op'];
+                    if (customEqOp && customEqOp.ts !== this._lastCustomEqOpTs) {
+                        this._lastCustomEqOpTs = customEqOp.ts;
+                        const eqId = customEqOp.eqId;
+                        const eqData = {
+                            name: customEqOp.name ?? '',
+                            min: customEqOp.min ?? -6,
+                            max: customEqOp.max ?? 6,
+                            freqs: customEqOp.freqs ?? [],
+                            dbs: customEqOp.dbs ?? [],
+                        };
+                        switch (customEqOp.action) {
+                            case 'add':
+                                this._opoBudsSocket?.addCustomEq(eqId, eqData);
+                                break;
+                            case 'modify':
+                                this._opoBudsSocket?.modifyCustomEq(eqId, eqData);
+                                break;
+                            case 'delete':
+                                this._opoBudsSocket?.deleteCustomEq(eqId, eqData);
+                                break;
+                            case 'select':
+                                if (eqData.dbs.length > 0)
+                                    this._opoBudsSocket?.modifyCustomEq(eqId, eqData);
+                                break;
+                            case 'list':
+                                this._opoBudsSocket?.getCustomEqInfo();
+                                break;
+                            default:
+                                this._log.warn(`Unknown custom EQ op action: ${customEqOp.action}`);
+                                break;
+                        }
                     }
                 }
             } catch (e) {
@@ -917,6 +980,21 @@ export const OpoBudsDevice = GObject.registerClass({
 
     updateEqPreset(preset) {
         this._updateSimpleSetting('_eqPreset', 'eq-preset', preset);
+    }
+
+    updateCustomEqs(entries) {
+        if (!this._modelData?.eqPreset)
+            return;
+
+        this._customEqList = Array.isArray(entries) ? entries : [];
+        this._updateSettingKey('custom-eq-list', this._customEqList);
+
+        if (this._customEqList.length > 0)
+            this._log.info(`Custom EQ list updated (${this._customEqList.length} entries)`);
+
+        const selected = this._customEqList.find(e => e.selected);
+        if (selected)
+            this._updateSettingKey('eq-preset', selected.eqId);
     }
 
     updateGestures(gesturesHex) {
