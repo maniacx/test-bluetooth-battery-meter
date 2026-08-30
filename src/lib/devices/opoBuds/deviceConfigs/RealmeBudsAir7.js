@@ -14,6 +14,12 @@ export default {
         clear_bass: 0x03,
     },
 
+    customEqSupport: true,
+    eqBands: {
+        frequencies: [50, 250, 1000, 4000, 8000, 16000],
+        range: 6,
+    },
+
     noiseControl: {
         ancCycleType: 2,
         off: [0x01],
