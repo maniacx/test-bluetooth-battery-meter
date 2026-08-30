@@ -247,6 +247,10 @@ export function cycleEnumToMask(code) {
             return 0x03;
         case 0x04:
             return 0x0B;
+        case 0x07:
+            return 0x0B;
+        case 0x0B:
+            return 0x0B;
         default:
             return code;
     }
@@ -254,19 +258,23 @@ export function cycleEnumToMask(code) {
 
 export function widgetMaskToProtocolMask(widgetMask) {
     let mask = 0;
-    NC_CYCLE_BITS.forEach((bit, index) => {
-        if (widgetMask & 1 << index)
-            mask |= bit;
-    });
+    if (widgetMask & (1 << 0))
+        mask |= 0x01;
+    if (widgetMask & (1 << 1))
+        mask |= 0x02;
+    if (widgetMask & (1 << 2))
+        mask |= 0x08;
     return mask;
 }
 
 export function protocolMaskToWidgetMask(protocolMask) {
     let widgetMask = 0;
-    NC_CYCLE_BITS.forEach((bit, index) => {
-        if (protocolMask & bit)
-            widgetMask |= 1 << index;
-    });
+    if (protocolMask & 0x01)
+        widgetMask |= 1 << 0;
+    if (protocolMask & 0x02)
+        widgetMask |= 1 << 1;
+    if (protocolMask & 0x08 || protocolMask & 0x04)
+        widgetMask |= 1 << 2;
     return widgetMask;
 }
 

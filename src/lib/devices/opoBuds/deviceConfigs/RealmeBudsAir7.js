@@ -15,6 +15,7 @@ export default {
     },
 
     noiseControl: {
+        ancCycleType: 2,
         off: [0x01],
         transparency: {
             levels: {

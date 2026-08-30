@@ -213,16 +213,11 @@ export const OpoBudsDevice = GObject.registerClass({
         if (this._modelData.fitTest)
             this._lastFitTestOpTs = this._settingsItems['fit-test-op']?.ts ?? 0;
 
-        if (this._modelData.windNoiseReduction || this._modelData.windReduction) {
+        if (this._modelData.windNoiseReduction || this._modelData.windReduction)
             this._windNoise = this._settingsItems['wind-noise'];
-            this._props.box1CheckButton1State = this._windNoise ? 1 : 0;
-            this._props.box2CheckButton2State = this._windNoise ? 1 : 0;
-        }
 
-        if (this._modelData.volumeEnhancer) {
+        if (this._modelData.volumeEnhancer)
             this._volumeEnhancer = this._settingsItems['volume-enhancer'];
-            this._props.box2CheckButton1State = this._volumeEnhancer ? 1 : 0;
-        }
 
         if (this._modelData.spatialAudio)
             this._spatial = this._settingsItems['spatial'];
@@ -295,6 +290,15 @@ export const OpoBudsDevice = GObject.registerClass({
                             this[item.prop] = val;
                             if (this._opoBudsSocket)
                                 item.fn(this._opoBudsSocket, val);
+
+                            // When Dynamic Bass is enabled, immediately push the stored slider values
+                            if (item.key === 'dynamic-bass' && val === true) {
+                                this._opoBudsSocket?.setDynamicAudioEq(
+                                    this._dynamicAudioLow ?? 0,
+                                    this._dynamicAudioMed ?? 0,
+                                    this._dynamicAudioHigh ?? 0
+                                );
+                            }
                         }
                     }
                 }
@@ -324,15 +328,17 @@ export const OpoBudsDevice = GObject.registerClass({
                 }
 
                 // 5. Dynamic Audio EQ (3-band sliders) - only send if dynamic bass is enabled
-                if (this._modelData.dynamicBass && this._dynamicBass) {
+                if (this._modelData.dynamicBass) {
                     const low = this._settingsItems['dynamic-audio-low'] ?? 0;
                     const med = this._settingsItems['dynamic-audio-med'] ?? 0;
                     const high = this._settingsItems['dynamic-audio-high'] ?? 0;
-                    if (this._dynamicAudioLow !== low || this._dynamicAudioMed !== med || this._dynamicAudioHigh !== high) {
+                    const changed = this._dynamicAudioLow !== low || this._dynamicAudioMed !== med || this._dynamicAudioHigh !== high;
+                    if (changed) {
                         this._dynamicAudioLow = low;
                         this._dynamicAudioMed = med;
                         this._dynamicAudioHigh = high;
-                        this._opoBudsSocket?.setDynamicAudioEq(low, med, high);
+                        if (this._dynamicBass)
+                            this._opoBudsSocket?.setDynamicAudioEq(low, med, high);
                     }
                 }
 
@@ -361,6 +367,30 @@ export const OpoBudsDevice = GObject.registerClass({
         });
     }
 
+    _updateSettingKey(key, value) {
+        if (!this._settings || !this._devicePath)
+            return;
+
+        if (this._settingsItems && this._settingsItems[key] === value)
+            return;
+
+        if (this._settingsItems)
+            this._settingsItems[key] = value;
+
+        this._ignoreGsettingsChange = true;
+        try {
+            const list = this._settings.get_strv('opo-buds-list').map(safeJsonParse).filter(Boolean);
+            const index = list.findIndex(d => d.path === this._devicePath);
+            if (index !== -1) {
+                list[index][key] = value;
+                this._settings.set_strv('opo-buds-list', list.map(JSON.stringify));
+            }
+        } catch (e) {
+            this._log.error(`_updateSettingKey error (${key}): ${e.message}`);
+        }
+        this._ignoreGsettingsChange = false;
+    }
+
     _updateGsettings() {
         this._ignoreGsettingsChange = true;
 
@@ -376,11 +406,11 @@ export const OpoBudsDevice = GObject.registerClass({
     }
 
     _updateSimpleSetting(prop, key, value) {
+        if (this[prop] === value)
+            return;
+
         this[prop] = value;
-        if (this._settingsItems) {
-            this._settingsItems[key] = value;
-            this._updateGsettings();
-        }
+        this._updateSettingKey(key, value);
     }
 
     _updateIcons() {
@@ -514,11 +544,16 @@ export const OpoBudsDevice = GObject.registerClass({
         }
 
         this._config.optionsBox2 = [];
+        this._box2Map = [];
         const box2Labels = [];
-        if (this._modelData.volumeEnhancer)
+        if (this._modelData.volumeEnhancer) {
             box2Labels.push(_('Enhance Voice'));
-        if (this._modelData.windNoiseReduction || this._modelData.windReduction)
+            this._box2Map.push('volumeEnhancer');
+        }
+        if (this._modelData.windNoiseReduction || this._modelData.windReduction) {
             box2Labels.push(_('Smart Wind Noise Reduction'));
+            this._box2Map.push('windNoise');
+        }
 
         if (box2Labels.length > 0) {
             this._config.optionsBox2.push('check-button');
@@ -527,6 +562,19 @@ export const OpoBudsDevice = GObject.registerClass({
 
         if (this._config.box1RadioButton?.length && !this._props.box1RadioButtonState)
             this._props.box1RadioButtonState = 1;
+
+        if (this._box2Map?.length) {
+            this._box2Map.forEach((feat, idx) => {
+                const val = feat === 'volumeEnhancer' ? (this._volumeEnhancer ? 1 : 0) : (this._windNoise ? 1 : 0);
+                if (idx === 0)
+                    this._props.box2CheckButton1State = val;
+                else if (idx === 1)
+                    this._props.box2CheckButton2State = val;
+            });
+        }
+
+        if (this._modelData.windNoiseReduction || this._modelData.windReduction)
+            this._props.box1CheckButton1State = this._windNoise ? 1 : 0;
 
         this.dataHandler?.setConfig(this._config);
     }
@@ -630,39 +678,53 @@ export const OpoBudsDevice = GObject.registerClass({
     _box1CheckButton1Changed(value) {
         const enabled = value > 0;
         this._windNoise = enabled;
-        if (this._settingsItems) {
-            this._settingsItems['wind-noise'] = enabled;
-            this._updateGsettings();
-        }
+        this._updateSettingKey('wind-noise', enabled);
         this._props.box1CheckButton1State = value;
-        this._props.box2CheckButton2State = value;
+        if (this._box2Map) {
+            const idx = this._box2Map.indexOf('windNoise');
+            if (idx === 0)
+                this._props.box2CheckButton1State = value;
+            else if (idx === 1)
+                this._props.box2CheckButton2State = value;
+        }
         this.dataHandler?.setProps(this._props);
         this._opoBudsSocket?.setWindNoise(enabled);
+    }
+
+    _handleBox2Checkbox(index, value) {
+        const feature = this._box2Map?.[index];
+        if (!feature)
+            return;
+
+        const enabled = value > 0;
+        if (feature === 'volumeEnhancer') {
+            this._volumeEnhancer = enabled;
+            this._updateSettingKey('volume-enhancer', enabled);
+            if (index === 0)
+                this._props.box2CheckButton1State = value;
+            else if (index === 1)
+                this._props.box2CheckButton2State = value;
+            this.dataHandler?.setProps(this._props);
+            this._opoBudsSocket?.setVolumeEnhancer(enabled);
+        } else if (feature === 'windNoise') {
+            this._windNoise = enabled;
+            this._updateSettingKey('wind-noise', enabled);
+            this._props.box1CheckButton1State = value;
+            if (index === 0)
+                this._props.box2CheckButton1State = value;
+            else if (index === 1)
+                this._props.box2CheckButton2State = value;
+            this.dataHandler?.setProps(this._props);
+            this._opoBudsSocket?.setWindNoise(enabled);
+        }
     }
 
     _box2CheckButton1Changed(value) {
-        const enabled = value > 0;
-        this._volumeEnhancer = enabled;
-        if (this._settingsItems) {
-            this._settingsItems['volume-enhancer'] = enabled;
-            this._updateGsettings();
-        }
-        this._props.box2CheckButton1State = value;
-        this.dataHandler?.setProps(this._props);
-        this._opoBudsSocket?.setVolumeEnhancer(enabled);
+        this._handleBox2Checkbox(0, value);
     }
 
     _box2CheckButton2Changed(value) {
-        const enabled = value > 0;
-        this._windNoise = enabled;
-        if (this._settingsItems) {
-            this._settingsItems['wind-noise'] = enabled;
-            this._updateGsettings();
-        }
-        this._props.box1CheckButton1State = value;
-        this._props.box2CheckButton2State = value;
-        this.dataHandler?.setProps(this._props);
-        this._opoBudsSocket?.setWindNoise(enabled);
+        this._handleBox2Checkbox(1, value);
     }
 
     _settingsButtonClicked() {
@@ -691,10 +753,16 @@ export const OpoBudsDevice = GObject.registerClass({
             this._props.battery3Status = cse.isCharging ? 'charging' : 'discharging';
         }
 
-        if (!this._modelData?.batteryLR)
-            this._props.computedBatteryLevel = this._props.battery1Level;
-        else
+        if (!this._modelData?.batteryLR) {
+            const primary = left ?? right ?? cse;
+            if (primary) {
+                this._props.battery1Level = primary.level;
+                this._props.battery1Status = primary.isCharging ? 'charging' : 'discharging';
+            }
+            this._props.computedBatteryLevel = this._props.battery1Level ?? 0;
+        } else {
             this._props.computedBatteryLevel = buds2to1BatteryLevel(this._props);
+        }
 
         if (!this._battInfoReceived)
             this._startConfiguration(this._props);
@@ -758,8 +826,8 @@ export const OpoBudsDevice = GObject.registerClass({
             this._modelData.noiseControl?.noiseCancellation?.levels?.auto;
 
         if (isAnc && isSmart && hasSmartLevel) {
-            const sub = this._smartSubName || _('Moderate');
-            this._props.labelIndicator1 = `${_('Adaptive')}: ${sub}`;
+            const sub = this._smartSubName ?? '';
+            this._props.labelIndicator1 = sub ? `${_('Adaptive')}: ${sub}` : _('Adaptive');
         } else {
             this._props.labelIndicator1 = '';
         }
@@ -775,10 +843,8 @@ export const OpoBudsDevice = GObject.registerClass({
         const subName = subNames[subByte] ?? '';
         this._log.info(`Real-Time Adaptive ANC Level: ${subName} (0x${subByte.toString(16)})`);
         this._smartSubName = subName;
-        if (subName && this._settingsItems) {
-            this._settingsItems['smart-anc-sublevel'] = subName;
-            this._updateGsettings();
-        }
+        if (subName && this._settingsItems)
+            this._updateSettingKey('smart-anc-sublevel', subName);
         this._updateLabelIndicator();
     }
 
@@ -800,12 +866,15 @@ export const OpoBudsDevice = GObject.registerClass({
             return;
         }
         this._windNoise = windNoise;
-        if (this._settingsItems) {
-            this._settingsItems['wind-noise'] = this._windNoise;
-            this._updateGsettings();
-        }
+        this._updateSettingKey('wind-noise', this._windNoise);
         this._props.box1CheckButton1State = windNoise ? 1 : 0;
-        this._props.box2CheckButton2State = windNoise ? 1 : 0;
+        if (this._box2Map) {
+            const idx = this._box2Map.indexOf('windNoise');
+            if (idx === 0)
+                this._props.box2CheckButton1State = windNoise ? 1 : 0;
+            else if (idx === 1)
+                this._props.box2CheckButton2State = windNoise ? 1 : 0;
+        }
         this.dataHandler?.setProps(this._props);
     }
 
@@ -815,11 +884,14 @@ export const OpoBudsDevice = GObject.registerClass({
             return;
         }
         this._volumeEnhancer = volumeEnhancer;
-        if (this._settingsItems) {
-            this._settingsItems['volume-enhancer'] = this._volumeEnhancer;
-            this._updateGsettings();
+        this._updateSettingKey('volume-enhancer', this._volumeEnhancer);
+        if (this._box2Map) {
+            const idx = this._box2Map.indexOf('volumeEnhancer');
+            if (idx === 0)
+                this._props.box2CheckButton1State = volumeEnhancer ? 1 : 0;
+            else if (idx === 1)
+                this._props.box2CheckButton2State = volumeEnhancer ? 1 : 0;
         }
-        this._props.box2CheckButton1State = volumeEnhancer ? 1 : 0;
         this.dataHandler?.setProps(this._props);
     }
 
@@ -860,18 +932,15 @@ export const OpoBudsDevice = GObject.registerClass({
 
         if (newHex !== hex) {
             this._gestures = newHex;
-            this._settingsItems['gestures'] = newHex;
-            this._updateGsettings();
+            this._updateSettingKey('gestures', newHex);
         }
     }
 
     updateFitTestResult(result) {
         this._log.info(`Update Fit Test Result: left=${result?.left}, right=${result?.right}`);
         this._fitTestResult = result;
-        if (this._modelData?.fitTest && this._settingsItems) {
-            this._settingsItems['fit-test-result'] = result;
-            this._updateGsettings();
-        }
+        if (this._modelData?.fitTest && this._settingsItems)
+            this._updateSettingKey('fit-test-result', result);
     }
 
     destroy() {

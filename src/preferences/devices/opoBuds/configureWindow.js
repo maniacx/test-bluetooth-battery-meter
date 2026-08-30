@@ -37,22 +37,17 @@ export const ConfigureWindow = GObject.registerClass({
         this._gestureSlotMap = {};
 
         this._breakpointCompact = new Adw.Breakpoint({
-            condition: Adw.BreakpointCondition.parse('max-width: 500px'),
-        });
-
-        this._breakpointExpanded = new Adw.Breakpoint({
-            condition: Adw.BreakpointCondition.parse('min-width: 550px'),
+            condition: Adw.BreakpointCondition.parse('max-width: 550px'),
         });
 
         this.add_breakpoint(this._breakpointCompact);
-        this.add_breakpoint(this._breakpointExpanded);
 
         this._breakpointCompact.connect('apply', () => {
             this._isCompactMode = true;
             this._updateCompactStatus();
         });
 
-        this._breakpointExpanded.connect('apply', () => {
+        this._breakpointCompact.connect('unapply', () => {
             this._isCompactMode = false;
             this._updateCompactStatus();
         });
@@ -106,11 +101,15 @@ export const ConfigureWindow = GObject.registerClass({
         });
 
         iconSelector.connect('notify::selected-icon', () => {
+            if (this._isUpdatingUI)
+                return;
             this._updateGsettings('icon', iconSelector.selected_icon);
         });
 
         if (this._modelData.batteryCase) {
             iconSelector.connect('notify::selected-case-icon', () => {
+                if (this._isUpdatingUI)
+                    return;
                 this._updateGsettings('case', iconSelector.selected_case_icon);
             });
         }
@@ -257,7 +256,7 @@ export const ConfigureWindow = GObject.registerClass({
 
             if (this._modelData?.ring) {
                 const ringState = this._settingsItems?.['ring-state'];
-                if (ringState === 'playing')
+                if (ringState === 'playing' || ringState === 'started')
                     this._updateGsettings('ring-state', 'stopped');
             }
 
@@ -346,6 +345,8 @@ export const ConfigureWindow = GObject.registerClass({
         });
 
         this._eqPresetDropdown.connect('notify::selected-item', () => {
+            if (this._isUpdatingUI)
+                return;
             this._updateGsettings('eq-preset', this._eqPresetDropdown.selected_item);
         });
 
@@ -378,6 +379,8 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             dynamicAudioExpander.connect('notify::enable-expansion', () => {
+                if (this._isUpdatingUI)
+                    return;
                 const enabled = dynamicAudioExpander.enable_expansion;
                 dynamicAudioExpander.expanded = enabled;
                 this._updateGsettings('dynamic-bass', enabled);
@@ -466,6 +469,8 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             this._spatialAudioSwitch.connect('notify::active', () => {
+                if (this._isUpdatingUI)
+                    return;
                 this._updateGsettings('spatial', this._spatialAudioSwitch.active);
             });
 
@@ -480,6 +485,8 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             this._volumeEnhancerSwitch.connect('notify::active', () => {
+                if (this._isUpdatingUI)
+                    return;
                 this._updateGsettings('volume-enhancer', this._volumeEnhancerSwitch.active);
             });
 
@@ -494,6 +501,8 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             this._highResSwitch.connect('notify::active', () => {
+                if (this._isUpdatingUI)
+                    return;
                 this._updateGsettings('high-res', this._highResSwitch.active);
             });
 
@@ -508,6 +517,8 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             this._windNoiseSwitch.connect('notify::active', () => {
+                if (this._isUpdatingUI)
+                    return;
                 this._updateGsettings('wind-noise', this._windNoiseSwitch.active);
             });
 
@@ -538,6 +549,8 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             this._lowLatencySwitch.connect('notify::active', () => {
+                if (this._isUpdatingUI)
+                    return;
                 this._updateGsettings('lowlatency', this._lowLatencySwitch.active);
             });
 
@@ -552,6 +565,8 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             this._inEarSwitch.connect('notify::active', () => {
+                if (this._isUpdatingUI)
+                    return;
                 this._updateGsettings('inear-enable', this._inEarSwitch.active);
             });
 
@@ -591,6 +606,8 @@ export const ConfigureWindow = GObject.registerClass({
             this._dualConnSwitch.active = this._settingsItems['dual-connection'] ?? false;
 
             this._dualConnSwitch.connect('notify::active', () => {
+                if (this._isUpdatingUI)
+                    return;
                 this._updateGsettings('dual-connection', this._dualConnSwitch.active);
             });
 
@@ -652,6 +669,8 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             this._autoAnswerSwitch.connect('notify::active', () => {
+                if (this._isUpdatingUI)
+                    return;
                 this._updateGsettings('auto-answer', this._autoAnswerSwitch.active);
             });
 
@@ -666,6 +685,8 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             this._findPhoneSwitch.connect('notify::active', () => {
+                if (this._isUpdatingUI)
+                    return;
                 this._updateGsettings('find-phone', this._findPhoneSwitch.active);
             });
 
@@ -812,7 +833,12 @@ export const ConfigureWindow = GObject.registerClass({
                     label: _('Test Again'),
                 });
 
-                if (!res || typeof res !== 'object' || res.left === undefined || res.right === undefined) {
+                let leftGood = false;
+                let rightGood = false;
+                if (res && typeof res === 'object' && res.left !== undefined && res.right !== undefined) {
+                    leftGood = (res.left === 1);
+                    rightGood = (res.right === 1);
+                } else {
                     this._fitLeftBadge.label = _('Failed');
                     this._fitLeftBadge.css_classes = ['error', 'heading'];
                     this._fitRightBadge.label = _('Failed');
@@ -821,37 +847,6 @@ export const ConfigureWindow = GObject.registerClass({
                     descRow.subtitle = _('Could not detect earbud seal. Ensure earbuds are worn, then test again');
                     return;
                 }
-
-                const left = res.left;
-                const right = res.right;
-
-                // Status 4 = Not in ear (Wear earbuds first)
-                if (left === 4 || right === 4) {
-                    this._fitLeftBadge.label = (left === 4) ? _('Not in ear') : (left === 1 ? _('Good') : _('Not ideal'));
-                    this._fitLeftBadge.css_classes = (left === 4) ? ['warning', 'heading'] : (left === 1 ? ['success', 'heading'] : ['warning', 'heading']);
-
-                    this._fitRightBadge.label = (right === 4) ? _('Not in ear') : (right === 1 ? _('Good') : _('Not ideal'));
-                    this._fitRightBadge.css_classes = (right === 4) ? ['warning', 'heading'] : (right === 1 ? ['success', 'heading'] : ['warning', 'heading']);
-
-                    descRow.title = _('Insert your earbuds');
-                    descRow.subtitle = _('Please wear both earbuds in your ears, then tap "Test Again"');
-                    return;
-                }
-
-                // Status 2 or 3 = Test Failed / Interrupted
-                if (left === 2 || left === 3 || right === 2 || right === 3) {
-                    this._fitLeftBadge.label = _('Failed');
-                    this._fitLeftBadge.css_classes = ['error', 'heading'];
-                    this._fitRightBadge.label = _('Failed');
-                    this._fitRightBadge.css_classes = ['error', 'heading'];
-                    descRow.title = _('Test Incomplete');
-                    descRow.subtitle = _('Wear your earbuds and remain still during the test, then try again');
-                    return;
-                }
-
-                // Status 1 = Good seal, Status 0 = Poor seal / Needs adjust
-                const leftGood = (left === 1);
-                const rightGood = (right === 1);
 
                 if (leftGood) {
                     this._fitLeftBadge.label = _('Good');
@@ -911,7 +906,6 @@ export const ConfigureWindow = GObject.registerClass({
                     GLib.source_remove(id);
                 }
 
-                // 10-second watchdog fallback in case hardware packet drops
                 this._fitTestTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 10, () => {
                     this._fitTestTimeoutId = null;
                     if (this._isTestingFit)
@@ -937,6 +931,8 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             ringRow.connect('notify::status', () => {
+                if (this._isUpdatingUI)
+                    return;
                 this._updateGsettings('ring-state', ringRow.status);
             });
 
@@ -956,7 +952,7 @@ export const ConfigureWindow = GObject.registerClass({
         this._ncCycleSwitches = null;
 
         const gestureGroup = new Adw.PreferencesGroup({
-            title: _('Gesture &amp; Button Controls'),
+            title: _('Gesture & Button Controls'),
             description: _('Customize actions for buttons and touch gestures'),
         });
 
@@ -977,17 +973,17 @@ export const ConfigureWindow = GObject.registerClass({
             'single': _('Single-tap'),
             'double': _('Double-tap'),
             'triple': _('Triple-tap'),
-            'action-hold': _('Touch &amp; Hold'),
+            'action-hold': _('Touch & Hold'),
             'anc-single': _('Single-tap'),
-            'double-action-hold': _('Double Tap &amp; Hold'),
+            'double-action-hold': _('Double Tap & Hold'),
         };
 
         const pressSlotNames = {
             'single': _('Single-press'),
             'double': _('Double-press'),
             'triple': _('Triple-press'),
-            'action-hold': _('Press &amp; Hold'),
-            'double-action-hold': _('Double Press &amp; Hold'),
+            'action-hold': _('Press & Hold'),
+            'double-action-hold': _('Double Press & Hold'),
         };
 
         const currentGesturesHex = this._settingsItems['gestures'] ??
@@ -1088,6 +1084,8 @@ export const ConfigureWindow = GObject.registerClass({
             this._ncCycleWidget.compact_mode = this._isCompactMode;
 
             this._ncCycleWidget.connect('notify::toggled-value', () => {
+                if (this._isUpdatingUI)
+                    return;
                 const toggled = this._ncCycleWidget.toggled_value;
                 const mask = widgetMaskToProtocolMask(toggled);
                 this._updateGsettings('nc-cycle-mask', mask);
@@ -1112,7 +1110,7 @@ export const ConfigureWindow = GObject.registerClass({
             case 'anc':
                 return _('Noise Control (ANC) Button');
             default:
-                return _('Button &amp; Gesture Controls');
+                return _('Button & Gesture Controls');
         }
     }
 
