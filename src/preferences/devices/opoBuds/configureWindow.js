@@ -152,8 +152,6 @@ export const ConfigureWindow = GObject.registerClass({
                 if (this._modelData.highResAudio && this._highResSwitch)
                     this._highResSwitch.active = this._settingsItems['high-res'];
 
-                if ((this._modelData.windNoiseReduction || this._modelData.windReduction) && this._windNoiseSwitch)
-                    this._windNoiseSwitch.active = this._settingsItems['wind-noise'];
 
                 if (this._modelData.lowLatencyMode && this._lowLatencySwitch)
                     this._lowLatencySwitch.active = this._settingsItems['lowlatency'];
@@ -356,10 +354,8 @@ export const ConfigureWindow = GObject.registerClass({
 
     _addAudioEffects() {
         const _ = this._gettext;
-        const hasWindNoise = this._modelData.windNoiseReduction || this._modelData.windReduction;
         const hasEffects = this._modelData.dynamicBass || this._modelData.spatialAudio ||
-            this._modelData.volumeEnhancer || this._modelData.highResAudio ||
-            hasWindNoise;
+            this._modelData.volumeEnhancer || this._modelData.highResAudio;
 
         if (!hasEffects)
             return;
@@ -507,22 +503,6 @@ export const ConfigureWindow = GObject.registerClass({
             });
 
             effectsGroup.add(this._highResSwitch);
-        }
-
-        if (hasWindNoise) {
-            this._windNoiseSwitch = new Adw.SwitchRow({
-                title: _('Smart Wind Noise Reduction'),
-                subtitle: _('Suppress turbulent wind noise during outdoor use'),
-                active: this._settingsItems['wind-noise'],
-            });
-
-            this._windNoiseSwitch.connect('notify::active', () => {
-                if (this._isUpdatingUI)
-                    return;
-                this._updateGsettings('wind-noise', this._windNoiseSwitch.active);
-            });
-
-            effectsGroup.add(this._windNoiseSwitch);
         }
 
         this._page.add(effectsGroup);

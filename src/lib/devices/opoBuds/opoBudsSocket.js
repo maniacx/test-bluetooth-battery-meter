@@ -438,6 +438,21 @@ export const OpoBudsSocket = GObject.registerClass({
 
             case EventCode.EARBUDS_STATUS:
                 this._log.info(`Received Earbuds in-ear status event: ${hexBytes(eventData)}`);
+                // If any bud reports not worn (wearState == 0x00) during a test,
+                // finish immediately instead of waiting the full timeout.
+                if (eventData.length >= 2) {
+                    let anyNotWorn = false;
+                    for (let i = 1; i + 1 < eventData.length; i += 2) {
+                        const wearState = eventData[i + 1];
+                        if (wearState === 0x00) {
+                            anyNotWorn = true;
+                        }
+                    }
+                    if (anyNotWorn) {
+                        this._log.info('In-ear status: at least one bud not worn; aborting fit test');
+                        this._callbacks?.updateFitTestResult?.({left: 0, right: 0});
+                    }
+                }
                 break;
 
             case 0x04:
