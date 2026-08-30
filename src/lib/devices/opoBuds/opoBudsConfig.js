@@ -164,14 +164,14 @@ export const FeatureId = {
     WIND_NOISE: 0x1A,
     SPATIAL: 0x1B,
     DYNAMIC_BASS: 0x1D,
-    FIND_PHONE: 0x36,
+    FIND_PHONE: 0x26,
 };
 
 export const FEATURE_CONFIG_MAP = [
     { configKeys: ['inEarDetection'], defaultByte: FeatureId.IN_EAR, name: 'In-Ear Detection', callback: 'updateInEar' },
     { configKeys: ['lowLatencyMode'], defaultByte: FeatureId.GAME_MODE, name: 'Low Latency Game Mode', callback: 'updateLatency' },
     { configKeys: ['dualConnection'], defaultByte: FeatureId.DUAL_DEVICE, name: 'Dual Connection', callback: 'updateDualConnection' },
-    { configKeys: ['windReduction', 'windNoiseReduction'], defaultByte: FeatureId.WIND_NOISE, name: 'Wind Noise Reduction', callback: 'updateWindNoise' },
+    { configKeys: ['windNoiseReduction'], defaultByte: FeatureId.WIND_NOISE, name: 'Wind Noise Reduction', callback: 'updateWindNoise' },
     { configKeys: ['volumeEnhancer'], defaultByte: FeatureId.VOLUME_ENHANCER, name: 'Volume Enhancer', callback: 'updateVolumeEnhancer' },
     { configKeys: ['spatialAudio'], defaultByte: FeatureId.SPATIAL, name: 'Spatial Audio', callback: 'updateSpatialAudio' },
     { configKeys: ['highResAudio'], defaultByte: FeatureId.HIGH_RES, name: 'High-Res LHDC', callback: 'updateHighRes' },

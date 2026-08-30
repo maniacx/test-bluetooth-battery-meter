@@ -21,7 +21,7 @@ const SIMPLE_FEATURE_MAP = [
     { key: 'inear-enable', flags: ['inEarDetection'], prop: '_inEar', fn: (s, v) => s.setInEar(v) },
     { key: 'lowlatency', flags: ['lowLatencyMode'], prop: '_lowlatency', fn: (s, v) => s.setLatency(v) },
     { key: 'dual-connection', flags: ['dualConnection'], prop: '_dualConnection', fn: (s, v) => s.setDualConnection(v) },
-    { key: 'wind-noise', flags: ['windNoiseReduction', 'windReduction'], prop: '_windNoise', fn: (s, v) => s.setWindNoise(v) },
+    { key: 'wind-noise', flags: ['windNoiseReduction'], prop: '_windNoise', fn: (s, v) => s.setWindNoise(v) },
     { key: 'volume-enhancer', flags: ['volumeEnhancer'], prop: '_volumeEnhancer', fn: (s, v) => s.setVolumeEnhancer(v) },
     { key: 'spatial', flags: ['spatialAudio'], prop: '_spatial', fn: (s, v) => s.setSpatialAudio(v) },
     { key: 'high-res', flags: ['highResAudio'], prop: '_highRes', fn: (s, v) => s.setHighRes(v) },
@@ -167,7 +167,7 @@ export const OpoBudsDevice = GObject.registerClass({
                 'audio-priority-mac': '',
                 'multi-device-op': null,
             } : {}),
-            ...((this._modelData.windNoiseReduction || this._modelData.windReduction) ? {'wind-noise': false} : {}),
+            ...((this._modelData.windNoiseReduction) ? {'wind-noise': false} : {}),
             ...(this._modelData.volumeEnhancer ? {'volume-enhancer': false} : {}),
             ...(this._modelData.fitTest ? {'fit-test-op': null} : {}),
             ...(this._modelData.spatialAudio ? {'spatial': false} : {}),
@@ -222,7 +222,7 @@ export const OpoBudsDevice = GObject.registerClass({
         if (this._modelData.fitTest)
             this._lastFitTestOpTs = this._settingsItems['fit-test-op']?.ts ?? 0;
 
-        if (this._modelData.windNoiseReduction || this._modelData.windReduction)
+        if (this._modelData.windNoiseReduction)
             this._windNoise = this._settingsItems['wind-noise'];
 
         if (this._modelData.volumeEnhancer)
@@ -601,7 +601,7 @@ export const OpoBudsDevice = GObject.registerClass({
         this._config.optionsBox1 = [];
         if (nc.noiseCancellation?.levels)
             this._config.optionsBox1.push('radio-button');
-        if (this._modelData.windNoiseReduction || this._modelData.windReduction) {
+        if (this._modelData.windNoiseReduction) {
             this._config.optionsBox1.push('check-button');
             this._config.box1CheckButton = [_('Smart Wind Noise Reduction')];
         }
@@ -613,7 +613,7 @@ export const OpoBudsDevice = GObject.registerClass({
             box2Labels.push(_('Enhance Voice'));
             this._box2Map.push('volumeEnhancer');
         }
-        if (this._modelData.windNoiseReduction || this._modelData.windReduction) {
+        if (this._modelData.windNoiseReduction) {
             box2Labels.push(_('Smart Wind Noise Reduction'));
             this._box2Map.push('windNoise');
         }
@@ -636,7 +636,7 @@ export const OpoBudsDevice = GObject.registerClass({
             });
         }
 
-        if (this._modelData.windNoiseReduction || this._modelData.windReduction)
+        if (this._modelData.windNoiseReduction)
             this._props.box1CheckButton1State = this._windNoise ? 1 : 0;
 
         this.dataHandler?.setConfig(this._config);

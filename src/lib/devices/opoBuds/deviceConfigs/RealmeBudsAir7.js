@@ -47,6 +47,7 @@ export default {
     highResAudio: true,
     dynamicBass: true,
     autoAnswer: true,
+    findMyPhone: true,
     fitTest: true,
     ring: true,
 

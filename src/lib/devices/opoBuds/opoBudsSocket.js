@@ -826,7 +826,7 @@ export const OpoBudsSocket = GObject.registerClass({
     }
 
     setWindNoise(enable) {
-        const byte = resolveFeatureByte(this._modelData, ['windReduction', 'windNoiseReduction'], FeatureId.WIND_NOISE);
+        const byte = resolveFeatureByte(this._modelData, 'windNoiseReduction', FeatureId.WIND_NOISE);
         if (byte !== null)
             this._setFeatureSwitch(byte, enable, 'Wind Noise');
     }
