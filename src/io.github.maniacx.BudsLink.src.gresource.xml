@@ -122,6 +122,7 @@
         <file>lib/devices/nothingBuds/nothingBudsSocket.js</file>
         <file>lib/devices/nothingBuds/deviceConfigs/BudsPro.js</file>
         <file>lib/devices/nothingBuds/deviceConfigs/CMFBuds.js</file>
+        <file>lib/devices/nothingBuds/deviceConfigs/CMFBudsNeo.js</file>
         <file>lib/devices/nothingBuds/deviceConfigs/CMFBuds2.js</file>
         <file>lib/devices/nothingBuds/deviceConfigs/CMFBuds2A.js</file>
         <file>lib/devices/nothingBuds/deviceConfigs/CMFBuds2Plus.js</file>
