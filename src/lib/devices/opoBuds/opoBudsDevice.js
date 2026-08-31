@@ -202,7 +202,7 @@ export const OpoBudsDevice = GObject.registerClass({
         if (this._modelData.eqPreset)
             this._eqPreset = this._settingsItems['eq-preset'];
 
-        if (this._modelData.eqPreset) {
+        if (this._modelData.customEqSupport) {
             this._customEqList = this._settingsItems['custom-eq-list'] ?? [];
             this._lastCustomEqOpTs = this._settingsItems['custom-eq-op']?.ts ?? 0;
         }
@@ -378,7 +378,7 @@ export const OpoBudsDevice = GObject.registerClass({
                     }
                 }
 
-                if (this._modelData.eqPreset) {
+                if (this._modelData.customEqSupport) {
                     const customEqOp = this._settingsItems['custom-eq-op'];
                     if (customEqOp && customEqOp.ts !== this._lastCustomEqOpTs) {
                         this._lastCustomEqOpTs = customEqOp.ts;
@@ -972,7 +972,7 @@ export const OpoBudsDevice = GObject.registerClass({
     }
 
     updateCustomEqs(entries) {
-        if (!this._modelData?.eqPreset)
+        if (!this._modelData?.customEqSupport)
             return;
 
         this._customEqList = Array.isArray(entries) ? entries : [];

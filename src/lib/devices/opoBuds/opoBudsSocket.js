@@ -55,7 +55,7 @@ export const OpoBudsSocket = GObject.registerClass({
             this._getFeatureSwitches();
             if (this._modelData.eqPreset)
                 this._getEqPreset();
-            if (this._modelData.eqPreset)
+            if (this._modelData.customEqSupport)
                 this.getCustomEqInfo();
             if (this._modelData.gestureOptions)
                 this._getGestures();
@@ -294,7 +294,7 @@ export const OpoBudsSocket = GObject.registerClass({
         if (modelData.eqPreset)
             this._getEqPreset();
 
-        if (modelData.eqPreset)
+        if (modelData.customEqSupport)
             this.getCustomEqInfo();
 
         if (modelData.broadcastEvents) {
@@ -578,7 +578,7 @@ export const OpoBudsSocket = GObject.registerClass({
 
         this._log.info(`Set Dynamic Audio EQ: Low=${low}, Med=${med}, High=${high}`);
         const payload = [0x03, lowByte, medByte, highByte];
-        this._queuePacket(Cmd.SET_EQ_DETAIL, payload, 'Set Dynamic Audio EQ');
+        this._queuePacket(Cmd.SET_EQ_INFO, payload, 'Set Dynamic Audio EQ');
     }
 
     _parseCustomEqInfo(payload) {
@@ -671,7 +671,7 @@ export const OpoBudsSocket = GObject.registerClass({
     }
 
     requestCustomEqInfo() {
-        this.setCustomEq(CustomEqAction.REQUEST, 0x00, {});
+        this._queuePacket(Cmd.SET_EQ_INFO, [0x00, 0x00, 0x00, 0x00, 0x00], 'Custom EQ Request');
     }
 
     _getNoiseControl() {

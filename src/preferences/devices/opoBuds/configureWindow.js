@@ -448,7 +448,7 @@ export const ConfigureWindow = GObject.registerClass({
 
         this._eqEditor.present(this);
     }
-_addCustomEqManagement(eqGroup) {
+    _addCustomEqManagement(eqGroup) {
         const _ = this._gettext;
 
         const addRow = new Adw.ActionRow({
@@ -497,7 +497,8 @@ _addCustomEqManagement(eqGroup) {
 
     _nextCustomEqId() {
         const entries = this._settingsItems['custom-eq-list'] ?? [];
-        let next = 4;
+        const baseOffset = this._modelData.eqPreset ? Object.values(this._modelData.eqPreset).length : 4;
+        let next = baseOffset;
         for (const entry of entries) {
             if (entry.eqId >= next)
                 next = entry.eqId + 1;
