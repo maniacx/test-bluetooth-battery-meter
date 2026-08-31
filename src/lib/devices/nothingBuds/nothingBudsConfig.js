@@ -7,6 +7,7 @@ import CMFBuds2A from './deviceConfigs/CMFBuds2A.js';
 import CMFBuds2 from './deviceConfigs/CMFBuds2.js';
 import BudsPro from './deviceConfigs/BudsPro.js';
 import CMFBuds from './deviceConfigs/CMFBuds.js';
+import CMFBudsNeo from './deviceConfigs/CMFBudsNeo.js';
 import CMFHeadphonePro from './deviceConfigs/CMFHeadphonePro.js';
 import NeckbandPro from './deviceConfigs/NeckbandPro.js';
 import NothingHeadphone1 from './deviceConfigs/NothingHeadphone1.js';
@@ -29,6 +30,7 @@ export const NothingBudsModelList = [
     CMFBuds2,
     BudsPro,
     CMFBuds,
+    CMFBudsNeo,
     CMFHeadphonePro,
     NeckbandPro,
     NothingHeadphone1,
