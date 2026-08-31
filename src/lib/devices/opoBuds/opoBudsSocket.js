@@ -603,7 +603,7 @@ export const OpoBudsSocket = GObject.registerClass({
             if (pos + nameLen > payload.length)
                 break;
 
-            const name = new TextDecoder().decode(payload.slice(pos, pos + nameLen));
+            const name = new TextDecoder('utf-8').decode(new Uint8Array(payload.slice(pos, pos + nameLen))).replace(/\0+$/, '');
             pos += nameLen;
 
             if (pos >= payload.length)

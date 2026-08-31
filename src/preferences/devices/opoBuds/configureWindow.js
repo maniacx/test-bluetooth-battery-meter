@@ -63,6 +63,8 @@ export const ConfigureWindow = GObject.registerClass({
         if (!this._settingsItems)
             return;
 
+        this._lastCustomEqListJson = JSON.stringify(this._settingsItems['custom-eq-list'] ?? []);
+
         this.title = this._settingsItems.alias;
 
         this._modelData = OpoBudsModelList.find(m => m.modelId === this._settingsItems.modelid);
@@ -139,8 +141,14 @@ export const ConfigureWindow = GObject.registerClass({
                 this._settingsItems = item;
 
                 if (this._modelData.eqPreset && this._eqPresetDropdown) {
-                    this._syncEqDropdownOptions();
-                    this._eqPresetDropdown.selected_item = this._settingsItems['eq-preset'];
+                    const currentCustomJson = JSON.stringify(this._settingsItems['custom-eq-list'] ?? []);
+                    if (this._lastCustomEqListJson !== currentCustomJson) {
+                        this._lastCustomEqListJson = currentCustomJson;
+                        this._syncEqDropdownOptions();
+                    }
+
+                    if (this._eqPresetDropdown.selected_item !== this._settingsItems['eq-preset'])
+                        this._eqPresetDropdown.selected_item = this._settingsItems['eq-preset'];
                 }
 
                 if (this._modelData.dynamicBass && this._dynamicBassSwitch)
@@ -370,8 +378,11 @@ export const ConfigureWindow = GObject.registerClass({
         eqGroup.add(this._eqPresetDropdown);
         this._page.add(eqGroup);
 
-        if (this._modelData.customEqSupport)
-            this._addCustomEqManagement(eqGroup);
+        if (this._modelData.customEqSupport) {
+            this._customEqGroup = eqGroup;
+            this._customEqRows = [];
+            this._addCustomEqManagement();
+        }
     }
 
     _buildEqOptions() {
@@ -404,6 +415,9 @@ export const ConfigureWindow = GObject.registerClass({
         this._eqPresetDropdown.updateList(
             options, values, this._settingsItems['eq-preset'], buttonVisibleFor
         );
+
+        if (this._modelData.customEqSupport)
+            this._syncCustomEqRows();
     }
 
     _selectedCustomEntry() {
@@ -425,7 +439,7 @@ export const ConfigureWindow = GObject.registerClass({
         this._eqEditor = new EqualizerWidget({
             freqs: labels,
             initialValues: entry.dbs ?? [],
-            range: Math.max(this._modelData.eqBands?.range ?? 6, Math.abs(entry.min), Math.abs(entry.max)),
+            range: Math.max(this._modelData.eqBands?.range ?? 6, Math.abs(entry.min ?? 6), Math.abs(entry.max ?? 6)),
             topBarTitle: entry.name || _('Custom'),
             bottomBarTitle: _('Gain (dB)'),
         });
@@ -434,6 +448,7 @@ export const ConfigureWindow = GObject.registerClass({
             if (this._isUpdatingUI)
                 return;
 
+            entry.dbs = values;
             this._updateGsettings('custom-eq-op', {
                 action: 'modify',
                 eqId: entry.eqId,
@@ -448,7 +463,8 @@ export const ConfigureWindow = GObject.registerClass({
 
         this._eqEditor.present(this);
     }
-    _addCustomEqManagement(eqGroup) {
+
+    _addCustomEqManagement() {
         const _ = this._gettext;
 
         const addRow = new Adw.ActionRow({
@@ -460,25 +476,53 @@ export const ConfigureWindow = GObject.registerClass({
             icon_name: 'list-add-symbolic',
             valign: Gtk.Align.CENTER,
             css_classes: ['circular'],
+            tooltip_text: _('Add Custom Preset'),
         });
 
         addButton.connect('clicked', () => this._promptForNewPreset());
         addRow.add_suffix(addButton);
         addRow.activatable_widget = addButton;
-        eqGroup.add(addRow);
+        this._customEqGroup.add(addRow);
+
+        this._syncCustomEqRows();
+    }
+
+    _syncCustomEqRows() {
+        if (!this._customEqGroup)
+            return;
+
+        const _ = this._gettext;
+
+        for (const row of this._customEqRows ?? [])
+            this._customEqGroup.remove(row);
+
+        this._customEqRows = [];
 
         for (const entry of this._settingsItems['custom-eq-list'] ?? []) {
+            if (entry.eqId === undefined)
+                continue;
+
             const row = new Adw.ActionRow({
                 title: entry.name || _('Custom'),
-                subtitle: entry.selected ? _('Currently selected') : '',
+                subtitle: entry.selected ? _('Currently active') : '',
             });
+
+            const editButton = new Gtk.Button({
+                icon_name: 'bbm-eq-symbolic',
+                valign: Gtk.Align.CENTER,
+                css_classes: ['circular'],
+                tooltip_text: _('Adjust Equalizer'),
+            });
+            editButton.connect('clicked', () => this._presentEqEditor(entry));
+            row.add_suffix(editButton);
+            row.activatable_widget = editButton;
 
             const renameButton = new Gtk.Button({
                 icon_name: 'document-edit-symbolic',
                 valign: Gtk.Align.CENTER,
                 css_classes: ['circular'],
+                tooltip_text: _('Rename Preset'),
             });
-
             renameButton.connect('clicked', () => this._promptRenamePreset(entry));
             row.add_suffix(renameButton);
 
@@ -486,12 +530,13 @@ export const ConfigureWindow = GObject.registerClass({
                 icon_name: 'user-trash-symbolic',
                 valign: Gtk.Align.CENTER,
                 css_classes: ['circular', 'destructive-action'],
+                tooltip_text: _('Delete Preset'),
             });
-
             deleteButton.connect('clicked', () => this._confirmDeletePreset(entry));
             row.add_suffix(deleteButton);
 
-            eqGroup.add(row);
+            this._customEqGroup.add(row);
+            this._customEqRows.push(row);
         }
     }
 
@@ -526,9 +571,20 @@ export const ConfigureWindow = GObject.registerClass({
             const name = entry.text.trim();
             if (response === 'add' && name) {
                 const bandFreqs = this._modelData.eqBands?.frequencies ?? [];
+                const newId = this._nextCustomEqId();
+                const newEntry = {
+                    eqId: newId,
+                    name,
+                    min: -6,
+                    max: 6,
+                    freqs: bandFreqs,
+                    dbs: bandFreqs.map(() => 0),
+                    selected: true,
+                };
+
                 this._updateGsettings('custom-eq-op', {
                     action: 'add',
-                    eqId: this._nextCustomEqId(),
+                    eqId: newId,
                     name,
                     min: -6,
                     max: 6,
@@ -536,6 +592,8 @@ export const ConfigureWindow = GObject.registerClass({
                     dbs: bandFreqs.map(() => 0),
                     ts: Date.now(),
                 });
+
+                this._presentEqEditor(newEntry);
             }
         });
 
@@ -593,6 +651,11 @@ export const ConfigureWindow = GObject.registerClass({
         dialog.connect('response', (_d, response) => {
             if (response !== 'delete')
                 return;
+
+            if (this._settingsItems['eq-preset'] === entry.eqId) {
+                const defaultPreset = Object.values(this._modelData.eqPreset ?? {})[0] ?? 0;
+                this._updateGsettings('eq-preset', defaultPreset);
+            }
 
             this._updateGsettings('custom-eq-op', {
                 action: 'delete',
