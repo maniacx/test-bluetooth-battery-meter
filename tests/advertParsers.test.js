@@ -22,6 +22,16 @@ describe('parseSwiftPair', () => {
     it('returns null without 0x0006', () => {
         assertNull(parseSwiftPair(empty));
     });
+    it('decodes real Samsung Buds4 Pro swift beacon (6-byte sub-header)', () => {
+        // Real capture: 03 02 80 04 44 24 <name>. Control byte 0x04 at index 3
+        // flags the extra 3-byte sub-header; name starts at index 6.
+        const nm = Array.from("harsha's Buds4 Pro").map(c => c.charCodeAt(0));
+        const advert = {...empty, manufacturerData: mfg(0x0006, [0x03, 0x02, 0x80, 0x04, 0x44, 0x24, ...nm])};
+        assertEqual(parseSwiftPair(advert).name, "harsha's Buds4 Pro");
+    });
+    it('rejects a 0x03 beacon whose payload is non-printable garbage', () => {
+        assertNull(parseSwiftPair({...empty, manufacturerData: mfg(0x0006, [0x03, 0x02, 0x80, 0x04, 0xfc, 0x45, 0xd9, 0x99])}));
+    });
 });
 
 describe('parseFastPair', () => {

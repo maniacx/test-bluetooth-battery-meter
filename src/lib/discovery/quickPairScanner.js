@@ -76,7 +76,10 @@ export const QuickPairScanner = GObject.registerClass({
             if (!cand)
                 return;
             const now = GLib.get_monotonic_time() / 1e6;
-            if (!shouldNotify(this._seen, path, now))
+            // Dedup by name so one physical device that advertises on both its LE
+            // and BR/EDR addresses (e.g. Galaxy Buds: swiftpair + samsung) only
+            // notifies once.
+            if (!shouldNotify(this._seen, cand.name || path, now))
                 return;
             this._log.info(`candidate ${cand.kind} name=${cand.name}`);
             this.emit('candidate-found', {path, ...cand});

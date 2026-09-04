@@ -15,21 +15,33 @@
 // candidate shape: {kind, name, icon, modelId}
 
 const decoder = new TextDecoder('utf-8');
+const ICON = 'audio-headphones-symbolic';
 
 // --- Microsoft Swift Pair ------------------------------------------------
 // Manufacturer data under company id 0x0006. Layout:
 //   [0]=0x03 (Microsoft Beacon Id), [1]=sub-scenario, [2]=rssi/flags,
-//   [3..]=UTF-8 display name (present in the pairing scenarios).
+//   then the UTF-8 display name. Some devices (e.g. Samsung Galaxy Buds,
+//   sub-scenario 0x02) insert a 3-byte sub-header before the name, flagged by a
+//   control byte at index 3 (observed: 04 44 24); plain MS beacons (mice) start
+//   the name right at index 3.
 const MS_COMPANY = 0x0006;
 const MS_BEACON_SWIFTPAIR = 0x03;
+const CTRL = /[\x00-\x1f]/;
+const CTRL_G = /[\x00-\x1f]+/g;
+const REPLACEMENT = '�';
 
 export function parseSwiftPair(advert) {
     const data = advert.manufacturerData?.get(MS_COMPANY);
     if (!data || data.length < 4) return null;
     if (data[0] !== MS_BEACON_SWIFTPAIR) return null;
-    const name = decoder.decode(data.slice(3)).replace(/\0+$/, '').trim();
-    if (!name) return null;
-    return {kind: 'swiftpair', name, icon: 'audio-headphones-symbolic', modelId: null};
+    const nameStart = (data[3] !== undefined && data[3] < 0x20) ? 6 : 3;
+    if (data.length <= nameStart) return null;
+    const name = decoder.decode(data.slice(nameStart)).replace(CTRL_G, '').trim();
+    // Reject non-name payloads from other 0x03 beacons: no decode errors, no
+    // leftover control chars, and at least one letter.
+    if (!name || name.includes(REPLACEMENT) || CTRL.test(name) || !/[A-Za-z]/.test(name))
+        return null;
+    return {kind: 'swiftpair', name, icon: ICON, modelId: null};
 }
 
 // --- Google Fast Pair ----------------------------------------------------
@@ -46,7 +58,7 @@ export function parseFastPair(advert) {
     if (!data || data.length !== 3) return null;
     const modelId = (data[0] << 16) | (data[1] << 8) | data[2];
     const name = FAST_PAIR_MODELS.get(modelId) || advert.name?.trim() || 'Fast Pair device';
-    return {kind: 'fastpair', name, icon: 'audio-headphones-symbolic', modelId};
+    return {kind: 'fastpair', name, icon: ICON, modelId};
 }
 
 // --- Apple proximity pairing ---------------------------------------------
@@ -64,7 +76,7 @@ export function parseApple(advert) {
     if (data[0] !== APPLE_PROX_PAIRING) return null;
     const modelId = (data[3] << 8) | data[4];
     const name = APPLE_MODELS.get(modelId) || 'AirPods';
-    return {kind: 'apple', name, icon: 'audio-headphones-symbolic', modelId};
+    return {kind: 'apple', name, icon: ICON, modelId};
 }
 
 // --- Samsung -------------------------------------------------------------
@@ -81,7 +93,7 @@ export function parseSamsung(advert) {
     const major = cod == null ? null : (cod >> 8) & 0x1F;
     if (major !== 0x04) return null;
     const name = advert.name?.trim() || 'Galaxy Buds';
-    return {kind: 'samsung', name, icon: 'audio-headphones-symbolic', modelId: null};
+    return {kind: 'samsung', name, icon: ICON, modelId: null};
 }
 
 // --- Class-of-Device fallback --------------------------------------------
@@ -100,7 +112,7 @@ export function parseClassFallback(advert, opts = {}) {
     if (advert.rssi == null || advert.rssi < CLASS_RSSI_MIN) return null;
     const name = advert.name?.trim();
     if (!name) return null;
-    return {kind: 'class', name, icon: 'audio-headphones-symbolic', modelId: null};
+    return {kind: 'class', name, icon: ICON, modelId: null};
 }
 
 // --- Dispatcher ----------------------------------------------------------
