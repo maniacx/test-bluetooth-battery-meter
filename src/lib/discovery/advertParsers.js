@@ -66,3 +66,31 @@ export function parseApple(advert) {
     const name = APPLE_MODELS.get(modelId) || 'AirPods';
     return {kind: 'apple', name, icon: 'audio-headphones-symbolic', modelId};
 }
+
+// --- Class-of-Device fallback --------------------------------------------
+// Bluetooth Class of Device: bits 8-12 are the major device class. 0x04 =
+// Audio/Video. Low-confidence, opt-in ('aggressive') fallback for devices that
+// carry no vendor pairing beacon. Gated by a close-proximity RSSI floor.
+const MAJOR_AUDIO = 0x04;
+const CLASS_RSSI_MIN = -60;
+
+export function parseClassFallback(advert, opts = {}) {
+    if (!opts.aggressive) return null;
+    const cod = advert.class;
+    if (cod == null) return null;
+    const major = (cod >> 8) & 0x1F;
+    if (major !== MAJOR_AUDIO) return null;
+    if (advert.rssi == null || advert.rssi < CLASS_RSSI_MIN) return null;
+    const name = advert.name?.trim();
+    if (!name) return null;
+    return {kind: 'class', name, icon: 'audio-headphones-symbolic', modelId: null};
+}
+
+// --- Dispatcher ----------------------------------------------------------
+// Precedence: fast pair > apple > swift pair > class fallback. First match wins.
+export function parseAdvert(advert, opts = {aggressive: false}) {
+    return parseFastPair(advert)
+        || parseApple(advert)
+        || parseSwiftPair(advert)
+        || parseClassFallback(advert, opts);
+}

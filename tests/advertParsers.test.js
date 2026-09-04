@@ -1,6 +1,6 @@
 'use strict';
 import {describe, it, assertEqual, assertNull} from './harness.js';
-import {parseSwiftPair, parseFastPair, FAST_PAIR_MODELS, parseApple, APPLE_MODELS} from '../src/lib/discovery/advertParsers.js';
+import {parseSwiftPair, parseFastPair, FAST_PAIR_MODELS, parseApple, APPLE_MODELS, parseClassFallback, parseAdvert} from '../src/lib/discovery/advertParsers.js';
 
 function mfg(company, bytes) { return new Map([[company, Uint8Array.from(bytes)]]); }
 function svc(uuid, bytes) { return new Map([[uuid, Uint8Array.from(bytes)]]); }
@@ -57,4 +57,33 @@ describe('parseApple', () => {
         assertNull(parseApple({...empty, manufacturerData: mfg(0x004C, [0x10, 0x05, 0x01, 0x02, 0x03])}));
     });
     it('returns null without 0x004C', () => { assertNull(parseApple(empty)); });
+});
+
+const AUDIO_CLASS = 0x240418; // major device class = Audio/Video
+
+describe('parseClassFallback', () => {
+    it('matches audio class + strong rssi only when aggressive', () => {
+        const advert = {...empty, class: AUDIO_CLASS, name: 'BT Speaker', rssi: -50};
+        assertNull(parseClassFallback(advert, {aggressive: false}));
+        assertEqual(parseClassFallback(advert, {aggressive: true}),
+            {kind: 'class', name: 'BT Speaker', icon: 'audio-headphones-symbolic', modelId: null});
+    });
+    it('rejects weak rssi even when aggressive', () => {
+        assertNull(parseClassFallback({...empty, class: AUDIO_CLASS, name: 'x', rssi: -80}, {aggressive: true}));
+    });
+    it('rejects non-audio class', () => {
+        assertNull(parseClassFallback({...empty, class: 0x000100, name: 'x', rssi: -50}, {aggressive: true}));
+    });
+});
+
+describe('parseAdvert precedence', () => {
+    it('prefers fast pair over class fallback', () => {
+        FAST_PAIR_MODELS.set(0x000001, 'Known Buds');
+        const advert = {...empty, class: AUDIO_CLASS, rssi: -50,
+            serviceData: svc(FE2C, [0x00, 0x00, 0x01])};
+        assertEqual(parseAdvert(advert, {aggressive: true}).kind, 'fastpair');
+    });
+    it('returns null when nothing matches', () => {
+        assertNull(parseAdvert(empty, {aggressive: false}));
+    });
 });
