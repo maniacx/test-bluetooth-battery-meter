@@ -270,6 +270,8 @@ const DeviceManagementDialog = GObject.registerClass({
             valign: Gtk.Align.CENTER,
             width_request: 16,
             height_request: 16,
+            margin_start: 8,
+            margin_end: 8,
             visible: isInitializing || isProcessing,
         });
 
