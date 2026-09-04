@@ -12,6 +12,10 @@ const BluezDeviceInterface = `
     <property name="Name" type="s" access="read"/>
     <property name="ServicesResolved" type="b" access="read"/>
     <property name="UUIDs" type="as" access="read"/>
+    <property name="ManufacturerData" type="a{qv}" access="read"/>
+    <property name="ServiceData" type="a{sv}" access="read"/>
+    <property name="RSSI" type="n" access="read"/>
+    <property name="Class" type="u" access="read"/>
   </interface>
 </node>`;
 

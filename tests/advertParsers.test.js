@@ -1,6 +1,7 @@
 'use strict';
 import {describe, it, assertEqual, assertNull} from './harness.js';
 import {parseSwiftPair, parseFastPair, FAST_PAIR_MODELS, parseApple, APPLE_MODELS, parseClassFallback, parseAdvert} from '../src/lib/discovery/advertParsers.js';
+import {shouldNotify} from '../src/lib/discovery/discoveryUtils.js';
 
 function mfg(company, bytes) { return new Map([[company, Uint8Array.from(bytes)]]); }
 function svc(uuid, bytes) { return new Map([[uuid, Uint8Array.from(bytes)]]); }
@@ -85,5 +86,18 @@ describe('parseAdvert precedence', () => {
     });
     it('returns null when nothing matches', () => {
         assertNull(parseAdvert(empty, {aggressive: false}));
+    });
+});
+
+describe('shouldNotify dedup', () => {
+    it('notifies first sight, suppresses repeat within session', () => {
+        const seen = new Map();
+        assertEqual(shouldNotify(seen, '/org/bluez/hci0/dev_AA', 1000), true);
+        assertEqual(shouldNotify(seen, '/org/bluez/hci0/dev_AA', 1005), false);
+    });
+    it('re-notifies after the cooldown window', () => {
+        const seen = new Map();
+        shouldNotify(seen, '/p', 1000);
+        assertEqual(shouldNotify(seen, '/p', 1000 + 121), true); // > 120s cooldown
     });
 });

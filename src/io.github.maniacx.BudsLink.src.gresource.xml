@@ -21,6 +21,10 @@
         <file>lib/bluezDeviceProxy.js</file>
         <file>lib/dataHandler.js</file>
         <file>lib/enhancedDeviceSupportManager.js</file>
+        <file>lib/discovery/advertParsers.js</file>
+        <file>lib/discovery/adapterProxy.js</file>
+        <file>lib/discovery/discoveryUtils.js</file>
+        <file>lib/discovery/quickPairScanner.js</file>
         <file>lib/devices/commonEmuns.js</file>
         <file>lib/devices/deviceUtils.js</file>
         <file>lib/devices/logger.js</file>
