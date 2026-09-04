@@ -533,7 +533,7 @@ export const ConfigureWindow = GObject.registerClass({
                 hasPairMode: true,
                 hasRoutingIndicator: true,
                 hasRoutingControl: true,
-                hasActiveFix: true,
+                hasActiveFix: false,
                 showMac: true,
                 refreshOnWindowOpen: true,
             };
