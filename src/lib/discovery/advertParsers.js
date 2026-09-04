@@ -67,6 +67,23 @@ export function parseApple(advert) {
     return {kind: 'apple', name, icon: 'audio-headphones-symbolic', modelId};
 }
 
+// --- Samsung -------------------------------------------------------------
+// Galaxy Buds advertise Samsung manufacturer data (company id 0x0075) rather than
+// Google Fast Pair. But 0x0075 covers all Samsung gear (phones, watches, TVs), so
+// require an Audio/Video class of device to mean a bud/headphone. Model id is not
+// reliably in the advert; name comes from the resolved Name/Alias, else generic.
+const SAMSUNG_COMPANY = 0x0075;
+
+export function parseSamsung(advert) {
+    const data = advert.manufacturerData?.get(SAMSUNG_COMPANY);
+    if (!data) return null;
+    const cod = advert.class;
+    const major = cod == null ? null : (cod >> 8) & 0x1F;
+    if (major !== 0x04) return null;
+    const name = advert.name?.trim() || 'Galaxy Buds';
+    return {kind: 'samsung', name, icon: 'audio-headphones-symbolic', modelId: null};
+}
+
 // --- Class-of-Device fallback --------------------------------------------
 // Bluetooth Class of Device: bits 8-12 are the major device class. 0x04 =
 // Audio/Video. Low-confidence, opt-in ('aggressive') fallback for devices that
@@ -87,10 +104,12 @@ export function parseClassFallback(advert, opts = {}) {
 }
 
 // --- Dispatcher ----------------------------------------------------------
-// Precedence: fast pair > apple > swift pair > class fallback. First match wins.
+// Precedence: fast pair > apple > samsung > swift pair > class fallback.
+// First match wins.
 export function parseAdvert(advert, opts = {aggressive: false}) {
     return parseFastPair(advert)
         || parseApple(advert)
+        || parseSamsung(advert)
         || parseSwiftPair(advert)
         || parseClassFallback(advert, opts);
 }

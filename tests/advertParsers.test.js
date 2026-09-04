@@ -1,6 +1,7 @@
 'use strict';
 import {describe, it, assertEqual, assertNull} from './harness.js';
 import {parseSwiftPair, parseFastPair, FAST_PAIR_MODELS, parseApple, APPLE_MODELS, parseClassFallback, parseAdvert} from '../src/lib/discovery/advertParsers.js';
+import {parseSamsung} from '../src/lib/discovery/advertParsers.js';
 import {shouldNotify} from '../src/lib/discovery/discoveryUtils.js';
 
 function mfg(company, bytes) { return new Map([[company, Uint8Array.from(bytes)]]); }
@@ -86,6 +87,38 @@ describe('parseAdvert precedence', () => {
     });
     it('returns null when nothing matches', () => {
         assertNull(parseAdvert(empty, {aggressive: false}));
+    });
+});
+
+// Real capture: Galaxy Buds4 Pro, company 0x0075, class 0x00244404 (audio).
+const BUDS4PRO_MFG = [0x02, 0x09, 0x01, 0x00, 0x00, 0x00, 0x15, 0x06, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x03, 0x01, 0x68, 0x01, 0x5b, 0x48, 0x65, 0x61, 0x64,
+    0x70, 0x68, 0x6f, 0x6e, 0x65, 0x5d, 0x20];
+const BUDS4PRO_CLASS = 0x00244404;
+
+describe('parseSamsung', () => {
+    it('matches company 0x0075 with audio class', () => {
+        const advert = {...empty, class: BUDS4PRO_CLASS, name: "harsha's Buds4 Pro",
+            manufacturerData: mfg(0x0075, BUDS4PRO_MFG)};
+        assertEqual(parseSamsung(advert),
+            {kind: 'samsung', name: "harsha's Buds4 Pro", icon: 'audio-headphones-symbolic', modelId: null});
+    });
+    it('falls back to Galaxy Buds when unnamed', () => {
+        const advert = {...empty, class: BUDS4PRO_CLASS, manufacturerData: mfg(0x0075, BUDS4PRO_MFG)};
+        assertEqual(parseSamsung(advert).name, 'Galaxy Buds');
+    });
+    it('ignores non-audio Samsung gear (phone/watch)', () => {
+        assertNull(parseSamsung({...empty, class: 0x000100, manufacturerData: mfg(0x0075, [0x01])}));
+    });
+    it('returns null without 0x0075', () => { assertNull(parseSamsung(empty)); });
+});
+
+describe('real devices', () => {
+    it('Galaxy Buds4 Pro resolves via parseAdvert as samsung', () => {
+        const advert = {...empty, class: BUDS4PRO_CLASS, name: "harsha's Buds4 Pro",
+            manufacturerData: mfg(0x0075, BUDS4PRO_MFG)};
+        assertEqual(parseAdvert(advert, {aggressive: false}).kind, 'samsung');
     });
 });
 
