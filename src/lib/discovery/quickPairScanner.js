@@ -6,7 +6,6 @@ import GLib from 'gi://GLib';
 import {getBluezDeviceProxy} from '../bluezDeviceProxy.js';
 import {getAdapterProxy, setDiscoveryFilter} from './adapterProxy.js';
 import {parseAdvert} from './advertParsers.js';
-import {shouldNotify} from './discoveryUtils.js';
 import {createLogger} from '../devices/logger.js';
 
 const BLUEZ = 'org.bluez';
@@ -75,14 +74,24 @@ export const QuickPairScanner = GObject.registerClass({
             const cand = parseAdvert(advert, {aggressive: this._aggressive});
             if (!cand)
                 return;
+            // A device with a Class of Device is reachable over BR/EDR — the correct
+            // endpoint to Pair(). Pure-LE advertisers (e.g. a Galaxy Buds swiftpair
+            // random address) fail LE pairing, so they are detection-only here.
+            const bredr = advert.class != null;
             const now = GLib.get_monotonic_time() / 1e6;
             // Dedup by name so one physical device that advertises on both its LE
             // and BR/EDR addresses (e.g. Galaxy Buds: swiftpair + samsung) only
-            // notifies once.
-            if (!shouldNotify(this._seen, cand.name || path, now))
+            // notifies once — but let a BR/EDR sighting supersede an earlier LE-only
+            // one so the notification pairs the right (pairable) endpoint.
+            const key = cand.name || path;
+            const prev = this._seen.get(key);
+            const cooled = !prev || (now - prev.t) > 120;
+            const upgrade = prev && !prev.bredr && bredr;
+            if (!cooled && !upgrade)
                 return;
-            this._log.info(`candidate ${cand.kind} name=${cand.name}`);
-            this.emit('candidate-found', {path, ...cand});
+            this._seen.set(key, {t: now, bredr});
+            this._log.info(`candidate ${cand.kind} name=${cand.name} bredr=${bredr}`);
+            this.emit('candidate-found', {path, bredr, ...cand});
         } catch (e) {
             this._log.error(e);
         }

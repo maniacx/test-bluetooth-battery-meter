@@ -30,14 +30,27 @@ export async function setDiscoveryFilter(adapter, rssi = -70) {
     });
 }
 
+// Promise wrapper around Gio.DBusConnection.call that does not depend on a global
+// _promisify (so this module works standalone and inside the app alike).
+function dbusCall(conn, path, iface, method, params, timeout) {
+    return new Promise((resolve, reject) => {
+        conn.call(BLUEZ, path, iface, method, params, null,
+            Gio.DBusCallFlags.NONE, timeout, null, (obj, res) => {
+                try {
+                    resolve(obj.call_finish(res));
+                } catch (e) {
+                    reject(e);
+                }
+            });
+    });
+}
+
 // Pair (Just Works for buds), connect, then trust so it auto-connects later.
 export async function pairAndConnect(devicePath) {
     const conn = Gio.DBus.system;
-    await conn.call(BLUEZ, devicePath, DEVICE_IFACE, 'Pair', null, null,
-        Gio.DBusCallFlags.NONE, 60000, null);
-    await conn.call(BLUEZ, devicePath, DEVICE_IFACE, 'Connect', null, null,
-        Gio.DBusCallFlags.NONE, 30000, null);
-    await conn.call(BLUEZ, devicePath, PROPS_IFACE, 'Set',
+    await dbusCall(conn, devicePath, DEVICE_IFACE, 'Pair', null, 60000);
+    await dbusCall(conn, devicePath, DEVICE_IFACE, 'Connect', null, 30000);
+    await dbusCall(conn, devicePath, PROPS_IFACE, 'Set',
         new GLib.Variant('(ssv)', [DEVICE_IFACE, 'Trusted', GLib.Variant.new_boolean(true)]),
-        null, Gio.DBusCallFlags.NONE, 5000, null);
+        5000);
 }
