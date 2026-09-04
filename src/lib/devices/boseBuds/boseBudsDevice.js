@@ -322,6 +322,7 @@ export const BoseBudsDevice = GObject.registerClass({
             this._pairingMode = this._settingsItems['pairing-mode'];
             this._devMgmtAction = this._settingsItems['dev-mgmt-action'];
             this._activeDevice = this._settingsItems['active-dev'];
+            this._deviceInfo = this._settingsItems['dev-mgmt']
         }
 
         if (this._modelData.sideTone)
@@ -476,6 +477,10 @@ export const BoseBudsDevice = GObject.registerClass({
 
                     case DeviceManagementAction.Routing:
                         this._setRoutingBTDevice(devMgmtAction.id);
+                        break;
+
+                    case DeviceManagementAction.Refresh:
+                        this._refreshBTDevice();
                         break;
                 }
             }
@@ -1567,6 +1572,16 @@ export const BoseBudsDevice = GObject.registerClass({
 
     _setRoutingBTDevice(id) {
         this._boseBudsSocket?.setRoutingBTDevice(id);
+    }
+
+    _refreshBTDevice() {
+        for (const device of this._deviceInfo)
+            device.state = BtDeviceState.Processing;
+
+        this._settingsItems['dev-mgmt'] = this._deviceInfo;
+        this._updateGsettings();
+
+        this._boseBudsSocket?.refreshBTDevice();
     }
 
     async _updateOwnId() {

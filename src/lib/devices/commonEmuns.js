@@ -11,4 +11,5 @@ export const DeviceManagementAction = {
     Disconnect: 1,
     Remove: 2,
     Routing: 3,
+    Refresh: 4,
 };
