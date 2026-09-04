@@ -1,8 +1,10 @@
 'use strict';
 import {describe, it, assertEqual, assertNull} from './harness.js';
-import {parseSwiftPair} from '../src/lib/discovery/advertParsers.js';
+import {parseSwiftPair, parseFastPair, FAST_PAIR_MODELS} from '../src/lib/discovery/advertParsers.js';
 
 function mfg(company, bytes) { return new Map([[company, Uint8Array.from(bytes)]]); }
+function svc(uuid, bytes) { return new Map([[uuid, Uint8Array.from(bytes)]]); }
+const FE2C = '0000fe2c-0000-1000-8000-00805f9b34fb';
 const empty = {manufacturerData: new Map(), serviceData: new Map(), class: null, name: null, rssi: null};
 
 describe('parseSwiftPair', () => {
@@ -18,4 +20,22 @@ describe('parseSwiftPair', () => {
     it('returns null without 0x0006', () => {
         assertNull(parseSwiftPair(empty));
     });
+});
+
+describe('parseFastPair', () => {
+    it('decodes 3-byte model id (discoverable frame)', () => {
+        FAST_PAIR_MODELS.set(0x123456, 'Pixel Buds Pro');
+        const advert = {...empty, serviceData: svc(FE2C, [0x12, 0x34, 0x56])};
+        assertEqual(parseFastPair(advert),
+            {kind: 'fastpair', name: 'Pixel Buds Pro', icon: 'audio-headphones-symbolic', modelId: 0x123456});
+    });
+    it('falls back to advert name for unknown model id', () => {
+        const advert = {...empty, name: 'Some Buds', serviceData: svc(FE2C, [0xAB, 0xCD, 0xEF])};
+        assertEqual(parseFastPair(advert),
+            {kind: 'fastpair', name: 'Some Buds', icon: 'audio-headphones-symbolic', modelId: 0xABCDEF});
+    });
+    it('ignores non-discoverable frame (len != 3)', () => {
+        assertNull(parseFastPair({...empty, serviceData: svc(FE2C, [0x00, 0x11, 0x22, 0x33, 0x44])}));
+    });
+    it('returns null without FE2C', () => { assertNull(parseFastPair(empty)); });
 });

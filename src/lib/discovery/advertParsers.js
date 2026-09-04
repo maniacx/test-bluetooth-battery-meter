@@ -31,3 +31,20 @@ export function parseSwiftPair(advert) {
     if (!name) return null;
     return {kind: 'swiftpair', name, icon: 'audio-headphones-symbolic', modelId: null};
 }
+
+// --- Google Fast Pair ----------------------------------------------------
+// 16-bit service UUID 0xFE2C. In discoverable/pairing mode the service data is
+// exactly the 3-byte (24-bit, big-endian) model id. Longer frames are the
+// not-discoverable account-key filter — ignored in v1.
+const FAST_PAIR_UUID = '0000fe2c-0000-1000-8000-00805f9b34fb';
+
+// Seeded from a local model list, never a cloud call.
+export const FAST_PAIR_MODELS = new Map();
+
+export function parseFastPair(advert) {
+    const data = advert.serviceData?.get(FAST_PAIR_UUID);
+    if (!data || data.length !== 3) return null;
+    const modelId = (data[0] << 16) | (data[1] << 8) | data[2];
+    const name = FAST_PAIR_MODELS.get(modelId) || advert.name?.trim() || 'Fast Pair device';
+    return {kind: 'fastpair', name, icon: 'audio-headphones-symbolic', modelId};
+}
