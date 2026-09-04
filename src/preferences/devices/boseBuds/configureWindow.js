@@ -535,6 +535,7 @@ export const ConfigureWindow = GObject.registerClass({
                 hasRoutingControl: true,
                 hasActiveFix: true,
                 showMac: true,
+                refreshOnWindowOpen: true,
             };
             const deviceInfo = this._settingsItems['dev-mgmt'];
             const currentActiveRoute = this._settingsItems['active-dev'];

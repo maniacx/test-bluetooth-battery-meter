@@ -427,7 +427,6 @@ export const BoseBudsSocket = GObject.registerClass({
         if (this._modelData.dualConnection) {
             this._getRoutingBTDevice();
             this._getPairingMode();
-            this._getAllBTDevices();
         }
     }
 
@@ -1246,6 +1245,10 @@ export const BoseBudsSocket = GObject.registerClass({
         const loginfo = 'Set Routing BTDevice';
         const mac = hexToBytes(macHex);
         this._encode(CommandType.DEVICE_ROUTING, Operator.START, loginfo, mac);
+    }
+
+    refreshBTDevice() {
+        this._getAllBTDevices();
     }
 
     destroy() {

@@ -454,6 +454,7 @@ export const DeviceManagementRow = GObject.registerClass({
             hasRoutingControl: false,
             hasActiveFix: false,
             showMac: true,
+            refreshOnWindowOpen: false,
             ...config,
         };
 
@@ -503,7 +504,12 @@ export const DeviceManagementRow = GObject.registerClass({
         }
 
         this._dialog = new DeviceManagementDialog(this, ownDevice, routeDevice);
-        this._button.connect('clicked', () => this._dialog.present(window));
+        this._button.connect('clicked', () => {
+            if (this.config.refreshOnWindowOpen)
+                this.emit('device-action', DeviceManagementAction.Refresh, '');
+
+            this._dialog.present(window);
+        });
         this.add_suffix(box);
     }
 
