@@ -48,3 +48,21 @@ export function parseFastPair(advert) {
     const name = FAST_PAIR_MODELS.get(modelId) || advert.name?.trim() || 'Fast Pair device';
     return {kind: 'fastpair', name, icon: 'audio-headphones-symbolic', modelId};
 }
+
+// --- Apple proximity pairing ---------------------------------------------
+// Apple Continuity manufacturer data (company id 0x004C) is a sequence of
+// [type][length][payload...] messages. Proximity Pairing = type 0x07; its payload
+// is [prefix=0x01][model hi][model lo][status][battery...]. Model id is big-endian.
+const APPLE_COMPANY = 0x004C;
+const APPLE_PROX_PAIRING = 0x07;
+
+export const APPLE_MODELS = new Map();
+
+export function parseApple(advert) {
+    const data = advert.manufacturerData?.get(APPLE_COMPANY);
+    if (!data || data.length < 5) return null;
+    if (data[0] !== APPLE_PROX_PAIRING) return null;
+    const modelId = (data[3] << 8) | data[4];
+    const name = APPLE_MODELS.get(modelId) || 'AirPods';
+    return {kind: 'apple', name, icon: 'audio-headphones-symbolic', modelId};
+}
