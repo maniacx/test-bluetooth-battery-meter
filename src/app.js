@@ -16,6 +16,8 @@ import {DbusService} from './appLibs/dbusService.js';
 import {BluetoothClient} from './appLibs/bluetoothClient.js';
 import {initConfigureWindowLauncher} from './appLibs/confirueWindowlauncher.js';
 import {EnhancedDeviceSupportManager} from './lib/enhancedDeviceSupportManager.js';
+import {QuickPairScanner} from './lib/discovery/quickPairScanner.js';
+import {pairAndConnect} from './lib/discovery/adapterProxy.js';
 
 Gio._promisify(Gio, 'bus_get');
 Gio._promisify(Gio.DBusProxy, 'new');
@@ -155,7 +157,42 @@ export const BudsLinkApplication = GObject.registerClass({
 
         this._client = new BluetoothClient();
         this._deviceManager = new EnhancedDeviceSupportManager(this);
+        this._initQuickPair();
         this._initialize();
+    }
+
+    _initQuickPair() {
+        const acceptAction = new Gio.SimpleAction({name: 'quickpair-accept'});
+        acceptAction.connect('activate', () => {
+            this._pendingAccept?.();
+            this._pendingAccept = null;
+        });
+        this.add_action(acceptAction);
+
+        this._notifyQuickPair = (name, _icon, cb) => {
+            this._pendingAccept = cb;
+            const n = new Gio.Notification();
+            n.set_title(_('Device found'));
+            n.set_body(_('Connect to %s?').replace('%s', name));
+            n.add_button(_('Connect'), 'app.quickpair-accept');
+            this.send_notification('quickpair', n);
+        };
+
+        this._quickPair = new QuickPairScanner({aggressive: false});
+        this._quickPair.connect('candidate-found', (_s, cand) => {
+            this._log.info(`quick pair candidate: ${cand.kind} ${cand.name}`);
+            const accept = () => pairAndConnect(cand.path).catch(e => this._log.error(e));
+            this._notifyQuickPair(cand.name, cand.icon, accept);
+        });
+
+        const syncQuickPair = () => {
+            if (this.settings.get_boolean('quick-pair-enabled'))
+                this._quickPair.start();
+            else
+                this._quickPair.stop();
+        };
+        this.settings.connect('changed::quick-pair-enabled', syncQuickPair);
+        syncQuickPair();
     }
 
     _onActivate() {
@@ -317,6 +354,9 @@ export const BudsLinkApplication = GObject.registerClass({
 
         this._themeManager?.destroy();
         this._themeManager = null;
+
+        this._quickPair?.destroy();
+        this._quickPair = null;
 
         this._client?.destroy();
         this._client = null;

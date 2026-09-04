@@ -21,12 +21,13 @@ export function getAdapterProxy(path = '/org/bluez/hci0') {
 // Restrict discovery to what Quick Pair needs: both transports, keep advert
 // updates flowing (DuplicateData), and let BlueZ pre-drop weak signals.
 export async function setDiscoveryFilter(adapter, rssi = -70) {
-    const filter = new GLib.Variant('a{sv}', {
+    // The proxy-wrapper method marshals its a{sv} argument itself, so pass a plain
+    // object whose values are variants (the `v`); do NOT pre-wrap in GLib.Variant.
+    await adapter.SetDiscoveryFilterAsync({
         Transport: GLib.Variant.new_string('auto'),
         DuplicateData: GLib.Variant.new_boolean(true),
         RSSI: GLib.Variant.new_int16(rssi),
     });
-    await adapter.SetDiscoveryFilterAsync(filter);
 }
 
 // Pair (Just Works for buds), connect, then trust so it auto-connects later.

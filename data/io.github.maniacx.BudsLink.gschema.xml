@@ -43,5 +43,10 @@
         <key name="gfps-list" type="as">
             <default>[]</default>
         </key>
+        <key name="quick-pair-enabled" type="b">
+            <default>true</default>
+            <summary>Enable Quick Pair discovery</summary>
+            <description>Watch for nearby unpaired devices in pairing mode and offer to connect.</description>
+        </key>
 	</schema>
 </schemalist>
