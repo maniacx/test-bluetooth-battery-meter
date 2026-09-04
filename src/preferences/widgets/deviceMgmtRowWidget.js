@@ -101,16 +101,16 @@ const DeviceManagementDialog = GObject.registerClass({
         toolbarView.set_content(page);
         this.set_child(toolbarView);
 
-        this.updateDevices(this._mgmtRow.deviceArr);
+        this.updateDevices();
     }
 
     _formatMac(mac) {
         return mac.replace(/:/g, '').match(/.{1,2}/g)?.join(':') ?? mac;
     }
 
-    updateDevices(deviceArr) {
+    updateDevices() {
         const _ = this._mgmtRow.gtxt;
-        const devices = deviceArr.map(device => ({...device}));
+        const devices = this._mgmtRow.deviceArr.map(device => ({...device}));
 
         devices.sort((a, b) => {
             const aCurrent = a.id === this._ownDevice;
@@ -425,7 +425,7 @@ const DeviceManagementDialog = GObject.registerClass({
             return;
 
         this._ownDevice = id;
-        this.updateDevices(this._mgmtRow.deviceArr);
+        this.updateDevices();
     }
 });
 
@@ -535,8 +535,9 @@ export const DeviceManagementRow = GObject.registerClass({
         if (this._deviceArrEqual(this.deviceArr, deviceArr))
             return;
 
-        this.deviceArr = deviceArr.map(device => ({...device}));
-        this._dialog?.updateDevices(deviceArr);
+        this.deviceArr.length = 0;
+        this.deviceArr.push(...deviceArr.map(device => ({...device})));
+        this._dialog?.updateDevices();
     }
 
     updateRouteDevice(id) {
