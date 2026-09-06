@@ -1,5 +1,6 @@
 #!@GJS@ -m
 import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
 
 imports.package.init({
     name: '@PACKAGE_NAME@',
@@ -7,6 +8,12 @@ imports.package.init({
     prefix: '@PREFIX@',
     libdir: '@LIBDIR@',
 });
+
+const settings = new Gio.Settings({schema_id: '@PACKAGE_NAME@'});
+const lang = settings.get_string('language');
+if (lang && lang !== 'system')
+    GLib.setenv('LANGUAGE', lang, true);
+
 imports.package.initGettext();
 
 const loop = new GLib.MainLoop(null, false);

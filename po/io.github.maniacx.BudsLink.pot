@@ -82,6 +82,10 @@ msgstr ""
 msgid "Accent Color"
 msgstr ""
 
+#: src/appLibs/widgets/settingsButton.js:80
+msgid "Language"
+msgstr ""
+
 #: src/appLibs/widgets/settingsButton.js:77
 msgid "Packet Logging"
 msgstr ""
@@ -104,6 +108,10 @@ msgstr ""
 
 #: src/appLibs/widgets/settingsButton.js:185
 msgid "Dark"
+msgstr ""
+
+#: src/appLibs/widgets/settingsButton.js:307
+msgid "Restart required to apply language change"
 msgstr ""
 
 #: src/appLibs/widgets/settingsButton.js:301

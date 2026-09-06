@@ -30,7 +30,24 @@ const SIGINT = 2;
 const SIGTERM = 15;
 
 const AppId = pkg.name; // eslint-disable-line no-undef
-const dataDir = pkg.datadir; // eslint-disable-line no-undef
+
+function resolveDataDir() {
+    const installed = pkg.datadir; // eslint-disable-line no-undef
+    const installedIcons = GLib.build_filenamev([installed, 'icons']);
+    if (GLib.file_test(installedIcons, GLib.FileTest.IS_DIR))
+        return installed;
+
+    const srcRoot = GLib.getenv('MESON_SOURCE_ROOT');
+    if (srcRoot) {
+        const srcPath = GLib.build_filenamev([srcRoot, 'src']);
+        if (GLib.file_test(GLib.build_filenamev([srcPath, 'icons']), GLib.FileTest.IS_DIR))
+            return srcPath;
+    }
+
+    return installed;
+}
+
+const dataDir = resolveDataDir();
 
 export const BudsLinkApplication = GObject.registerClass({
     GTypeName: 'BudsLinkApplication',
@@ -178,6 +195,7 @@ export const BudsLinkApplication = GObject.registerClass({
             this._sync();
             this._window = null;
             this._navView = null;
+            this._toastOverlay = null;
             this._devicesGrp = null;
             this._noDeviceRow = null;
             return false;
@@ -204,12 +222,18 @@ export const BudsLinkApplication = GObject.registerClass({
         this._devicesGrp.add(this._noDeviceRow);
         toolbarView.set_content(devicesPage);
 
-        const settingsButton = new SettingsButton(this.settings, direction);
+        const settingsButton = new SettingsButton(this.settings, direction, this);
         this._devicesGrp.set_header_suffix(settingsButton);
 
-        this._window.set_content(this._navView);
+        this._toastOverlay = new Adw.ToastOverlay({child: this._navView});
+        this._window.set_content(this._toastOverlay);
         this._window.present();
         this.sync();
+    }
+
+    showToast(message) {
+        if (this._toastOverlay)
+            this._toastOverlay.add_toast(new Adw.Toast({title: message, timeout: 3}));
     }
 
     async _initialize() {

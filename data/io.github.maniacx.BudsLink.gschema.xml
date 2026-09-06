@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="budslink">
     <schema id="io.github.maniacx.BudsLink" path="/io/github/maniacx/BudsLink/">
+        <key name="language" type="s">
+            <default>'system'</default>
+        </key>
         <key name="dark-mode" type="s">
             <default>'system'</default>
         </key>

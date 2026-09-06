@@ -1,6 +1,10 @@
 log
 config
+build
 build-dir
 .flatpak-builder
 localdata
 repo
+subprojects/.wraplock
+data/gschemas.compiled
+gschemas.compiled
