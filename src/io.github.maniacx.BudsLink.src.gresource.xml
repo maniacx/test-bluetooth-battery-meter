@@ -228,5 +228,11 @@
         <file>lib/devices/sony/deviceConfigs/WI-C100.js</file>
         <file>lib/devices/sony/deviceConfigs/WI-SP600N.js</file>
         <file>preferences/devices/sony/configureWindow.js</file>
+        <file>lib/devices/opoBuds/opoBudsConfig.js</file>
+        <file>lib/devices/opoBuds/opoBudsDevice.js</file>
+        <file>lib/devices/opoBuds/opoBudsSocket.js</file>
+        <file>lib/devices/opoBuds/deviceConfigs/RealmeBudsAir7.js</file>
+        <file>lib/devices/opoBuds/deviceConfigs/RealmeBudsWireless5ANC.js</file>
+        <file>preferences/devices/opoBuds/configureWindow.js</file>
     </gresource>
 </gresources>
