@@ -9,16 +9,18 @@ import {gettext as _} from 'gettext';
 
 const MODE_KEY = 'dark-mode';
 const ACCENT_KEY = 'accent-color';
+const LANG_KEY = 'language';
 
 const MODE_SYSTEM = 'system';
 const MODE_LIGHT = 'light';
 const MODE_DARK = 'dark';
 
 const ACCENT_SYSTEM = 'system';
+const LANG_SYSTEM = 'system';
 
 export const SettingsButton = GObject.registerClass(
 class SettingsButton extends Gtk.MenuButton {
-    _init(settings, direction) {
+    _init(settings, direction, app = null) {
         super._init({
             icon_name: 'bbm-open-menu-symbolic',
             tooltip_text: _('Application Settings'),
@@ -28,6 +30,7 @@ class SettingsButton extends Gtk.MenuButton {
         });
 
         this._settings = settings;
+        this._app = app;
 
         this._accentTable = [
             ['system', '--window-bg-color', _('System Default')],
@@ -70,6 +73,13 @@ class SettingsButton extends Gtk.MenuButton {
             _('Accent Color'),
             true,
             btn => this._openSubPopover(() => this._createAccentColorPopover(), btn)
+        ));
+
+        box.append(this._createRow(
+            'preferences-desktop-locale-symbolic',
+            _('Language'),
+            true,
+            btn => this._openSubPopover(() => this._createLanguagePopover(), btn)
         ));
 
         box.append(this._createRow(
@@ -220,6 +230,71 @@ class SettingsButton extends Gtk.MenuButton {
         }
 
         popover.set_child(box);
+        return popover;
+    }
+
+    _getLanguage() {
+        const v = this._settings.get_string(LANG_KEY);
+        return v || LANG_SYSTEM;
+    }
+
+    _createLanguagePopover() {
+        const current = this._getLanguage();
+
+        const popover = new Gtk.Popover({
+            has_arrow: true,
+            position: this._popPosition,
+            cascade_popdown: true,
+        });
+
+        const scrolled = new Gtk.ScrolledWindow({
+            hscrollbar_policy: Gtk.PolicyType.NEVER,
+            vscrollbar_policy: Gtk.PolicyType.AUTOMATIC,
+            max_content_height: 360,
+            propagate_natural_height: true,
+        });
+
+        const box = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            spacing: 4,
+            margin_top: 6,
+            margin_bottom: 6,
+            margin_start: 6,
+            margin_end: 6,
+        });
+
+        const languages = [
+            {code: LANG_SYSTEM, name: _('System Default')},
+            {code: 'en', name: 'English'},
+            {code: 'en_GB', name: 'English (UK)'},
+            {code: 'ru', name: 'Русский'},
+            {code: 'cs', name: 'Čeština'},
+            {code: 'de', name: 'Deutsch'},
+            {code: 'de_CH', name: 'Deutsch (Schweiz)'},
+            {code: 'fr', name: 'Français'},
+            {code: 'id', name: 'Bahasa Indonesia'},
+            {code: 'it', name: 'Italiano'},
+            {code: 'ko', name: '한국어'},
+            {code: 'nl', name: 'Nederlands'},
+            {code: 'oc', name: 'Occitan'},
+            {code: 'pt_BR', name: 'Português (Brasil)'},
+        ];
+
+        for (const lang of languages) {
+            const isSelected = current === lang.code;
+            const row = this._createCheckRow(lang.name, isSelected);
+            row.connect('clicked', () => {
+                this._settings.set_string(LANG_KEY, lang.code);
+                popover.popdown();
+                this._mainPopover.popdown();
+                if (this._app && this._app.showToast)
+                    this._app.showToast(_('Restart required to apply language change'));
+            });
+            box.append(row);
+        }
+
+        scrolled.set_child(box);
+        popover.set_child(scrolled);
         return popover;
     }
 
