@@ -42,6 +42,7 @@ export const BudsLinkApplication = GObject.registerClass({
         });
 
         this._isServiceHeld = false;
+        this._isBackgroundHeld = false;
 
         this._log = createLogger('Main');
 
@@ -156,6 +157,24 @@ export const BudsLinkApplication = GObject.registerClass({
         this._client = new BluetoothClient();
         this._deviceManager = new EnhancedDeviceSupportManager(this);
         this._initialize();
+
+        this._applyRunInBackground();
+        this._bgSettingsId = this.settings.connect('changed::run-in-background',
+            () => this._applyRunInBackground());
+    }
+
+    _applyRunInBackground() {
+        const enabled = this.settings.get_boolean('run-in-background');
+
+        if (enabled && !this._isBackgroundHeld) {
+            this._isBackgroundHeld = true;
+            this.hold();
+            this._log.info('run-in-background enabled');
+        } else if (!enabled && this._isBackgroundHeld) {
+            this._isBackgroundHeld = false;
+            this.release();
+            this._log.info('run-in-background disabled');
+        }
     }
 
     _onActivate() {
@@ -313,6 +332,16 @@ export const BudsLinkApplication = GObject.registerClass({
         if (this._sigtermId) {
             GLib.Source.remove(this._sigtermId);
             this._sigtermId = 0;
+        }
+
+        if (this._bgSettingsId && this.settings) {
+            this.settings.disconnect(this._bgSettingsId);
+            this._bgSettingsId = 0;
+        }
+
+        if (this._isBackgroundHeld) {
+            this.release();
+            this._isBackgroundHeld = false;
         }
 
         this._themeManager?.destroy();

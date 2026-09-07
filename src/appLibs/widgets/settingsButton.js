@@ -80,6 +80,13 @@ class SettingsButton extends Gtk.MenuButton {
         ));
 
         box.append(this._createRow(
+            'bbm-mode-run-symbolic',
+            _('Run in Background'),
+            true,
+            btn => this._openSubPopover(() => this._createRunInBackgroundPopover(), btn)
+        ));
+
+        box.append(this._createRow(
             'bbm-extension-symbolic',
             _('BudsLink Companion'),
             true,
@@ -291,6 +298,43 @@ class SettingsButton extends Gtk.MenuButton {
 
             row.connect('clicked', () => {
                 this._settings.set_boolean('logging-enabled', value);
+                popover.popdown();
+                this._mainPopover.popdown();
+            });
+
+            box.append(row);
+        };
+
+        add(_('On'), true);
+        add(_('Off'), false);
+
+        popover.set_child(box);
+        return popover;
+    }
+
+    _createRunInBackgroundPopover() {
+        const enabled = this._settings.get_boolean('run-in-background');
+
+        const popover = new Gtk.Popover({
+            has_arrow: true,
+            position: this._popPosition,
+            cascade_popdown: true,
+        });
+
+        const box = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            spacing: 6,
+            margin_top: 6,
+            margin_bottom: 6,
+            margin_start: 6,
+            margin_end: 6,
+        });
+
+        const add = (label, value) => {
+            const row = this._createCheckRow(label, enabled === value);
+
+            row.connect('clicked', () => {
+                this._settings.set_boolean('run-in-background', value);
                 popover.popdown();
                 this._mainPopover.popdown();
             });
