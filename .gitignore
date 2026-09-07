@@ -4,3 +4,5 @@ build-dir
 .flatpak-builder
 localdata
 repo
+data/gschemas.compiled
+subprojects/.wraplock
